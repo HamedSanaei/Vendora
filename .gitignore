@@ -1,0 +1,63 @@
+# Build outputs
+bin/
+obj/
+dist/
+build/
+out/
+
+# .NET
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.swp
+*.tmp
+*.cache
+TestResults/
+CoverageReports/
+*.log
+
+# Visual Studio
+.vs/
+*.nupkg
+
+# Rider / JetBrains
+.idea/
+*.iml
+
+# NuGet
+packages/
+*.snupkg
+
+# ASP.NET Core
+appsettings.Local.json
+appsettings.*.local.json
+secrets.json
+
+# React / Vite / Node
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+.yarn-cache/
+.parcel-cache/
+.turbo/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Generated files
+*.generated.cs
+*.g.cs
+*.g.i.cs
+
