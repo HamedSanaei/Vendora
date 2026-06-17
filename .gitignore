@@ -4,6 +4,8 @@ obj/
 dist/
 build/
 out/
+TEMPLATE/
+.tools/
 
 # .NET
 *.user
@@ -35,7 +37,6 @@ appsettings.*.local.json
 secrets.json
 
 # React / Vite / Node
-node_modules/
 .pnpm-store/
 .npm/
 .yarn/
@@ -61,3 +62,7 @@ Desktop.ini
 *.g.cs
 *.g.i.cs
 
+# Local databases
+*.db
+*.sqlite
+*.sqlite3

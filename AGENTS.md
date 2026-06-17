@@ -25,7 +25,7 @@ Core long-term capabilities:
 
 ## Bilingual website, locale routing, and text direction
 
-The application must support two complete localized versions from the beginning: Persian and English. Locale routing and text direction are core product requirements, not optional UI polish.
+The application must support two complete localized versions from the beginning. Locale routing and text direction are core product requirements, not optional UI polish.
 
 Language versions:
 
@@ -37,35 +37,36 @@ Routing rules:
 - All frontend routes must be locale-prefixed with either `/fa` or `/en`.
 - Persian route examples: `/fa`, `/fa/products`, `/fa/cart`, `/fa/checkout`, `/fa/admin`, `/fa/admin/products`.
 - English route examples: `/en`, `/en/products`, `/en/cart`, `/en/checkout`, `/en/admin`, `/en/admin/products`.
-- The locale prefix is the source of truth for the active language and direction. Do not rely only on browser language, cookies, or local storage to determine the current locale.
-- Avoid creating unprefixed public routes for real pages. The root path `/` may only redirect to an approved default locale or show a locale selector if explicitly requested.
-- Keep route definitions and route generation centralized so locale handling is consistent across storefront, cart, checkout, payment result pages, authentication pages, profile pages, and admin pages.
-- Do not duplicate business logic for each language. Locale differences should be handled through routing, translations, formatting utilities, metadata, and direction-aware layout primitives.
+- The locale prefix is the source of truth for the active language and direction. Do not rely only on browser language, cookies, or local storage.
+- Avoid unprefixed public routes for real pages. The root path `/` may only redirect to an approved default locale or show a locale selector if requested.
+- Keep route definitions and route generation centralized across storefront, cart, checkout, payment result pages, authentication, profile, and admin pages.
+- Do not duplicate business logic for each language. Handle locale differences through routing, translations, formatting utilities, metadata, and direction-aware layout primitives.
 
 Direction and layout rules:
 
 - Persian pages must render with `lang="fa"` and `dir="rtl"` on the page/layout root or app container.
 - English pages must render with `lang="en"` and `dir="ltr"` on the page/layout root or app container.
-- Persian UI must feel fully right-to-left across navigation, menus, breadcrumbs, product cards, forms, cart, checkout, profile pages, payment result pages, tables, dashboards, and admin screens.
+- Persian UI must feel fully right-to-left across navigation, menus, breadcrumbs, product cards, forms, cart, checkout, profile, payment result pages, tables, dashboards, and admin screens.
 - English UI must feel fully left-to-right across the same flows.
-- Prefer CSS logical properties and direction-safe utilities such as start/end, inline-start/inline-end, `text-start`, and `text-end` when available. Avoid hard-coded physical layout assumptions such as `left`, `right`, `ml-*`, and `mr-*` when the value should flip between RTL and LTR.
-- Directional icons and controls must adapt correctly for both directions, including arrows, chevrons, back/next buttons, breadcrumbs, pagination, carousel controls, drawers, steppers, and checkout step indicators.
+- Prefer CSS logical properties and direction-safe utilities such as start/end, inline-start/inline-end, `text-start`, and `text-end` when available.
+- Avoid hard-coded physical layout assumptions such as `left`, `right`, `ml-*`, and `mr-*` when the value should flip between RTL and LTR.
+- Directional icons and controls must adapt correctly for both directions, including arrows, chevrons, back/next buttons, breadcrumbs, pagination, carousels, drawers, steppers, and checkout indicators.
 
 Localization rules:
 
-- Keep user-visible text localizable. Do not hard-code Persian or English UI copy directly inside reusable components when it belongs to a translatable flow.
-- Keep translations centralized once an i18n structure exists, and avoid scattering repeated strings across many components.
-- Use Persian copy for `/fa` and English copy for `/en`; do not mix languages in the same UI surface unless intentional, such as brand names, technical labels, payment provider names, SKUs, codes, or gateway reference numbers.
+- Keep user-visible text localizable. Do not hard-code Persian or English copy inside reusable components when it belongs to a translatable flow.
+- Keep translations centralized once an i18n structure exists.
+- Use Persian copy for `/fa` and English copy for `/en`; do not mix languages unless intentional, such as brand names, SKUs, codes, provider names, or gateway reference numbers.
 - Forms must keep labels, placeholders, validation messages, helper text, error summaries, and success messages localized and direction-aware.
 - Format prices, dates, numbers, phone numbers, addresses, and currency labels through shared locale-aware utilities.
-- Payment initiation, callback routes, success pages, failure pages, and order result pages must preserve the active `/fa` or `/en` prefix so customers return to the correct language and direction after payment.
+- Payment initiation, callback routes, success pages, failure pages, and order result pages must preserve the active `/fa` or `/en` prefix.
 
 Backend and content rules:
 
-- Backend APIs should remain language-neutral where possible. Store stable data, statuses, enum values, payment states, and business records independent of display language, and let the frontend/localization layer render user-facing labels in Persian or English.
+- Backend APIs should remain language-neutral where possible. Store stable data, statuses, enum values, payment states, and business records independent of display language.
 - Pass locale to the backend only when localized content, localized validation messages, localized metadata, or explicit language-specific behavior is required.
 - Product/catalog content may eventually need Persian and English fields. Do not change the database schema for bilingual content without an explicit EF migration and user approval when the change is significant.
-- Where SEO is relevant, prepare pages so canonical links, alternate locale links, titles, descriptions, and Open Graph metadata can distinguish the Persian and English versions cleanly.
+- Where SEO is relevant, prepare canonical links, alternate locale links, titles, descriptions, and Open Graph metadata for Persian and English versions.
 
 Testing expectation:
 
@@ -145,6 +146,44 @@ If the actual repository already contains a different structure, inspect it firs
 
 The required architecture is clean, domain-centric, and layered. Follow the dependency rule: inner layers must not depend on outer layers.
 
+## Clean architecture flow, CQRS, and mediator usage
+
+Follow the course-style clean architecture flow.
+
+Layer mapping:
+
+- `Domain` is the inner entities ring: entities, value objects, enums, and domain rules.
+- `Application` is the use-case ring: each use case belongs here as a command/query plus handler.
+- `API` is the interface-adapter ring: controllers receive HTTP requests and return HTTP responses.
+- `client`, database, and external services are outer details. They must not drive the domain model.
+
+Dependency and testability rules:
+
+- Dependencies point inward. `Domain` must not know about `Application`, `Persistence`, `Infrastructure`, `API`, or `client`.
+- Business logic should be testable without React, HTTP, servers, or a concrete database server.
+- `API` must delegate business work to `Application`; do not put business rules or EF-heavy logic in controllers.
+- Keep database-provider details in `Persistence`. `Application` may use EF Core through the established project pattern, but it must not contain SQLite-specific assumptions.
+
+CQRS and mediator rules:
+
+- Model every backend use case as either a Query or a Command.
+- Queries read data and must not change state. Example names: `ListProducts.Query`, `Details.Query`, `GetOrder.Query`.
+- Commands change state. Example names: `Create.Command`, `Edit.Command`, `Delete.Command`, `ChangeOrderStatus.Command`, `StartPayment.Command`, `VerifyPayment.Command`.
+- Each use case should have one focused handler responsible for that use case only.
+- Prefer feature folders in `Application`, such as `Products/List.cs`, `Products/Details.cs`, `Products/Create.cs`, `Orders/ChangeStatus.cs`, and `Payments/Verify.cs`.
+- When `MediatR` or the approved mediator package exists, controllers must call `_mediator.Send(...)` with a command/query and pass the `CancellationToken`.
+- Do not add `MediatR` or any mediator dependency unless it already exists or the user explicitly approves the new dependency.
+- Controllers should only map route/body/query data into commands or queries, call the mediator, and return the correct HTTP response.
+- Use handlers for orchestration, validation coordination, EF Core reads/writes, domain rule execution, and result creation.
+- Return DTOs or result objects from handlers. Do not return EF entities directly from public API endpoints.
+- Do not combine unrelated read and write operations in one handler just to reduce file count.
+
+Expected request flow:
+
+```text
+React client -> API controller -> mediator.Send(command/query) -> Application handler -> Domain/Persistence as needed -> handler result -> API response -> React UI
+```
+
 ### Domain layer
 
 - Contains enterprise/domain business rules.
@@ -158,10 +197,12 @@ The required architecture is clean, domain-centric, and layered. Follow the depe
 
 - Contains application use cases and orchestration.
 - Use feature-oriented folders such as Products, Orders, Cart, Payments, Users, and Admin.
-- Prefer command/query style handlers for use cases when the project has or approves MediatR or a similar pattern.
+- Use CQRS-style command/query handlers for use cases and follow the mediator flow described above.
 - Contains DTOs, validators, use-case-specific models, and interfaces/ports for external services.
 - Controllers must delegate business work to this layer.
 - Do not place UI concerns, HTTP response formatting, database provider configuration, or concrete payment gateway calls here.
+- In the backend Application layer, always use the existing AutoMapper `IMapper` and `MappingProfiles` for mapping between entities, DTOs, commands, and queries; do not write manual object-to-object mapping unless there is a clear exception.
+
 
 ### Persistence layer
 
@@ -197,7 +238,6 @@ The required architecture is clean, domain-centric, and layered. Follow the depe
 - Keep API access in `client/src/lib` or the existing equivalent.
 - Keep feature UI in `client/src/features/<featureName>`.
 - Keep app-level routing, providers, layout, and global configuration in `client/src/app`.
-- Implement locale-aware frontend routing so Persian pages are under `/fa` and English pages are under `/en`.
 
 ## Non-negotiable working rules for Codex
 
@@ -296,6 +336,15 @@ Use React with TypeScript only:
 - Extract reusable UI pieces when duplication becomes clear.
 - Do not introduce global state unless local state, URL state, or server cache is insufficient.
 
+API communication rules:
+
+- Use `axios` for all React frontend API calls.
+- Do not use the native `fetch` API unless the user explicitly requests it.
+- Create and reuse a centralized `axios` instance for `baseURL`, headers, credentials, auth tokens, interceptors, timeout, and shared error handling.
+- Keep request and response types explicit with TypeScript interfaces or types.
+- Keep API calls in `client/src/lib`, `client/src/api`, or the existing API-client location. Do not scatter raw HTTP calls across UI components.
+- Preserve the active locale prefix (`/fa` or `/en`) when building frontend routes around API-driven flows such as checkout, payment callbacks, and order result pages.
+
 Documentation and comments:
 
 - Add JSDoc comments for exported components, hooks, API client functions, and non-trivial utilities.
@@ -340,12 +389,13 @@ Ecommerce UX direction:
 - Visible order/payment state.
 - Admin screens should prioritize clarity, fast editing, and error prevention.
 
-Bilingual UI implementation reminders:
+Localization and RTL readiness:
 
-- Follow the dedicated `Bilingual website, locale routing, and text direction` section before changing routing, layouts, copy, formatting, checkout, payment result pages, authentication pages, or admin pages.
-- After layout changes, verify representative screens in both `/fa` and `/en` so RTL and LTR flows remain correct.
+- This product targets an Iranian ecommerce context.
+- Keep UI compatible with Persian text and right-to-left layouts when the UI language is Persian.
+- Avoid hard-coded layout assumptions that break in RTL.
+- Format prices, dates, and phone numbers consistently through shared utilities.
 - Keep currency unit naming explicit and consistent across backend and frontend.
-- Keep stable backend statuses/enums independent of display language; render localized labels in the frontend/localization layer unless the requested feature explicitly needs localized API responses.
 
 ## Testing and quality rules
 
@@ -581,11 +631,9 @@ When responding in Persian or mixed Persian-English text:
 3. Never put Persian explanation and long code/commands on the same line.
 4. For terminal commands, always use fenced code blocks with `bash`.
 5. For code, always use fenced code blocks with the correct language.
-6. Keep English technical terms isolated with backticks, for example: `React`, `useEffect`, `package.json`, `npm install`.
+6. Keep English technical terms isolated with backticks, for example `React`, `useEffect`, `package.json`, and `npm install`.
 7. Avoid inline tables for Persian text.
-8. If a response contains both Persian and English, write each item as:
-   - Persian explanation first
-   - English/code token separately in backticks
+8. If a response contains both Persian and English, write the Persian explanation first and the English/code token separately inside backticks.
 9. Do not output raw mixed RTL/LTR paragraphs when code, paths, URLs, or commands are involved.
 
 ## Final response format after each task
