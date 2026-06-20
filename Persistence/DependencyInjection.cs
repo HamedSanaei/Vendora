@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Persistence.Admin;
 using Persistence.Carts;
 using Persistence.Common;
 using Persistence.Orders;
@@ -32,6 +33,8 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IAdminRepository, AdminRepository>();
+        services.AddScoped<IProductAdminRepository, ProductAdminRepository>();
         services.AddScoped<IProductReadRepository, ProductReadRepository>();
         services.AddScoped<DbInitializer>();
 

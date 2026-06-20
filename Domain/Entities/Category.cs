@@ -23,7 +23,27 @@ public class Category : AuditableEntity
     public bool IsActive { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets the optional parent category identifier.
+    /// </summary>
+    public Guid? ParentCategoryId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional parent category.
+    /// </summary>
+    public Category? ParentCategory { get; set; }
+
+    /// <summary>
+    /// Gets child categories.
+    /// </summary>
+    public List<Category> Children { get; set; } = [];
+
+    /// <summary>
     /// Gets the products that belong to this category.
     /// </summary>
     public List<Product> Products { get; set; } = [];
+
+    /// <summary>
+    /// Gets the multi-category product links that reference this category.
+    /// </summary>
+    public List<ProductCategory> ProductCategories { get; set; } = [];
 }

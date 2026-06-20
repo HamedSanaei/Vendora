@@ -1,0 +1,64 @@
+"use client";
+import React, { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+// internal
+import Header from "@layout/header";
+import Wrapper from "@layout/wrapper";
+import Footer from "@layout/footer";
+import { useGetUserOrdersQuery } from "src/redux/features/orderApi";
+import DashboardArea from "@components/user-dashboard/dashboard-area";
+import Loader from "@components/loader/loader";
+import ErrorMessage from "@components/error-message/error";
+import { getLocaleFromPathname, withLocalePath } from "@lib/locale-path";
+
+const UserDashboardMainArea = () => {
+  const {
+    data: orderData,
+    isError,
+    isLoading,
+    error,
+    refetch,
+  } = useGetUserOrdersQuery();
+  const router = useRouter();
+  const pathname = usePathname();
+  const locale = getLocaleFromPathname(pathname);
+  const isFa = locale === "fa";
+
+  useEffect(() => {
+    const isAuthenticate = localStorage.getItem("auth");
+    if (!isAuthenticate) {
+      router.push(withLocalePath("/login", locale));
+    }
+    if (orderData) {
+      refetch();
+    }
+  }, [locale, router, orderData, refetch]);
+  let content = null;
+
+  if (isLoading) {
+    content = (
+      <div
+        className="d-flex align-items-center justify-content-center"
+        style={{ height: "100vh" }}
+      >
+        <Loader loading={isLoading} />
+      </div>
+    );
+  }
+  if (isError) {
+    content = <ErrorMessage message={isFa ? "خطایی رخ داد." : "There was an error."} />;
+  }
+  if (orderData && !isError) {
+    content = <DashboardArea orderData={orderData} />;
+  }
+
+  return (
+    <Wrapper>
+      <Header style_2={true} />
+      {content}
+      <Footer />
+    </Wrapper>
+  );
+};
+
+export default UserDashboardMainArea;

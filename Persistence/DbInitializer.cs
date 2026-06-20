@@ -1,6 +1,8 @@
 using System.Data;
 using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Persistence.Identity;
 
 namespace Persistence;
 
@@ -10,14 +12,21 @@ namespace Persistence;
 public sealed class DbInitializer
 {
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+    private readonly UserManager<AppUser> _userManager;
+    private readonly RoleManager<IdentityRole<Guid>> _roleManager;
 
     /// <summary>
     /// Creates a new initializer.
     /// </summary>
     /// <param name="dbContextFactory">The application database context factory.</param>
-    public DbInitializer(IDbContextFactory<AppDbContext> dbContextFactory)
+    public DbInitializer(
+        IDbContextFactory<AppDbContext> dbContextFactory,
+        UserManager<AppUser> userManager,
+        RoleManager<IdentityRole<Guid>> roleManager)
     {
         _dbContextFactory = dbContextFactory;
+        _userManager = userManager;
+        _roleManager = roleManager;
     }
 
     /// <summary>
@@ -50,7 +59,75 @@ public sealed class DbInitializer
         }
 
         await SeedData.SeedAsync(dbContext, cancellationToken);
+        await SeedIdentityAsync();
         return true;
+    }
+
+    private async Task SeedIdentityAsync()
+    {
+        await EnsureRoleAsync("Admin");
+        await EnsureRoleAsync("Customer");
+        await EnsureUserAsync("Vendora Admin", "admin@vendora.local", "09120000000", "Admin");
+        var customer = await EnsureUserAsync("Test Customer", "customer@vendora.local", "09121111111", "Customer");
+        await EnsureDefaultAddressAsync(customer);
+    }
+
+    private async Task EnsureRoleAsync(string role)
+    {
+        if (!await _roleManager.RoleExistsAsync(role))
+        {
+            await _roleManager.CreateAsync(new IdentityRole<Guid>(role));
+        }
+    }
+
+    private async Task<AppUser> EnsureUserAsync(string fullName, string email, string phoneNumber, string role)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+        {
+            user = new AppUser
+            {
+                FullName = fullName,
+                UserName = email,
+                Email = email,
+                EmailConfirmed = true,
+                PhoneNumber = phoneNumber
+            };
+            await _userManager.CreateAsync(user, "Pass123$");
+        }
+
+        if (!await _userManager.IsInRoleAsync(user, role))
+        {
+            await _userManager.AddToRoleAsync(user, role);
+        }
+
+        return user;
+    }
+
+    private async Task EnsureDefaultAddressAsync(AppUser user)
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        if (await dbContext.CustomerAddresses.AnyAsync(address => address.UserId == user.Id))
+        {
+            return;
+        }
+
+        await dbContext.CustomerAddresses.AddAsync(new Domain.Entities.CustomerAddress
+        {
+            UserId = user.Id,
+            Title = "خانه",
+            RecipientName = user.FullName,
+            PhoneNumber = user.PhoneNumber ?? "09121111111",
+            Province = "تهران",
+            City = "تهران",
+            StreetAddress = "خیابان ولیعصر، کوچه نمونه، پلاک ۱۲",
+            Plaque = "۱۲",
+            Unit = "۳",
+            PostalCode = "1234567890",
+            IsDefault = true
+        });
+
+        await dbContext.SaveChangesAsync();
     }
 
     private async Task RebuildDevelopmentDatabaseAsync(CancellationToken cancellationToken)

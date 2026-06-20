@@ -31,7 +31,52 @@ public class Order : AuditableEntity
     /// <summary>
     /// Gets or sets the order currency code.
     /// </summary>
-    public string CurrencyCode { get; set; } = "IRR";
+    public string CurrencyCode { get; set; } = "TOMAN";
+
+    /// <summary>
+    /// Gets or sets the customer address identifier selected at checkout.
+    /// </summary>
+    public Guid? ShippingAddressId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the recipient name snapshot captured at checkout.
+    /// </summary>
+    public string ShippingRecipientName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the recipient phone snapshot captured at checkout.
+    /// </summary>
+    public string ShippingPhoneNumber { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the province snapshot captured at checkout.
+    /// </summary>
+    public string ShippingProvince { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the city snapshot captured at checkout.
+    /// </summary>
+    public string ShippingCity { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the street address snapshot captured at checkout.
+    /// </summary>
+    public string ShippingStreetAddress { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the plaque snapshot captured at checkout.
+    /// </summary>
+    public string? ShippingPlaque { get; set; }
+
+    /// <summary>
+    /// Gets or sets the unit snapshot captured at checkout.
+    /// </summary>
+    public string? ShippingUnit { get; set; }
+
+    /// <summary>
+    /// Gets or sets the postal code snapshot captured at checkout.
+    /// </summary>
+    public string ShippingPostalCode { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the subtotal at the time the order was created.

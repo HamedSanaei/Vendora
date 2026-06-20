@@ -10,12 +10,23 @@ internal static class OrderMappings
         return new OrderDto(
             order.Id,
             order.OrderNumber,
+            order.CreatedAtUtc,
             order.Status.ToString(),
             order.PaymentStatus.ToString(),
             order.Subtotal,
             order.ShippingCost,
             order.DiscountAmount,
             order.TotalAmount,
+            new OrderShippingAddressDto(
+                order.ShippingAddressId,
+                order.ShippingRecipientName,
+                order.ShippingPhoneNumber,
+                order.ShippingProvince,
+                order.ShippingCity,
+                order.ShippingStreetAddress,
+                order.ShippingPlaque,
+                order.ShippingUnit,
+                order.ShippingPostalCode),
             order.Items
                 .OrderBy(item => item.ProductTitle)
                 .Select(item => new OrderItemDto(

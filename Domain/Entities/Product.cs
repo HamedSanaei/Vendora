@@ -24,7 +24,7 @@ public class Product : AuditableEntity
     public string? Description { get; set; }
 
     /// <summary>
-    /// Gets or sets the product price in the smallest currency unit used by the system.
+    /// Gets or sets the product price in Toman.
     /// </summary>
     public decimal Price { get; set; }
 
@@ -52,6 +52,26 @@ public class Product : AuditableEntity
     /// Gets or sets the category.
     /// </summary>
     public Category? Category { get; set; }
+
+    /// <summary>
+    /// Gets the multi-category links assigned to the product.
+    /// </summary>
+    public List<ProductCategory> Categories { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the optional brand identifier.
+    /// </summary>
+    public Guid? BrandId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional brand.
+    /// </summary>
+    public Brand? Brand { get; set; }
+
+    /// <summary>
+    /// Gets product color links.
+    /// </summary>
+    public List<ProductColor> Colors { get; set; } = [];
 
     /// <summary>
     /// Gets the product images.

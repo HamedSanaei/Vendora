@@ -12,7 +12,7 @@ public static class Details
     /// <summary>
     /// Represents an order details query.
     /// </summary>
-    public sealed record Query(string OrderNumber) : IRequest<OrderDto?>;
+    public sealed record Query(string OrderNumber, Guid UserId) : IRequest<OrderDto?>;
 
     /// <summary>
     /// Handles order details queries.
@@ -33,7 +33,7 @@ public static class Details
         public async Task<OrderDto?> Handle(Query request, CancellationToken cancellationToken)
         {
             var order = await _orderRepository.GetByOrderNumberAsync(request.OrderNumber, cancellationToken);
-            return order is null ? null : OrderMappings.Map(order);
+            return order is null || order.UserId != request.UserId ? null : OrderMappings.Map(order);
         }
     }
 }
