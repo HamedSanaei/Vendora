@@ -23,11 +23,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # No NuGet lock files are committed yet (no packages.lock.json), so a
+      # setup-dotnet cache would fail. Keep this consistent with the backend
+      # job in the production pipeline (deploy.yml).
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-          cache: true
-          cache-dependency-path: '**/packages.lock.json'
 
       - name: Restore
         run: dotnet restore Vendora.slnx

@@ -4,7 +4,7 @@ obj/
 dist/
 build/
 out/
-TEMPLATE/
+/TEMPLATE/
 artifacts/
 .tools/
 
