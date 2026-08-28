@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+coverage
+*.local
+.env
+.env.*
+!.env.example
+*.log
+.git
+.github
+.vscode
+.vf
+scripts
+playwright-report
+test-results

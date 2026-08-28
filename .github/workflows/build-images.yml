@@ -1,0 +1,120 @@
+name: Build Production Images
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: vendora-build
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  # Public endpoints baked into the client bundles at build time.
+  PUBLIC_ORIGIN: https://vendora.tofanservice.ir
+
+jobs:
+  build:
+    name: Build and push images
+    runs-on: ubuntu-latest
+    outputs:
+      images: ${{ steps.image-list.outputs.images }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compute registry
+        id: registry
+        run: |
+          echo "registry=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Image created timestamp
+        id: meta-time
+        run: echo "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/docker/API.Dockerfile
+          push: true
+          tags: |
+            ${{ steps.registry.outputs.registry }}/vendora-api:${{ github.sha }}
+            ${{ steps.registry.outputs.registry }}/vendora-api:latest
+          cache-from: type=gha,scope=vendora-api
+          cache-to: type=gha,mode=max,scope=vendora-api
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ steps.meta-time.outputs.created }}
+
+      - name: Build and push site image
+        uses: docker/build-push-action@v6
+        with:
+          context: site
+          file: deploy/docker/site.Dockerfile
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=${{ env.PUBLIC_ORIGIN }}
+            NEXT_PUBLIC_STRIPE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_KEY }}
+          tags: |
+            ${{ steps.registry.outputs.registry }}/vendora-site:${{ github.sha }}
+            ${{ steps.registry.outputs.registry }}/vendora-site:latest
+          cache-from: type=gha,scope=vendora-site
+          cache-to: type=gha,mode=max,scope=vendora-site
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ steps.meta-time.outputs.created }}
+
+      - name: Build and push admin image
+        uses: docker/build-push-action@v6
+        with:
+          context: admin
+          file: deploy/docker/admin.Dockerfile
+          push: true
+          build-args: |
+            VITE_API_BASE_URL=${{ env.PUBLIC_ORIGIN }}
+            VITE_STOREFRONT_URL=${{ env.PUBLIC_ORIGIN }}
+            VITE_BASE_URL=/admin/
+          tags: |
+            ${{ steps.registry.outputs.registry }}/vendora-admin:${{ github.sha }}
+            ${{ steps.registry.outputs.registry }}/vendora-admin:latest
+          cache-from: type=gha,scope=vendora-admin
+          cache-to: type=gha,mode=max,scope=vendora-admin
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ steps.meta-time.outputs.created }}
+
+      - name: List published images
+        id: image-list
+        run: |
+          echo "images=${{ steps.registry.outputs.registry }}/vendora-api:${{ github.sha }},${{ steps.registry.outputs.registry }}/vendora-site:${{ github.sha }},${{ steps.registry.outputs.registry }}/vendora-admin:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      # Validate that the exact pushed artifacts contain the expected runtime.
+      - name: Validate pushed images
+        env:
+          REGISTRY: ${{ steps.registry.outputs.registry }}
+        run: |
+          set -euo pipefail
+          SHA="${{ github.sha }}"
+          docker pull "$REGISTRY/vendora-api:$SHA"
+          docker run --rm --entrypoint sh "$REGISTRY/vendora-api:$SHA" -c 'test -f /app/API.dll && test -x /usr/bin/curl'
+          docker pull "$REGISTRY/vendora-site:$SHA"
+          docker run --rm --entrypoint sh "$REGISTRY/vendora-site:$SHA" -c 'test -f /app/server.js'
+          docker pull "$REGISTRY/vendora-admin:$SHA"
+          docker run --rm --entrypoint sh "$REGISTRY/vendora-admin:$SHA" -c 'test -f /usr/share/nginx/html/index.html'
+          echo "All images validated."

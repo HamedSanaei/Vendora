@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+*.local
+.env
+.env.*
+!.env.example
+*.log
+.git
+.github
+.vscode
+artifacts
+design-assets

@@ -1,0 +1,55 @@
+name: Cloudflare DNS
+
+# Manual only. DNS does not need to be rewritten on every deployment, so this
+# workflow never runs automatically. It upserts an AAAA record for
+# vendora.tofanservice.ir pointing at the production server IPv6 address.
+on:
+  workflow_dispatch:
+    inputs:
+      ipv6:
+        description: "Production server IPv6 address (e.g. 2001:db8::1)"
+        required: true
+      record_name:
+        description: "DNS record name"
+        required: false
+        default: "vendora.tofanservice.ir"
+
+permissions:
+  contents: read
+
+jobs:
+  dns:
+    name: Upsert AAAA record
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upsert DNS record
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          RECORD_NAME: ${{ github.event.inputs.record_name }}
+          RECORD_CONTENT: ${{ github.event.inputs.ipv6 }}
+        run: |
+          set -euo pipefail
+          : "${CLOUDFLARE_API_TOKEN:?CLOUDFLARE_API_TOKEN secret is required}"
+          : "${CLOUDFLARE_ZONE_ID:?CLOUDFLARE_ZONE_ID secret is required}"
+
+          base="https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/dns_records"
+          list="$base?type=AAAA&name=$RECORD_NAME"
+
+          record_id="$(curl -fsSL -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$list" \
+            | jq -r '.result[0].id // empty')"
+
+          payload="$(jq -n \
+            --arg name "$RECORD_NAME" \
+            --arg content "$RECORD_CONTENT" \
+            '{type:"AAAA", name:$name, content:$content, proxied:true, ttl:1}')"
+
+          if [ -n "$record_id" ]; then
+            echo "Updating existing AAAA record $record_id for $RECORD_NAME"
+            curl -fsSL -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+              -d "$payload" "$base/$record_id" | jq -r '.success'
+          else
+            echo "Creating AAAA record for $RECORD_NAME"
+            curl -fsSL -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+              -d "$payload" "$base" | jq -r '.success'
+          fi

@@ -1,0 +1,111 @@
+name: vendora
+
+# Production stack for vendora.tofanservice.ir.
+#
+# Only the gateway is published (bound to the loopback interface). Host nginx
+# proxies HTTPS traffic to 127.0.0.1:8080. The database, uploads, API and
+# Node ports are never exposed to the network.
+#
+# Required shell environment (sourced from deploy/env/production.env by the
+# deploy script):
+#   VENDORA_IMAGE_REGISTRY  e.g. ghcr.io/hamedsanaei
+#   VENDORA_IMAGE_TAG       immutable Git SHA of the deployed build
+
+services:
+  vendora-gateway:
+    image: nginx:1.27-alpine
+    container_name: vendora-gateway
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./nginx/gateway.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - vendora
+    depends_on:
+      - vendora-api
+      - vendora-site
+      - vendora-admin
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+
+  vendora-api:
+    image: ${VENDORA_IMAGE_REGISTRY:?VENDORA_IMAGE_REGISTRY is required}/vendora-api:${VENDORA_IMAGE_TAG:?VENDORA_IMAGE_TAG is required}
+    container_name: vendora-api
+    restart: unless-stopped
+    env_file:
+      - path: ./env/production.env
+        required: false
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Data Source=/data/vendora.db
+    volumes:
+      - /opt/vendora/data:/data
+      - /opt/vendora/uploads:/app/wwwroot/uploads
+    networks:
+      - vendora
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+
+  # One-shot migration runner used by the deploy script. Not started by
+  # `docker compose up`; invoke with:
+  #   docker compose --profile migrate run -T --rm --no-deps vendora-api-migrate
+  vendora-api-migrate:
+    image: ${VENDORA_IMAGE_REGISTRY:?VENDORA_IMAGE_REGISTRY is required}/vendora-api:${VENDORA_IMAGE_TAG:?VENDORA_IMAGE_TAG is required}
+    profiles: ["migrate"]
+    restart: "no"
+    env_file:
+      - path: ./env/production.env
+        required: false
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      VENDORA__RUN_MIGRATIONS: apply
+      ConnectionStrings__DefaultConnection: Data Source=/data/vendora.db
+    volumes:
+      - /opt/vendora/data:/data
+    networks:
+      - vendora
+
+  vendora-site:
+    image: ${VENDORA_IMAGE_REGISTRY:?VENDORA_IMAGE_REGISTRY is required}/vendora-site:${VENDORA_IMAGE_TAG:?VENDORA_IMAGE_TAG is required}
+    container_name: vendora-site
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    networks:
+      - vendora
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/fa').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+
+  vendora-admin:
+    image: ${VENDORA_IMAGE_REGISTRY:?VENDORA_IMAGE_REGISTRY is required}/vendora-admin:${VENDORA_IMAGE_TAG:?VENDORA_IMAGE_TAG is required}
+    container_name: vendora-admin
+    restart: unless-stopped
+    networks:
+      - vendora
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+networks:
+  vendora:
+    driver: bridge
+    internal: false

@@ -20,7 +20,7 @@ The backend follows a domain-centric flow:
 React/Next UI -> API Controller -> MediatR Command/Query -> Application Handler -> Persistence/Domain -> API Response
 ```
 
-Admin APIs are currently development-only and marked with TODO comments for role-based authorization before production.
+Admin API endpoints are protected with `[Authorize(Policy = "AdminOnly")]` (JWT + Admin role). Development seed users and demo data are only created in Development environments.
 
 ## Requirements
 
@@ -81,6 +81,17 @@ dotnet build Vendora.slnx
 cd admin && npm run lint && npm run build
 cd site && npm run lint && npm run build
 ```
+
+## Production Deployment
+
+Vendora is deployed to **https://vendora.tofanservice.ir** behind Cloudflare
+using Docker Compose and GitHub Actions. Pushing to `main` runs CI, builds
+SHA-tagged images to GHCR, and deploys them to the production server with
+database backups, migrations, health checks, and automatic rollback.
+
+See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for the full architecture,
+server bootstrap, Cloudflare/TLS setup, GitHub secrets, and operating
+guide (backups, rollback, logs, troubleshooting).
 
 ## Notes
 

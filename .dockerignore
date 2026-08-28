@@ -1,0 +1,42 @@
+# Git metadata
+.git
+.github
+
+# Agent and tooling metadata
+.freebuff
+.agents
+.vscode
+.tools
+TEMPLATE
+
+# Design artifacts
+artifacts
+design-assets
+.vf
+
+# Build outputs and dependencies
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.next
+**/coverage
+**/*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+**/production.env
+
+# Local databases and logs
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.sqlite
+**/*.sqlite-shm
+**/*.sqlite-wal
+**/*.log
+
+# Development-uploaded product images are not part of the image
+API/wwwroot/uploads/products/*
+!API/wwwroot/uploads/products/.gitkeep
