@@ -5,6 +5,7 @@ dist/
 build/
 out/
 TEMPLATE/
+artifacts/
 .tools/
 
 # .NET
