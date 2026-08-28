@@ -58,8 +58,14 @@ public sealed class DbInitializer
             return false;
         }
 
-        await SeedData.SeedAsync(dbContext, cancellationToken);
-        await SeedIdentityAsync();
+        // Demo catalog data and well-known development users must never be
+        // created in a production database.
+        if (IsDevelopmentEnvironment())
+        {
+            await SeedData.SeedAsync(dbContext, cancellationToken);
+            await SeedIdentityAsync();
+        }
+
         return true;
     }
 

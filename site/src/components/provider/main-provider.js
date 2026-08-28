@@ -11,8 +11,11 @@ if (typeof window !== "undefined") {
   require("bootstrap/dist/js/bootstrap");
 }
 
-// stripePromise
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY);
+// stripePromise: only initialize Stripe when a publishable key is configured.
+// Without a key the provider renders without Stripe context, which the
+// current checkout flow does not depend on.
+const stripeKey = process.env.NEXT_PUBLIC_STRIPE_KEY || "";
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
 
 /** Hydrates persisted storefront state once and mounts shared cart feedback. */
 function StorefrontRuntime({ children }) {
