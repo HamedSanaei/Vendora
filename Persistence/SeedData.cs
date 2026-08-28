@@ -437,6 +437,224 @@ public static class SeedData
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Seeds only the production-safe storefront catalog (categories, brands,
+    /// colors, products, product images and product-to-category / product-to-color
+    /// relationships) in an explicit, idempotent-by-slug manner.
+    /// </summary>
+    /// <remarks>
+    /// This is safe to run on an existing production database and safe to run
+    /// repeatedly: missing records are created, existing records are preserved,
+    /// and no development identity/demo data is ever created. Use this from the
+    /// one-shot <c>VENDORA__RUN_SEED=apply</c> deployment mode and NOT in
+    /// Development, where <see cref="SeedAsync"/> continues to seed the full
+    /// catalog plus demo users, carts and orders.
+    /// </remarks>
+    public static async Task SeedCatalogAsync(AppDbContext dbContext, CancellationToken cancellationToken = default)
+    {
+        await EnsureBagTaxonomyAsync(dbContext, cancellationToken);
+        await EnsureCatalogBrandsAsync(dbContext, cancellationToken);
+        await EnsureCatalogColorsAsync(dbContext, cancellationToken);
+        await EnsureCuratedProductsAsync(dbContext, cancellationToken);
+        await EnsureBagShowcaseProductsAsync(dbContext, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task EnsureCatalogBrandsAsync(AppDbContext dbContext, CancellationToken cancellationToken)
+    {
+        var specs = new (string Name, string Slug, string? LogoUrl, string? Email, string? Website, string Description, string? Location, bool IsActive)[]
+        {
+            (
+                "Vendora Studio",
+                "vendora-studio",
+                "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=300&q=80",
+                "brand@vendora.local",
+                "https://vendora.local",
+                "Internal bag manufacturing brand.",
+                "Tehran",
+                true),
+            (
+                "Urban Carry",
+                "urban-carry",
+                "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=300&q=80",
+                null,
+                null,
+                "Everyday bags for city life.",
+                "Karaj",
+                true),
+            (
+                "Archive Label",
+                "archive-label",
+                null,
+                null,
+                null,
+                "Inactive demo brand for admin filtering.",
+                null,
+                false)
+        };
+
+        var existing = (await dbContext.Brands.AsNoTracking().ToListAsync(cancellationToken))
+            .ToDictionary(brand => brand.Slug, brand => brand, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var spec in specs)
+        {
+            if (existing.ContainsKey(spec.Slug))
+            {
+                continue;
+            }
+
+            await dbContext.Brands.AddAsync(
+                new Brand
+                {
+                    Name = spec.Name,
+                    Slug = spec.Slug,
+                    LogoUrl = spec.LogoUrl,
+                    Email = spec.Email,
+                    Website = spec.Website,
+                    Description = spec.Description,
+                    Location = spec.Location,
+                    IsActive = spec.IsActive
+                },
+                cancellationToken);
+        }
+    }
+
+    private static async Task EnsureCatalogColorsAsync(AppDbContext dbContext, CancellationToken cancellationToken)
+    {
+        var specs = new[]
+        {
+            new { Name = "Black", Slug = "black", HexCode = "#111827" },
+            new { Name = "Brown", Slug = "brown", HexCode = "#92400e" },
+            new { Name = "Green", Slug = "green", HexCode = "#047857" },
+            new { Name = "Navy", Slug = "navy", HexCode = "#1e3a8a" }
+        };
+
+        var existing = (await dbContext.CatalogColors.AsNoTracking().ToListAsync(cancellationToken))
+            .ToDictionary(color => color.Slug, color => color, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var spec in specs)
+        {
+            if (existing.ContainsKey(spec.Slug))
+            {
+                continue;
+            }
+
+            await dbContext.CatalogColors.AddAsync(
+                new CatalogColor
+                {
+                    Name = spec.Name,
+                    Slug = spec.Slug,
+                    HexCode = spec.HexCode,
+                    IsActive = true
+                },
+                cancellationToken);
+        }
+    }
+
+    private static async Task EnsureCuratedProductsAsync(AppDbContext dbContext, CancellationToken cancellationToken)
+    {
+        var existingProductSlugs = (await dbContext.Products
+                .AsNoTracking()
+                .Select(product => product.Slug)
+                .ToListAsync(cancellationToken))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var categories = (await dbContext.Categories.ToListAsync(cancellationToken))
+            .Concat(dbContext.Categories.Local)
+            .GroupBy(category => category.Slug)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+
+        var brands = (await dbContext.Brands.ToListAsync(cancellationToken))
+            .Concat(dbContext.Brands.Local)
+            .GroupBy(brand => brand.Slug)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+
+        var colors = (await dbContext.CatalogColors.ToListAsync(cancellationToken))
+            .Concat(dbContext.CatalogColors.Local)
+            .GroupBy(color => color.Slug)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+
+        var specs = GetCuratedProductSpecs();
+        var products = specs
+            .Where(spec => !existingProductSlugs.Contains(spec.Slug))
+            .Select(spec => CreateBagShowcaseProduct(spec, categories, brands, colors))
+            .Where(product => product is not null)
+            .Select(product => product!)
+            .ToList();
+
+        if (products.Count > 0)
+        {
+            await dbContext.Products.AddRangeAsync(products, cancellationToken);
+        }
+    }
+
+    private static IReadOnlyList<ProductSeedSpec> GetCuratedProductSpecs()
+    {
+        return
+        [
+            new(
+                "Leather Handbag",
+                "leather-handbag",
+                "A compact leather handbag for everyday use.",
+                1250000m,
+                18,
+                "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80",
+                "vendora-studio",
+                ["women-handbag", "natural-leather-bag", "daily-bag", "women-bag", "best-sellers", "gift-worthy"],
+                ["brown", "black"]),
+            new(
+                "City Backpack",
+                "city-backpack",
+                "A lightweight backpack designed for daily commuting.",
+                980000m,
+                11,
+                "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+                "urban-carry",
+                ["backpack", "fabric-bag", "student-bag", "unisex-bag", "economic-bags", "new-models"],
+                ["black", "navy"]),
+            new(
+                "Weekender Duffel",
+                "weekender-duffel",
+                "A spacious duffel bag for short trips and weekend travel.",
+                1560000m,
+                7,
+                "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=80",
+                "vendora-studio",
+                ["travel-bag", "canvas-bag", "travel-use-bag", "unisex-bag", "summer-collection"],
+                ["green", "black"]),
+            new(
+                "Laptop Briefcase",
+                "laptop-briefcase",
+                "A structured work bag with a padded laptop section.",
+                1840000m,
+                14,
+                "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=900&q=80",
+                "urban-carry",
+                ["laptop-bag", "office-bag", "work-bag", "men-bag", "formal-office-collection"],
+                ["navy"]),
+            new(
+                "Canvas Tote",
+                "canvas-tote",
+                "A durable canvas tote for shopping and daily carry.",
+                620000m,
+                5,
+                "https://images.unsplash.com/photo-1591561954557-26941169b49e?auto=format&fit=crop&w=900&q=80",
+                "vendora-studio",
+                ["handbag", "canvas-bag", "shopping-bag", "women-bag", "economic-bags"],
+                ["green", "brown"]),
+            new(
+                "Cabin Suitcase",
+                "cabin-suitcase",
+                "A compact travel suitcase for short business trips.",
+                2450000m,
+                0,
+                "https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?auto=format&fit=crop&w=900&q=80",
+                "urban-carry",
+                ["travel-bag", "waterproof-bag", "travel-use-bag", "men-bag", "luxury-bags"],
+                ["black"])
+        ];
+    }
+
     private static async Task SeedAdminTablesAsync(AppDbContext dbContext, CancellationToken cancellationToken)
     {
         await EnsureBagTaxonomyAsync(dbContext, cancellationToken);

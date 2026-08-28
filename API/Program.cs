@@ -1,4 +1,5 @@
 using Application;
+using Domain.Enums;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -58,6 +59,20 @@ string migrationMode = builder.Configuration["Vendora:RunMigrations"]
 if (!string.IsNullOrWhiteSpace(migrationMode))
 {
     await RunMigrationsAsync(app.Services, migrationMode);
+    return;
+}
+
+// One-shot production-safe catalog seed mode used by the deployment pipeline.
+// It opens the production database, applies ONLY the idempotent storefront
+// catalog (categories/brands/colors/products/images/links -- never development
+// identity data), prints database-derived counts, verifies the catalog contains
+// active products, and exits without starting the web server.
+string seedMode = builder.Configuration["Vendora:RunSeed"]
+    ?? Environment.GetEnvironmentVariable("VENDORA__RUN_SEED")
+    ?? string.Empty;
+if (!string.IsNullOrWhiteSpace(seedMode))
+{
+    await RunCatalogSeedAsync(app.Services, seedMode);
     return;
 }
 
@@ -138,6 +153,63 @@ static async Task RunMigrationsAsync(IServiceProvider services, string mode)
     catch (Exception exception)
     {
         Console.Error.WriteLine($"Database migration failed: {exception.Message}");
+        Environment.Exit(1);
+    }
+}
+
+/// <summary>
+/// Runs the idempotent production-safe catalog seed in the one-shot deployment
+/// mode. Applies only storefront catalog data (never development identity), prints
+/// database-derived counts, and verifies that active products exist before
+/// exiting. Exits non-zero on any failure so the deployment aborts.
+/// </summary>
+static async Task RunCatalogSeedAsync(IServiceProvider services, string mode)
+{
+    if (!mode.Equals("apply", StringComparison.OrdinalIgnoreCase))
+    {
+        Console.Error.WriteLine($"Unknown VENDORA__RUN_SEED mode: '{mode}' (expected 'apply').");
+        Environment.Exit(1);
+    }
+
+    using var scope = services.CreateScope();
+    var factory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+    try
+    {
+        await using var dbContext = await factory.CreateDbContextAsync();
+
+        int productCountBefore = await dbContext.Products.CountAsync();
+        int categoryCountBefore = await dbContext.Categories.CountAsync();
+        int brandCountBefore = await dbContext.Brands.CountAsync();
+        int colorCountBefore = await dbContext.CatalogColors.CountAsync();
+
+        await SeedData.SeedCatalogAsync(dbContext);
+        await dbContext.SaveChangesAsync();
+
+        int productCountAfter = await dbContext.Products.CountAsync();
+        int categoryCountAfter = await dbContext.Categories.CountAsync();
+        int brandCountAfter = await dbContext.Brands.CountAsync();
+        int colorCountAfter = await dbContext.CatalogColors.CountAsync();
+        int activeProductCount = await dbContext.Products.CountAsync(product => product.Status == ProductStatus.Active);
+
+        Console.WriteLine("Catalog seed:");
+        Console.WriteLine($"  Products:  {productCountBefore} -> {productCountAfter}");
+        Console.WriteLine($"  Categories:{categoryCountBefore} -> {categoryCountAfter}");
+        Console.WriteLine($"  Brands:    {brandCountBefore} -> {brandCountAfter}");
+        Console.WriteLine($"  Colors:    {colorCountBefore} -> {colorCountAfter}");
+        Console.WriteLine($"  Active products: {activeProductCount}");
+
+        if (activeProductCount == 0)
+        {
+            Console.Error.WriteLine("Catalog seed completed but no active products exist; the storefront would be empty.");
+            Environment.Exit(1);
+        }
+
+        Console.WriteLine("Catalog seed completed successfully.");
+        Environment.Exit(0);
+    }
+    catch (Exception exception)
+    {
+        Console.Error.WriteLine($"Catalog seed failed: {exception.Message}");
         Environment.Exit(1);
     }
 }

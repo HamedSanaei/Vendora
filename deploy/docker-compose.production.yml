@@ -75,6 +75,26 @@ services:
     networks:
       - vendora
 
+  # One-shot production-safe catalog seeder used by the deploy script. Applies
+  # ONLY the idempotent storefront catalog (never development identity data) and
+  # exits. Not started by `docker compose up`; invoke with:
+  #   docker compose --profile seed run -T --rm --no-deps vendora-api-seed
+  vendora-api-seed:
+    image: ${VENDORA_IMAGE_REGISTRY:?VENDORA_IMAGE_REGISTRY is required}/vendora-api:${VENDORA_IMAGE_TAG:?VENDORA_IMAGE_TAG is required}
+    profiles: ["seed"]
+    restart: "no"
+    env_file:
+      - path: ./env/production.env
+        required: false
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      VENDORA__RUN_SEED: apply
+      ConnectionStrings__DefaultConnection: Data Source=/data/vendora.db
+    volumes:
+      - /opt/vendora/data:/data
+    networks:
+      - vendora
+
   vendora-site:
     image: ${VENDORA_IMAGE_REGISTRY:?VENDORA_IMAGE_REGISTRY is required}/vendora-site:${VENDORA_IMAGE_TAG:?VENDORA_IMAGE_TAG is required}
     container_name: vendora-site

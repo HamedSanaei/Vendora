@@ -4,8 +4,9 @@
 # Usage: deploy-production.sh <immutable-image-sha>
 #
 # Flow: lock -> record current version -> pull exact images -> verify images ->
-# backup database -> apply migrations -> start containers -> wait for health ->
-# internal checks -> public checks via Cloudflare -> record new version.
+# backup database -> apply migrations -> apply production catalog seed ->
+# start containers -> wait for health -> internal checks -> public checks via
+# Cloudflare -> record new version.
 #
 # On any failure the application containers are rolled back to the previous
 # known-good image SHA when one is available. Never prints secrets.
@@ -141,6 +142,16 @@ bash "$DEPLOY_DIR/scripts/backup-database.sh" "$DEPLOY_DIR"
 log "Applying database migrations"
 "${COMPOSE[@]}" --profile migrate run -T --rm --no-deps vendora-api-migrate
 log "Migrations applied"
+
+# --- 4b. Apply the production-safe catalog seed --------------------------------
+# Runs AFTER migrations and BEFORE the web containers start. The seed is
+# idempotent by slug, only creates the storefront catalog (categories, brands,
+# colors, products, images, relationships), never creates development identity
+# or demo data, prints database-derived counts, and fails if no active products
+# exist. Safe to run repeatedly.
+log "Applying production catalog seed"
+"${COMPOSE[@]}" --profile seed run -T --rm --no-deps vendora-api-seed
+log "Catalog seed applied"
 
 # --- 5. Start the application containers ----------------------------------------
 log "Starting application containers"

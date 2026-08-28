@@ -4,4 +4,5 @@
   <Project Path="Domain/Domain.csproj" />
   <Project Path="Infrastructure/Infrastructure.csproj" />
   <Project Path="Persistence/Persistence.csproj" />
+  <Project Path="tests/Vendora.IntegrationTests/Vendora.IntegrationTests.csproj" />
 </Solution>

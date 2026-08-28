@@ -522,6 +522,49 @@ Manual backup:
 bash /opt/vendora/scripts/backup-database.sh
 ```
 
+### Production catalog seeding
+
+The production database is **never** seeded with development identity/demo
+users (`admin@vendora.local`, `customer@vendora.local`, `Pass123$`, demo carts
+and orders). It **is** seeded, on the first deploy and idempotently on every
+deployment thereafter, with the storefront catalog the storefront needs to
+display products.
+
+The catalog seed is run automatically by the deploy script **after** migrations
+and **before** the web containers start, using a one-shot API mode:
+
+```bash
+# The exact image SHA being deployed, same immutable image as the real API.
+docker compose --profile seed run -T --rm --no-deps vendora-api-seed
+```
+
+The seed is **idempotent by slug**: it creates any missing categories, brands,
+colors, products, product images, product-category and product-color
+relationships, and leaves everything already present untouched (existing
+production-created products are never deleted or overwritten). Running it twice
+produces the same logical catalog. It prints database-derived counts
+(`Products 0 -> N`, `Categories`, `Brands`, `Colors`) and **fails** (non-zero)
+if the catalog would have zero active products.
+
+Manual / recovery seed — safe to run any number of times. From the server:
+
+```bash
+cd /opt/vendora
+set -a
+# shellcheck disable=SC1091
+. deploy/env/production.env
+set +a
+export VENDORA_IMAGE_TAG="$(cat state/current-version 2>/dev/null || echo none)"
+docker compose -f deploy/docker-compose.production.yml \
+  --profile seed run -T --rm --no-deps vendora-api-seed
+```
+
+The seed always uses the current database and the API image tag
+(`VENDORA_IMAGE_TAG`) is only used to select which image to run, so it is safe
+against any API image version that shares the schema. Do not run
+`VENDORA__RUN_SEED` from a Development environment, and never run the
+Development `SeedAsync` identity path against a production database.
+
 ### Rollback and schema compatibility
 
 `scripts/rollback-production.sh` (or the automatic rollback in the deploy
@@ -616,8 +659,10 @@ Build-time variables for the frontends (baked into bundles):
   (`[Authorize(Policy = "AdminOnly")]` on `AdminController`).
 - Production startup validates that the JWT key and admin invite code are not
   the development defaults; the API exits with a clear error otherwise.
-- Development seed data (demo products, `admin@vendora.local`, test users) is
-  created only when `ASPNETCORE_ENVIRONMENT=Development`.
+- The storefront catalog is seeded into production only via the idempotent
+  one-shot `VENDORA__RUN_SEED=apply` mode. Development identity/demo data
+  (dev admin users, `customer@vendora.local`, demo carts/orders) is created only
+  when `ASPNETCORE_ENVIRONMENT=Development`.
 - CORS is restricted to configured origins; Swagger is development-only.
 - The health endpoint never leaks connection strings, paths, or stack traces.
 - Secrets, SSH keys, certificates, and `production.env` are never committed;
