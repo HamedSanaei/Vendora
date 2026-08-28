@@ -667,3 +667,9 @@ Stop and ask for approval before proceeding if a task requires:
 - Changing payment flow assumptions.
 - Changing public API contracts used by the frontend.
 - Storing or handling sensitive secrets.
+
+## Git commit policy
+
+Commits must use only the configured human Git author identity.
+Never add AI/tool attribution, Generated-by messages, Co-Authored-By trailers for AI agents,
+Codebuff references, bot identities, or AI signatures to commit messages.
