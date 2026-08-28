@@ -145,10 +145,14 @@ chmod 750 /opt/vendora
 # The API container runs as the non-root 'app' user (uid 1654 in the .NET
 # aspnet images). The bind-mounted data and uploads directories must be
 # writable by that uid inside the container while remaining traversable and
-# readable by the deploy user (root) for backups. Directories are owned by
-# uid 1654 with 755 permissions; files created inside (e.g. vendora.db) are
-# 644 so root can read them with sqlite3.
-chown 1654:1654 /opt/vendora/data /opt/vendora/uploads
+# readable by the deploy user (root) for backups.
+#
+# The chown is RECURSIVE on purpose: on a re-run over an existing production
+# install, files beneath data/uploads (the SQLite database and its -wal/-shm
+# files, uploaded product images) must be returned to uid 1654 as well.
+# Without the recursion a re-run would leave vendora.db owned by root and the
+# non-root API container would lose write access.
+chown -R 1654:1654 /opt/vendora/data /opt/vendora/uploads
 chmod 755 /opt/vendora/data /opt/vendora/uploads
 
 # --- Cloudflare origin TLS directory ------------------------------------------------

@@ -6,12 +6,22 @@
 #
 # The generated file is included by deploy/nginx/vendora.conf so that the
 # real visitor IP (CF-Connecting-IP) is trusted only from Cloudflare networks.
+#
+# SAFETY: the candidate file is assembled in a temporary file first, the
+# previous known-good file is preserved, `nginx -t` is run against the
+# candidate, and only then is the file installed and nginx reloaded. If
+# validation fails the previous file is restored, so nginx is never left with
+# a broken cloudflare-ips.conf.
 set -Eeuo pipefail
 
 OUT_FILE="/etc/nginx/cloudflare-ips.conf"
-TMP_FILE="$(mktemp)"
+BACKUP_FILE="/etc/nginx/cloudflare-ips.conf.prev"
+CANDIDATE_FILE="$(mktemp /tmp/cloudflare-ips.XXXXXX)"
 
 log() { echo "[cloudflare-ips][$(date -u +%H:%M:%SZ)] $*"; }
+
+cleanup() { rm -f "$CANDIDATE_FILE"; }
+trap cleanup EXIT
 
 if [ "$(id -u)" -ne 0 ]; then
   log "Run as root: sudo bash $0" >&2
@@ -25,19 +35,49 @@ log "Fetching Cloudflare IPv4 and IPv6 ranges..."
   echo "# Refreshing: sudo bash /opt/vendora/scripts/update-cloudflare-ips.sh"
   echo
   echo "# Cloudflare IPv4 ranges"
-  curl -fsSL https://www.cloudflare.com/ips-v4 | sed 's#^#set_real_ip_from #'
+  curl -fsSL https://www.cloudflare.com/ips-v4 \
+    | grep -E '^[0-9.]+/[0-9]+$' \
+    | awk '{ print "set_real_ip_from " $1 ";" }'
   echo
   echo "# Cloudflare IPv6 ranges"
-  curl -fsSL https://www.cloudflare.com/ips-v6 | sed 's#^#set_real_ip_from #'
-} > "$TMP_FILE"
+  curl -fsSL https://www.cloudflare.com/ips-v6 \
+    | grep -E '^[0-9a-fA-F:]+/[0-9]+$' \
+    | awk '{ print "set_real_ip_from " $1 ";" }'
+} > "$CANDIDATE_FILE"
 
-install -m 644 "$TMP_FILE" "$OUT_FILE"
-rm -f "$TMP_FILE"
+# Refuse to install a file with no real directives (e.g. the fetch failed or
+# Cloudflare changed the payload format).
+if ! grep -q '^set_real_ip_from .*;$' "$CANDIDATE_FILE"; then
+  log "ERROR: no valid Cloudflare ranges were generated; keeping the previous file." >&2
+  exit 1
+fi
 
+# Preserve the previous known-good file before installing the candidate.
+if [ -f "$OUT_FILE" ]; then
+  install -m 644 "$OUT_FILE" "$BACKUP_FILE"
+fi
+install -m 644 "$CANDIDATE_FILE" "$OUT_FILE"
 log "Updated $OUT_FILE ($(wc -l < "$OUT_FILE") lines)"
 
 if command -v nginx >/dev/null 2>&1; then
-  nginx -t
-  systemctl reload nginx 2>/dev/null || true
-  log "nginx config tested and reloaded."
+  if nginx -t; then
+    systemctl reload nginx 2>/dev/null || true
+    log "nginx config tested and reloaded."
+  else
+    log "ERROR: nginx -t FAILED with the new ranges; restoring the previous file." >&2
+    if [ -f "$BACKUP_FILE" ]; then
+      install -m 644 "$BACKUP_FILE" "$OUT_FILE"
+      if nginx -t; then
+        log "Restored $BACKUP_FILE as $OUT_FILE; nginx -t passes again."
+      else
+        log "WARNING: nginx -t also fails with the restored file; investigate manually." >&2
+      fi
+    else
+      rm -f "$OUT_FILE"
+      log "No previous file to restore; removed $OUT_FILE."
+    fi
+    exit 1
+  fi
+else
+  log "nginx not installed; validated candidate left in place for the bootstrap to test."
 fi
