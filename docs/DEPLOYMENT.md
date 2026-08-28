@@ -128,37 +128,52 @@ Requirements: Debian or Ubuntu, root access, static IPv6 (AAAA record).
 
 ### 4.1 Copy the repo deployment files to the server
 
-From your machine (replace the IPv6 literal):
+From your machine. IPv6 literals must be bracketed in scp; IPv4/hostnames are
+plain:
 
 ```bash
-scp -r deploy scripts vendora@2001:db8::1:/opt/vendora/
+# IPv6
+scp -r deploy scripts root@[2001:db8::1]:/opt/vendora/
+# IPv4 or hostname
+scp -r deploy scripts root@10.0.0.5:/opt/vendora/
 ```
 
 If `/opt/vendora` does not exist yet, create it first:
 
 ```bash
-ssh vendora@2001:db8::1 'sudo mkdir -p /opt/vendora && sudo chown -R $USER /opt/vendora'
+# IPv6
+ssh root@2001:db8::1 'mkdir -p /opt/vendora'
+# IPv4 or hostname
+ssh root@10.0.0.5 'mkdir -p /opt/vendora'
 ```
 
 ### 4.2 Run the bootstrap script
 
+Deployment connects directly as **root** with a dedicated key, so no separate
+Linux user is created.
+
 ```bash
-ssh vendora@2001:db8::1 'sudo bash /opt/vendora/scripts/bootstrap-server.sh'
+# IPv6
+ssh root@2001:db8::1 'bash /opt/vendora/scripts/bootstrap-server.sh'
+# IPv4 or hostname
+ssh root@10.0.0.5 'bash /opt/vendora/scripts/bootstrap-server.sh'
 ```
 
 This installs (idempotently):
 
 - Docker Engine + Compose plugin from the official Docker apt repository
 - nginx, sqlite3, rsync, curl
-- deployment user `vendora` (added to the `docker` group)
-- `/opt/vendora/{deploy,scripts,data,uploads,backups,logs,state}`
+- sshd hardening: `PermitRootLogin prohibit-password`,
+  `PubkeyAuthentication yes`, `PasswordAuthentication no`
+- `/opt/vendora/{deploy,scripts,data,uploads,backups,logs,state}` owned by root
 - `/etc/ssl/cloudflare` (mode 700)
 - the nginx site config (if `deploy/nginx/vendora.conf` is present)
 
-> The `vendora` user is a member of the `docker` group so the deploy script
-> can manage the stack. This is equivalent to root on the host for container
-> management; acceptable for a single-application server. The application
-> containers themselves never mount the Docker socket.
+> The SSH deployment user (root) and the container runtime users are separate
+> concerns. The API and storefront containers still run as non-root users;
+> only the bind-mounted data/uploads directories are owned by the API
+> container uid so it can write to them. No Docker socket is mounted into any
+> application container.
 
 ### 4.3 Add the GitHub Actions deploy key
 
@@ -168,12 +183,18 @@ Generate a dedicated SSH key pair (no passphrase):
 ssh-keygen -t ed25519 -f ~/.ssh/vendora_deploy -N ""
 ```
 
-Install the public key on the server:
+Install the public key in `/root/.ssh/authorized_keys` (the bootstrap also
+accepts it as `$1`):
 
 ```bash
-ssh vendora@2001:db8::1 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'
-cat ~/.ssh/vendora_deploy.pub | ssh vendora@2001:db8::1 'cat >> ~/.ssh/authorized_keys'
+# IPv6
+cat ~/.ssh/vendora_deploy.pub | ssh root@2001:db8::1 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'
+# IPv4 or hostname
+cat ~/.ssh/vendora_deploy.pub | ssh root@10.0.0.5 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'
 ```
+
+Root login is key-based only (`PermitRootLogin prohibit-password`);
+password-based root SSH is never used.
 
 ### 4.4 Create the production environment file
 
@@ -268,7 +289,7 @@ Configure these in **Settings → Secrets and variables → Actions** (or on the
 |---|---|
 | `PROD_HOST` | Production server IPv6 address (e.g. `2001:db8::1`) |
 | `PROD_PORT` | SSH port (usually `22`) |
-| `PROD_USER` | Deployment user (the bootstrap creates `vendora`) |
+| `PROD_USER` | SSH deployment user (set to `root`) |
 | `PROD_SSH_KEY` | **Private** half of the deploy key, e.g. contents of `~/.ssh/vendora_deploy` |
 | `PROD_SSH_KNOWN_HOSTS` | Output of `ssh-keyscan`, see below |
 | `CLOUDFLARE_API_TOKEN` | (optional, DNS workflow only) Cloudflare API token with DNS edit permission |
@@ -399,7 +420,8 @@ git push origin main
 ### Manual rollback
 
 ```bash
-ssh vendora@<server> 'bash /opt/vendora/scripts/rollback-production.sh'
+# IPv6: ssh root@2001:db8::1 ...; IPv4/hostname: ssh root@<server> ...
+ssh root@<server> 'bash /opt/vendora/scripts/rollback-production.sh'
 ```
 
 Version state is kept in `/opt/vendora/state/{current-version,previous-version}`.
@@ -407,9 +429,9 @@ Version state is kept in `/opt/vendora/state/{current-version,previous-version}`
 ### Logs
 
 ```bash
-ssh vendora@<server> 'docker compose -f /opt/vendora/deploy/docker-compose.production.yml logs -f --tail=200'
-ssh vendora@<server> 'sudo journalctl -u nginx -f'
-ssh vendora@<server> 'tail -f /opt/vendora/logs/*'
+ssh root@<server> 'docker compose -f /opt/vendora/deploy/docker-compose.production.yml logs -f --tail=200'
+ssh root@<server> 'journalctl -u nginx -f'
+ssh root@<server> 'tail -f /opt/vendora/logs/*'
 ```
 
 Deployment logs are printed to the GitHub Actions run; the deploy script
