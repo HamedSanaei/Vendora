@@ -513,6 +513,22 @@ On every deployment, before the new containers start:
 The API also applies migrations during normal startup (idempotent), so the
 deploy-time step and a manual `docker compose up` are both safe.
 
+### Gateway refresh after container rollout
+
+Because `nginx` in `vendora-gateway` resolves the Docker service names
+(`vendora-api`, `vendora-site`, `vendora-admin`) when its container starts, it
+can keep serving stale upstream container IPs after those containers are
+recreated, which surfaces as intermittent HTTP 502s.
+
+The deploy and rollback scripts therefore always run a fixed lifecycle: they
+start/recreate `vendora-api`, `vendora-site`, `vendora-admin`, wait until each
+is healthy, then **force-recreate** the gateway
+(`docker compose up -d --force-recreate --no-deps vendora-gateway`) so it
+re-resolves the current upstream IPs, wait for the gateway to be healthy, and
+only then run the internal `/healthz`, `/fa`, `/fa/admin` checks. On an internal
+check failure non-secret diagnostics (`docker compose ps`, the gateway
+network/IP, and gateway logs) are dumped before rollback.
+
 Backups rotate automatically: the newest 10 are kept
 (`VENDORA_KEEP_BACKUPS`).
 

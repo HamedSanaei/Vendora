@@ -5,11 +5,13 @@
 #
 # Flow: lock -> record current version -> pull exact images -> verify images ->
 # backup database -> apply migrations -> apply production catalog seed ->
-# start containers -> wait for health -> internal checks -> public checks via
-# Cloudflare -> record new version.
+# start/recreate application containers -> wait healthy -> force-recreate the
+# gateway so it re-resolves upstream Docker IPs -> wait gateway healthy ->
+# internal checks -> public checks via Cloudflare -> record new version.
 #
 # On any failure the application containers are rolled back to the previous
-# known-good image SHA when one is available. Never prints secrets.
+# known-good image SHA when one is available (also re-resolving the gateway).
+# Never prints secrets.
 set -Eeuo pipefail
 
 VERSION="${1:-}"
@@ -82,18 +84,63 @@ wait_for_container_healthy() {
   return 1
 }
 
-wait_for_gateway() {
-  local timeout="${1:-180}" waited=0
-  while [ "$waited" -lt "$timeout" ]; do
-    if curl -fsS -o /dev/null "http://127.0.0.1:8080/healthz"; then
-      log "Gateway/API health OK (${waited}s)"
-      return 0
-    fi
-    sleep 5
-    waited=$((waited + 5))
-  done
-  log "Timed out waiting for the gateway health endpoint."
-  return 1
+# Dump only useful non-secret diagnostics so a failure is debuggable without
+# leaking environment secrets, connection strings, or stack traces.
+dump_internal_diagnostics() {
+  log "Dumping non-secret deployment diagnostics"
+  echo "--- docker compose ps ---"
+  "${COMPOSE[@]}" ps || true
+  echo "--- gateway network/IP ---"
+  docker inspect --format '{{.Name}} {{range $k,$v := .NetworkSettings.Networks}}{{ $k }}={{.IPAddress}}{{end}}' vendora-gateway 2>/dev/null || true
+  echo "--- api network/IP ---"
+  docker inspect --format '{{.Name}} {{range $k,$v := .NetworkSettings.Networks}}{{ $k }}={{.IPAddress}}{{end}}' vendora-api 2>/dev/null || true
+  echo "--- gateway logs (tail) ---"
+  docker logs --tail 100 vendora-gateway 2>&1 || true
+}
+
+# Bring the application containers (api/site/admin) up/wait healthy, then
+# force-recreate the gateway so it re-resolves their current Docker IPs, then
+# run the localhost gateway health checks. Shared by deploy and rollback.
+refresh_app_through_gateway() {
+  local tag="$1" step="$2"
+  log "[$step] Starting application containers"
+  VENDORA_IMAGE_TAG="$tag" "${COMPOSE[@]}" up -d --no-deps vendora-api
+  VENDORA_IMAGE_TAG="$tag" "${COMPOSE[@]}" up -d --no-deps vendora-site
+  VENDORA_IMAGE_TAG="$tag" "${COMPOSE[@]}" up -d --no-deps vendora-admin
+  log "[$step] Waiting for API"
+  wait_for_container_healthy vendora-api 240
+  log "[$step] Waiting for storefront"
+  wait_for_container_healthy vendora-site 240
+  log "[$step] Waiting for admin"
+  wait_for_container_healthy vendora-admin 240
+  log "[$step] Recreating gateway to refresh Docker upstream resolution"
+  VENDORA_IMAGE_TAG="$tag" "${COMPOSE[@]}" up -d --force-recreate --no-deps vendora-gateway
+  log "[$step] Waiting for gateway"
+  wait_for_container_healthy vendora-gateway 240
+}
+
+# Run the localhost gateway checks. On any failure dump non-secret diagnostics
+# and return non-zero. This must only be called AFTER the gateway has been
+# force-recreated against the current app containers.
+#
+# run_internal_checks is intended to fail the deployment when an endpoint does
+# not respond (curl returns non-zero, e.g. on HTTP 502), which under `set -e`
+# triggers the ERR trap (rollback). It must not be wrapped in an `if !` guard
+# in the main flow or the failure would be swallowed.
+run_internal_checks() {
+  local failed=0
+  log "Internal /healthz check"
+  if ! curl -fsS -o /dev/null "http://127.0.0.1:8080/healthz"; then failed=1; fi
+  log "Internal /fa check"
+  if ! curl -fsS -o /dev/null "http://127.0.0.1:8080/fa"; then failed=1; fi
+  log "Internal /fa/admin check"
+  if ! curl -fsS -o /dev/null "http://127.0.0.1:8080/fa/admin"; then failed=1; fi
+  if [ "$failed" = "1" ]; then
+    dump_internal_diagnostics
+    log "Internal checks failed"
+    return 1
+  fi
+  log "Internal checks passed"
 }
 
 rollback() {
@@ -103,13 +150,17 @@ rollback() {
   log "Deployment failed (step: ${BASH_COMMAND:-unknown})."
   if [ -n "${CURRENT_VERSION:-}" ] && [ "$CURRENT_VERSION" != "none" ] && [ "$CURRENT_VERSION" != "$VERSION" ]; then
     log "Rolling back application containers to previous version $CURRENT_VERSION"
-    VENDORA_IMAGE_TAG="$CURRENT_VERSION" "${COMPOSE[@]}" up -d || true
-    if wait_for_gateway 180; then
-      log "Rollback healthy: $CURRENT_VERSION"
-      echo "$CURRENT_VERSION" > "$CURRENT_FILE"
-      echo "$VERSION" > "$PREVIOUS_FILE"
+    if refresh_app_through_gateway "$CURRENT_VERSION" rollback; then
+      if run_internal_checks; then
+        log "Rollback healthy: $CURRENT_VERSION"
+        echo "$CURRENT_VERSION" > "$CURRENT_FILE"
+        echo "$VERSION" > "$PREVIOUS_FILE"
+      else
+        log "Rollback containers were recreated but internal checks failed."
+      fi
     else
-      log "Rollback started but the gateway did not become healthy."
+      dump_internal_diagnostics
+      log "Rollback of the application containers did not become healthy."
     fi
   else
     log "No previous known-good version to roll back to (current=$CURRENT_VERSION)."
@@ -153,23 +204,34 @@ log "Applying production catalog seed"
 "${COMPOSE[@]}" --profile seed run -T --rm --no-deps vendora-api-seed
 log "Catalog seed applied"
 
-# --- 5. Start the application containers ----------------------------------------
+# --- 5. Start application containers, THEN recreate the gateway -----------------
+# The gateway nginx resolves the Docker service names (vendora-api, vendora-site,
+# vendora-admin) when its container/config starts and can retain stale upstream
+# container IPs after api/site/admin are recreated. To guarantee it never proxies
+# to stale addresses: start the app containers, wait until each is healthy, then
+# force-recreate the gateway so it re-resolves the current upstream IPs.
 log "Starting application containers"
-"${COMPOSE[@]}" up -d
+"${COMPOSE[@]}" up -d --no-deps vendora-api
+"${COMPOSE[@]}" up -d --no-deps vendora-site
+"${COMPOSE[@]}" up -d --no-deps vendora-admin
+log "Starting application containers complete"
 
-# --- 6. Wait for Docker health checks -------------------------------------------
-for container in vendora-gateway vendora-api vendora-site vendora-admin; do
-  wait_for_container_healthy "$container" 240
-done
+log "Waiting for API"
+wait_for_container_healthy vendora-api 240
+log "Waiting for storefront"
+wait_for_container_healthy vendora-site 240
+log "Waiting for admin"
+wait_for_container_healthy vendora-admin 240
 
-# --- 7. Internal (localhost gateway) checks -------------------------------------
-log "Internal health checks"
-curl -fsS -o /dev/null "http://127.0.0.1:8080/healthz"
-curl -fsS -o /dev/null "http://127.0.0.1:8080/fa"
-curl -fsS -o /dev/null "http://127.0.0.1:8080/fa/admin"
-log "Internal checks passed"
+log "Recreating gateway to refresh Docker upstream resolution"
+"${COMPOSE[@]}" up -d --force-recreate --no-deps vendora-gateway
+log "Waiting for gateway"
+wait_for_container_healthy vendora-gateway 240
 
-# --- 8. Public checks through Cloudflare ----------------------------------------
+# --- 6. Internal (localhost gateway) checks -------------------------------------
+run_internal_checks
+
+# --- 7. Public checks through Cloudflare ----------------------------------------
 log "Public health checks via https://$PUBLIC_HOST"
 for url in \
   "https://$PUBLIC_HOST/healthz" \
@@ -179,7 +241,7 @@ for url in \
   log "Public check passed: $url"
 done
 
-# --- 9. Record the deployed version ---------------------------------------------
+# --- 8. Record the deployed version ---------------------------------------------
 echo "$CURRENT_VERSION" > "$PREVIOUS_FILE"
 echo "$VERSION" > "$CURRENT_FILE"
 log "Deployment successful. current=$VERSION previous=$CURRENT_VERSION"
