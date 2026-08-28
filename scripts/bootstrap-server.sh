@@ -2,18 +2,20 @@
 # Bootstrap a clean Debian/Ubuntu server for Vendora production.
 #
 # Run as root (or with sudo). Idempotent: safe to re-run.
-#   sudo bash scripts/bootstrap-server.sh
+#   sudo bash scripts/bootstrap-server.sh [path-to-ssh-public-key]
 #
 # GitHub Actions deploys directly as root using a dedicated SSH key, so no
 # separate deployment Linux user is created. The API container still runs as
 # the non-root 'app' user (uid 1654); the container runtime user and the SSH
 # deployment user are separate concerns.
 #
-# After bootstrap:
-#   1. Add the GitHub Actions deploy key to /root/.ssh/authorized_keys
-#   2. Create /etc/ssl/cloudflare/vendora.crt and vendora.key
-#   3. Create deploy/env/production.env from the example
-#   4. Run scripts/update-cloudflare-ips.sh
+# SSH SAFETY: this script NEVER disables password auth or restarts sshd unless
+# a key-based root login is guaranteed to exist. See the SSH hardening section.
+#
+# NGINX SAFETY: if the Cloudflare origin certificate/key are not present yet,
+# nginx and Docker are still installed and /opt/vendora is prepared, but the
+# TLS site is NOT enabled/reloaded. It is activated on a later run once the
+# certificate files exist.
 set -Eeuo pipefail
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -48,31 +50,91 @@ else
 fi
 
 # --- SSH hardening for key-based root deployment -----------------------------------
-# Deployments connect directly as root with a dedicated key. Password
-# authentication is always disabled; key authentication is required.
+# Deployments connect directly as root with a dedicated key.
+#
+# LOCKOUT PROTECTION — order matters:
+#   1. Make sure a valid root public key exists BEFORE touching sshd config.
+#   2. If a key file path is given, install it; otherwise only proceed if one
+#      is already in /root/.ssh/authorized_keys.
+#   3. Abort BEFORE changing anything if no valid key exists.
+#   4. Only with a confirmed key, validate sshd with `sshd -t` and revert the
+#      drop-in if validation fails.
+#   5. Restart the actual ssh service (handles Ubuntu's `ssh` vs `sshd`).
 log "Configuring sshd for key-based root deployment"
 install -d -m 700 -o root -g root /root/.ssh
-{
-  echo "PermitRootLogin prohibit-password"
-  echo "PubkeyAuthentication yes"
-  echo "PasswordAuthentication no"
-} > /etc/ssh/sshd_config.d/99-vendora-deploy.conf
-chmod 600 /etc/ssh/sshd_config.d/99-vendora-deploy.conf
 
-# Install the deployment public key when provided as "$1" on the command line:
-#   sudo bash scripts/bootstrap-server.sh <path-to-ssh-public-key-file>
-if [ -n "${1:-}" ] && [ -f "$1" ]; then
-  log "Installing deploy public key from $1"
-  grep -qxF "$(cat "$1")" /root/.ssh/authorized_keys 2>/dev/null \
-    || cat "$1" >> /root/.ssh/authorized_keys
+install_deploy_key() {
+  local pub="$1"
+  [ -f "$pub" ] || { echo "[bootstrap] Public key file not found: $pub" >&2; return 1; }
+  # Validate it looks like an SSH public key.
+  grep -Eq '^(ssh-(rsa|ed25519|dss)|ecdsa-sha2-nistp)' "$pub" || { echo "[bootstrap] Not a valid SSH public key: $pub" >&2; return 1; }
+  touch /root/.ssh/authorized_keys
   chmod 600 /root/.ssh/authorized_keys
+  grep -qxF "$(tr -d '\r\n' < "$pub")" /root/.ssh/authorized_keys \
+    || { tr -d '\r\n' < "$pub"; echo; } >> /root/.ssh/authorized_keys
+  chmod 600 /root/.ssh/authorized_keys
+  log "Deploy public key installed from $1"
+}
+
+if [ -n "${1:-}" ]; then
+  if install_deploy_key "$1"; then
+    log "Deploy key installed; key-based root login is available."
+  else
+    echo "[bootstrap] ABORTING sshd hardening: the supplied key could not be installed." >&2
+    echo "[bootstrap] Fix the key path and re-run, or re-run without a key to use any" >&2
+    echo "[bootstrap] key already present in /root/.ssh/authorized_keys." >&2
+    exit 1
+  fi
+elif [ -s /root/.ssh/authorized_keys ]; then
+  log "Found existing keys in /root/.ssh/authorized_keys; using them for key-based root login."
 else
-  log "No public key provided as \$1; add the deploy key manually to /root/.ssh/authorized_keys."
+  echo "[bootstrap] REFUSING to harden SSH: /root/.ssh/authorized_keys is empty and no" >&2
+  echo "[bootstrap] public key was supplied as an argument." >&2
+  echo "[bootstrap] SSH password authentication and the ssh service were NOT modified." >&2
+  echo "[bootstrap] To proceed safely, install a key first, e.g.:" >&2
+  echo "[bootstrap]   scp -r deploy scripts root@<server>:/opt/vendora/" >&2
+  echo "[bootstrap]   cat ~/.ssh/id_ed25519.pub | ssh root@<server> 'mkdir -p /root/.ssh && chmod 700 /root/.ssh && cat >> /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys'" >&2
+  echo "[bootstrap]   ssh root@<server> 'bash /opt/vendora/scripts/bootstrap-server.sh'" >&2
+  echo "[bootstrap] Aborting before any sshd change." >&2
+  exit 1
 fi
 
-systemctl enable --now ssh sshd 2>/dev/null || true
-systemctl restart ssh sshd 2>/dev/null || true
-log "sshd restarted with PermitRootLogin prohibit-password."
+# Only now write the hardening drop-in (a valid root key is confirmed present).
+install -m 644 /dev/null /etc/ssh/sshd_config.d/99-vendora-deploy.conf
+cat > /etc/ssh/sshd_config.d/99-vendora-deploy.conf <<'SSHD'
+PermitRootLogin prohibit-password
+PubkeyAuthentication yes
+PasswordAuthentication no
+SSHD
+chmod 600 /etc/ssh/sshd_config.d/99-vendora-deploy.conf
+
+if command -v sshd >/dev/null 2>&1; then
+  if ! sshd -t; then
+    echo "[bootstrap] sshd -t FAILED. Reverting the hardening drop-in; sshd NOT restarted." >&2
+    rm -f /etc/ssh/sshd_config.d/99-vendora-deploy.conf
+    exit 1
+  fi
+  log "sshd -t passed."
+fi
+
+# Restart the actual ssh service without relying on a single hardcoded name.
+RESTARTED=0
+for svc in ssh sshd; do
+  if systemctl list-unit-files --type=service 2>/dev/null | grep -q "^$svc.service"; then
+    if systemctl is-enabled "$svc" >/dev/null 2>&1; then
+      systemctl restart "$svc"
+      log "Restarted ssh service: $svc"
+      RESTARTED=1
+      break
+    fi
+  fi
+done
+if [ "$RESTARTED" -eq 0 ]; then
+  # Fallback: try to restart whatever ssh service is present.
+  systemctl restart ssh 2>/dev/null || systemctl restart sshd 2>/dev/null || true
+  log "Attempted to restart the ssh service (no enabled unit detected by name)."
+fi
+log "sshd hardened with PermitRootLogin prohibit-password (key login REQUIRED)."
 
 # --- Application directories ---------------------------------------------------------
 log "Creating /opt/vendora directories"
@@ -91,47 +153,82 @@ chmod 755 /opt/vendora/data /opt/vendora/uploads
 
 # --- Cloudflare origin TLS directory ------------------------------------------------
 install -d -m 700 -o root -g root /etc/ssl/cloudflare
+CERT_FILE=/etc/ssl/cloudflare/vendora.crt
+KEY_FILE=/etc/ssl/cloudflare/vendora.key
 
 # --- Nginx site configuration ---------------------------------------------------------
-if [ -f /opt/vendora/deploy/nginx/vendora.conf ]; then
-  log "Installing nginx site configuration"
-  install -m 644 /opt/vendora/deploy/nginx/vendora.conf /etc/nginx/sites-available/vendora.conf
-  ln -sf /etc/nginx/sites-available/vendora.conf /etc/nginx/sites-enabled/vendora.conf
-  rm -f /etc/nginx/sites-enabled/default
+# The TLS site is only enabled once the Cloudflare origin certificate and key
+# exist. Until then nginx (and everything else) is installed but no invalid
+# configuration is ever reloaded, so the bootstrap can be re-run safely.
+TLS_SITE=/etc/nginx/sites-available/vendora.conf
+SITE_LINK=/etc/nginx/sites-enabled/vendora.conf
+TLS_PENDING_FILE=/etc/nginx/vendora-tls-pending
 
-  # Real visitor IPs from Cloudflare (run manually any time the ranges change).
-  if [ -f /opt/vendora/scripts/update-cloudflare-ips.sh ]; then
-    bash /opt/vendora/scripts/update-cloudflare-ips.sh || log "WARNING: cloudflare-ips refresh failed; nginx may not start until it succeeds."
-  fi
-
-  nginx -t
-  systemctl enable --now nginx
-  systemctl reload nginx
-  log "nginx configured for vendora.tofanservice.ir"
+if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
+  log "Cloudflare origin certificate/key not found at $CERT_FILE / $KEY_FILE."
+  log "Preparing nginx directories but NOT enabling the TLS site this run."
+  # Ensure the (port 80 redirect) part does not reference ssl material; only
+  # install the site when certs exist to keep nginx -t valid at all times.
+  install -d /etc/nginx/sites-available /etc/nginx/sites-enabled
+  rm -f "$SITE_LINK"
+  : > "$TLS_PENDING_FILE"
+  log "TLS activation is PENDING. Continue with the other steps; re-run this"
+  log "script after installing:"
+  log "  $CERT_FILE (mode 644)"
+  log "  $KEY_FILE  (mode 600)"
 else
-  log "WARNING: /opt/vendora/deploy/nginx/vendora.conf not found."
-  log "Copy the deploy/ and scripts/ directories into /opt/vendora first, then re-run this script:"
-  # IPv6 literal: root@[IPv6]; IPv4/hostname: root@host
-  log "  scp -r deploy scripts root@<server>:/opt/vendora/"
-  log "  (IPv6: scp -r deploy scripts 'root@[2001:db8::1]:/opt/vendora/')"
-  log "  sudo bash /opt/vendora/scripts/bootstrap-server.sh"
+  if [ -f /opt/vendora/deploy/nginx/vendora.conf ]; then
+    log "Installing nginx site configuration (certs present)"
+    install -m 644 /opt/vendora/deploy/nginx/vendora.conf "$TLS_SITE"
+    ln -sf "$TLS_SITE" "$SITE_LINK"
+    rm -f /etc/nginx/sites-enabled/default
+
+    # Real visitor IPs from Cloudflare. Fetched to the include file; if this
+    # ever fails, DO NOT reload nginx with a broken config.
+    if [ -f /opt/vendora/scripts/update-cloudflare-ips.sh ]; then
+      if bash /opt/vendora/scripts/update-cloudflare-ips.sh; then
+        log "Cloudflare IP ranges refreshed."
+      else
+        log "WARNING: Cloudflare IP refresh failed. Removing the TLS site entry so"
+        log "nginx is not left in a broken state; re-run bootstrap once certificates"
+        log "and Cloudflare ranges are available."
+        rm -f "$SITE_LINK"
+        exit 1
+      fi
+    else
+      log "WARNING: update-cloudflare-ips.sh not found; vendora.conf includes"
+      log "/etc/nginx/cloudflare-ips.conf which must exist first."
+      rm -f "$SITE_LINK"
+      exit 1
+    fi
+
+    if ! nginx -t; then
+      log "nginx -t FAILED with the Vendora site enabled; disabling it to keep nginx valid."
+      rm -f "$SITE_LINK"
+      exit 1
+    fi
+    systemctl enable --now nginx
+    systemctl reload nginx
+    rm -f "$TLS_PENDING_FILE"
+    log "nginx configured and reloaded for vendora.tofanservice.ir"
+  else
+    log "WARNING: /opt/vendora/deploy/nginx/vendora.conf not found."
+    log "Copy the deploy/ and scripts/ directories into /opt/vendora first, then re-run this script:"
+  fi
 fi
 
 log "Bootstrap complete."
 cat <<'NEXT'
 Next manual steps (details in docs/DEPLOYMENT.md):
-  1. Install the Cloudflare Origin certificate:
-       /etc/ssl/cloudflare/vendora.crt  (mode 644)
-       /etc/ssl/cloudflare/vendora.key  (mode 600)
-  2. Create the deploy key for GitHub Actions and add it to /root/.ssh/authorized_keys:
-       ssh-keygen -t ed25519 -f ~/.ssh/vendora_deploy -N ""
-       # IPv6: cat ~/.ssh/vendora_deploy.pub | ssh 'root@[2001:db8::1]' 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys'
-       # IPv4 : cat ~/.ssh/vendora_deploy.pub | ssh root@<server> 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys'
-     sshd is configured with PermitRootLogin prohibit-password.
-  3. Create the environment file:
+  1. Install the Cloudflare Origin certificate (if not already done):
+       sudo install -m 644 -o root -g root /path/to/vendora.pem /etc/ssl/cloudflare/vendora.crt
+       sudo install -m 600 -o root -g root /path/to/vendora.key /etc/ssl/cloudflare/vendora.key
+     Then re-run the bootstrap to activate the nginx TLS site:
+       sudo bash /opt/vendora/scripts/bootstrap-server.sh
+  2. Create the production environment file:
        install -m 600 deploy/env/production.env.example deploy/env/production.env
      then fill in Jwt__Key and Auth__AdminInviteCode:
        openssl rand -hex 32
-  4. Set Cloudflare DNS AAAA -> server IPv6 (proxied) and TLS mode Full (strict).
-  5. Trigger the first deployment from GitHub Actions.
+  3. Set Cloudflare DNS AAAA -> server IPv6 (proxied) and TLS mode Full (strict).
+  4. Trigger the first deployment from GitHub Actions.
 NEXT

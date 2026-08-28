@@ -1,5 +1,9 @@
 name: CI
 
+# CI runs for every push and pull request. For `main` pushes, these checks are
+# the same as the threshold the production pipeline enforces before building
+# images or deploying, but CI itself NEVER builds images or deploys. PRs run CI
+# only.
 on:
   pull_request:
   push:

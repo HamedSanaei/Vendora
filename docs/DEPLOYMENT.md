@@ -83,6 +83,23 @@ ghcr.io/<owner>/vendora-admin:<sha>
 `latest` is also maintained for convenience but deployment always pins the
 exact SHA.
 
+**GHCR package visibility (required for anonymous pulls):**
+
+- This is a **public** repository, and the production server pulls images with
+  `docker compose pull` **without any GHCR login** (anonymous pull). All three
+  packages must therefore be **Public**.
+- Verify/change visibility: GitHub → **Packages** → open each of
+  `vendora-api`, `vendora-site`, `vendora-admin` → **Package settings** →
+  **Change visibility** → **Public**. URL pattern:
+  `https://github.com/<owner>?tab=packages` then open
+  `https://ghcr.io/<owner>/vendora-api`,
+  `https://ghcr.io/<owner>/vendora-site`, and
+  `https://ghcr.io/<owner>/vendora-admin`.
+- If you prefer private images, the server must authenticate to GHCR instead;
+  that requires installing a deploy token on the server and adding a GHCR
+  `docker login` (via a Git ignore'd `.env` / credential helper) before the
+  deploy script pulls. Public packages are recommended for this repository.
+
 ### Dockerfiles
 
 | Image | Dockerfile | Base | Runtime |
@@ -98,27 +115,44 @@ Corresponding `.dockerignore` files keep build contexts clean.
 
 ## 3. CI/CD flow
 
+Two workflows:
+
+- **`.github/workflows/ci.yml`** — runs on every push and every PR. Backend
+  (`dotnet restore/build/test`), admin (`npm ci/lint/build`), site
+  (`npm ci/lint/build`). It never builds images and never deploys.
+- **`.github/workflows/deploy.yml`** — runs on `main` pushes only. This is a
+  **single gated pipeline**;
+
 ```
 push to main
-  -> CI workflow (.github/workflows/ci.yml)
-       - backend: dotnet restore/build/test (Release)
-       - admin: npm ci, lint, build
-       - site: npm ci, lint, build
-  -> Build Production Images workflow (.github/workflows/build-images.yml)
-       - Docker Buildx with GHCR layer caching
-       - push <sha> + latest tags with OCI labels (source, revision, created)
-       - validate the pushed artifacts
-  -> Deploy Production workflow (.github/workflows/deploy-production.yml)
-       (triggered by workflow_run success on the build workflow)
-       - environment: production (optional protection rules in GitHub)
-       - scp deploy/ + scripts/ to the server
-       - run scripts/deploy-production.sh <sha>
-       - verify public endpoints from the runner
-       - write a job summary
+  -> backend CI  \
+  -> admin CI    (all three must pass)
+  -> site CI     /
+       -> build-images  (only if ALL CI jobs succeeded; needs: [backend, admin, site])
+            - Docker Buildx + GHCR caching
+            - push <sha> + latest with OCI labels (source, revision, created)
+            - validate the pushed artifacts
+       -> deploy (only if image build succeeded; needs: build-images)
+            - environment: production (optional protection rules in GitHub)
+            - scp deploy/ + scripts/ to the server
+            - run scripts/deploy-production.sh <sha>
+            - verify the public endpoints from the runner
+            - write a job summary
 ```
 
-Pull requests never trigger a build or deploy. Production deploys happen only
-on `main`. Workflow concurrency groups prevent racing deployments.
+Because every stage uses `needs:`, a known-broken commit can **never** be
+image-built or deployed:
+
+- any CI job fails ⇒ **NO image build** and **NO deploy**
+- image build fails ⇒ **NO deploy**
+- deploy uses exactly the commit SHA (`actions/checkout` at the triggering
+  `GITHUB_SHA`) that passed CI and was baked into the images and scripts
+  (`GITHUB_SHA` for tags, the deploy argument, rollback state, and summary all
+  refer to the same commit).
+
+Pull requests never trigger a deploy. Production deploys happen only on
+`main`. Workflow concurrency groups (`vendora-production`) prevent racing
+deployments.
 
 ---
 
@@ -150,7 +184,10 @@ ssh root@10.0.0.5 'mkdir -p /opt/vendora'
 ### 4.2 Run the bootstrap script
 
 Deployment connects directly as **root** with a dedicated key, so no separate
-Linux user is created.
+Linux user is created. The bootstrap is **lockout-safe and idempotent**: it
+never disables SSH password auth or restarts sshd until a valid root key login
+is confirmed, and it never enables the nginx TLS site until the Cloudflare
+origin certificate/key are present.
 
 ```bash
 # IPv6
@@ -159,15 +196,52 @@ ssh root@2001:db8::1 'bash /opt/vendora/scripts/bootstrap-server.sh'
 ssh root@10.0.0.5 'bash /opt/vendora/scripts/bootstrap-server.sh'
 ```
 
+You can pass an SSH public key file as the first argument so the script installs
+it into `/root/.ssh/authorized_keys` before hardening sshd:
+
+```bash
+ssh root@<server> 'bash /opt/vendora/scripts/bootstrap-server.sh /tmp/deploy.pub'
+```
+
+If you do **not** pass a key, the bootstrap only proceeds if
+`/root/.ssh/authorized_keys` is already non-empty; otherwise it aborts **before**
+modifying any sshd configuration. Password-based root SSH is never enabled.
+
 This installs (idempotently):
 
 - Docker Engine + Compose plugin from the official Docker apt repository
 - nginx, sqlite3, rsync, curl
-- sshd hardening: `PermitRootLogin prohibit-password`,
-  `PubkeyAuthentication yes`, `PasswordAuthentication no`
 - `/opt/vendora/{deploy,scripts,data,uploads,backups,logs,state}` owned by root
 - `/etc/ssl/cloudflare` (mode 700)
-- the nginx site config (if `deploy/nginx/vendora.conf` is present)
+- sshd hardening (`PermitRootLogin prohibit-password`, `PubkeyAuthentication yes`,
+  `PasswordAuthentication no`) — written, validated with `sshd -t`, and applied
+  only after a valid root key is confirmed (see below)
+- the nginx TLS site config — installed and enabled only once
+  `/etc/ssl/cloudflare/vendora.{crt,key}` exist; otherwise reported as PENDING
+
+**SSH lockout protection order (implemented in the script):**
+
+1. If a public key path is supplied, validate the file and install it into
+   `/root/.ssh/authorized_keys` (mode 600).
+2. Otherwise inspect `/root/.ssh/authorized_keys`; if it has no valid non-empty
+   key, **abort before any sshd change** and print clear instructions — password
+   auth is left as-is and the ssh service is not restarted.
+3. Only after a valid root key is confirmed, write the hardening drop-in, run
+   `sshd -t`; if validation fails, revert the drop-in and do **not** restart ssh.
+4. Restart the actual ssh service (Ubuntu's `ssh`, `sshd`, or detected unit),
+   never `systemctl restart ssh sshd` blindly.
+
+**Nginx / certificate bootstrap order (implemented in the script):**
+
+1. Base packages, Docker, and `/opt/vendora` are installed regardless.
+2. `/etc/ssl/cloudflare` is created (mode 700).
+3. If `vendora.crt`/`vendora.key` are missing: everything installs, the TLS
+   site is **not** enabled and nginx is not reloaded — TLS activation is
+   reported as PENDING (safe to re-run later).
+4. Once the certificate/key files exist, re-run the bootstrap: it refreshes the
+   Cloudflare IP include, runs `nginx -t`, and only reloads nginx on success.
+   If the Cloudflare IP fetch or `nginx -t` fails, the site entry is removed so
+   nginx is never left broken.
 
 > The SSH deployment user (root) and the container runtime users are separate
 > concerns. The API and storefront containers still run as non-root users;
@@ -194,7 +268,8 @@ cat ~/.ssh/vendora_deploy.pub | ssh root@10.0.0.5 'mkdir -p ~/.ssh && chmod 700 
 ```
 
 Root login is key-based only (`PermitRootLogin prohibit-password`);
-password-based root SSH is never used.
+password-based root SSH is never used. The bootstrap never disables password
+auth or restarts sshd unless a valid root key login is already confirmed.
 
 ### 4.4 Create the production environment file
 
@@ -260,8 +335,18 @@ Generate a Cloudflare Origin Certificate in the Cloudflare dashboard
 ```bash
 sudo install -m 644 -o root -g root vendora.pem /etc/ssl/cloudflare/vendora.crt
 sudo install -m 600 -o root -g root vendora.key /etc/ssl/cloudflare/vendora.key
-sudo nginx -t && sudo systemctl reload nginx
 ```
+
+Then either re-run the bootstrap (it will detect the certificate/key and
+activate the TLS site safely), or activate manually after confirming everything:
+
+```bash
+sudo nginx -t && sudo systemctl enable --now nginx && sudo systemctl reload nginx
+```
+
+The bootstrap does **not** reload nginx while the certificate files are missing,
+so a first bootstrap never fails (or leaves nginx broken) because the
+certificate has not been installed yet.
 
 Certificate and key files are never stored in Git.
 
@@ -298,8 +383,13 @@ Configure these in **Settings → Secrets and variables → Actions** (or on the
 
 ### Obtaining the known-hosts value
 
+For an IPv6 host, use the `-6` flag (IPv4/hostname: `-4` or omit):
+
 ```bash
-ssh-keyscan -p <PORT> <PROD_HOST>   # e.g. ssh-keyscan -p 22 2001:db8::1
+# IPv6
+ssh-keyscan -6 -p <PORT> <PROD_HOST>          # e.g. ssh-keyscan -6 -p 22 2001:db8::1
+# IPv4 or hostname
+ssh-keyscan -4 -p <PORT> <PROD_HOST>          # e.g. ssh-keyscan -4 -p 22 10.0.0.5
 ```
 
 Paste the full output (one or more `hostname ssh-rsa ...` lines) into
@@ -313,15 +403,67 @@ reviewers or a manual approval gate before deployment.
 
 ## 7. First deployment
 
-After the server is bootstrapped, DNS proxied, and TLS verified, push to
-`main`:
+### Exact safe first-production order
+
+1. **Prepare an SSH key and confirm key-based root login works** (before any
+   sshd hardening): generate the deploy key locally and install its public half
+   into `/root/.ssh/authorized_keys`, then verify you can log in with it:
+
+   ```bash
+   ssh-keygen -t ed25519 -f ~/.ssh/vendora_deploy -N ""
+   # IPv6: cat ~/.ssh/vendora_deploy.pub | ssh -p22 'root@[2001:db8::1]' 'mkdir -p /root/.ssh && chmod 700 /root/.ssh && cat >> /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys'
+   # IPv4 : cat ~/.ssh/vendora_deploy.pub | ssh -p22 root@10.0.0.5 'mkdir -p /root/.ssh && chmod 700 /root/.ssh && cat >> /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys'
+   ssh -i ~/.ssh/vendora_deploy root@<server> 'echo key-login-ok'
+   ```
+2. **Run the bootstrap safely** — copy `deploy/` + `scripts/` to `/opt/vendora`
+   and run the bootstrap (pass the deploy public key so it installs a key
+   before hardening sshd):
+
+   ```bash
+   scp -r deploy scripts root@<server>:/opt/vendora/   # IPv6: root@[IPv6]:/opt/vendora/
+   ssh root@<server> 'bash /opt/vendora/scripts/bootstrap-server.sh /root/.ssh/authorized_keys'
+   ```
+
+   The bootstrap installs Docker/nginx and prepares `/opt/vendora`. With a
+   valid root key confirmed it hardens sshd (`PermitRootLogin
+   prohibit-password`) safely. nginx TLS activation stays PENDING until the
+   origin certificate is installed.
+3. **Generate secrets and create the environment file** on the server:
+
+   ```bash
+   cd /opt/vendora
+   install -m 600 deploy/env/production.env.example deploy/env/production.env
+   # fill in Jwt__Key (openssl rand -hex 32) and Auth__AdminInviteCode (openssl rand -hex 32)
+   ```
+4. **Install the Cloudflare Origin Certificate** (see §5) into
+   `/etc/ssl/cloudflare/vendora.{crt,key}`.
+5. **Activate (or re-run) nginx** so the TLS site is enabled:
+
+   ```bash
+   ssh root@<server> 'bash /opt/vendora/scripts/bootstrap-server.sh'
+   ```
+6. **Configure Cloudflare** — DNS AAAA `vendora.tofanservice.ir` → server IPv6
+   (`proxied`, orange cloud) and TLS mode set to **Full (strict)**.
+7. **Configure GitHub Environment secrets** — create the `production`
+   environment and add the secrets from the table in §6 (`PROD_HOST`,
+   `PROD_PORT`, `PROD_USER=root`, `PROD_SSH_KEY`, `PROD_SSH_KNOWN_HOSTS`).
+8. **Verify GHCR image visibility** — confirm all three packages are Public
+   (see §2) so the server can pull anonymously.
+9. **Push to `main`** to trigger the first production pipeline.
+10. **Verify `/healthz` and the storefront** respond over
+    `https://vendora.tofanservice.ir/`.
+
+### Triggering a deployment
+
+After the server is bootstrapped, DNS proxied, TLS verified, and GHCR packages
+made Public, push to `main`:
 
 ```bash
 git push origin main
 ```
 
-Watch the three workflows in the Actions tab. The deploy workflow shows a
-summary like:
+The production pipeline runs in the Actions tab: **CI → build-images → deploy**.
+The deploy job shows a summary like:
 
 ```
 Production Deployment
@@ -503,10 +645,9 @@ Build-time variables for the frontends (baked into bundles):
 ## 14. Reference files
 
 ```
-.github/workflows/ci.yml                 CI checks (PRs and main)
-.github/workflows/build-images.yml       Build + push SHA images to GHCR (main)
-.github/workflows/deploy-production.yml  SSH deploy + verification (main)
-.github/workflows/cloudflare-dns.yml     Manual AAAA upsert
+.github/workflows/ci.yml                 CI checks for PRs and pushes (images never built here)
+.github/workflows/deploy.yml             Gated main pipeline: CI -> build images -> deploy
+.github/workflows/cloudflare-dns.yml     Manual AAAA upsert (optional)
 deploy/docker-compose.production.yml     Production stack
 deploy/docker/API.Dockerfile             API image
 deploy/docker/site.Dockerfile            Storefront image

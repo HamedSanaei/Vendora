@@ -1,0 +1,317 @@
+name: Production Pipeline
+
+# Single main-branch pipeline for Vendora. The gating invariant is:
+#
+#   push to main -> CI jobs -> build-images -> deploy-production
+#
+# Each job depends (via `needs:`) on the previous stage, so a known-broken
+# commit can never produce an image or reach production:
+#   - CI job failure  => NO image build, NO deploy
+#   - build failure   => NO deploy
+#   - deploy uses exactly the commit SHA that was CI-tested and image-built
+#
+# Pull requests never run this workflow (they only run CI via ci.yml).
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: vendora-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  # Public endpoints baked into the client bundles at build time. The exact
+  # commit SHA (GITHUB_SHA) is used for checkout, image tags, the deploy
+  # argument, rollback state, and the summary — never the default branch HEAD.
+  PUBLIC_ORIGIN: https://vendora.tofanservice.ir
+
+jobs:
+  backend:
+    name: Backend (.NET)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Vendora.slnx
+
+      - name: Build
+        run: dotnet build Vendora.slnx -c Release --no-restore
+
+      - name: Test (if test projects exist)
+        run: |
+          if find . -name '*Tests.csproj' -o -name '*Test.csproj' | grep -q .; then
+            dotnet test Vendora.slnx -c Release --no-build
+          else
+            echo "No test projects found; skipping tests."
+          fi
+
+  admin:
+    name: Admin (Vite)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  site:
+    name: Storefront (Next.js)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  # Gated on ALL CI jobs. Fails the deployment path (jobs after it) if this fails.
+  build-images:
+    name: Build and push images
+    runs-on: ubuntu-latest
+    needs: [backend, admin, site]
+    outputs:
+      images: ${{ steps.image-list.outputs.images }}
+    steps:
+      # Checkout the exact commit that just passed CI so the built image, the
+      # deploy/scripts tree, and the tag all refer to the same SHA.
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compute registry
+        id: registry
+        run: |
+          echo "registry=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Image created timestamp
+        id: meta-time
+        run: echo "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/docker/API.Dockerfile
+          push: true
+          tags: |
+            ${{ steps.registry.outputs.registry }}/vendora-api:${{ github.sha }}
+            ${{ steps.registry.outputs.registry }}/vendora-api:latest
+          cache-from: type=gha,scope=vendora-api
+          cache-to: type=gha,mode=max,scope=vendora-api
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ steps.meta-time.outputs.created }}
+
+      - name: Build and push site image
+        uses: docker/build-push-action@v6
+        with:
+          context: site
+          file: deploy/docker/site.Dockerfile
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=${{ env.PUBLIC_ORIGIN }}
+            NEXT_PUBLIC_STRIPE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_KEY }}
+          tags: |
+            ${{ steps.registry.outputs.registry }}/vendora-site:${{ github.sha }}
+            ${{ steps.registry.outputs.registry }}/vendora-site:latest
+          cache-from: type=gha,scope=vendora-site
+          cache-to: type=gha,mode=max,scope=vendora-site
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ steps.meta-time.outputs.created }}
+
+      - name: Build and push admin image
+        uses: docker/build-push-action@v6
+        with:
+          context: admin
+          file: deploy/docker/admin.Dockerfile
+          push: true
+          build-args: |
+            VITE_API_BASE_URL=${{ env.PUBLIC_ORIGIN }}
+            VITE_STOREFRONT_URL=${{ env.PUBLIC_ORIGIN }}
+            VITE_BASE_URL=/admin/
+          tags: |
+            ${{ steps.registry.outputs.registry }}/vendora-admin:${{ github.sha }}
+            ${{ steps.registry.outputs.registry }}/vendora-admin:latest
+          cache-from: type=gha,scope=vendora-admin
+          cache-to: type=gha,mode=max,scope=vendora-admin
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ steps.meta-time.outputs.created }}
+
+      - name: List published images
+        id: image-list
+        run: |
+          echo "images=${{ steps.registry.outputs.registry }}/vendora-api:${{ github.sha }},${{ steps.registry.outputs.registry }}/vendora-site:${{ github.sha }},${{ steps.registry.outputs.registry }}/vendora-admin:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      # Validate that the exact pushed artifacts contain the expected runtime.
+      - name: Validate pushed images
+        env:
+          REGISTRY: ${{ steps.registry.outputs.registry }}
+        run: |
+          set -euo pipefail
+          SHA="${{ github.sha }}"
+          docker pull "$REGISTRY/vendora-api:$SHA"
+          docker run --rm --entrypoint sh "$REGISTRY/vendora-api:$SHA" -c 'test -f /app/API.dll && test -x /usr/bin/curl'
+          docker pull "$REGISTRY/vendora-site:$SHA"
+          docker run --rm --entrypoint sh "$REGISTRY/vendora-site:$SHA" -c 'test -f /app/server.js'
+          docker pull "$REGISTRY/vendora-admin:$SHA"
+          docker run --rm --entrypoint sh "$REGISTRY/vendora-admin:$SHA" -c 'test -f /usr/share/nginx/html/index.html'
+          echo "All images validated."
+
+  # Gated on image build success. Uses environment: production so PROD_* /
+  # NEXT_PUBLIC_STRIPE_KEY secrets are available only here.
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    needs: build-images
+    environment: production
+    outputs:
+      sha: ${{ steps.sha.outputs.sha }}
+    steps:
+      # Checkout the exact commit that was CI-tested and image-built.
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: sha
+        run: |
+          # GITHUB_SHA is the commit that triggered this push; images were
+          # built from this exact SHA. Never resolve to main HEAD.
+          SHA="${GITHUB_SHA}"
+          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Write SSH key
+        env:
+          PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          PROD_SSH_KNOWN_HOSTS: ${{ secrets.PROD_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.ssh"
+          install -m 600 /dev/null "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$PROD_SSH_KEY" > "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$PROD_SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Copy deployment files to server
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_PORT: ${{ secrets.PROD_PORT }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+        run: |
+          set -euo pipefail
+          host="$PROD_HOST"
+          port="${PROD_PORT:-22}"
+          user="${PROD_USER:-root}"
+          # cc_host IPv6 syntax: root@[2001:db8::1]; IPv4/hostname: root@<server>
+          if printf '%s' "$host" | grep -q ':'; then
+            cc_host="$user@[$host]"
+          else
+            cc_host="$user@$host"
+          fi
+          scp -i "$HOME/.ssh/deploy_key" -P "$port" -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            -r deploy scripts "$cc_host:/opt/vendora/"
+
+      - name: Run deployment on server
+        id: deploy
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_PORT: ${{ secrets.PROD_PORT }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+          SHA: ${{ steps.sha.outputs.sha }}
+        run: |
+          set -euo pipefail
+          host="$PROD_HOST"
+          port="${PROD_PORT:-22}"
+          user="${PROD_USER:-root}"
+          # ssh accepts raw IPv6 literals directly: root@2001:db8::1 or root@host
+          ssh -i "$HOME/.ssh/deploy_key" -p "$port" -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$user@$host" "chmod +x /opt/vendora/scripts/*.sh && bash /opt/vendora/scripts/deploy-production.sh '$SHA'"
+
+      - name: Verify public endpoints from the runner
+        env:
+          SHA: ${{ steps.sha.outputs.sha }}
+        run: |
+          set -euo pipefail
+          for url in \
+            "https://vendora.tofanservice.ir/healthz" \
+            "https://vendora.tofanservice.ir/" \
+            "https://vendora.tofanservice.ir/fa/admin"; do
+            curl -fsS --retry 10 --retry-delay 5 --retry-connrefused -o /dev/null "$url"
+            echo "Public check passed: $url"
+          done
+          echo "Public endpoints verified for $SHA"
+
+      - name: Deployment summary
+        if: always()
+        env:
+          SHA: ${{ steps.sha.outputs.sha }}
+          STATUS: ${{ job.status }}
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ## Production Deployment
+
+          | Item | Result |
+          |---|---|
+          | Deployment status | **$STATUS** |
+          | Git SHA | ${{ steps.sha.outputs.sha }} |
+          | CI | ${{ needs.build-images.result == 'success' && 'Passed' || 'Failed' }} |
+          | Image tags | \`ghcr.io/${{ github.repository_owner }}/vendora-{api,site,admin}:${{ steps.sha.outputs.sha }}\` |
+          | Target environment | production |
+          | Hostname | https://vendora.tofanservice.ir |
+          | Server deployment | ${{ steps.deploy.conclusion || 'skipped' }} |
+          | Internal health | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |
+          | Cloudflare health | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |
+          | Rollback | ${{ job.status == 'success' && 'Not required' || 'See server logs /opt/vendora/logs' }} |
+
+          ${{ job.status == 'success' && 'Deployment succeeded. The storefront, API, and admin panel are live.' || 'Deployment FAILED. Check the workflow logs and /opt/vendora/logs on the server. The previous version may have been restored automatically.' }}
+          EOF
