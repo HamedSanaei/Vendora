@@ -67,7 +67,8 @@
 /*  01. THEME DEFAULT CSS START
 /*----------------------------------------*/
 
-@import url($font-url);
+/* The remote font @import was moved to the top of src/app/globals.scss
+   (Tailwind v4's PostCSS import inliner requires @imports before rules). */
 
 *{
 	margin: 0;

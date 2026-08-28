@@ -1,8 +1,10 @@
 import { AdminBrandStore } from './AdminBrandStore';
 import { AdminAuthStore } from './AdminAuthStore';
 import { AdminCategoryStore } from './AdminCategoryStore';
+import { AdminColorStore } from './AdminColorStore';
 import { AdminCouponStore } from './AdminCouponStore';
 import { AdminDashboardStore } from './AdminDashboardStore';
+import { AdminNewsletterStore } from './AdminNewsletterStore';
 import { AdminOrderStore } from './AdminOrderStore';
 import { AdminProductStore } from './AdminProductStore';
 import { AdminUiStore } from './AdminUiStore';
@@ -14,30 +16,15 @@ export class AdminRootStore {
   orders = new AdminOrderStore();
   categories = new AdminCategoryStore();
   brands = new AdminBrandStore();
+  colors = new AdminColorStore();
   coupons = new AdminCouponStore();
   users = new AdminUserStore();
+  newsletter = new AdminNewsletterStore();
   dashboard = new AdminDashboardStore();
   ui = new AdminUiStore();
 
-  /** Loads the shared admin data needed by dashboard and tables. */
+  /** Restores only the current admin identity; feature pages load their own data on demand. */
   async bootstrap(): Promise<void> {
     await this.auth.loadCurrentUser();
-    if (!this.auth.isAdmin) {
-      return;
-    }
-
-    await Promise.all([
-      this.products.loadProducts(),
-      this.products.loadCategoryOptions(),
-      this.products.loadColorOptions(),
-      this.orders.loadOrders(),
-      this.categories.loadCategories(),
-      this.brands.loadBrands(),
-      this.coupons.loadCoupons(),
-      this.users.loadUsers(),
-    ]);
-    await Promise.all([
-      this.dashboard.loadDashboard(this.products.products, this.orders.orders),
-    ]);
   }
 }

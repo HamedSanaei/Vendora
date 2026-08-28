@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import HomeContent from "../../home-content";
 import AboutPage from "../../about/page";
 import CartPage from "../../cart/page";
@@ -12,8 +12,8 @@ import ProductDetailsPage from "../../product-details/[id]/page";
 import RegisterPage from "../../register/page";
 import SearchPage from "../../search/page";
 import ShopPage from "../../shop/page";
+import ShippingPage from "../../shipping/page";
 import TermsPage from "../../terms/page";
-import UserDashboardPage from "../../user-dashboard/page";
 import WishlistPage from "../../wishlist/page";
 import OrderPage from "../../order/[id]/page";
 
@@ -44,8 +44,9 @@ export default async function LocalizedStorefrontPage({ params, searchParams }) 
   if (path === "register") return <RegisterPage />;
   if (path === "search") return <SearchPage searchParams={resolvedSearchParams} />;
   if (path === "shop") return <ShopPage searchParams={Promise.resolve(resolvedSearchParams)} />;
+  if (path === "shipping") return <ShippingPage />;
   if (path === "terms") return <TermsPage />;
-  if (path === "user-dashboard") return <UserDashboardPage />;
+  if (path === "user-dashboard") permanentRedirect(`/${locale}/account`);
   if (path === "wishlist") return <WishlistPage />;
 
   if (slug[0] === "product-details" && slug[1]) {

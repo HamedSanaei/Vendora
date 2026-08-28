@@ -1,6 +1,6 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import { getAdminDashboard } from '../api/adminApi';
-import type { AdminDashboardStats, AdminOrder, AdminProduct } from '../types';
+import type { AdminDashboardStats } from '../types';
 
 export class AdminDashboardStore {
   stats: AdminDashboardStats | null = null;
@@ -11,13 +11,13 @@ export class AdminDashboardStore {
     makeAutoObservable(this);
   }
 
-  /** Calculates dashboard totals from currently available admin data. */
-  async loadDashboard(products: AdminProduct[], orders: AdminOrder[]): Promise<void> {
+  /** Loads persisted dashboard totals and chart data. */
+  async loadDashboard(): Promise<void> {
     this.isLoading = true;
     this.error = null;
 
     try {
-      const stats = await getAdminDashboard(products, orders);
+      const stats = await getAdminDashboard();
       runInAction(() => {
         this.stats = stats;
       });

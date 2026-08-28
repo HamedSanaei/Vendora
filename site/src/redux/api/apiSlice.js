@@ -89,6 +89,25 @@ function flattenCategories(categories, parentName = null) {
   });
 }
 
+function mapCatalogColor(color) {
+  return {
+    id: color.id,
+    name: color.name,
+    slug: color.slug,
+    hexCode: color.hexCode || null,
+  };
+}
+
+function getMockColors() {
+  const colorSlugs = [...new Set(mockStoreData.products.flatMap((product) => product.colors || []))];
+  return colorSlugs.map((slug) => ({
+    id: slug,
+    name: slug,
+    slug,
+    hexCode: null,
+  }));
+}
+
 const mockBaseQuery = async (args) => {
   const url = typeof args === "string" ? args : args?.url ?? "";
   const normalizedUrl = url.replace(/^\//, "");
@@ -113,6 +132,10 @@ const mockBaseQuery = async (args) => {
 
   if (normalizedUrl === "api/category/show") {
     return { data: { success: true, categories: mockStoreData.categories.filter((category) => category.status === "Show") } };
+  }
+
+  if (normalizedUrl === "api/catalog/colors") {
+    return { data: { success: true, colors: getMockColors() } };
   }
 
   if (normalizedUrl === "api/coupon") {
@@ -145,6 +168,11 @@ const hybridBaseQuery = async (args) => {
       return { data: { success: true, categories: flattenCategories(categories) } };
     }
 
+    if (normalizedUrl === "api/catalog/colors") {
+      const colors = await catalogFetch("/api/catalog/colors");
+      return { data: { success: true, colors: colors.map(mapCatalogColor) } };
+    }
+
     if (normalizedUrl.startsWith("api/products/") && !normalizedUrl.startsWith("api/products/relatedProduct")) {
       const products = await catalogFetch("/api/catalog/products");
       const productId = normalizedUrl.replace("api/products/", "");
@@ -161,6 +189,6 @@ const hybridBaseQuery = async (args) => {
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: hybridBaseQuery,
-  tagTypes: ["Category", "Products", "Discount", "Coupon", "Product", "RelatedProducts", "Address"],
+  tagTypes: ["Category", "Products", "Discount", "Coupon", "Product", "RelatedProducts", "Address", "Colors"],
   endpoints: (builder) => ({}),
 });

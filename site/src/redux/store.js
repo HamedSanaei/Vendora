@@ -6,6 +6,7 @@ import couponSlice from './features/coupon/couponSlice';
 import orderSlice from './features/order/orderSlice';
 import wishlistSlice from './features/wishlist-slice';
 import productSlice from './features/productSlice';
+import { cartFeedbackListener } from './features/cartFeedbackListener';
 
 
 export const store = configureStore({
@@ -18,8 +19,10 @@ export const store = configureStore({
     order:orderSlice,
     product:productSlice,
   },
-  middleware:(getDefaultMiddleware) => 
-  getDefaultMiddleware().concat(apiSlice.middleware),
+  middleware:(getDefaultMiddleware) =>
+  getDefaultMiddleware()
+    .prepend(cartFeedbackListener.middleware)
+    .concat(apiSlice.middleware),
   devTools: process.env.NODE_ENV !== "production",
 })
 

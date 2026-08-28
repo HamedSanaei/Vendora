@@ -1,11 +1,13 @@
 using Application.Admin;
 using Application.Admin.DTOs;
 using Application.Interfaces;
+using Application.Newsletter;
 using Application.Products;
 using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace API.Controllers;
 
@@ -313,6 +315,50 @@ public sealed class AdminController : ControllerBase
     }
 
     /// <summary>
+    /// Returns colors.
+    /// </summary>
+    [HttpGet("colors")]
+    public async Task<ActionResult> GetColors(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new Colors.List.Query(), cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Creates a color.
+    /// </summary>
+    [HttpPost("colors")]
+    public async Task<ActionResult> CreateColor(AdminColorRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new Colors.Create.Command(request.Name, request.Slug, request.HexCode, request.IsActive),
+            cancellationToken);
+        return ToMutationResponse(result.Action, result.Color, nameof(CreateColor));
+    }
+
+    /// <summary>
+    /// Updates a color.
+    /// </summary>
+    [HttpPut("colors/{id:guid}")]
+    public async Task<ActionResult> EditColor(Guid id, AdminColorRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new Colors.Edit.Command(id, request.Name, request.Slug, request.HexCode, request.IsActive),
+            cancellationToken);
+        return ToMutationResponse(result.Action, result.Color);
+    }
+
+    /// <summary>
+    /// Soft deletes a color.
+    /// </summary>
+    [HttpDelete("colors/{id:guid}")]
+    public async Task<ActionResult> DeleteColor(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new Colors.Delete.Command(id), cancellationToken);
+        return result.Succeeded ? NoContent() : BadRequest(new { message = result.Error });
+    }
+
+    /// <summary>
     /// Returns coupons.
     /// </summary>
     [HttpGet("coupons")]
@@ -320,6 +366,16 @@ public sealed class AdminController : ControllerBase
     {
         // TODO: Protect admin endpoints with role-based authorization before production.
         var result = await _mediator.Send(new Coupons.List.Query(), cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Returns real commerce metrics for the admin dashboard.
+    /// </summary>
+    [HttpGet("dashboard")]
+    public async Task<ActionResult> GetDashboard([FromQuery] int months = 6, CancellationToken cancellationToken = default)
+    {
+        var result = await _mediator.Send(new Dashboard.Query(months), cancellationToken);
         return Ok(result);
     }
 
@@ -341,6 +397,35 @@ public sealed class AdminController : ControllerBase
     {
         var result = await _mediator.Send(new Orders.Details.Query(id), cancellationToken);
         return result is null ? NotFound(new { message = "Order was not found." }) : Ok(result);
+    }
+
+    /// <summary>
+    /// Advances an order through the guarded fulfilment lifecycle.
+    /// </summary>
+    [HttpPatch("orders/{id:guid}/status")]
+    public async Task<ActionResult> ChangeOrderStatus(
+        Guid id,
+        AdminOrderStatusRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!Enum.TryParse<OrderStatus>(request.Status, ignoreCase: true, out var status))
+        {
+            return BadRequest(new { message = "Order status is not recognized." });
+        }
+
+        var result = await _mediator.Send(new Orders.ChangeStatus.Command(id, status), cancellationToken);
+        if (result.Succeeded)
+        {
+            return Ok(result.Order);
+        }
+
+        return result.Failure switch
+        {
+            Orders.ChangeStatus.Failure.NotFound => NotFound(new { message = result.Error }),
+            Orders.ChangeStatus.Failure.InvalidTransition => Conflict(new { message = result.Error }),
+            Orders.ChangeStatus.Failure.PaymentNotVerified => Conflict(new { message = result.Error }),
+            _ => BadRequest(new { message = result.Error })
+        };
     }
 
     /// <summary>
@@ -446,6 +531,27 @@ public sealed class AdminController : ControllerBase
         // TODO: Wire this to a real auth/password provider before production.
         var result = await _mediator.Send(new Users.RequestPasswordReset.Command(id), cancellationToken);
         return StatusCode(StatusCodes.Status501NotImplemented, new { message = result.Error });
+    }
+
+    /// <summary>
+    /// Returns storefront newsletter email subscriptions.
+    /// </summary>
+    [HttpGet("newsletter-subscriptions")]
+    public async Task<ActionResult> GetNewsletterSubscriptions(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new NewsletterSubscriptions.AdminList.Query(), cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Exports storefront newsletter email subscriptions as CSV.
+    /// </summary>
+    [HttpGet("newsletter-subscriptions.csv")]
+    public async Task<IActionResult> ExportNewsletterSubscriptions(CancellationToken cancellationToken)
+    {
+        string csv = await _mediator.Send(new NewsletterSubscriptions.ExportCsv.Query(), cancellationToken);
+        byte[] bytes = Encoding.UTF8.GetBytes("\uFEFF" + csv);
+        return File(bytes, "text/csv; charset=utf-8", "newsletter-subscriptions.csv");
     }
 
     private ActionResult ToMutationResponse<T>(AdminActionResult action, T? payload, string? createdAction = null)
@@ -602,6 +708,24 @@ public sealed class AdminBrandRequest
 }
 
 /// <summary>
+/// Represents a color mutation request.
+/// </summary>
+public sealed class AdminColorRequest
+{
+    /// <summary>Gets or sets the color name.</summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the optional slug.</summary>
+    public string? Slug { get; set; }
+
+    /// <summary>Gets or sets the optional hexadecimal color value.</summary>
+    public string? HexCode { get; set; }
+
+    /// <summary>Gets or sets whether the color is active.</summary>
+    public bool IsActive { get; set; } = true;
+}
+
+/// <summary>
 /// Represents a coupon mutation request.
 /// </summary>
 public sealed class AdminCouponRequest
@@ -647,4 +771,13 @@ public sealed class AdminUserRequest
 
     /// <summary>Gets or sets the role name.</summary>
     public string Role { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Represents a guarded admin order status request.
+/// </summary>
+public sealed class AdminOrderStatusRequest
+{
+    /// <summary>Gets or sets the requested next order status.</summary>
+    public string Status { get; set; } = string.Empty;
 }

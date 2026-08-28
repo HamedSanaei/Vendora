@@ -12,6 +12,7 @@ import {
 } from "src/redux/features/cartSlice";
 import { getLocaleFromPathname, withLocalePath } from "@lib/locale-path";
 import { getSafeImageProps } from "@lib/image-source";
+import { formatToman } from "@lib/format-money";
 
 const SingleWishlist = ({ item }) => {
   const { _id, image, title, originalPrice } = item || {};
@@ -21,6 +22,9 @@ const SingleWishlist = ({ item }) => {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
   const detailsPath = withLocalePath(`/product-details/${_id}`, locale);
+  const orderQuantity = isAddToCart?.orderQuantity || 0;
+  const removeLabel = locale === "fa" ? "حذف از علاقه‌مندی‌ها" : "Remove from wishlist";
+  const imageAlt = locale === "fa" ? `تصویر ${title || "محصول"}` : `${title || "Product"} image`;
 
   // handle add product
   const handleAddProduct = (prd) => {
@@ -43,14 +47,14 @@ const SingleWishlist = ({ item }) => {
     <tr>
       <td className="product-thumbnail">
         <Link href={detailsPath}>
-          <Image {...getSafeImageProps(image)} alt="cart img" width={125} height={125} />
+          <Image {...getSafeImageProps(image)} alt={imageAlt} width={125} height={125} />
         </Link>
       </td>
       <td className="product-name">
         <Link href={detailsPath}>{title}</Link>
       </td>
       <td className="product-price">
-        <span className="amount">${originalPrice}</span>
+        <span className="amount">{formatToman(originalPrice, locale)}</span>
       </td>
       <td className="product-quantity">
         <div className="tp-product-quantity mt-10 mb-10">
@@ -60,7 +64,7 @@ const SingleWishlist = ({ item }) => {
           <input
             className="tp-cart-input"
             type="text"
-            value={isAddToCart ? isAddToCart?.orderQuantity : 0}
+            value={orderQuantity}
             onChange={handleChange}
           />
           <span className="tp-cart-plus" onClick={() => handleAddProduct(item)}>
@@ -69,15 +73,10 @@ const SingleWishlist = ({ item }) => {
         </div>
       </td>
       <td className="product-subtotal">
-        <span className="amount">
-          $
-          {isAddToCart?.orderQuantity
-            ? (originalPrice * isAddToCart?.orderQuantity).toFixed(2)
-            : (originalPrice * 0).toFixed(2)}
-        </span>
+        <span className="amount">{formatToman(originalPrice * orderQuantity, locale)}</span>
       </td>
       <td className="product-remove">
-        <button type="submit" onClick={() => handleRemovePrd(item)}>
+        <button type="submit" onClick={() => handleRemovePrd(item)} aria-label={removeLabel}>
           <i className="fa fa-times"></i>
         </button>
       </td>

@@ -45,10 +45,13 @@
     "yup": "^0.32.11"
   },
   "devDependencies": {
-    "eslint-config-next": "16.2.9",
-    "typescript": "^6.0.2",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3"
+    "@types/react-dom": "^19.2.3",
+    "eslint-config-next": "16.2.9",
+    "playwright": "^1.62.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.2"
   }
 }

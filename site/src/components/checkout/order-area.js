@@ -17,6 +17,8 @@ const OrderArea = ({
   setClientSecret,
   isCheckoutSubmit,
   locale = "en",
+  shippingCompleted = false,
+  shippingInfo = {},
 }) => {
   const { cart_products } = useSelector((state) => state.cart);
   const isFa = locale === "fa";
@@ -43,7 +45,7 @@ const OrderArea = ({
             ))}
           </tbody>
           <tfoot>
-            <OrderDetails
+              <OrderDetails
               register={register}
               errors={errors}
               discountAmount={discountAmount}
@@ -51,8 +53,10 @@ const OrderArea = ({
               shippingCost={shippingCost}
               handleShippingCost={handleShippingCost}
               setClientSecret={setClientSecret}
-              locale={locale}
-            />
+                locale={locale}
+                shippingCompleted={shippingCompleted}
+                shippingInfo={shippingInfo}
+              />
           </tfoot>
         </table>
       </div>

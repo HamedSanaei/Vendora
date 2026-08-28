@@ -1,14 +1,9 @@
-import UserDashboardMainArea from "@components/user-dashboard/user-dashboard-main-area";
-import ProtectedRoute from "@components/auth/protected-route";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "User Dashboard - Vendora",
-};
-
+/**
+ * Legacy account route. The Penpot-based account area now lives under
+ * `/[locale]/account`; this path is kept as a permanent alias.
+ */
 export default function UserDashboardPage() {
-  return (
-    <ProtectedRoute>
-      <UserDashboardMainArea/>
-    </ProtectedRoute>
-  );
+  redirect("/account");
 }

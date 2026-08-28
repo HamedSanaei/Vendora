@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './features/admin/styles/admin.css'
+import './features/admin/styles/admin-penpot.css'
 import 'react-toastify/dist/ReactToastify.css'
 import App from './app/layout/App'
 import '@fontsource/roboto/300.css';

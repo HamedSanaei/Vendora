@@ -1,15 +1,15 @@
 import CheckoutMainArea from "@components/checkout/checkout-main";
-import ProtectedRoute from "@components/auth/protected-route";
+import Wrapper from "@layout/wrapper";
 
 export const metadata = {
-  title: "Checkout - Harri Shop",
+  title: "پرداخت و ثبت سفارش | وندورا",
 };
 
 const Checkout = () => {
   return (
-    <ProtectedRoute>
+    <Wrapper>
       <CheckoutMainArea/>
-    </ProtectedRoute>
+    </Wrapper>
   );
 };
 

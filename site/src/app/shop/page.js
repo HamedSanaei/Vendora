@@ -1,7 +1,7 @@
 import ShopMainArea from "@components/shop/shop-main-area";
 
 export const metadata = {
-  title: "Shop - Harri Shop",
+  title: "فروشگاه محصولات | وندورا",
 };
 
 export default async function ShopPage({searchParams}) {

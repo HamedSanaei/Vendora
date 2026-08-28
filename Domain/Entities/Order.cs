@@ -8,6 +8,19 @@ namespace Domain.Entities;
 /// </summary>
 public class Order : AuditableEntity
 {
+    private static readonly IReadOnlyDictionary<OrderStatus, OrderStatus[]> AllowedTransitions =
+        new Dictionary<OrderStatus, OrderStatus[]>
+        {
+            [OrderStatus.PendingPayment] = [OrderStatus.Cancelled],
+            [OrderStatus.Paid] = [OrderStatus.Processing, OrderStatus.Cancelled],
+            [OrderStatus.Processing] = [OrderStatus.Packed, OrderStatus.Cancelled],
+            [OrderStatus.Packed] = [OrderStatus.Shipped, OrderStatus.Cancelled],
+            [OrderStatus.Shipped] = [OrderStatus.Delivered],
+            [OrderStatus.Delivered] = [],
+            [OrderStatus.Cancelled] = [],
+            [OrderStatus.Refunded] = []
+        };
+
     /// <summary>
     /// Gets or sets the optional customer identifier.
     /// </summary>
@@ -102,6 +115,32 @@ public class Order : AuditableEntity
     /// Gets the order items.
     /// </summary>
     public List<OrderItem> Items { get; set; } = [];
+
+    /// <summary>
+    /// Returns the lifecycle states that can follow the current order state.
+    /// </summary>
+    /// <returns>A read-only collection of valid next states.</returns>
+    public IReadOnlyList<OrderStatus> GetAllowedTransitions()
+    {
+        return AllowedTransitions.TryGetValue(Status, out var transitions) ? transitions : [];
+    }
+
+    /// <summary>
+    /// Advances the order to a valid next lifecycle state and records the update time.
+    /// </summary>
+    /// <param name="nextStatus">The requested next state.</param>
+    /// <returns><see langword="true"/> when the transition is valid and applied.</returns>
+    public bool TryChangeStatus(OrderStatus nextStatus)
+    {
+        if (!GetAllowedTransitions().Contains(nextStatus))
+        {
+            return false;
+        }
+
+        Status = nextStatus;
+        Touch();
+        return true;
+    }
 
     /// <summary>
     /// Recalculates the order totals from the current line items.

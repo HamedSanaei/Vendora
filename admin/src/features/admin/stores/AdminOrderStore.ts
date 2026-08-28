@@ -1,11 +1,12 @@
 import { makeAutoObservable, runInAction } from 'mobx';
-import { getAdminOrder, getAdminOrders } from '../api/adminApi';
+import { changeAdminOrderStatus, getAdminOrder, getAdminOrders } from '../api/adminApi';
 import type { AdminOrder, AdminOrderDetails, AdminOrderStatus } from '../types';
 
 export class AdminOrderStore {
   orders: AdminOrder[] = [];
   selectedOrder: AdminOrderDetails | null = null;
   isLoading = false;
+  updatingOrderId: string | null = null;
   error: string | null = null;
 
   constructor() {
@@ -56,11 +57,46 @@ export class AdminOrderStore {
     }
   }
 
-  /** Updates a local order status during the UI-first admin stage. */
-  updateStatus(orderId: string, status: AdminOrderStatus): void {
-    const order = this.orders.find((item) => item.id === orderId);
-    if (order) {
-      order.status = status;
+  /** Persists a guarded order lifecycle transition and synchronizes every visible order copy. */
+  async updateStatus(orderId: string, status: AdminOrderStatus): Promise<boolean> {
+    this.updatingOrderId = orderId;
+    this.error = null;
+
+    try {
+      const update = await changeAdminOrderStatus(orderId, status);
+      runInAction(() => {
+        const order = this.orders.find((item) => item.id === orderId);
+        if (order) {
+          order.status = update.status;
+          order.allowedNextStatuses = update.allowedNextStatuses;
+        }
+
+        if (this.selectedOrder?.id === orderId) {
+          this.selectedOrder.status = update.status;
+          this.selectedOrder.allowedNextStatuses = update.allowedNextStatuses;
+        }
+      });
+      return true;
+    } catch (error) {
+      runInAction(() => {
+        this.error = extractErrorMessage(error);
+      });
+      return false;
+    } finally {
+      runInAction(() => {
+        this.updatingOrderId = null;
+      });
     }
   }
+}
+
+function extractErrorMessage(error: unknown): string {
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const response = (error as { response?: { data?: { message?: string } } }).response;
+    if (response?.data?.message) {
+      return response.data.message;
+    }
+  }
+
+  return error instanceof Error ? error.message : 'Unable to update the order status.';
 }

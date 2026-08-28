@@ -1,6 +1,16 @@
 export type AdminInventoryStatus = 'InStock' | 'LowStock' | 'OutOfStock';
 
-export type AdminOrderStatus = 'PendingPayment' | 'Paid' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+export type AdminOrderStatus =
+  | 'PendingPayment'
+  | 'Paid'
+  | 'Processing'
+  | 'Packed'
+  | 'Shipped'
+  | 'Delivered'
+  | 'Cancelled'
+  | 'Refunded';
+
+export type AdminPaymentStatus = 'Pending' | 'Redirected' | 'Verified' | 'Failed' | 'Cancelled';
 
 export interface PublicProductDto {
   id: string;
@@ -99,15 +109,16 @@ export interface AdminOrder {
   createdAtUtc: string;
   totalAmount: number;
   status: AdminOrderStatus;
-  paymentStatus: 'Pending' | 'Verified' | 'Failed';
+  paymentStatus: AdminPaymentStatus;
   itemCount: number;
+  allowedNextStatuses: AdminOrderStatus[];
 }
 
 export interface AdminOrderDetails {
   id: string;
   orderNumber: string;
   status: AdminOrderStatus;
-  paymentStatus: 'Pending' | 'Verified' | 'Failed';
+  paymentStatus: AdminPaymentStatus;
   currencyCode: string;
   createdAtUtc: string;
   subtotal: number;
@@ -119,6 +130,16 @@ export interface AdminOrderDetails {
     fullName: string;
     email: string;
     phoneNumber: string | null;
+  };
+  shipping: {
+    recipientName: string;
+    phoneNumber: string;
+    province: string;
+    city: string;
+    streetAddress: string;
+    plaque: string | null;
+    unit: string | null;
+    postalCode: string;
   };
   items: Array<{
     productId: string;
@@ -136,6 +157,13 @@ export interface AdminOrderDetails {
     status: string;
     failureReason: string | null;
   }>;
+  allowedNextStatuses: AdminOrderStatus[];
+}
+
+export interface AdminOrderStatusUpdate {
+  id: string;
+  status: AdminOrderStatus;
+  allowedNextStatuses: AdminOrderStatus[];
 }
 
 export interface AdminDashboardStats {
@@ -143,7 +171,8 @@ export interface AdminDashboardStats {
   totalOrders: number;
   totalProducts: number;
   totalCustomers: number;
-  monthlySales: Array<{ month: string; amount: number }>;
+  monthlySales: Array<{ year: number; month: number; amount: number }>;
+  recentOrders: AdminOrder[];
 }
 
 export interface AdminBrand {
@@ -179,6 +208,15 @@ export interface AdminStaff {
   role: 'Owner' | 'Admin' | 'Manager';
 }
 
+export interface AdminNewsletterSubscription {
+  id: string;
+  email: string;
+  sourceLocale: 'fa' | 'en' | null;
+  isActive: boolean;
+  createdAtUtc: string;
+  updatedAtUtc: string | null;
+}
+
 export interface CreateAdminProductInput {
   title: string;
   slug?: string;
@@ -208,6 +246,17 @@ export interface AdminCatalogColor {
   name: string;
   slug: string;
   hexCode: string | null;
+}
+
+export interface AdminColor extends AdminCatalogColor {
+  isActive: boolean;
+}
+
+export interface AdminColorInput {
+  name: string;
+  slug?: string;
+  hexCode?: string;
+  isActive: boolean;
 }
 
 export interface AdminBrandInput {

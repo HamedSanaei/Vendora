@@ -8,6 +8,7 @@ import {Minus,Plus} from "@svg/index";
 import { add_cart_product, quantityDecrement, remove_product } from "src/redux/features/cartSlice";
 import { getLocaleFromPathname, withLocalePath } from "@lib/locale-path";
 import { getSafeImageProps } from "@lib/image-source";
+import { formatToman } from "@lib/format-money";
 
 const SingleCartItem = ({item}) => {
   const {_id,image,title,originalPrice,orderQuantity=0} = item || {};
@@ -15,6 +16,8 @@ const SingleCartItem = ({item}) => {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
   const detailsPath = withLocalePath(`/product-details/${_id}`, locale);
+  const removeLabel = locale === "fa" ? "حذف محصول" : "Remove product";
+  const imageAlt = locale === "fa" ? `تصویر ${title || "محصول"}` : `${title || "Product"} image`;
 
   // handle add product
   const handleAddProduct = (prd) => {
@@ -37,14 +40,14 @@ const SingleCartItem = ({item}) => {
     <tr>
       <td className="product-thumbnail">
         <Link href={detailsPath}>
-          <Image {...getSafeImageProps(image)} alt="cart img" width={125} height={125} />
+          <Image {...getSafeImageProps(image)} alt={imageAlt} width={125} height={125} />
         </Link>
       </td>
       <td className="product-name">
         <Link href={detailsPath}>{title}</Link>
       </td>
       <td className="product-price">
-        <span className="amount">${originalPrice}</span>
+        <span className="amount">{formatToman(originalPrice, locale)}</span>
       </td>
       <td className="product-quantity">
         <div className="tp-product-quantity mt-10 mb-10">
@@ -58,10 +61,10 @@ const SingleCartItem = ({item}) => {
         </div>
       </td>
       <td className="product-subtotal">
-        <span className="amount">${(originalPrice * orderQuantity).toFixed(2)}</span>
+        <span className="amount">{formatToman(originalPrice * orderQuantity, locale)}</span>
       </td>
       <td className="product-remove">
-        <button type="submit" onClick={()=> handleRemovePrd(item)}>
+        <button type="submit" onClick={()=> handleRemovePrd(item)} aria-label={removeLabel}>
           <i className="fa fa-times"></i>
         </button>
       </td>

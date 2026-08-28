@@ -185,6 +185,56 @@ public static class Account
         }
     }
 
+    /// <summary>Changes the password of the currently authenticated user.</summary>
+    public static class ChangePassword
+    {
+        /// <summary>Represents a change-password command.</summary>
+        public sealed record Command(Guid UserId, string CurrentPassword, string NewPassword) : IRequest<Result>;
+
+        /// <summary>Handles a change-password command through ASP.NET Identity.</summary>
+        public sealed class Handler : IRequestHandler<Command, Result>
+        {
+            private readonly UserManager<AppUser> _userManager;
+
+            /// <summary>Creates the handler.</summary>
+            public Handler(UserManager<AppUser> userManager)
+            {
+                _userManager = userManager;
+            }
+
+            /// <inheritdoc />
+            public async Task<Result> Handle(Command request, CancellationToken cancellationToken)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (string.IsNullOrEmpty(request.CurrentPassword))
+                {
+                    return Result.Fail("Current password is required.");
+                }
+
+                if (string.IsNullOrEmpty(request.NewPassword))
+                {
+                    return Result.Fail("New password is required.");
+                }
+
+                var user = await _userManager.FindByIdAsync(request.UserId.ToString());
+                if (user is null)
+                {
+                    return Result.Fail("User was not found.");
+                }
+
+                var result = await _userManager.ChangePasswordAsync(
+                    user,
+                    request.CurrentPassword,
+                    request.NewPassword);
+
+                return result.Succeeded
+                    ? new Result(true, null)
+                    : Result.Fail(string.Join(" ", result.Errors.Select(error => error.Description)));
+            }
+        }
+    }
+
     /// <summary>Returns the currently authenticated user's profile.</summary>
     public static class Me
     {

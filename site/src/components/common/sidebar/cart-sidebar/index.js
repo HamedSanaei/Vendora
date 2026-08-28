@@ -7,6 +7,7 @@ import SingleCartItem from "./single-cart-item";
 import useCartInfo from "@hooks/use-cart-info";
 import EmptyCart from "./empty-cart";
 import { getLocaleFromPathname, withLocalePath } from "@lib/locale-path";
+import { formatToman } from "@lib/format-money";
 
 
 const CartSidebar = ({ isCartOpen, setIsCartOpen }) => {
@@ -14,6 +15,14 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen }) => {
   const {total} = useCartInfo();
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
+  const isFa = locale === "fa";
+  const copy = {
+    title: isFa ? "سبد خرید" : "Shopping cart",
+    subtotal: isFa ? "جمع جزء:" : "Subtotal:",
+    viewCart: isFa ? "مشاهده سبد خرید" : "View cart",
+    checkout: isFa ? "ادامه به پرداخت" : "Checkout",
+    close: isFa ? "بستن سبد خرید" : "Close cart",
+  };
 
   return (
     <React.Fragment>
@@ -22,13 +31,14 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen }) => {
           <div className="cartmini__top-wrapper ">
             <div className="cartmini__top p-relative">
               <div className="cartmini__title">
-                <h4>Shopping cart</h4>
+                <h4>{copy.title}</h4>
               </div>
               <div className="cartmini__close">
                 <button
                   onClick={() => setIsCartOpen(false)}
                   type="button"
                   className="cartmini__close-btn cartmini-close-btn"
+                  aria-label={copy.close}
                 >
                   <i className="fal fa-times"></i>
                 </button>
@@ -48,15 +58,15 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen }) => {
           </div>
           <div className="cartmini__checkout">
             <div className="cartmini__checkout-title mb-30">
-              <h4>Subtotal:</h4>
-              <span>${total.toFixed(2)}</span>
+              <h4>{copy.subtotal}</h4>
+              <span>{formatToman(total, locale)}</span>
             </div>
             <div className="cartmini__checkout-btn">
               <Link href={withLocalePath("/cart", locale)} className="tp-btn mb-10 w-100">
-                <span></span> view cart
+                <span></span> {copy.viewCart}
               </Link>
-              <Link href={withLocalePath("/checkout", locale)} className="tp-btn-border w-100 cursor-pointer">
-                <span></span> checkout
+              <Link href={withLocalePath("/shipping", locale)} className="tp-btn-border w-100 cursor-pointer">
+                <span></span> {copy.checkout}
               </Link>
             </div>
           </div>

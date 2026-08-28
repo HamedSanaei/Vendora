@@ -5,12 +5,17 @@ import type {
   AdminCategory,
   AdminCategoryOption,
   AdminCategoryInput,
+  AdminColor,
+  AdminColorInput,
   AdminCoupon,
   AdminCouponInput,
   AdminCatalogColor,
   AdminDashboardStats,
+  AdminNewsletterSubscription,
   AdminOrder,
   AdminOrderDetails,
+  AdminOrderStatus,
+  AdminOrderStatusUpdate,
   AdminProduct,
   AdminProductDto,
   AdminUser,
@@ -170,6 +175,29 @@ export async function getAdminColors(): Promise<AdminCatalogColor[]> {
   return response.data;
 }
 
+/** Loads all catalog colors for admin color management screens. */
+export async function getAdminManageColors(): Promise<AdminColor[]> {
+  const response = await httpClient.get<AdminColor[]>('/api/admin/colors');
+  return response.data;
+}
+
+/** Creates a catalog color. */
+export async function createAdminColor(input: AdminColorInput): Promise<AdminColor> {
+  const response = await httpClient.post<AdminColor>('/api/admin/colors', input);
+  return response.data;
+}
+
+/** Updates a catalog color. */
+export async function updateAdminColor(id: string, input: AdminColorInput): Promise<AdminColor> {
+  const response = await httpClient.put<AdminColor>(`/api/admin/colors/${id}`, input);
+  return response.data;
+}
+
+/** Soft deletes a catalog color. */
+export async function deleteAdminColor(id: string): Promise<void> {
+  await httpClient.delete(`/api/admin/colors/${id}`);
+}
+
 function resolveImageUrl(imageUrl: string | null): string {
   if (!imageUrl) {
     return fallbackImageUrl;
@@ -254,13 +282,13 @@ export async function deleteAdminCoupon(id: string): Promise<void> {
 /** Loads users. */
 export async function getAdminUsers(): Promise<AdminUser[]> {
   const response = await httpClient.get<AdminUser[]>('/api/admin/users');
-  return response.data;
+  return response.data.map(mapAdminUser);
 }
 
 /** Updates a user. */
 export async function updateAdminUser(id: string, input: AdminUserInput): Promise<AdminUser> {
   const response = await httpClient.put<AdminUser>(`/api/admin/users/${id}`, input);
-  return response.data;
+  return mapAdminUser(response.data);
 }
 
 /** Requests a password reset placeholder action. */
@@ -279,9 +307,32 @@ export async function getAdminOrders(): Promise<AdminOrder[]> {
   return response.data;
 }
 
+/** Loads storefront newsletter email subscriptions. */
+export async function getAdminNewsletterSubscriptions(): Promise<AdminNewsletterSubscription[]> {
+  const response = await httpClient.get<AdminNewsletterSubscription[]>('/api/admin/newsletter-subscriptions');
+  return response.data;
+}
+
+/** Downloads storefront newsletter email subscriptions as a CSV blob. */
+export async function downloadAdminNewsletterSubscriptionsCsv(): Promise<Blob> {
+  const response = await httpClient.get<Blob>('/api/admin/newsletter-subscriptions.csv', {
+    responseType: 'blob',
+  });
+  return response.data;
+}
+
 /** Loads one admin order invoice. */
 export async function getAdminOrder(id: string): Promise<AdminOrderDetails> {
   const response = await httpClient.get<AdminOrderDetails>(`/api/admin/orders/${id}`);
+  return response.data;
+}
+
+/** Persists one guarded order lifecycle transition. */
+export async function changeAdminOrderStatus(
+  id: string,
+  status: AdminOrderStatus,
+): Promise<AdminOrderStatusUpdate> {
+  const response = await httpClient.patch<AdminOrderStatusUpdate>(`/api/admin/orders/${id}/status`, { status });
   return response.data;
 }
 
@@ -296,26 +347,25 @@ function extractErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Request failed.';
 }
 
-/** Creates dashboard totals from the available API and local UI-first data. */
-export async function getAdminDashboard(products: AdminProduct[], orders: AdminOrder[]): Promise<AdminDashboardStats> {
-  const totalSales = orders
-    .filter((order) => order.paymentStatus === 'Verified')
-    .reduce((sum, order) => sum + order.totalAmount, 0);
-
+function mapAdminUser(user: AdminUser): AdminUser {
   return {
-    totalSales,
-    totalOrders: orders.length,
-    totalProducts: products.length,
-    totalCustomers: 3,
-    monthlySales: [
-      { month: 'Jan', amount: 720000 },
-      { month: 'Feb', amount: 1120000 },
-      { month: 'Mar', amount: 980000 },
-      { month: 'Apr', amount: 1740000 },
-      { month: 'May', amount: 2100000 },
-      { month: 'Jun', amount: totalSales },
-    ],
+    ...user,
+    role: normalizeAdminRole(user.role),
   };
+}
+
+function normalizeAdminRole(role: AdminUser['role'] | number): AdminUser['role'] {
+  if (role === 1 || role === 'Admin') {
+    return 'Admin';
+  }
+
+  return 'Customer';
+}
+
+/** Loads real dashboard metrics from the admin API. */
+export async function getAdminDashboard(months = 6): Promise<AdminDashboardStats> {
+  const response = await httpClient.get<AdminDashboardStats>('/api/admin/dashboard', { params: { months } });
+  return response.data;
 }
 
 /** Logs an admin user in through the ASP.NET Core account API. */

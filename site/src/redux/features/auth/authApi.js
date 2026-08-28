@@ -121,7 +121,20 @@ export const authApi = apiSlice.injectEndpoints({
     }),
 
     changePassword: builder.mutation({
-      queryFn: async () => ({ error: { status: 501, data: { message: "Change password is not available yet." } } }),
+      async queryFn(data) {
+        const localAuth = JSON.parse(localStorage.getItem("auth") || "{}");
+        return accountRequest(
+          "/api/account/change-password",
+          {
+            // Keep accepting the legacy `password` property used by the old
+            // dashboard form while the new account screen uses the clearer
+            // `currentPassword` name.
+            currentPassword: data.currentPassword ?? data.password,
+            newPassword: data.newPassword,
+          },
+          localAuth?.accessToken
+        );
+      },
     }),
 
     updateProfile: builder.mutation({

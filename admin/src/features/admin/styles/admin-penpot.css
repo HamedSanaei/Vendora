@@ -1,0 +1,2047 @@
+:root {
+  --va-canvas: #f3f1ec;
+  --va-surface: #fcfbf8;
+  --va-surface-2: #f7f5f0;
+  --va-surface-3: #ece9e2;
+  --va-ink: #171b1f;
+  --va-graphite: #252a2e;
+  --va-sidebar: #161a1d;
+  --va-sidebar-2: #20262b;
+  --va-brass: #b89555;
+  --va-brass-dark: #8d6b36;
+  --va-brass-soft: #f0e7d6;
+  --va-muted: #74797c;
+  --va-border: #ddd8ce;
+  --va-green: #3d735a;
+  --va-green-soft: #e3efe8;
+  --va-blue: #456b8a;
+  --va-blue-soft: #e7eef3;
+  --va-amber: #a96f25;
+  --va-amber-soft: #f6ebd9;
+  --va-red: #9b433e;
+  --va-red-soft: #f5e4e2;
+  --va-purple: #675d86;
+  --va-purple-soft: #ece9f3;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+body:has(.admin-shell[data-admin-theme="penpot"]),
+body:has(.admin-auth-page[data-admin-theme="penpot"]) {
+  background: var(--va-canvas);
+  color: var(--va-ink);
+}
+
+.admin-shell[data-admin-theme="penpot"] {
+  min-height: 100dvh;
+  background: var(--va-canvas);
+  color: var(--va-ink);
+  font-family: "Vazirmatn", Tahoma, sans-serif;
+}
+
+.admin-shell[data-admin-theme="penpot"] *,
+.admin-auth-page[data-admin-theme="penpot"] * {
+  box-sizing: border-box;
+}
+
+.admin-shell[data-admin-theme="penpot"] button,
+.admin-shell[data-admin-theme="penpot"] input,
+.admin-shell[data-admin-theme="penpot"] select,
+.admin-shell[data-admin-theme="penpot"] textarea,
+.admin-auth-page[data-admin-theme="penpot"] button,
+.admin-auth-page[data-admin-theme="penpot"] input,
+.admin-auth-page[data-admin-theme="penpot"] select,
+.admin-auth-page[data-admin-theme="penpot"] textarea {
+  font-family: inherit;
+}
+
+.admin-shell[data-admin-theme="penpot"] :focus-visible,
+.admin-auth-page[data-admin-theme="penpot"] :focus-visible {
+  outline: 3px solid rgb(184 149 85 / 34%);
+  outline-offset: 2px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-sidebar {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 60;
+  display: flex;
+  width: min(86vw, 292px);
+  flex-direction: column;
+  overflow: hidden;
+  border: 0;
+  background: linear-gradient(180deg, var(--va-sidebar) 0%, #121517 100%);
+  color: #fff;
+  transform: translateX(110%);
+  box-shadow: -24px 0 60px rgb(12 14 16 / 24%);
+  transition: transform 220ms ease;
+}
+
+.admin-shell[data-admin-theme="penpot"][dir="ltr"] .admin-sidebar {
+  transform: translateX(-110%);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-sidebar-open,
+.admin-shell[data-admin-theme="penpot"][dir="ltr"] .admin-sidebar-open {
+  transform: translateX(0);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-brand {
+  display: flex;
+  min-height: 88px;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+  color: #fff;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-brand-mark {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgb(184 149 85 / 60%);
+  border-radius: 12px;
+  background: rgb(184 149 85 / 13%);
+  color: var(--va-brass);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-brand-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-brand-copy strong {
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.14em;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-brand-copy small {
+  color: rgb(255 255 255 / 50%);
+  font-size: 11px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-sidebar-close {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  margin-inline-start: auto;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 6%);
+  color: rgb(255 255 255 / 75%);
+  cursor: pointer;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-menu {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 14px;
+  scrollbar-color: rgb(184 149 85 / 35%) transparent;
+  scrollbar-width: thin;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-menu-section {
+  display: grid;
+  gap: 4px;
+  padding-block: 8px 14px;
+  border-bottom: 1px solid rgb(255 255 255 / 6%);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-menu-section:last-child {
+  border-bottom: 0;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-menu-section > h2 {
+  margin: 0;
+  padding: 4px 12px 8px;
+  color: rgb(255 255 255 / 38%);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-menu-link {
+  display: flex;
+  width: 100%;
+  min-height: 46px;
+  align-items: center;
+  gap: 11px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: rgb(255 255 255 / 70%);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-menu-link:hover {
+  background: rgb(255 255 255 / 5%);
+  color: #fff;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-menu-link-active {
+  background: linear-gradient(90deg, rgb(184 149 85 / 18%), rgb(184 149 85 / 8%));
+  color: #fff;
+  box-shadow: inset 3px 0 0 var(--va-brass);
+}
+
+.admin-shell[data-admin-theme="penpot"][dir="rtl"] .admin-menu-link-active {
+  box-shadow: inset -3px 0 0 var(--va-brass);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-menu-icon {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 5%);
+  color: rgb(255 255 255 / 58%);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-menu-link-active .admin-menu-icon {
+  background: rgb(184 149 85 / 16%);
+  color: var(--va-brass);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-menu-chevron {
+  margin-inline-start: auto;
+  transition: transform 160ms ease;
+}
+
+.admin-shell[data-admin-theme="penpot"][dir="rtl"] .admin-menu-chevron {
+  transform: rotate(180deg);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-menu-chevron-open {
+  transform: rotate(90deg);
+}
+
+.admin-shell[data-admin-theme="penpot"][dir="rtl"] .admin-menu-chevron-open {
+  transform: rotate(90deg);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-submenu {
+  display: grid;
+  max-height: 0;
+  gap: 2px;
+  overflow: hidden;
+  padding: 0 42px 0 10px;
+  opacity: 0;
+  transition: max-height 180ms ease, opacity 180ms ease, padding 180ms ease;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-submenu-open {
+  max-height: 180px;
+  padding-block: 4px 8px;
+  opacity: 1;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-submenu-link {
+  position: relative;
+  padding: 7px 13px;
+  border-radius: 8px;
+  color: rgb(255 255 255 / 48%);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-submenu-link::before {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: currentColor;
+  content: "";
+  transform: translateY(-50%);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-submenu-link:hover,
+.admin-shell[data-admin-theme="penpot"] .admin-submenu-link-active {
+  color: var(--va-brass);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-sidebar-footer {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(0 0 0 / 10%);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-store-link,
+.admin-shell[data-admin-theme="penpot"] .admin-logout-btn {
+  position: static;
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: rgb(255 255 255 / 64%);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-store-link:hover,
+.admin-shell[data-admin-theme="penpot"] .admin-logout-btn:hover {
+  background: rgb(255 255 255 / 5%);
+  color: #fff;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-store-arrow {
+  margin-inline-start: auto;
+}
+
+.admin-shell[data-admin-theme="penpot"][dir="rtl"] .admin-store-arrow {
+  transform: rotate(180deg);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  visibility: hidden;
+  border: 0;
+  background: rgb(17 20 22 / 66%);
+  opacity: 0;
+  backdrop-filter: blur(2px);
+  transition: opacity 180ms ease, visibility 180ms ease;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-backdrop-visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-main {
+  min-width: 0;
+  min-height: 100dvh;
+  margin: 0;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-header {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  display: grid;
+  min-height: 76px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgb(221 216 206 / 85%);
+  background: rgb(252 251 248 / 92%);
+  box-shadow: 0 8px 28px rgb(23 27 31 / 3%);
+  backdrop-filter: blur(18px);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-header-context {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-header-breadcrumb {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 2px 5px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-header-breadcrumb a {
+  overflow: hidden;
+  color: var(--va-muted);
+  font-size: 10px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-header-breadcrumb > span {
+  color: var(--va-border);
+  font-size: 10px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-header-breadcrumb strong {
+  grid-column: 1 / -1;
+  color: var(--va-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-menu-button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--va-border);
+  border-radius: 12px;
+  background: var(--va-surface);
+  color: var(--va-graphite);
+  cursor: pointer;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-search {
+  display: none;
+  height: 44px;
+  align-items: center;
+  gap: 9px;
+  padding-inline: 14px;
+  border: 1px solid var(--va-border);
+  border-radius: 12px;
+  background: var(--va-surface-2);
+  color: var(--va-muted);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-search input {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--va-ink);
+  font-size: 12px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-profile {
+  display: flex;
+  min-width: 44px;
+  align-items: center;
+  gap: 10px;
+  color: var(--va-ink);
+  text-decoration: none;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-profile-avatar {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #c9aa70;
+  border-radius: 12px;
+  background: var(--va-brass-soft);
+  color: var(--va-brass-dark);
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-profile > div,
+.admin-shell[data-admin-theme="penpot"] .admin-profile-chevron {
+  display: none;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-content {
+  width: 100%;
+  max-width: 1620px;
+  margin-inline: auto;
+  padding: 20px 14px calc(40px + env(safe-area-inset-bottom));
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-page {
+  display: grid;
+  gap: 18px;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-page-heading,
+.admin-shell[data-admin-theme="penpot"] .admin-page-title {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 2px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-page-heading-copy,
+.admin-shell[data-admin-theme="penpot"] .admin-page-title > div,
+.admin-shell[data-admin-theme="penpot"] .admin-page-title:not(.admin-title-row) {
+  min-width: 0;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-page-heading h1,
+.admin-shell[data-admin-theme="penpot"] .admin-page-title h1 {
+  margin: 0;
+  color: var(--va-ink);
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.35;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-page-heading p,
+.admin-shell[data-admin-theme="penpot"] .admin-page-title p {
+  max-width: 760px;
+  margin: 5px 0 0;
+  color: var(--va-muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--va-brass-dark);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-page-heading-actions,
+.admin-shell[data-admin-theme="penpot"] .admin-title-row > button {
+  flex: 0 0 auto;
+}
+
+.admin-action,
+.admin-shell[data-admin-theme="penpot"] .admin-primary-btn,
+.admin-shell[data-admin-theme="penpot"] .admin-ghost-btn,
+.admin-shell[data-admin-theme="penpot"] .admin-danger-btn {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 15px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.admin-action:hover,
+.admin-shell[data-admin-theme="penpot"] .admin-primary-btn:hover,
+.admin-shell[data-admin-theme="penpot"] .admin-ghost-btn:hover,
+.admin-shell[data-admin-theme="penpot"] .admin-danger-btn:hover {
+  transform: translateY(-1px);
+}
+
+.admin-action:disabled,
+.admin-shell[data-admin-theme="penpot"] button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
+
+.admin-action-primary,
+.admin-shell[data-admin-theme="penpot"] .admin-primary-btn {
+  background: var(--va-graphite);
+  color: #fff;
+}
+
+.admin-action-primary:hover,
+.admin-shell[data-admin-theme="penpot"] .admin-primary-btn:hover {
+  background: var(--va-ink);
+}
+
+.admin-action-brass {
+  background: var(--va-brass);
+  color: var(--va-sidebar);
+}
+
+.admin-action-brass:hover {
+  background: #c4a264;
+}
+
+.admin-action-secondary,
+.admin-action-ghost,
+.admin-shell[data-admin-theme="penpot"] .admin-ghost-btn {
+  border-color: var(--va-border);
+  background: var(--va-surface);
+  color: var(--va-graphite);
+}
+
+.admin-action-ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+.admin-action-danger,
+.admin-shell[data-admin-theme="penpot"] .admin-danger-btn {
+  border-color: #dcb7b3;
+  background: var(--va-red-soft);
+  color: var(--va-red);
+}
+
+.admin-surface,
+.admin-shell[data-admin-theme="penpot"] .admin-panel {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--va-border);
+  border-radius: 16px;
+  background: var(--va-surface);
+  box-shadow: 0 12px 36px rgb(23 27 31 / 4%);
+}
+
+.admin-surface-header,
+.admin-shell[data-admin-theme="penpot"] .admin-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--va-border);
+}
+
+.admin-surface-header h2,
+.admin-shell[data-admin-theme="penpot"] .admin-panel-head h2,
+.admin-shell[data-admin-theme="penpot"] .admin-panel h3 {
+  margin: 0;
+  color: var(--va-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.admin-surface-header p,
+.admin-shell[data-admin-theme="penpot"] .admin-panel-head span {
+  margin: 3px 0 0;
+  color: var(--va-muted);
+  font-size: 11px;
+}
+
+.admin-filter-bar {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--va-border);
+  border-radius: 12px;
+  background: var(--va-surface-2);
+}
+
+.admin-filter-search {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 9px;
+  padding-inline: 12px;
+  border: 1px solid var(--va-border);
+  border-radius: 10px;
+  background: var(--va-surface);
+  color: var(--va-muted);
+}
+
+.admin-filter-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--va-ink);
+  font-size: 12px;
+}
+
+.admin-filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-filter-controls select,
+.admin-filter-select {
+  min-width: 132px;
+  min-height: 44px;
+  padding-inline: 12px 34px;
+  border: 1px solid var(--va-border);
+  border-radius: 10px;
+  background-color: var(--va-surface);
+  color: var(--va-ink);
+  font-size: 12px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-table-wrap {
+  width: 100%;
+  overflow: visible;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--va-graphite);
+  font-size: 12px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-table th {
+  padding: 12px;
+  border-bottom: 1px solid var(--va-border);
+  background: var(--va-surface-2);
+  color: var(--va-muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: start;
+  white-space: nowrap;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-table th:first-child {
+  border-start-start-radius: 10px;
+  border-end-start-radius: 10px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-table th:last-child {
+  border-start-end-radius: 10px;
+  border-end-end-radius: 10px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #ebe8e1;
+  color: var(--va-graphite);
+  text-align: start;
+  vertical-align: middle;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-table tbody tr {
+  transition: background 140ms ease;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-table tbody tr:hover {
+  background: #f9f7f2;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-table a {
+  color: var(--va-ink);
+  text-decoration-color: var(--va-brass);
+  text-underline-offset: 3px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-table small {
+  display: block;
+  margin-top: 3px;
+  color: var(--va-muted);
+  font-size: 10px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-product-cell {
+  display: flex;
+  min-width: 210px;
+  align-items: center;
+  gap: 11px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-product-cell img {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  border: 1px solid var(--va-border);
+  border-radius: 10px;
+  background: var(--va-surface-2);
+  object-fit: cover;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-badge {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-badge::before {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: currentColor;
+  content: "";
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-badge-green { background: var(--va-green-soft); color: var(--va-green); }
+.admin-shell[data-admin-theme="penpot"] .admin-badge-blue { background: var(--va-blue-soft); color: var(--va-blue); }
+.admin-shell[data-admin-theme="penpot"] .admin-badge-yellow { background: var(--va-amber-soft); color: var(--va-amber); }
+.admin-shell[data-admin-theme="penpot"] .admin-badge-red { background: var(--va-red-soft); color: var(--va-red); }
+.admin-shell[data-admin-theme="penpot"] .admin-badge-gray { background: var(--va-surface-3); color: var(--va-muted); }
+
+.admin-shell[data-admin-theme="penpot"] .admin-form,
+.admin-shell[data-admin-theme="penpot"] .admin-product-form {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-form label,
+.admin-field {
+  display: grid;
+  gap: 7px;
+  color: var(--va-graphite);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-form input,
+.admin-shell[data-admin-theme="penpot"] .admin-form select,
+.admin-shell[data-admin-theme="penpot"] .admin-form textarea,
+.admin-shell[data-admin-theme="penpot"] .admin-product-form input,
+.admin-shell[data-admin-theme="penpot"] .admin-product-form select,
+.admin-shell[data-admin-theme="penpot"] .admin-product-form textarea,
+.admin-field input,
+.admin-field select,
+.admin-field textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--va-border);
+  border-radius: 10px;
+  outline: 0;
+  background: var(--va-surface);
+  color: var(--va-ink);
+  font-size: 12px;
+  font-weight: 400;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.admin-field textarea {
+  min-height: 116px;
+  resize: vertical;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-form textarea,
+.admin-shell[data-admin-theme="penpot"] .admin-product-form textarea {
+  min-height: 116px;
+  resize: vertical;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-form input:focus,
+.admin-shell[data-admin-theme="penpot"] .admin-form select:focus,
+.admin-shell[data-admin-theme="penpot"] .admin-form textarea:focus,
+.admin-shell[data-admin-theme="penpot"] .admin-product-form input:focus,
+.admin-shell[data-admin-theme="penpot"] .admin-product-form select:focus,
+.admin-shell[data-admin-theme="penpot"] .admin-product-form textarea:focus,
+.admin-field input:focus,
+.admin-field select:focus,
+.admin-field textarea:focus {
+  border-color: var(--va-brass);
+  box-shadow: 0 0 0 3px rgb(184 149 85 / 13%);
+}
+
+.admin-field small {
+  color: var(--va-muted);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.admin-field-error input,
+.admin-field-error select,
+.admin-field-error textarea {
+  border-color: var(--va-red);
+}
+
+.admin-field-error small {
+  color: var(--va-red);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 9px;
+  padding-top: 4px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-form-full {
+  grid-column: 1 / -1;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-category-options,
+.admin-shell[data-admin-theme="penpot"] .admin-color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-category-option,
+.admin-shell[data-admin-theme="penpot"] .admin-color-option {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  border: 1px solid var(--va-border);
+  border-radius: 10px;
+  background: var(--va-surface-2);
+  font-size: 11px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-category-option-child {
+  margin-inline-start: 14px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-upload-box {
+  display: grid;
+  min-height: 126px;
+  place-items: center;
+  padding: 20px;
+  border: 1px dashed #c6b58f;
+  border-radius: 14px;
+  background: var(--va-brass-soft);
+  color: var(--va-brass-dark);
+  cursor: pointer;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-image-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-image-gallery figure {
+  position: relative;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid var(--va-border);
+  border-radius: 12px;
+  background: var(--va-surface-2);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-image-gallery figure.admin-image-primary {
+  border-color: var(--va-brass);
+  box-shadow: inset 0 0 0 1px var(--va-brass);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-image-gallery img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-gallery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-stat-card {
+  position: relative;
+  min-height: 138px;
+  overflow: hidden;
+  padding: 18px;
+  border: 1px solid var(--va-border);
+  border-radius: 16px;
+  background: var(--va-surface);
+  box-shadow: 0 12px 32px rgb(23 27 31 / 4%);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-stat-card::after {
+  position: absolute;
+  inset-inline-end: -22px;
+  bottom: -34px;
+  width: 104px;
+  height: 104px;
+  border-radius: 999px;
+  background: currentColor;
+  content: "";
+  opacity: 0.08;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-stat-card p,
+.admin-shell[data-admin-theme="penpot"] .admin-stat-label {
+  display: block;
+  margin: 0 0 12px;
+  color: var(--va-muted);
+  font-size: 11px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-stat-card strong {
+  display: block;
+  color: var(--va-ink);
+  font-size: clamp(19px, 3vw, 27px);
+  font-weight: 700;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-stat-blue { color: var(--va-blue); border-top: 3px solid var(--va-blue); }
+.admin-shell[data-admin-theme="penpot"] .admin-stat-green { color: var(--va-green); border-top: 3px solid var(--va-green); }
+.admin-shell[data-admin-theme="penpot"] .admin-stat-purple { color: var(--va-purple); border-top: 3px solid var(--va-purple); }
+.admin-shell[data-admin-theme="penpot"] .admin-stat-rose { color: var(--va-brass-dark); border-top: 3px solid var(--va-brass); }
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-chart-canvas {
+  height: 300px;
+  min-height: 260px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-list {
+  display: grid;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid #ebe8e1;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-list-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-list-row strong,
+.admin-shell[data-admin-theme="penpot"] .admin-list-row small {
+  display: block;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-list-row strong {
+  color: var(--va-ink);
+  font-size: 12px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-list-row small {
+  margin-top: 4px;
+  color: var(--va-muted);
+  font-size: 10px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-list-end {
+  display: grid;
+  justify-items: end;
+  gap: 5px;
+  font-size: 11px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-product-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-product-card {
+  overflow: hidden;
+  border: 1px solid var(--va-border);
+  border-radius: 16px;
+  background: var(--va-surface);
+  box-shadow: 0 12px 30px rgb(23 27 31 / 4%);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-product-card > img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--va-surface-2);
+  object-fit: cover;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-product-card-body {
+  display: grid;
+  gap: 13px;
+  padding: 16px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-product-card h2 {
+  margin: 0;
+  color: var(--va-ink);
+  font-size: 14px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-product-card p,
+.admin-shell[data-admin-theme="penpot"] .admin-card-footer {
+  margin: 3px 0 0;
+  color: var(--va-muted);
+  font-size: 10px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-pagination-modern,
+.admin-shell[data-admin-theme="penpot"] .admin-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 18px;
+}
+
+.admin-pagination-modern button,
+.admin-shell[data-admin-theme="penpot"] .admin-pagination button {
+  display: grid;
+  min-width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--va-border);
+  border-radius: 10px;
+  background: var(--va-surface);
+  color: var(--va-graphite);
+  cursor: pointer;
+}
+
+.admin-pagination-modern button.is-active,
+.admin-shell[data-admin-theme="penpot"] .admin-pagination button.active {
+  border-color: var(--va-graphite);
+  background: var(--va-graphite);
+  color: #fff;
+}
+
+.admin-pagination-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-pagination-ellipsis {
+  color: var(--va-muted);
+}
+
+.admin-icon-back {
+  transform: rotate(180deg);
+}
+
+.admin-shell[data-admin-theme="penpot"][dir="rtl"] .admin-icon-back {
+  transform: none;
+}
+
+.admin-shell[data-admin-theme="penpot"][dir="rtl"] .admin-pagination-modern > button:last-child svg {
+  transform: rotate(180deg);
+}
+
+.admin-empty-state,
+.admin-shell[data-admin-theme="penpot"] .admin-empty-panel {
+  display: grid;
+  min-height: 260px;
+  place-items: center;
+  align-content: center;
+  gap: 9px;
+  padding: 32px 18px;
+  text-align: center;
+}
+
+.admin-empty-state-icon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--va-brass-soft);
+  color: var(--va-brass-dark);
+}
+
+.admin-empty-state h3,
+.admin-empty-state p {
+  margin: 0;
+}
+
+.admin-empty-state h3 {
+  color: var(--va-ink);
+  font-size: 15px;
+}
+
+.admin-empty-state p {
+  max-width: 420px;
+  color: var(--va-muted);
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.admin-feedback,
+.admin-shell[data-admin-theme="penpot"] .admin-error,
+.admin-shell[data-admin-theme="penpot"] .admin-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 12px 14px;
+  border: 1px solid;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.admin-feedback-info,
+.admin-shell[data-admin-theme="penpot"] .admin-info-box { border-color: #c6d7e2; background: var(--va-blue-soft); color: var(--va-blue); }
+.admin-feedback-success { border-color: #bfd4c7; background: var(--va-green-soft); color: var(--va-green); }
+.admin-feedback-warning { border-color: #e6ca9d; background: var(--va-amber-soft); color: var(--va-amber); }
+.admin-feedback-error,
+.admin-shell[data-admin-theme="penpot"] .admin-error { border-color: #dcb7b3; background: var(--va-red-soft); color: var(--va-red); }
+
+.admin-shell[data-admin-theme="penpot"] .admin-loading,
+.admin-boot-screen .admin-loading {
+  display: grid;
+  min-height: 220px;
+  place-items: center;
+  color: var(--va-muted);
+  font-family: "Vazirmatn", Tahoma, sans-serif;
+}
+
+.admin-boot-screen {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  background: var(--va-canvas);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-invoice-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin: 0;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-invoice-grid > div {
+  padding: 14px;
+  border: 1px solid var(--va-border);
+  border-radius: 12px;
+  background: var(--va-surface-2);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-invoice-grid p {
+  margin: 7px 0;
+  color: var(--va-muted);
+  font-size: 11px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-order-status-control {
+  display: flex;
+  min-width: 190px;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-order-status-control select {
+  min-width: 118px;
+  min-height: 40px;
+  padding-inline: 10px;
+  border: 1px solid var(--va-border);
+  border-radius: 9px;
+  background: var(--va-surface);
+  color: var(--va-graphite);
+  font-size: 10px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-order-detail-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-order-review-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-order-shipping {
+  min-width: 0;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-detail-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-detail-list > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #ebe8e1;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-detail-list > div:last-child {
+  border-bottom: 0;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-detail-list dt,
+.admin-shell[data-admin-theme="penpot"] .admin-detail-list dd {
+  margin: 0;
+  font-size: 11px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-detail-list dt { color: var(--va-muted); }
+.admin-shell[data-admin-theme="penpot"] .admin-detail-list dd { color: var(--va-ink); font-weight: 600; text-align: end; }
+.admin-shell[data-admin-theme="penpot"] .admin-detail-total { margin-top: 3px; color: var(--va-brass-dark); }
+.admin-shell[data-admin-theme="penpot"] .admin-detail-total dt,
+.admin-shell[data-admin-theme="penpot"] .admin-detail-total dd { color: inherit; font-size: 13px; font-weight: 700; }
+
+.admin-shell[data-admin-theme="penpot"] .admin-choice {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 9px;
+  color: var(--va-graphite);
+  cursor: pointer;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-choice input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--va-brass-dark);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-chip {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding-inline: 10px;
+  border: 1px solid var(--va-border);
+  border-radius: 999px;
+  background: var(--va-surface-2);
+  color: var(--va-graphite);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-chip-brass { border-color: #d8c49f; background: var(--va-brass-soft); color: var(--va-brass-dark); }
+.admin-shell[data-admin-theme="penpot"] .admin-chip-success { border-color: #bdd4c7; background: var(--va-green-soft); color: var(--va-green); }
+
+.admin-shell[data-admin-theme="penpot"] .admin-permission-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #e6ce9f;
+  border-radius: 12px;
+  background: var(--va-amber-soft);
+  color: var(--va-amber);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-permission-banner strong,
+.admin-shell[data-admin-theme="penpot"] .admin-permission-banner p { margin: 0; }
+.admin-shell[data-admin-theme="penpot"] .admin-permission-banner p { margin-top: 3px; color: var(--va-graphite); font-size: 11px; line-height: 1.8; }
+
+.admin-shell[data-admin-theme="penpot"] .admin-bulk-bar {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid #d8c49f;
+  border-radius: 12px;
+  background: var(--va-brass-soft);
+  color: var(--va-brass-dark);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-bulk-bar > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-action-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-action-menu > summary {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid var(--va-border);
+  border-radius: 10px;
+  background: var(--va-surface);
+  color: var(--va-graphite);
+  cursor: pointer;
+  list-style: none;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-action-menu > summary::-webkit-details-marker { display: none; }
+.admin-shell[data-admin-theme="penpot"] .admin-action-menu-popover {
+  position: absolute;
+  z-index: 20;
+  inset-inline-end: 0;
+  top: calc(100% + 6px);
+  display: grid;
+  min-width: 160px;
+  gap: 5px;
+  padding: 7px;
+  border: 1px solid var(--va-border);
+  border-radius: 12px;
+  background: var(--va-surface);
+  box-shadow: 0 16px 35px rgb(23 27 31 / 16%);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-action-menu-popover .admin-action {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-selection-cell {
+  width: 54px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-selection-cell .admin-choice {
+  min-height: 36px;
+}
+
+.admin-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgb(16 19 21 / 72%);
+  backdrop-filter: blur(4px);
+}
+
+.admin-dialog {
+  display: grid;
+  width: min(100%, 440px);
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid var(--va-border);
+  border-radius: 16px;
+  background: var(--va-surface);
+  box-shadow: 0 24px 70px rgb(9 11 12 / 30%);
+}
+
+.admin-dialog-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--va-red-soft);
+  color: var(--va-red);
+}
+
+.admin-dialog h2,
+.admin-dialog p {
+  margin: 0;
+}
+
+.admin-dialog h2 {
+  color: var(--va-ink);
+  font-size: 18px;
+}
+
+.admin-dialog p {
+  color: var(--va-muted);
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+.admin-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.admin-color-preview {
+  box-shadow: 0 0 0 1px var(--va-border), inset 0 0 0 2px #fff;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-row-actions,
+.admin-shell[data-admin-theme="penpot"] .admin-view-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-storefront-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-storefront-card {
+  display: grid;
+  min-height: 250px;
+  align-content: start;
+  gap: 11px;
+  padding: 20px;
+  border: 1px solid var(--va-border);
+  border-radius: 16px;
+  background: var(--va-surface);
+  box-shadow: 0 12px 32px rgb(23 27 31 / 4%);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-storefront-card > span {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--va-brass-soft);
+  color: var(--va-brass-dark);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-storefront-card h2,
+.admin-shell[data-admin-theme="penpot"] .admin-storefront-card p {
+  margin: 0;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-storefront-card h2 { color: var(--va-ink); font-size: 16px; }
+.admin-shell[data-admin-theme="penpot"] .admin-storefront-card p { min-height: 52px; color: var(--va-muted); font-size: 11px; line-height: 1.9; }
+.admin-shell[data-admin-theme="penpot"] .admin-storefront-card .admin-action { margin-top: auto; }
+
+.admin-auth-page[data-admin-theme="penpot"] {
+  display: grid;
+  min-height: 100dvh;
+  background: var(--va-canvas);
+  color: var(--va-ink);
+  font-family: "Vazirmatn", Tahoma, sans-serif;
+}
+
+.admin-auth-brand-panel {
+  display: none;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 20%, rgb(184 149 85 / 18%), transparent 30%),
+    radial-gradient(circle at 85% 80%, rgb(184 149 85 / 10%), transparent 34%),
+    var(--va-sidebar);
+  color: #fff;
+}
+
+.admin-auth-form-panel {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 22px 16px calc(28px + env(safe-area-inset-bottom));
+}
+
+.admin-auth-mobile-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 16px;
+  color: var(--va-brass-dark);
+  font-family: Arial, sans-serif;
+  letter-spacing: 0.12em;
+}
+
+.admin-auth-card {
+  width: min(100%, 460px);
+  padding: 22px;
+  border: 1px solid var(--va-border);
+  border-radius: 18px;
+  background: var(--va-surface);
+  box-shadow: 0 22px 70px rgb(23 27 31 / 10%);
+}
+
+.admin-auth-card header h2,
+.admin-auth-card header p {
+  margin: 0;
+}
+
+.admin-auth-card header h2 {
+  color: var(--va-ink);
+  font-size: 24px;
+  line-height: 1.5;
+}
+
+.admin-auth-card header p {
+  margin-top: 6px;
+  color: var(--va-muted);
+  font-size: 11px;
+  line-height: 1.9;
+}
+
+.admin-auth-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.admin-auth-password,
+.admin-auth-textarea {
+  display: grid;
+  gap: 7px;
+  color: var(--va-graphite);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-auth-password > div {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  border: 1px solid var(--va-border);
+  border-radius: 10px;
+  background: var(--va-surface);
+}
+
+.admin-auth-password input {
+  width: 100%;
+  height: 44px;
+  padding: 10px 12px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--va-ink);
+}
+
+.admin-auth-password button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--va-muted);
+  cursor: pointer;
+}
+
+.admin-auth-textarea textarea,
+.admin-auth-token textarea {
+  width: 100%;
+  padding: 11px;
+  border: 1px solid var(--va-border);
+  border-radius: 10px;
+  background: var(--va-surface-2);
+  color: var(--va-ink);
+  resize: vertical;
+}
+
+.admin-auth-submit {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 2px;
+}
+
+.admin-auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--va-border);
+}
+
+.admin-auth-links a {
+  color: var(--va-brass-dark);
+  font-size: 10px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.admin-auth-token {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid #c6d7e2;
+  border-radius: 10px;
+  background: var(--va-blue-soft);
+  color: var(--va-blue);
+  font-size: 10px;
+}
+
+@media (min-width: 640px) {
+  .admin-shell[data-admin-theme="penpot"] .admin-storefront-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 960px) {
+  .admin-auth-page[data-admin-theme="penpot"] {
+    grid-template-columns: minmax(420px, 0.95fr) minmax(520px, 1.05fr);
+  }
+
+  .admin-auth-brand-panel {
+    position: relative;
+    display: flex;
+    min-height: 100dvh;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 48px;
+  }
+
+  .admin-auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .admin-auth-brand > span {
+    display: grid;
+    width: 52px;
+    height: 52px;
+    place-items: center;
+    border: 1px solid rgb(184 149 85 / 48%);
+    border-radius: 14px;
+    background: rgb(184 149 85 / 12%);
+    color: var(--va-brass);
+  }
+
+  .admin-auth-brand > div { display: grid; gap: 2px; }
+  .admin-auth-brand strong { font-family: Arial, sans-serif; letter-spacing: 0.15em; }
+  .admin-auth-brand small { color: rgb(255 255 255 / 48%); font-size: 10px; }
+
+  .admin-auth-brand-copy { max-width: 570px; }
+  .admin-auth-brand-copy > span { color: var(--va-brass); font-size: 11px; font-weight: 700; }
+  .admin-auth-brand-copy h1 { margin: 12px 0; font-size: clamp(34px, 4vw, 54px); line-height: 1.45; }
+  .admin-auth-brand-copy p { max-width: 500px; margin: 0; color: rgb(255 255 255 / 55%); font-size: 13px; line-height: 2; }
+
+  .admin-auth-brand-panel ul {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .admin-auth-brand-panel li {
+    display: grid;
+    min-height: 92px;
+    align-content: center;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid rgb(255 255 255 / 8%);
+    border-radius: 12px;
+    background: rgb(255 255 255 / 3%);
+    color: rgb(255 255 255 / 68%);
+    font-size: 10px;
+  }
+
+  .admin-auth-brand-panel li svg { color: var(--va-brass); }
+  .admin-auth-form-panel { padding: 48px; }
+  .admin-auth-mobile-brand { display: none; }
+  .admin-auth-card { padding: 34px; }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-storefront-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-select__control {
+  min-height: 42px;
+  border-color: var(--va-border);
+  border-radius: 10px;
+  background: var(--va-surface);
+  box-shadow: none;
+  font-size: 11px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-select__control--is-focused {
+  border-color: var(--va-brass);
+  box-shadow: 0 0 0 3px rgb(184 149 85 / 13%);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-select__menu {
+  z-index: 20;
+  overflow: hidden;
+  border: 1px solid var(--va-border);
+  border-radius: 10px;
+  background: var(--va-surface);
+  box-shadow: 0 16px 40px rgb(23 27 31 / 12%);
+  font-size: 11px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .Toastify__toast {
+  border: 1px solid var(--va-border);
+  border-radius: 12px;
+  background: var(--va-surface);
+  color: var(--va-ink);
+  font-family: "Vazirmatn", Tahoma, sans-serif;
+  font-size: 11px;
+  box-shadow: 0 16px 46px rgb(23 27 31 / 14%);
+}
+
+@media (max-width: 767px) {
+  .admin-shell[data-admin-theme="penpot"] .admin-page-heading,
+  .admin-shell[data-admin-theme="penpot"] .admin-page-title,
+  .admin-shell[data-admin-theme="penpot"] .admin-title-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-page-heading-actions,
+  .admin-shell[data-admin-theme="penpot"] .admin-title-row > button,
+  .admin-shell[data-admin-theme="penpot"] .admin-title-row > a {
+    width: 100%;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-table thead {
+    display: none;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-table,
+  .admin-shell[data-admin-theme="penpot"] .admin-table tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-table tr {
+    display: grid;
+    gap: 0;
+    padding: 8px 12px;
+    border: 1px solid var(--va-border);
+    border-radius: 12px;
+    background: var(--va-surface-2);
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-table td {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e7e3da;
+    text-align: end;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-table td::before {
+    flex: 0 0 auto;
+    color: var(--va-muted);
+    content: attr(data-label);
+    font-size: 10px;
+    text-align: start;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-table td[data-label=""]::before {
+    display: none;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-table .admin-product-cell {
+    min-width: 0;
+    flex: 1;
+    text-align: start;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-table td .admin-action,
+  .admin-shell[data-admin-theme="penpot"] .admin-table td .admin-ghost-btn,
+  .admin-shell[data-admin-theme="penpot"] .admin-table td .admin-danger-btn {
+    min-height: 40px;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-form-actions > * {
+    flex: 1 1 120px;
+  }
+}
+
+@media (min-width: 640px) {
+  .admin-shell[data-admin-theme="penpot"] .admin-content {
+    padding: 24px 22px 52px;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-filter-bar {
+    grid-template-columns: minmax(220px, 1fr) auto;
+    align-items: center;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-image-gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-invoice-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .admin-shell[data-admin-theme="penpot"] .admin-header {
+    grid-template-columns: minmax(210px, auto) minmax(260px, 520px) auto;
+    padding-inline: 24px;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-search {
+    display: flex;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-profile > div,
+  .admin-shell[data-admin-theme="penpot"] .admin-profile-chevron {
+    display: block;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-profile > div {
+    min-width: 0;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-profile strong,
+  .admin-shell[data-admin-theme="penpot"] .admin-profile small {
+    display: block;
+    overflow: hidden;
+    max-width: 150px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-profile strong { font-size: 11px; }
+  .admin-shell[data-admin-theme="penpot"] .admin-profile small { margin-top: 2px; color: var(--va-muted); font-size: 9px; }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-invoice-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-order-review-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-order-shipping {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .admin-shell[data-admin-theme="penpot"] .admin-sidebar,
+  .admin-shell[data-admin-theme="penpot"][dir="ltr"] .admin-sidebar {
+    width: 264px;
+    transform: translateX(0);
+    box-shadow: none;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-main {
+    margin-inline-start: 264px;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-sidebar-close,
+  .admin-shell[data-admin-theme="penpot"] .admin-menu-button,
+  .admin-shell[data-admin-theme="penpot"] .admin-backdrop {
+    display: none;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-header {
+    min-height: 86px;
+    padding-inline: 30px;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-content {
+    padding: 30px 32px 64px;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-dashboard-grid {
+    grid-template-columns: minmax(0, 1.45fr) minmax(310px, 0.75fr);
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-image-gallery {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .admin-shell[data-admin-theme="penpot"] .admin-sidebar,
+  .admin-shell[data-admin-theme="penpot"][dir="ltr"] .admin-sidebar {
+    width: 286px;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-main {
+    margin-inline-start: 286px;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-content {
+    padding-inline: 40px;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.admin-shell[data-admin-theme="legacy"] .admin-header-context {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-shell[data-admin-theme="legacy"] .admin-brand-copy,
+.admin-shell[data-admin-theme="legacy"] .admin-header-breadcrumb {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 5px;
+}
+
+.admin-shell[data-admin-theme="legacy"] .admin-brand-copy small,
+.admin-shell[data-admin-theme="legacy"] .admin-header-breadcrumb a,
+.admin-shell[data-admin-theme="legacy"] .admin-header-breadcrumb > span {
+  color: #767a7d;
+  font-size: 11px;
+}
+
+.admin-shell[data-admin-theme="legacy"] .admin-header-breadcrumb strong {
+  grid-column: 1 / -1;
+}
+
+.admin-shell[data-admin-theme="legacy"] .admin-sidebar-close,
+.admin-shell[data-admin-theme="legacy"] .admin-sidebar-footer,
+.admin-shell[data-admin-theme="legacy"] .admin-menu-section > h2 {
+  display: none;
+}
+
+.admin-shell[data-admin-theme="legacy"] .admin-content {
+  padding: 0;
+}

@@ -17,6 +17,7 @@ export const mockOrders: AdminOrder[] = [
     status: 'Paid',
     paymentStatus: 'Verified',
     itemCount: 1,
+    allowedNextStatuses: ['Processing', 'Cancelled'],
   },
   {
     id: 'order-seed-2',
@@ -27,6 +28,7 @@ export const mockOrders: AdminOrder[] = [
     status: 'Processing',
     paymentStatus: 'Verified',
     itemCount: 2,
+    allowedNextStatuses: ['Packed', 'Cancelled'],
   },
   {
     id: 'order-seed-3',
@@ -37,6 +39,7 @@ export const mockOrders: AdminOrder[] = [
     status: 'PendingPayment',
     paymentStatus: 'Pending',
     itemCount: 1,
+    allowedNextStatuses: ['Cancelled'],
   },
   {
     id: 'order-seed-4',
@@ -47,6 +50,7 @@ export const mockOrders: AdminOrder[] = [
     status: 'Shipped',
     paymentStatus: 'Verified',
     itemCount: 3,
+    allowedNextStatuses: ['Delivered'],
   },
 ];
 

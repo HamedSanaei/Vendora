@@ -124,6 +124,44 @@ public sealed class AdminRepository : IAdminRepository
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<CatalogColor>> GetColorsAsync(bool includeInactive, CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.CatalogColors.AsNoTracking().AsQueryable();
+        if (!includeInactive)
+        {
+            query = query.Where(color => color.IsActive);
+        }
+
+        return await query.OrderBy(color => color.Name).ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<CatalogColor?> GetColorAsync(Guid id, bool trackChanges, CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.CatalogColors.Where(color => color.Id == id);
+        if (!trackChanges)
+        {
+            query = query.AsNoTracking();
+        }
+
+        return query.SingleOrDefaultAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<bool> ColorSlugExistsAsync(string slug, Guid? ignoredColorId = null, CancellationToken cancellationToken = default)
+    {
+        return _dbContext.CatalogColors.AnyAsync(
+            color => color.Slug == slug && (!ignoredColorId.HasValue || color.Id != ignoredColorId.Value),
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task AddColorAsync(CatalogColor color, CancellationToken cancellationToken = default)
+    {
+        await _dbContext.CatalogColors.AddAsync(color, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<Coupon>> GetCouponsAsync(bool includeInactive, CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Coupons

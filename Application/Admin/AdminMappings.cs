@@ -36,6 +36,17 @@ public static class AdminMappings
             brand.IsActive);
     }
 
+    /// <summary>Maps a catalog color to an admin DTO.</summary>
+    public static AdminColorDto MapColor(CatalogColor color)
+    {
+        return new AdminColorDto(
+            color.Id,
+            color.Name,
+            color.Slug,
+            color.HexCode,
+            color.IsActive);
+    }
+
     /// <summary>Maps a coupon to an admin DTO.</summary>
     public static AdminCouponDto MapCoupon(Coupon coupon)
     {

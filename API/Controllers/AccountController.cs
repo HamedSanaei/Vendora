@@ -56,6 +56,24 @@ public sealed class AccountController : ControllerBase
         return ToAccountResponse(result);
     }
 
+    /// <summary>Changes the current authenticated user's password.</summary>
+    [Authorize]
+    [HttpPost("account/change-password")]
+    public async Task<ActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized(new { message = "User token is invalid." });
+        }
+
+        var result = await _mediator.Send(
+            new Account.ChangePassword.Command(userId, request.CurrentPassword, request.NewPassword),
+            cancellationToken);
+        return result.Succeeded
+            ? Ok(new { message = "Password updated successfully." })
+            : BadRequest(new { message = result.Error });
+    }
+
     /// <summary>Returns the current authenticated user.</summary>
     [Authorize]
     [HttpGet("account/me")]
@@ -226,6 +244,9 @@ public sealed record AdminRegisterRequest(string FullName, string Email, string 
 
 /// <summary>Represents a login request.</summary>
 public sealed record LoginRequest(string Email, string Password);
+
+/// <summary>Represents a request to change the current user's password.</summary>
+public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
 /// <summary>Represents a forgot-password request.</summary>
 public sealed record ForgotPasswordRequest(string Email);

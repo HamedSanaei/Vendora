@@ -1,6 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { getLocalStorage, setLocalStorage } from "@utils/localstorage";
-import { notifyError, notifySuccess } from "@utils/toast";
 
 const initialState = {
   cart_products: [],
@@ -19,7 +18,6 @@ export const cartSlice = createSlice({
           orderQuantity: 1,
         };
         state.cart_products.push(newItem);
-        notifySuccess(`${payload.title} added to cart`);
       } else {
         state.cart_products.map((item) => {
           if (item._id === payload._id) {
@@ -28,9 +26,7 @@ export const cartSlice = createSlice({
                 state.orderQuantity !== 1
                   ? state.orderQuantity + item.orderQuantity
                   : item.orderQuantity + 1;
-              notifySuccess(`${state.orderQuantity} ${item.title} added to cart`);
             } else {
-              notifyError("No more quantity available for this product!");
               state.orderQuantity = 1;
             }
           }
@@ -49,13 +45,30 @@ export const cartSlice = createSlice({
           : (state.orderQuantity = 1);
     },
     quantityDecrement: (state, { payload }) => {
-      state.cart_products.map((item) => {
-        if (item._id === payload._id) {
-          if (item.orderQuantity > 1) {
-            item.orderQuantity = item.orderQuantity - 1;
-          }
+      const itemIndex = state.cart_products.findIndex(
+        (item) => item._id === payload._id
+      );
+
+      if (itemIndex >= 0) {
+        const item = state.cart_products[itemIndex];
+        if (item.orderQuantity > 1) {
+          item.orderQuantity -= 1;
+        } else {
+          state.cart_products.splice(itemIndex, 1);
         }
-        return { ...item };
+      }
+      setLocalStorage("cart_products", state.cart_products);
+    },
+    // Increases one cart line while respecting the product stock when it is known.
+    quantityIncrement: (state, { payload }) => {
+      state.cart_products.forEach((item) => {
+        if (item._id !== payload._id) return;
+
+        const stock = Number(item.quantity);
+        const hasStockLimit = Number.isFinite(stock);
+        if (!hasStockLimit || item.orderQuantity < stock) {
+          item.orderQuantity += 1;
+        }
       });
       setLocalStorage("cart_products", state.cart_products);
     },
@@ -63,6 +76,26 @@ export const cartSlice = createSlice({
       state.cart_products = state.cart_products.filter(
         (item) => item._id !== payload._id
       );
+      setLocalStorage("cart_products", state.cart_products);
+    },
+    // Restores one removed cart line at its previous stable position.
+    restore_cart_product: (state, { payload }) => {
+      const item = payload?.item;
+      if (!item || state.cart_products.some((entry) => entry._id === item._id)) {
+        return;
+      }
+
+      const requestedIndex = Number(payload.index);
+      const index = Number.isFinite(requestedIndex)
+        ? Math.min(Math.max(requestedIndex, 0), state.cart_products.length)
+        : state.cart_products.length;
+
+      state.cart_products.splice(index, 0, item);
+      setLocalStorage("cart_products", state.cart_products);
+    },
+    // Removes every line from the cart and synchronizes the persisted cart.
+    clear_cart: (state) => {
+      state.cart_products = [];
       setLocalStorage("cart_products", state.cart_products);
     },
     get_cart_products: (state, action) => {
@@ -80,7 +113,10 @@ export const {
   decrement,
   get_cart_products,
   remove_product,
+  restore_cart_product,
   quantityDecrement,
+  quantityIncrement,
+  clear_cart,
   initialOrderQuantity,
 } = cartSlice.actions;
 export default cartSlice.reducer;

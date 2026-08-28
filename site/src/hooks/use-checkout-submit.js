@@ -24,12 +24,12 @@ const useCheckoutSubmit = () => {
   const { total, setTotal } = useCartInfo();
   const [cartTotal, setCartTotal] = useState(0);
   const [minimumAmount, setMinimumAmount] = useState(0);
-  const [shippingCost, setShippingCost] = useState(0);
+  const [shippingCost, setShippingCost] = useState(Number(shipping_info?.shippingCost) || 0);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [discountPercentage, setDiscountPercentage] = useState(0);
   const [discountProductType, setDiscountProductType] = useState("");
   const [isCheckoutSubmit, setIsCheckoutSubmit] = useState(false);
-  const [selectedAddressId, setSelectedAddressId] = useState("");
+  const [selectedAddressId, setSelectedAddressId] = useState(shipping_info?.shippingAddressId || "");
 
   const dispatch = useDispatch();
   const router = useRouter();
@@ -99,6 +99,12 @@ const useCheckoutSubmit = () => {
     setValue("zipCode", shipping_info.zipCode);
     setValue("email", shipping_info.email ?? user?.email);
     setValue("contact", shipping_info.contact ?? user?.phone);
+    if (shipping_info.shippingAddressId) {
+      setSelectedAddressId(shipping_info.shippingAddressId);
+    }
+    if (shipping_info.shippingCost !== undefined) {
+      setShippingCost(Number(shipping_info.shippingCost) || 0);
+    }
   }, [user, setValue, shipping_info]);
 
   const handleCouponCode = (event) => {
@@ -144,10 +150,14 @@ const useCheckoutSubmit = () => {
 
   const handleShippingCost = (value) => {
     setShippingCost(value);
+    dispatch(set_shipping({
+      ...shipping_info,
+      shippingCost: value,
+    }));
   };
 
   const submitHandler = async (data) => {
-    dispatch(set_shipping(data));
+    dispatch(set_shipping({ ...shipping_info, ...data }));
     setIsCheckoutSubmit(true);
 
     if (!user?._id) {
@@ -225,6 +235,8 @@ const useCheckoutSubmit = () => {
     addresses,
     selectedAddressId,
     setSelectedAddressId,
+    shippingInfo: shipping_info,
+    shippingCompleted: Boolean(shipping_info.shippingAddressId && shipping_info.shippingMethodId),
     locale,
   };
 };

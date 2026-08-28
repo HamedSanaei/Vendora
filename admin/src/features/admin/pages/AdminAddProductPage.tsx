@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { type ChangeEvent, type FormEvent, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { AdminButton, AdminFeedback, AdminPageHeader, AdminSelect, AdminTextarea } from '../components/AdminUi';
 import { adminPath, adminText, normalizeAdminLocale } from '../i18n';
 import { useAdminStore } from '../stores/AdminStoreContext';
 import type { CreateAdminProductInput } from '../types';
@@ -24,6 +25,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
   const navigate = useNavigate();
   const params = useParams();
   const locale = normalizeAdminLocale(params.locale);
+  const isFa = locale === 'fa';
   const productId = params.id;
   const isEdit = mode === 'edit' && Boolean(productId);
   const [title, setTitle] = useState('');
@@ -103,7 +105,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
   function handleImagesChange(event: ChangeEvent<HTMLInputElement>): void {
     clearErrors();
     const selectedFiles = Array.from(event.target.files ?? []);
-    const validationError = validateImages(selectedFiles, gallery.length);
+    const validationError = validateImages(selectedFiles, gallery.length, isFa);
     if (validationError) {
       setFormError(validationError);
       event.target.value = '';
@@ -173,17 +175,17 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
     const numericStock = parseNumberInput(stockQuantity);
 
     if (!normalizedTitle) {
-      setFormError('Product title is required.');
+      setFormError(isFa ? 'عنوان محصول الزامی است.' : 'Product title is required.');
       return;
     }
 
     if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
-      setFormError('Product price must be greater than zero.');
+      setFormError(isFa ? 'قیمت محصول باید بیشتر از صفر باشد.' : 'Product price must be greater than zero.');
       return;
     }
 
     if (!Number.isInteger(numericStock) || numericStock < 0) {
-      setFormError('Stock quantity cannot be negative.');
+      setFormError(isFa ? 'موجودی محصول نمی‌تواند منفی باشد.' : 'Stock quantity cannot be negative.');
       return;
     }
 
@@ -215,34 +217,31 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       : await products.createProduct(payload);
 
     if (!saved) {
-      setFormError(products.saveError ?? 'Unable to save product.');
+      setFormError(products.saveError ?? (isFa ? 'ذخیره محصول ناموفق بود.' : 'Unable to save product.'));
       return;
     }
 
-    toast.success(isEdit ? 'Product updated successfully.' : 'Product created successfully.');
+    toast.success(isFa ? (isEdit ? 'محصول با موفقیت به‌روزرسانی شد.' : 'محصول با موفقیت ایجاد شد.') : (isEdit ? 'Product updated successfully.' : 'Product created successfully.'));
     navigate(adminPath(locale, 'product-list'));
   }
 
   return (
     <section className="admin-page">
-      <div className="admin-page-title">
-        <h1>{isEdit ? adminText(locale, 'editProduct') : adminText(locale, 'addProduct')}</h1>
-        <p>{isEdit ? 'Update product data and optionally replace images.' : 'Create a catalog product with local image upload.'}</p>
-      </div>
+      <AdminPageHeader eyebrow={isFa ? 'فرم کاتالوگ' : 'Catalog form'} title={isEdit ? adminText(locale, 'editProduct') : adminText(locale, 'addProduct')} description={isFa ? (isEdit ? 'اطلاعات، ویژگی‌ها و گالری محصول را با حفظ تصاویر موجود به‌روزرسانی کنید.' : 'محصول تازه را همراه دسته‌بندی، رنگ و گالری تصاویر ایجاد کنید.') : (isEdit ? 'Update product data and optionally replace images.' : 'Create a catalog product with local image upload.')} />
 
       <form className="admin-product-form" onSubmit={handleSubmit}>
         <article className="admin-panel">
           <div className="admin-form-grid">
             <label>
-              Product title
-              <input name="title" value={title} onChange={(event) => handleTitleChange(event.target.value)} placeholder="Laptop Briefcase" />
+              {isFa ? 'عنوان محصول' : 'Product title'}
+              <input name="title" required value={title} onChange={(event) => handleTitleChange(event.target.value)} placeholder={isFa ? 'کیف اداری لپ‌تاپ' : 'Laptop Briefcase'} />
             </label>
             <label>
-              Slug
+              {isFa ? 'اسلاگ' : 'Slug'}
               <input name="slug" value={slug} onChange={(event) => { clearErrors(); setSlug(event.target.value); }} placeholder="laptop-briefcase" />
             </label>
             <label>
-              Price ({adminText(locale, 'toman')})
+              {isFa ? `قیمت (${adminText(locale, 'toman')})` : `Price (${adminText(locale, 'toman')})`}
               <input
                 inputMode="numeric"
                 name="price"
@@ -255,7 +254,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
               />
             </label>
             <label>
-              Stock quantity
+              {isFa ? 'تعداد موجودی' : 'Stock quantity'}
               <input
                 inputMode="numeric"
                 name="stockQuantity"
@@ -267,36 +266,27 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
                 placeholder="0"
               />
             </label>
-            <label>
-              Brand
-              <select value={brandId} onChange={(event) => { clearErrors(); setBrandId(event.target.value); }}>
-                <option value="">No brand</option>
+            <AdminSelect label={isFa ? 'برند' : 'Brand'} value={brandId} onChange={(event) => { clearErrors(); setBrandId(event.target.value); }}>
+                <option value="">{isFa ? 'بدون برند' : 'No brand'}</option>
                 {brands.brands.filter((brand) => brand.isActive).map((brand) => (
                   <option value={brand.id} key={brand.id}>
                     {brand.name}
                   </option>
                 ))}
-              </select>
-            </label>
-            <label>
-              Status
-              <select value={status} onChange={(event) => { clearErrors(); setStatus(event.target.value as CreateAdminProductInput['status']); }}>
-                <option value="Draft">Draft</option>
-                <option value="Active">Active</option>
-                <option value="Archived">Archived</option>
-              </select>
-            </label>
+            </AdminSelect>
+            <AdminSelect label={isFa ? 'وضعیت انتشار' : 'Status'} value={status} onChange={(event) => { clearErrors(); setStatus(event.target.value as CreateAdminProductInput['status']); }}>
+                <option value="Draft">{isFa ? 'پیش‌نویس' : 'Draft'}</option>
+                <option value="Active">{isFa ? 'فعال' : 'Active'}</option>
+                <option value="Archived">{isFa ? 'آرشیو' : 'Archived'}</option>
+            </AdminSelect>
           </div>
 
-          <label className="admin-form-full">
-            Description
-            <textarea name="description" value={description} onChange={(event) => { clearErrors(); setDescription(event.target.value); }} rows={5} />
-          </label>
+          <AdminTextarea className="admin-form-full" label={isFa ? 'توضیحات محصول' : 'Description'} name="description" value={description} onChange={(event) => { clearErrors(); setDescription(event.target.value); }} rows={5} />
 
           {products.categoryOptions.length > 0 ? (
             <div className="admin-gallery-section">
-              <strong>Categories</strong>
-              <small>Select every category that describes this product. The first selected category is kept as the legacy primary category.</small>
+              <strong>{isFa ? 'دسته‌بندی‌ها' : 'Categories'}</strong>
+              <small>{isFa ? 'تمام دسته‌های مرتبط را انتخاب کنید؛ اولین انتخاب به‌عنوان دسته اصلی سازگار ذخیره می‌شود.' : 'Select every category that describes this product. The first selected category is kept as the legacy primary category.'}</small>
               <div className="admin-category-options">
                 {products.categoryOptions.map((category) => (
                   <label
@@ -316,14 +306,14 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
           ) : null}
 
           <label className="admin-upload-box">
-            Upload images
+            {isFa ? 'بارگذاری تصاویر' : 'Upload images'}
             <input accept="image/jpeg,image/png,image/webp" multiple type="file" onChange={handleImagesChange} />
-            <span>Add images in multiple rounds. JPG, PNG, or WebP. Max {maxProductImages} files, 5MB each.</span>
+            <span>{isFa ? `تصاویر JPG، PNG یا WebP را در چند مرحله اضافه کنید؛ حداکثر ${maxProductImages.toLocaleString('fa-IR')} فایل و هرکدام ۵ مگابایت.` : `Add images in multiple rounds. JPG, PNG, or WebP. Max ${maxProductImages} files, 5MB each.`}</span>
           </label>
 
           {products.colorOptions.length > 0 ? (
             <div className="admin-gallery-section">
-              <strong>Colors</strong>
+              <strong>{isFa ? 'رنگ‌ها' : 'Colors'}</strong>
               <div className="admin-color-options">
                 {products.colorOptions.map((color) => (
                   <label key={color.id} className="admin-color-option">
@@ -342,19 +332,15 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
 
           {gallery.length > 0 ? (
             <div className="admin-gallery-section">
-              <strong>Product gallery</strong>
+              <strong>{isFa ? 'گالری محصول' : 'Product gallery'}</strong>
               <div className="admin-image-gallery">
                 {gallery.map((image) => (
                   <figure key={image.key} className={primaryImageKey === image.key ? 'admin-image-primary' : ''}>
                     <img src={image.url} alt={image.name} />
-                    <figcaption>{primaryImageKey === image.key ? 'Primary' : image.name}</figcaption>
+                    <figcaption>{primaryImageKey === image.key ? (isFa ? 'تصویر اصلی' : 'Primary') : image.name}</figcaption>
                     <div className="admin-gallery-actions">
-                      <button type="button" onClick={() => setPrimaryImageKey(image.key)}>
-                        Make primary
-                      </button>
-                      <button type="button" onClick={() => removeGalleryItem(image)}>
-                        Remove
-                      </button>
+                      <AdminButton onClick={() => setPrimaryImageKey(image.key)} variant="secondary">{isFa ? 'انتخاب به‌عنوان اصلی' : 'Make primary'}</AdminButton>
+                      <AdminButton onClick={() => removeGalleryItem(image)} variant="danger">{isFa ? 'حذف' : 'Remove'}</AdminButton>
                     </div>
                   </figure>
                 ))}
@@ -362,15 +348,11 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
             </div>
           ) : null}
 
-          {formError ?? products.saveError ? <div className="admin-error">{formError ?? products.saveError}</div> : null}
+          {formError ?? products.saveError ? <AdminFeedback tone="error">{formError ?? products.saveError}</AdminFeedback> : null}
 
           <div className="admin-form-actions">
-            <button className="admin-ghost-btn" type="button" onClick={() => navigate(adminPath(locale, 'product-list'))}>
-              {adminText(locale, 'cancel')}
-            </button>
-            <button className="admin-primary-btn" type="submit" disabled={products.isSaving}>
-              {products.isSaving ? adminText(locale, 'saving') : adminText(locale, 'save')}
-            </button>
+            <AdminButton onClick={() => navigate(adminPath(locale, 'product-list'))} variant="secondary">{adminText(locale, 'cancel')}</AdminButton>
+            <AdminButton disabled={products.isSaving} type="submit" variant="brass">{products.isSaving ? adminText(locale, 'saving') : adminText(locale, 'save')}</AdminButton>
           </div>
         </article>
       </form>
@@ -378,18 +360,18 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
   );
 });
 
-function validateImages(files: File[], currentCount: number): string | null {
+function validateImages(files: File[], currentCount: number, isFa: boolean): string | null {
   if (currentCount + files.length > maxProductImages) {
-    return `A product can have at most ${maxProductImages} images.`;
+    return isFa ? `هر محصول حداکثر می‌تواند ${maxProductImages.toLocaleString('fa-IR')} تصویر داشته باشد.` : `A product can have at most ${maxProductImages} images.`;
   }
 
   for (const file of files) {
     if (!allowedImageTypes.includes(file.type)) {
-      return 'Only JPG, PNG, and WebP product images are allowed.';
+      return isFa ? 'فقط تصاویر JPG، PNG و WebP مجاز هستند.' : 'Only JPG, PNG, and WebP product images are allowed.';
     }
 
     if (file.size > maxImageBytes) {
-      return 'Each product image must be 5MB or smaller.';
+      return isFa ? 'حجم هر تصویر باید حداکثر ۵ مگابایت باشد.' : 'Each product image must be 5MB or smaller.';
     }
   }
 

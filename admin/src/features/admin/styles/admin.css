@@ -891,6 +891,15 @@ textarea {
   border-radius: 999px;
 }
 
+.admin-color-preview {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
 .admin-info-box {
   display: grid;
   gap: 8px;

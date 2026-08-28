@@ -1,26 +1,35 @@
 import Header from "@layout/header";
-import Wrapper from "@layout/wrapper";
-import HeroBanner from "@components/hero-banner";
-import ShopCategoryArea from "@components/shop-category/shop-category";
-import ShopProducts from "@components/products";
-import OfferPopularProduct from "@components/offer-product";
-import ShopBanner from "@components/shop-banner";
-import ShopFeature from "@components/shop-feature";
-import ShopCta from "@components/cta";
 import Footer from "@layout/footer";
+import {
+  HeroSection,
+  QuickLinksSection,
+  PopularProductsSection,
+  BenefitsSection,
+  NewestProductsSection,
+  EditorialPromosSection,
+  CategoryCirclesSection,
+  BrandStorySection,
+} from "@components/vendora/home/sections";
 
+/**
+ * Vendora homepage composition, following the approved Penpot frame
+ * "Frame / Home / Desktop / 1440" (page: Vendora · 03 Home Responsive).
+ */
 export default function HomeContent() {
   return (
-    <Wrapper>
+    <div className="vd-root vd-home">
       <Header />
-      <HeroBanner />
-      <ShopCategoryArea />
-      <ShopProducts />
-      <OfferPopularProduct />
-      <ShopBanner />
-      <ShopFeature />
-      <ShopCta />
+      <main>
+        <HeroSection />
+        <QuickLinksSection />
+        <PopularProductsSection />
+        <BenefitsSection />
+        <NewestProductsSection />
+        <EditorialPromosSection />
+        <CategoryCirclesSection />
+        <BrandStorySection />
+      </main>
       <Footer />
-    </Wrapper>
+    </div>
   );
 }

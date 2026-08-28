@@ -34,6 +34,18 @@ public interface IAdminRepository
     /// <summary>Adds a brand.</summary>
     Task AddBrandAsync(Brand brand, CancellationToken cancellationToken = default);
 
+    /// <summary>Returns colors.</summary>
+    Task<IReadOnlyList<CatalogColor>> GetColorsAsync(bool includeInactive, CancellationToken cancellationToken = default);
+
+    /// <summary>Returns one color.</summary>
+    Task<CatalogColor?> GetColorAsync(Guid id, bool trackChanges, CancellationToken cancellationToken = default);
+
+    /// <summary>Returns whether a color slug is already used.</summary>
+    Task<bool> ColorSlugExistsAsync(string slug, Guid? ignoredColorId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>Adds a color.</summary>
+    Task AddColorAsync(CatalogColor color, CancellationToken cancellationToken = default);
+
     /// <summary>Returns coupons with category restrictions.</summary>
     Task<IReadOnlyList<Coupon>> GetCouponsAsync(bool includeInactive, CancellationToken cancellationToken = default);
 

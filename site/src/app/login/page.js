@@ -1,18 +1,14 @@
-import Footer from "@layout/footer";
-import Header from "@layout/header";
 import Wrapper from "@layout/wrapper";
-import LoginArea from "@components/login-register/login-area";
+import { VendoraLoginPage } from "@components/vendora/auth/login-page";
 
 export const metadata = {
-  title: "Login - Harri Shop",
+  title: "Login | Vendora",
 };
 
 export default function Login() {
   return (
     <Wrapper>
-      <Header style_2={true} />
-      <LoginArea />
-      <Footer />
+      <VendoraLoginPage />
     </Wrapper>
   );
 }

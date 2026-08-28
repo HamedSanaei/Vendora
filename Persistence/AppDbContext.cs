@@ -63,6 +63,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <summary>Gets the coupon category restrictions.</summary>
     public DbSet<CouponCategory> CouponCategories => Set<CouponCategory>();
 
+    /// <summary>Gets storefront email subscriptions.</summary>
+    public DbSet<EmailSubscription> EmailSubscriptions => Set<EmailSubscription>();
+
     /// <summary>
     /// Configures entity mappings, relationships, indexes, and UTC date handling.
     /// </summary>
@@ -319,6 +322,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 .WithMany()
                 .HasForeignKey(x => x.CategoryId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<EmailSubscription>(builder =>
+        {
+            builder.ToTable("EmailSubscriptions");
+            builder.HasKey(x => x.Id);
+            builder.Property(x => x.Email).HasMaxLength(320).IsRequired();
+            builder.Property(x => x.SourceLocale).HasMaxLength(10);
+            builder.Property(x => x.IsActive).HasDefaultValue(true);
+            builder.HasIndex(x => x.Email).IsUnique();
+            builder.HasIndex(x => x.CreatedAtUtc);
+            builder.HasIndex(x => x.IsActive);
         });
 
         var utcDateTimeConverter = new ValueConverter<DateTime, DateTime>(

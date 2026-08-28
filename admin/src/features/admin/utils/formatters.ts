@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import type { AdminLocale } from '../i18n';
 
 /** Formats Toman values for admin tables and dashboard cards. */
@@ -41,5 +40,14 @@ export function parseNumberInput(value: string): number {
 
 /** Formats UTC timestamps into compact admin-facing dates. */
 export function formatDate(value: string, locale: AdminLocale = 'fa'): string {
-  return locale === 'fa' ? dayjs(value).format('YYYY/MM/DD') : dayjs(value).format('MMM D, YYYY');
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return '—';
+  }
+
+  return new Intl.DateTimeFormat(locale === 'fa' ? 'fa-IR' : 'en-US', {
+    year: 'numeric',
+    month: locale === 'fa' ? '2-digit' : 'short',
+    day: '2-digit',
+  }).format(parsedDate);
 }

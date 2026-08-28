@@ -1,17 +1,20 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 import { buildLocalizedShopPath, getLocaleFromPathname } from "@lib/locale-path";
+import { useGetColorsQuery } from "src/redux/features/colorApi";
 
 const ShopColor = ({ all_products }) => {
   const [isChecked, setIsChecked] = useState("");
+  const { data: colorData } = useGetColorsQuery();
   const searchParams = useSearchParams();
   const color = searchParams.get("color");
   const router = useRouter();
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
   const isFa = locale === "fa";
-  const all_colors = all_products.map((prd) => prd.colors.map((c) => c));
-  const colors = [...new Set(all_colors.flat())];
+  const productColors = [...new Set(all_products.flatMap((prd) => prd.colors || []))]
+    .map((slug) => ({ id: slug, name: slug, slug, hexCode: null }));
+  const colors = colorData?.colors?.length ? colorData.colors : productColors;
 
   // handle brand
   const handleColors = (value) => {
@@ -20,7 +23,7 @@ const ShopColor = ({ all_products }) => {
       router.push(buildLocalizedShopPath(locale));
     } else {
       setIsChecked(value);
-      router.push(buildLocalizedShopPath(locale, { color: value.toLowerCase() }));
+      router.push(buildLocalizedShopPath(locale, { color: value }));
     }
   };
 
@@ -49,22 +52,35 @@ const ShopColor = ({ all_products }) => {
             className="shop__widget-list"
             style={{ height: "180px", overflowY: "auto" }}
           >
-            {colors.map((clr, i) => (
-              <div key={i} className={`shop__widget-list-item-2 has-${clr}`}>
+            {colors.map((clr) => (
+              <div key={clr.id ?? clr.slug} className={`shop__widget-list-item-2 has-${clr.slug}`}>
                 <input
                   type="checkbox"
-                  id="c-orange"
+                  id={`c-${clr.slug}`}
                   checked={
-                    color === clr.toLowerCase() ? "checked" : false
+                    color === clr.slug ? "checked" : false
                   }
                   readOnly
                 />
                 <label
-                  onClick={() => handleColors(clr)}
-                  htmlFor="c-orange"
+                  onClick={() => handleColors(clr.slug)}
+                  htmlFor={`c-${clr.slug}`}
                   className="text-capitalize"
                 >
-                  {clr}
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      backgroundColor: clr.hexCode || "#d1d5db",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "999px",
+                      display: "inline-block",
+                      height: "14px",
+                      marginInlineEnd: "8px",
+                      verticalAlign: "middle",
+                      width: "14px",
+                    }}
+                  />
+                  {clr.name}
                 </label>
               </div>
             ))}

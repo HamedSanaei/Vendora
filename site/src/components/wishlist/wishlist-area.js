@@ -12,6 +12,17 @@ const WishlistArea = () => {
   const { wishlist } = useSelector((state) => state.wishlist);
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
+  const isFa = locale === "fa";
+  const copy = {
+    continueShopping: isFa ? "ادامه خرید" : "Continue Shopping",
+    image: isFa ? "تصویر" : "Image",
+    product: isFa ? "محصول" : "Product",
+    unitPrice: isFa ? "قیمت واحد" : "Unit Price",
+    quantity: isFa ? "تعداد" : "Quantity",
+    total: isFa ? "جمع" : "Total",
+    remove: isFa ? "حذف" : "Remove",
+    goToCart: isFa ? "رفتن به سبد خرید" : "Go to Cart",
+  };
 
   return (
     <section className="cart-area pt-100 pb-100">
@@ -24,19 +35,19 @@ const WishlistArea = () => {
                   <div className="tp-continue-shopping">
                     <p>
                       <Link href={withLocalePath("/shop", locale)}>
-                        Continue Shopping <i className="fal fa-reply"></i>
+                        {copy.continueShopping} <i className="fal fa-reply"></i>
                       </Link>
                     </p>
                   </div>
                   <table className="table">
                     <thead>
                       <tr>
-                        <th className="product-thumbnail">Images</th>
-                        <th className="cart-product-name">Product</th>
-                        <th className="product-price">Unit Price</th>
-                        <th className="product-quantity">Quantity</th>
-                        <th className="product-subtotal">Total</th>
-                        <th className="product-remove">Remove</th>
+                        <th className="product-thumbnail">{copy.image}</th>
+                        <th className="cart-product-name">{copy.product}</th>
+                        <th className="product-price">{copy.unitPrice}</th>
+                        <th className="product-quantity">{copy.quantity}</th>
+                        <th className="product-subtotal">{copy.total}</th>
+                        <th className="product-remove">{copy.remove}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -50,7 +61,7 @@ const WishlistArea = () => {
                   <div className="col-12">
                     <div className="tp-wishlist-btn mt-50">
                       <Link href={withLocalePath("/cart", locale)} className="tp-btn tp-btn-black">
-                        Go to Cart
+                        {copy.goToCart}
                       </Link>
                     </div>
                   </div>

@@ -9,6 +9,8 @@ const BillingDetails = ({
   selectedAddressId,
   setSelectedAddressId,
   locale = "en",
+  shippingCompleted = false,
+  shippingInfo = {},
 }) => {
   const { user } = useSelector((state) => state.auth);
   const isFa = locale === "fa";
@@ -35,6 +37,24 @@ const BillingDetails = ({
   };
 
   const shouldShowNewAddress = selectedAddressId === "new" || addresses.length === 0;
+
+  if (shippingCompleted) {
+    const selected = shippingInfo.shippingAddress ?? addresses.find((address) => address.id === shippingInfo.shippingAddressId);
+    return (
+      <div className="rounded-[18px] border border-vd-line bg-surface-soft p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-extrabold text-ink">{isFa ? "آدرس انتخاب‌شده" : "Selected address"}</p>
+            <p className="mt-2 text-xs leading-6 text-vd-muted">{selected ? [selected.province, selected.city, selected.streetAddress].filter(Boolean).join("، ") : (isFa ? "آدرس ذخیره‌شده برای این سفارش استفاده می‌شود." : "Your saved address will be used for this order.")}</p>
+            {selected ? <p className="mt-1 text-xs text-vd-muted">{selected.recipientName} · {selected.phoneNumber}</p> : null}
+          </div>
+          <span className="rounded-full bg-jade-tint px-2.5 py-1 text-[10px] font-bold text-jade">{isFa ? "تأیید شده" : "Confirmed"}</span>
+        </div>
+        <p className="mt-4 border-t border-vd-line pt-4 text-xs font-semibold text-jade">{shippingInfo.shippingMethodTitle ?? (isFa ? "روش ارسال انتخاب‌شده" : "Selected shipping method")}</p>
+        <input type="hidden" {...register("shippingOption", { required: true })} value={shippingInfo.shippingMethodId ?? "shipping"} readOnly />
+      </div>
+    );
+  }
 
   return (
     <>

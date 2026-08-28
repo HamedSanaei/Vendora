@@ -206,10 +206,10 @@ namespace Persistence.Migrations
 
                     b.HasIndex("ParentCategoryId");
 
-                    b.HasIndex("ParentCategoryId", "IsActive");
-
                     b.HasIndex("Slug")
                         .IsUnique();
+
+                    b.HasIndex("ParentCategoryId", "IsActive");
 
                     b.ToTable("Categories", (string)null);
                 });
@@ -354,6 +354,44 @@ namespace Persistence.Migrations
                     b.ToTable("CustomerAddresses", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.EmailSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("SourceLocale")
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive");
+
+                    b.ToTable("EmailSubscriptions", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Entities.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -382,16 +420,16 @@ namespace Persistence.Migrations
                     b.Property<int>("PaymentStatus")
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("ShippingCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
-
                     b.Property<Guid?>("ShippingAddressId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ShippingCity")
                         .IsRequired()
                         .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("ShippingCost")
+                        .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ShippingPhoneNumber")
@@ -594,21 +632,6 @@ namespace Persistence.Migrations
                     b.ToTable("Products", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.ProductColor", b =>
-                {
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("CatalogColorId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("ProductId", "CatalogColorId");
-
-                    b.HasIndex("CatalogColorId");
-
-                    b.ToTable("ProductColors", (string)null);
-                });
-
             modelBuilder.Entity("Domain.Entities.ProductCategory", b =>
                 {
                     b.Property<Guid>("ProductId")
@@ -624,6 +647,21 @@ namespace Persistence.Migrations
                     b.HasIndex("CategoryId", "ProductId");
 
                     b.ToTable("ProductCategories", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.ProductColor", b =>
+                {
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CatalogColorId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ProductId", "CatalogColorId");
+
+                    b.HasIndex("CatalogColorId");
+
+                    b.ToTable("ProductColors", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.ProductImage", b =>
@@ -981,25 +1019,6 @@ namespace Persistence.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("Domain.Entities.ProductColor", b =>
-                {
-                    b.HasOne("Domain.Entities.CatalogColor", "CatalogColor")
-                        .WithMany("Products")
-                        .HasForeignKey("CatalogColorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.Product", "Product")
-                        .WithMany("Colors")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CatalogColor");
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("Domain.Entities.ProductCategory", b =>
                 {
                     b.HasOne("Domain.Entities.Category", "Category")
@@ -1015,6 +1034,25 @@ namespace Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ProductColor", b =>
+                {
+                    b.HasOne("Domain.Entities.CatalogColor", "CatalogColor")
+                        .WithMany("Products")
+                        .HasForeignKey("CatalogColorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Product", "Product")
+                        .WithMany("Colors")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CatalogColor");
 
                     b.Navigation("Product");
                 });

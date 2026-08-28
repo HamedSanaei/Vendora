@@ -6,9 +6,8 @@ import Loader from "@components/loader/loader";
 import useAuthCheck from "@hooks/use-auth-check";
 import BackToTopCom from "@components/common/scroll-to-top";
 import { get_wishlist_products } from "src/redux/features/wishlist-slice";
-import { get_cart_products } from "src/redux/features/cartSlice";
 import { get_coupons } from "src/redux/features/coupon/couponSlice";
-import { get_shipping } from "src/redux/features/order/orderSlice";
+import { get_payment, get_shipping } from "src/redux/features/order/orderSlice";
 import ProductModal from "@components/common/modals/product-modal";
 import {ToastContainer} from '@utils/toast';
 
@@ -18,9 +17,9 @@ const Wrapper = ({ children }) => {
   const authChecked = useAuthCheck();
   useEffect(() => {
     dispatch(get_wishlist_products());
-    dispatch(get_cart_products());
     dispatch(get_coupons());
     dispatch(get_shipping());
+    dispatch(get_payment());
   }, [dispatch]);
   return (
     <>

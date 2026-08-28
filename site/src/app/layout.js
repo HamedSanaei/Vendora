@@ -1,5 +1,6 @@
 import MainProvider from "@components/provider/main-provider";
 import "./globals.scss";
+import "./vendora.css";
 import { headers } from "next/headers";
 
 export const metadata = {

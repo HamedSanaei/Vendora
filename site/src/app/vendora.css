@@ -1,0 +1,756 @@
+/*
+ * Vendora design system (extracted from the approved Penpot file "New File 1",
+ * pages "Vendora · 01 Foundations" .. "Vendora · 10").
+ *
+ * Tailwind v4 WITHOUT preflight so legacy Bootstrap pages keep their styling.
+ * IMPORTANT: theme + utilities are imported UNLAYERED on purpose. Unlayered
+ * author styles always beat layered ones; wrapping our tokens/utilities in a
+ * cascade layer let unlayered Bootstrap rules (e.g. reboot `h2`, `.text-danger`)
+ * override the Penpot UI. This file is imported after globals.scss so it also
+ * wins ties by source order. Color tokens that collide with Bootstrap utility
+ * names are namespaced with `vd-`.
+ */
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";
+
+@source "../";
+
+@theme {
+  /* Brand palette — Vendora dark jade identity */
+  --color-jade: #006b4f;
+  --color-jade-dark: #004d3a;
+  --color-jade-light: #00a86b;
+  --color-jade-tint: #e6f8ed;
+
+  /* Neutrals */
+  --color-ink: #0b0b0b;
+  --color-vd-muted: #6b7280;
+  --color-vd-line: #e5e7eb;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f6faf8;
+
+  /* Status palette (Penpot "Status Badges") — vd- prefix avoids Bootstrap
+     utility collisions (.text-success/.text-danger/.text-muted/...) */
+  --color-vd-success: #16855b;
+  --color-vd-success-tint: #e7f7ef;
+  --color-vd-warning: #b26a00;
+  --color-vd-warning-tint: #fff3d6;
+  --color-vd-info: #315e9b;
+  --color-vd-info-tint: #eaf1ff;
+  --color-vd-purple: #6941c6;
+  --color-vd-purple-tint: #f4f0ff;
+  --color-vd-danger: #d92d20;
+  --color-vd-danger-tint: #fdecec;
+
+  /* Decorative surfaces from home sections */
+  --color-tile-mint: #eaf4f0;
+  --color-tile-sand: #f3efe8;
+  --color-tile-steel: #e7eef0;
+  --color-promo-green: #dff4ea;
+  --color-promo-clay: #f2e8dc;
+  --color-clay-accent: #8b6f47;
+  --color-pine: #1e3d36;
+
+  /* Colors used on dark panels */
+  --color-on-dark-muted: #bfc9c3;
+  --color-on-dark-soft: #dde7e2;
+  --color-jade-glow: #8cd8b8;
+
+  /* Typography — single source of truth is Vazirmatn (loaded in globals.scss) */
+  --font-sans: "Vazirmatn", "Segoe UI", Tahoma, sans-serif;
+
+  /* Radii scale from Foundations page */
+  --radius-control: 0.75rem; /* 12 – buttons & inputs */
+  --radius-card: 1rem; /* 16 – product/order cards   */
+  --radius-panel: 1.125rem; /* 18 – sidebar / big cards   */
+  --radius-tile: 1.25rem; /* 20 – tiles / benefits      */
+  --radius-hero: 1.5rem; /* 24 – hero / brand story    */
+
+  /* Elevation (design uses hairlines; shadows stay subtle) */
+  --shadow-card: 0 1px 2px rgb(11 11 11 / 0.05);
+  --shadow-pop: 0 24px 48px -12px rgb(11 11 11 / 0.25);
+
+  /* Page grid: 1440 frame = 1312 content + 64 gutters.
+     The container itself spans the full frame (max-width 1440). */
+  --container-page: 90rem;
+}
+
+/* Layout -------------------------------------------------------------- */
+.vd-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--container-page);
+  padding-inline: 1rem;
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+  @media (width >= 80rem) {
+    padding-inline: 4rem;
+  }
+}
+
+.vd-desktop-header-frame {
+  margin-inline: 16px !important;
+}
+
+/*
+ * Isolation reset for every Vendora (Penpot) surface. Legacy global styles
+ * (Bootstrap reboot margins, list styles, link colors) must not leak into
+ * the new UI. Apply `.vd-root` to the outermost element of each new tree:
+ * StoreHeader, StoreFooter, AccountPageFrame and the homepage main.
+ */
+.vd-root {
+  font-family: var(--font-sans);
+}
+.vd-root :where(h1, h2, h3, h4, h5, h6, p, figure) {
+  margin: 0;
+}
+.vd-root :where(ul, ol) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.vd-root :where(a) {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Keep the viewport width identical to Penpot frames during account-page
+   scrolling; the approved frames do not reserve a scrollbar gutter. */
+html:has(.vd-account-page),
+html:has(.vd-home) {
+  scrollbar-width: none;
+}
+html:has(.vd-account-page)::-webkit-scrollbar,
+html:has(.vd-home)::-webkit-scrollbar {
+  display: none;
+}
+
+@media (width >= 64rem) {
+  /* Bootstrap's global `.border` utility is important, so the desktop
+     dashboard rows need an explicit reset to avoid an inner rectangular frame.
+     The surrounding Recent Orders panel remains bordered and rounded; only
+     the horizontal separators supplied by the parent are kept. */
+  .vd-order-row {
+    border: 0 !important;
+    background-color: transparent !important;
+  }
+  .vd-order-row:not(:last-child) {
+    border-block-end: 1px solid var(--color-vd-line) !important;
+  }
+
+  .vd-order-row > .vd-order-title,
+  .vd-order-row > .vd-order-status,
+  .vd-order-row > .vd-order-date,
+  .vd-order-row > .vd-order-amount,
+  .vd-order-row > .vd-order-button {
+    order: 0 !important;
+  }
+}
+
+/* Typography scale (Foundations · 48/32/24/16/14/12, lh 1.4, Vazirmatn) */
+.vd-text-display {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0;
+  @media (width >= 48rem) {
+    font-size: 2.25rem;
+  }
+  @media (width >= 80rem) {
+    font-size: 3rem;
+  }
+}
+.vd-text-page-title {
+  font-size: 1.625rem;
+  font-weight: 700;
+  line-height: 1.4;
+  @media (width >= 80rem) {
+    font-size: 1.875rem;
+  }
+}
+.vd-text-section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+  @media (width >= 80rem) {
+    font-size: 1.5rem;
+  }
+}
+.vd-text-card-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.vd-text-body {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.7;
+}
+.vd-text-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.vd-text-caption {
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+/* Accessible focus treatment shared by all interactive elements */
+.vd-focus:focus-visible {
+  outline: 2px solid var(--color-jade);
+  outline-offset: 2px;
+}
+
+/* The legacy storefront stylesheet targets typed inputs but leaves an
+   untyped search input with the browser's inset border. Keep the search
+   control's border on its wrapper so the focus treatment remains a single,
+   consistent Penpot-style field. */
+.vd-order-search :where(input, input:focus) {
+  appearance: none;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+.vd-order-search:focus-within {
+  border-color: var(--color-jade) !important;
+}
+
+/* Keep the filters compact on account screens while matching the generous
+   desktop spacing in the approved Penpot frame. These explicit values also
+   avoid Bootstrap's important `.p-*` utilities changing the component's
+   geometry at different breakpoints. */
+.vd-order-filters {
+  gap: 1rem !important;
+  padding: 1rem !important;
+}
+@media (width >= 48rem) {
+  .vd-order-filters {
+    padding: 1.5rem !important;
+  }
+}
+@media (width >= 64rem) {
+  .vd-order-filters {
+    padding: 2rem !important;
+  }
+}
+@media (width >= 80rem) {
+  .vd-order-filters {
+    gap: 1.5rem !important;
+    padding: 3.75rem !important;
+  }
+}
+
+/* Cart-aware catalog cards switch their commerce row based on actual card
+   width, not viewport width. This keeps the 768/1024 transitions stable. */
+.vd-product-card {
+  container-type: inline-size;
+}
+.vd-product-card__commerce {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+.vd-product-card__price {
+  min-height: 2.75rem;
+}
+.vd-product-card__action {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+}
+@container (min-width: 230px) {
+  .vd-product-card__commerce {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .vd-product-card__price {
+    min-height: 0;
+  }
+  .vd-product-card__action {
+    width: auto;
+    justify-content: flex-end;
+  }
+}
+
+/* Product detail hero --------------------------------------------------
+   The Penpot desktop reference keeps the gallery and information columns
+   aligned at 520px, while the purchase panel is a shorter 392px card. These
+   rules are scoped to the product hero so legacy Bootstrap utilities (most
+   notably `.p-5 !important`) cannot change its geometry or affect unrelated
+   storefront panels. Below the desktop breakpoint the columns intentionally
+   return to their natural, stacked heights. */
+.vd-product-hero__gallery,
+.vd-product-hero__information,
+.vd-product-hero__purchase {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.vd-product-hero__information,
+.vd-product-hero__purchase {
+  padding: 1.25rem !important;
+}
+
+.vd-product-hero__title {
+  min-width: 0;
+}
+
+.vd-product-information__eyebrow {
+  color: var(--color-jade);
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: start;
+}
+
+.vd-product-information__title {
+  margin-top: 1rem !important;
+  color: var(--color-ink);
+  font-size: clamp(1.5rem, 2.2vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1.45;
+  text-align: start;
+}
+
+.vd-product-information__subtitle {
+  margin-top: 0.625rem !important;
+  overflow: hidden;
+  color: var(--color-vd-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: start;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.vd-product-information__divider {
+  margin: 1rem 0 0 !important;
+  opacity: 1;
+}
+
+.vd-product-information__rating {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.vd-product-information__colors {
+  margin-top: 1.125rem;
+}
+
+.vd-product-information__color-label,
+.vd-product-information__features-title {
+  color: var(--color-ink);
+  font-size: 0.875rem;
+  font-weight: 800;
+  line-height: 1.7;
+  text-align: start;
+}
+
+.vd-product-information__swatches {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.625rem;
+  margin-top: 0.625rem;
+}
+
+.vd-product-information__features {
+  min-height: 0;
+  margin-top: 1.125rem;
+  overflow: hidden;
+}
+
+.vd-product-information__feature-list {
+  display: grid;
+  min-height: 0;
+  gap: 0.25rem;
+  margin-top: 0.5rem !important;
+  overflow: hidden;
+}
+
+.vd-product-information__feature {
+  display: flex;
+  min-width: 0;
+  min-height: 1.5rem;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--color-ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.5rem;
+}
+
+.vd-product-information__feature-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (width >= 64rem) {
+  .vd-product-hero__gallery,
+  .vd-product-hero__information {
+    height: 520px;
+    min-height: 520px;
+    max-height: 520px;
+  }
+
+  .vd-product-hero__gallery {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .vd-product-hero__media {
+    min-height: 0;
+  }
+
+  .vd-product-hero__gallery > .vd-product-hero__media {
+    flex: 1 1 auto;
+    aspect-ratio: auto !important;
+  }
+
+  .vd-product-hero__media > img {
+    object-fit: contain !important;
+  }
+
+  .vd-product-hero__information {
+    min-height: 0;
+    overflow: hidden;
+    padding: 1.5rem 1.75rem !important;
+  }
+
+  .vd-product-hero__title {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .vd-product-hero__purchase {
+    display: flex;
+    height: 392px;
+    min-height: 392px;
+    max-height: 392px;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 1.5rem !important;
+  }
+
+  .vd-product-hero__warranty {
+    margin-top: auto;
+  }
+}
+
+@media (width >= 80rem) {
+  .vd-product-hero__information {
+    padding: 2rem 2.5rem !important;
+  }
+}
+
+/* Dedicated Toastify viewport and surfaces for cart feedback. Other legacy
+   toasts keep their existing placement and styling. */
+.vd-cart-toast-viewport.Toastify__toast-container {
+  width: min(410px, calc(100vw - 2rem));
+}
+@media (width >= 48rem) {
+  .vd-cart-toast-viewport.Toastify__toast-container--top-center {
+    top: 8.75rem;
+  }
+}
+@media (width < 48rem) {
+  .vd-cart-toast-viewport.Toastify__toast-container {
+    right: 1rem !important;
+    bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important;
+    left: 1rem !important;
+    width: auto !important;
+    padding: 0;
+    transform: none !important;
+  }
+}
+.vd-cart-toast.Toastify__toast {
+  min-height: 92px;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--color-vd-line);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: 0 18px 46px -24px rgb(0 77 58 / 0.45);
+}
+.vd-cart-toast--danger.Toastify__toast {
+  border-color: #f4b7b2;
+  background: var(--color-vd-danger-tint);
+}
+.vd-cart-toast--warning.Toastify__toast {
+  border-color: #e9c988;
+  background: var(--color-vd-warning-tint);
+}
+.vd-cart-toast__body.Toastify__toast-body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+.vd-cart-toast__content {
+  display: flex;
+  min-height: 88px;
+  width: 100%;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 0.75rem 0.75rem;
+}
+.vd-cart-toast__content p {
+  margin: 0;
+}
+.vd-cart-toast__icon {
+  display: flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: white;
+}
+.vd-cart-toast__icon--success {
+  background: var(--color-jade);
+}
+.vd-cart-toast__icon--danger {
+  background: var(--color-vd-danger);
+}
+.vd-cart-toast__icon--warning {
+  background: var(--color-vd-warning);
+}
+.vd-cart-toast__action--success {
+  color: var(--color-jade);
+}
+.vd-cart-toast__action--danger {
+  color: var(--color-vd-danger);
+}
+.vd-cart-toast__action--warning {
+  color: var(--color-vd-warning);
+}
+.vd-cart-toast__progress--success {
+  background: var(--color-jade) !important;
+}
+.vd-cart-toast__progress--danger {
+  background: var(--color-vd-danger) !important;
+}
+.vd-cart-toast__progress--warning {
+  background: var(--color-vd-warning) !important;
+}
+
+/* Visually hidden (screen-reader only) helper */
+.vd-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Mini-cart item region keeps totals/actions fixed while long carts scroll. */
+.vd-mini-cart-scroll {
+  scrollbar-color: #a4b3ae #eef2f0;
+  scrollbar-width: thin;
+}
+.vd-mini-cart-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.vd-mini-cart-scroll::-webkit-scrollbar-track {
+  background: #eef2f0;
+}
+.vd-mini-cart-scroll::-webkit-scrollbar-thumb {
+  background: #a4b3ae;
+  border-radius: 999px;
+}
+@media (max-width: 767px) {
+  .vd-order-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .vd-order-summary {
+    order: -2;
+    height: 38px;
+    padding: 0;
+    border: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .vd-order-summary > h2 {
+    font-size: 15px;
+  }
+
+  .vd-order-summary > dl {
+    margin: 0;
+    display: block;
+  }
+
+  .vd-order-summary > dl > div:first-child dt {
+    display: none;
+  }
+
+  .vd-order-summary > dl > div:not(:first-child) {
+    display: none;
+  }
+
+  .vd-order-progress {
+    order: -1;
+    height: 168px;
+    padding: 24px 8px;
+  }
+
+  .vd-order-items {
+    padding: 0;
+    border: 0;
+  }
+
+  .vd-return-form {
+    display: flex;
+    height: 2242px;
+    flex-direction: column;
+    gap: 16px;
+    overflow: visible;
+  }
+
+  .vd-return-form > ol {
+    height: 48px;
+    min-height: 48px;
+    padding: 0;
+    background: transparent;
+  }
+
+  .vd-return-form > ol li > span:nth-last-child(1) {
+    display: none;
+  }
+
+  .vd-return-form > ol li > span:nth-last-child(2) {
+    width: 40px;
+    height: 40px;
+  }
+
+  .vd-return-form > section {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .vd-return-form > section > h2 {
+    height: 40px;
+    display: flex;
+    align-items: center;
+  }
+
+  .vd-return-form > section > h2 + .grid,
+  .vd-return-form > section > h2 + fieldset {
+    margin-top: 8px;
+    gap: 16px !important;
+    row-gap: 16px !important;
+  }
+
+  form.vd-return-form > section > div.grid {
+    gap: 16px !important;
+    row-gap: 16px !important;
+  }
+
+  .vd-return-form > section:nth-of-type(2) > .grid > div > p:last-child {
+    height: 44px;
+  }
+
+  .vd-return-form textarea {
+    height: 104px !important;
+  }
+
+  .vd-return-form > section:last-child button.mt-5 {
+    margin-top: 8px;
+    height: 130px;
+    padding-block: 16px;
+  }
+
+  .vd-address-form,
+  .vd-address-form-card {
+    height: 1348px;
+  }
+
+  .vd-address-form-card {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .vd-address-form-card > h2 {
+    height: 40px;
+    display: flex;
+    align-items: center;
+  }
+
+  .vd-address-form-card > h2 + .grid {
+    margin-top: 10px !important;
+    gap: 18px !important;
+  }
+
+  .vd-address-form-card > hr {
+    display: none;
+  }
+
+  .vd-address-form-card > hr + h2 {
+    display: none;
+  }
+
+  .vd-address-form-card > hr + h2 + .grid {
+    margin-top: 18px !important;
+  }
+
+  .vd-address-form-card textarea {
+    height: 52px !important;
+    min-height: 52px;
+  }
+
+  .vd-address-form-card > .mt-6 {
+    height: 154px;
+    min-height: 154px;
+    margin-top: 42px !important;
+    padding: 20px;
+  }
+
+  .vd-address-form-card > .mt-7 {
+    margin-top: 24px;
+    padding-top: 24px;
+    gap: 16px;
+  }
+
+  .vd-address-form-card > .mt-7 > div {
+    display: grid;
+    width: 100%;
+    gap: 16px;
+  }
+
+  .vd-address-form-card > .mt-7 a,
+  .vd-address-form-card > .mt-7 button {
+    width: 100%;
+  }
+}

@@ -1,21 +1,10 @@
-import Header from "@layout/header";
-import Wrapper from "@layout/wrapper";
-import ShopCta from "@components/cta";
-import AboutArea from "@components/about";
-import Footer from "@layout/footer";
+import { AboutPage } from "@components/vendora/about/about-page";
 
 export const metadata = {
-  title: "About - Harri Shop",
-};
-const About = () => {
-  return (
-    <Wrapper>
-      <Header style_2={true} />
-      <AboutArea />
-      <ShopCta />
-      <Footer />
-    </Wrapper>
-  );
+  title: "درباره وندورا | Vendora",
+  description: "داستان وندورا، فرایند تولید کیف و ارزش‌هایی که در محصولات ما دیده می‌شوند.",
 };
 
-export default About;
+export default function About() {
+  return <AboutPage />;
+}

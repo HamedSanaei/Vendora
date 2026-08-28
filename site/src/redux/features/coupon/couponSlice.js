@@ -24,8 +24,12 @@ export const couponSlice = createSlice({
       }
       
     },
+    clear_coupon: (state) => {
+      state.coupon_info = undefined;
+      localStorage.removeItem("couponInfo");
+    },
   },
 });
 
-export const { set_coupon,get_coupons } = couponSlice.actions;
+export const { set_coupon,get_coupons,clear_coupon } = couponSlice.actions;
 export default couponSlice.reducer;
