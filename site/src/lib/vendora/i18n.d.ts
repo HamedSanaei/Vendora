@@ -53,6 +53,17 @@ declare const fa: {
         heroBody: string;
         heroPrimary: string;
         heroSecondary: string;
+        slideshow: {
+            carousel: string;
+            photo: string;
+            indicators: string;
+            previous: string;
+            next: string;
+            pause: string;
+            play: string;
+            goToPhoto: (number: string) => string;
+            position: (current: string, total: string) => string;
+        };
         popularTitle: string;
         newestTitle: string;
         quickLinks: {

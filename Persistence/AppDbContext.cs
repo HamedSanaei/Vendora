@@ -66,6 +66,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <summary>Gets storefront email subscriptions.</summary>
     public DbSet<EmailSubscription> EmailSubscriptions => Set<EmailSubscription>();
 
+    /// <summary>Gets the uploaded homepage slideshow photos.</summary>
+    public DbSet<SlideshowSlide> SlideshowSlides => Set<SlideshowSlide>();
+
     /// <summary>
     /// Configures entity mappings, relationships, indexes, and UTC date handling.
     /// </summary>
@@ -334,6 +337,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             builder.HasIndex(x => x.Email).IsUnique();
             builder.HasIndex(x => x.CreatedAtUtc);
             builder.HasIndex(x => x.IsActive);
+        });
+
+        modelBuilder.Entity<SlideshowSlide>(builder =>
+        {
+            builder.ToTable("SlideshowSlides", table =>
+            {
+                table.HasCheckConstraint("CK_SlideshowSlides_SortOrder", "SortOrder >= 0");
+                table.HasCheckConstraint("CK_SlideshowSlides_DurationSeconds", "DurationSeconds >= 1 AND DurationSeconds <= 120");
+            });
+            builder.HasKey(x => x.Id);
+            builder.Property(x => x.ImageUrl).HasMaxLength(500).IsRequired();
+            builder.HasIndex(x => new { x.SortOrder, x.Id });
         });
 
         var utcDateTimeConverter = new ValueConverter<DateTime, DateTime>(

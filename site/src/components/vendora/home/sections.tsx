@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -15,6 +14,7 @@ import type { Locale } from "@/lib/vendora/types";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
 import { SectionHeading } from "@/components/vendora/ui/section-heading";
 import { CategoryTile, EditorialPromoTile } from "./commerce-components";
+import { HeroSlideshow } from "./hero-slideshow";
 import { ProductCard } from "@/components/vendora/product/product-card";
 import { BagArtwork } from "@/components/vendora/product/bag-artwork";
 import { VendoraButton } from "@/components/vendora/ui/button";
@@ -32,55 +32,10 @@ function useVendoraLocale() {
   return { locale, t: getDict(locale) };
 }
 
-/**
- * Hero section (Penpot "Layout / Hero"): rounded image panel with the
- * direct-from-factory badge, display headline, body copy, primary/secondary
- * buttons and the slider pagination indicator.
- */
+/** Homepage hero backed by the configured slideshow, retaining the original layout and copy. */
 export function HeroSection() {
-  const { locale, t } = useVendoraLocale();
-  return (
-    <section aria-labelledby="vd-hero-title" className="vd-container mt-[24px] md:mt-[28px] md:h-[410px] lg:mt-[31px] lg:h-[520px]">
-      <div className="relative h-[510px] overflow-hidden rounded-hero bg-white md:h-[410px] md:bg-surface-soft lg:h-[480px]">
-        <Image
-          src="/assets/img/vendora/hero-bags.jpg"
-          alt=""
-          fill
-          priority
-          sizes="(max-width: 768px) 100vw, 1312px"
-          className="h-[248px]! object-cover object-center md:h-auto!"
-        />
-        <div className="absolute inset-x-0 top-0 hidden h-full bg-gradient-to-l from-white/95 via-white/80 to-transparent rtl:bg-gradient-to-r md:block" />
-        <div className="relative flex h-full flex-col px-[26px] pt-[270px] md:justify-center md:px-[44px] md:py-[28px] lg:min-h-[510px] lg:px-14 lg:py-10">
-          <span className="inline-flex w-fit items-center rounded-full bg-jade-tint px-3 py-1 text-xs font-semibold text-jade">
-            {t.home.heroBadge}
-          </span>
-          <h1 id="vd-hero-title" className="mt-[12px] max-w-xl whitespace-pre-line text-[28px] font-bold leading-[43px] text-ink lg:mt-4 lg:text-[48px] lg:leading-[1.4]">
-            {t.home.heroTitle}
-          </h1>
-          <p className="mt-[6px] max-w-lg text-[14px] leading-[26px] text-vd-muted lg:mt-4 lg:text-[1.0625rem] lg:leading-8">{t.home.heroBody}</p>
-          <div className="mt-[6px] flex flex-wrap gap-4 lg:mt-7">
-            <VendoraButton href={withLocalePath("/shop", locale)} size="lg">
-              {t.home.heroPrimary}
-            </VendoraButton>
-            <VendoraButton href={withLocalePath("/about", locale)} variant="outline" size="lg" className="hidden lg:inline-flex">
-              {t.home.heroSecondary}
-            </VendoraButton>
-          </div>
-        </div>
-      </div>
-      {/* Slider indicator (design shows slide 1 of 4 active) */}
-      <div className="hidden h-[40px] items-center justify-between lg:flex">
-        <span className="vd-text-caption font-semibold text-vd-muted">01 / 04</span>
-        <div className="flex items-center gap-2" aria-hidden>
-          <span className="h-1 w-8 rounded-sm bg-jade" />
-          <span className="h-1 w-5 rounded-sm bg-[#bfc9c3]" />
-          <span className="h-1 w-5 rounded-sm bg-[#bfc9c3]" />
-          <span className="h-1 w-5 rounded-sm bg-[#bfc9c3]" />
-        </div>
-      </div>
-    </section>
-  );
+  const { locale } = useVendoraLocale();
+  return <HeroSlideshow locale={locale} />;
 }
 
 const quickTileColors = ["bg-tile-mint", "bg-tile-sand", "bg-tile-steel"] as const;

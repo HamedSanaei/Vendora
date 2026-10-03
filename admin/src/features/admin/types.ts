@@ -1,3 +1,18 @@
+/** Persisted homepage photo and its slideshow playback settings. */
+export interface AdminSlideshowSlide {
+  id: string;
+  imageUrl: string;
+  sortOrder: number;
+  durationSeconds: number;
+}
+
+/** Multipart slideshow settings; an omitted image preserves the existing photo. */
+export interface AdminSlideshowInput {
+  image?: File;
+  sortOrder: number;
+  durationSeconds: number;
+}
+
 export type AdminInventoryStatus = 'InStock' | 'LowStock' | 'OutOfStock';
 
 export type AdminOrderStatus =

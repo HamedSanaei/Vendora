@@ -1,6 +1,6 @@
 # Vendora
 
-Vendora is a clean-architecture ecommerce solution for a specialized bag manufacturer. The repository contains an ASP.NET Core Web API, a React admin panel, and a mock-first Next.js storefront.
+Vendora is a clean-architecture ecommerce solution for a specialized bag manufacturer. The repository contains an ASP.NET Core Web API, a React admin panel, and a bilingual Next.js storefront.
 
 ## Projects
 
@@ -10,7 +10,7 @@ Vendora is a clean-architecture ecommerce solution for a specialized bag manufac
 - `Persistence`: EF Core SQLite DbContext, migrations, repositories, and seed data.
 - `Infrastructure`: adapters for external details such as local product image storage.
 - `admin`: Vite + React admin panel using MobX and Axios.
-- `site`: Next.js storefront rebuilt from the Harri template with mock data.
+- `site`: Next.js storefront with localized shopping UI and API-backed features.
 
 ## Architecture
 
@@ -72,7 +72,17 @@ Storefront routes are locale-prefixed:
 - Persian RTL: `http://localhost:3000/fa`
 - English LTR: `http://localhost:3000/en`
 
-The storefront is currently mock-only and does not call the ASP.NET Core API. Mock data is copied from the template backend seed files into `site/src/data/template`.
+The homepage slideshow reads its configured photos from the ASP.NET Core API. Set `NEXT_PUBLIC_API_BASE_URL` to the API origin (or its `/api` URL) before starting or building the site; it defaults to `http://localhost:5020`.
+
+### Homepage slideshow
+
+- Manage photos under **Online store** at `/fa/admin/online-store` or `/en/admin/online-store`.
+- Upload JPEG, PNG, or WebP images up to **5 MiB**; the API validates the extension, MIME type, byte count, and raster signatures. Uploaded photos use the existing `/uploads/products/` storage.
+- Each photo has a nonnegative integer display order and its own **1–120 second** duration. Lower orders appear first; ties are ordered by slide ID. Both languages share the same playlist and keep their localized hero text.
+- Edit settings without selecting a file to retain the existing photo, or select a replacement. Removal requires confirmation. Successful replacements/removals clean up the owned upload after saving the database change; IO/permission cleanup failures are best-effort.
+- The storefront supports autoplay, previous/next, direct photo selection, RTL-aware arrow keys, and pause/play on mobile and desktop. Hover, focus, and hidden tabs temporarily pause playback; reduced-motion preferences start it paused. A single photo does not autoplay. With no configured photos or an unavailable API, the original hero photo remains and the count reflects one photo.
+- `GET /api/slideshow` is public. `GET`/`POST /api/admin/slideshow` and `PUT`/`DELETE /api/admin/slideshow/{id}` require the `AdminOnly` policy. Write forms use `image`, `sortOrder`, and `durationSeconds`; only updates may omit `image`.
+- Apply the additive `AddHomepageSlideshow` EF migration before serving the new endpoints. The deployment pipeline already runs migrations; no existing tables or data are changed by this migration's `Up` operation.
 
 ## Quality Checks
 

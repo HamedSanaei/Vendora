@@ -22,6 +22,8 @@ import type {
   AdminUserInput,
   AdminAuthAccount,
   AdminAuthProfile,
+  AdminSlideshowSlide,
+  AdminSlideshowInput,
   CreateAdminProductInput,
 } from '../types';
 
@@ -196,6 +198,45 @@ export async function updateAdminColor(id: string, input: AdminColorInput): Prom
 /** Soft deletes a catalog color. */
 export async function deleteAdminColor(id: string): Promise<void> {
   await httpClient.delete(`/api/admin/colors/${id}`);
+}
+
+/** Loads persisted homepage slides in server-defined display order and resolves image URLs. */
+export async function getAdminSlideshow(): Promise<AdminSlideshowSlide[]> {
+  const response = await httpClient.get<AdminSlideshowSlide[]>('/api/admin/slideshow');
+  return response.data.map(mapSlideshowSlide);
+}
+
+/** Uploads a required photo with its order and duration, returning the persisted slide. */
+export async function createAdminSlideshowSlide(input: AdminSlideshowInput & { image: File }): Promise<AdminSlideshowSlide> {
+  const response = await httpClient.post<AdminSlideshowSlide>('/api/admin/slideshow', slideshowFormData(input), multipartRequestConfig);
+  return mapSlideshowSlide(response.data);
+}
+
+/** Saves slide settings and optionally replaces its photo, returning the persisted slide. */
+export async function updateAdminSlideshowSlide(id: string, input: AdminSlideshowInput): Promise<AdminSlideshowSlide> {
+  const response = await httpClient.put<AdminSlideshowSlide>(`/api/admin/slideshow/${id}`, slideshowFormData(input), multipartRequestConfig);
+  return mapSlideshowSlide(response.data);
+}
+
+/** Permanently removes the specified homepage slide after the caller confirms removal. */
+export async function deleteAdminSlideshowSlide(id: string): Promise<void> {
+  await httpClient.delete(`/api/admin/slideshow/${id}`);
+}
+
+/** Encodes the exact multipart fields; absent replacement files are not sent. */
+function slideshowFormData(input: AdminSlideshowInput): FormData {
+  const data = new FormData();
+  if (input.image) {
+    data.append('image', input.image);
+  }
+  data.append('sortOrder', String(input.sortOrder));
+  data.append('durationSeconds', String(input.durationSeconds));
+  return data;
+}
+
+/** Reuses the product image resolution convention for stored slideshow image paths. */
+function mapSlideshowSlide(slide: AdminSlideshowSlide): AdminSlideshowSlide {
+  return { ...slide, imageUrl: resolveImageUrl(slide.imageUrl) };
 }
 
 function resolveImageUrl(imageUrl: string | null): string {

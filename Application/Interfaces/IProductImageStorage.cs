@@ -12,4 +12,9 @@ public interface IProductImageStorage
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The stored image URL.</returns>
     Task<StoredProductImage> SaveAsync(ProductImageUpload upload, CancellationToken cancellationToken = default);
+
+    /// <summary>Best-effort removal of an owned local image; never deletes arbitrary URLs or paths.</summary>
+    /// <param name="imageUrl">A URL previously returned by this storage adapter.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    Task DeleteAsync(string imageUrl, CancellationToken cancellationToken = default);
 }

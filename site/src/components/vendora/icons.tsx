@@ -219,6 +219,24 @@ export function ChevronIcon({ size, ...props }: VendoraIconProps) {
   );
 }
 
+/** Non-directional play symbol for slideshow autoplay. */
+export function PlayIcon({ size, ...props }: VendoraIconProps) {
+  return (
+    <svg {...base(size, props)}>
+      <path d="m9 5 11 7-11 7Z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** Pause symbol for slideshow autoplay. */
+export function PauseIcon({ size, ...props }: VendoraIconProps) {
+  return (
+    <svg {...base(size, props)}>
+      <path d="M9 5v14M15 5v14" strokeWidth="3" />
+    </svg>
+  );
+}
+
 /** Long arrow pointing to the inline-end; flips automatically in RTL. */
 export function ArrowEndIcon({ size, ...props }: VendoraIconProps) {
   return (
