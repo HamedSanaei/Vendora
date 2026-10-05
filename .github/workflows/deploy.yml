@@ -261,6 +261,24 @@ jobs:
           scp -i "$HOME/.ssh/deploy_key" -P "$port" -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
             -r deploy scripts "$cc_host:/opt/vendora/"
 
+      - name: Authenticate production server to GHCR
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_PORT: ${{ secrets.PROD_PORT }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          host="$PROD_HOST"
+          port="${PROD_PORT:-22}"
+          user="${PROD_USER:-root}"
+          # Refresh the server-side GHCR credential on every deploy. GITHUB_TOKEN
+          # is short-lived and scoped to this repository, avoiding stale PATs.
+          printf '%s' "$GHCR_TOKEN" | \
+            ssh -i "$HOME/.ssh/deploy_key" -p "$port" -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+              "$user@$host" "docker login ghcr.io --username '$GHCR_USER' --password-stdin >/dev/null"
+
       - name: Run deployment on server
         id: deploy
         env:
