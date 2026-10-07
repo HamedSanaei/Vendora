@@ -71,12 +71,13 @@ interface CheckoutStickyActionProps {
   label: string;
   value: string;
   action: ReactNode;
+  reserveMobileNavigation?: boolean;
 }
 
 /** Safe-area-aware mobile checkout action shared by Cart, Shipping and Payment. */
-export function CheckoutStickyAction({ label, value, action }: CheckoutStickyActionProps) {
+export function CheckoutStickyAction({ label, value, action, reserveMobileNavigation = false }: CheckoutStickyActionProps) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 flex min-h-[92px] items-center justify-between gap-4 border-t border-vd-line bg-white px-4 pb-[env(safe-area-inset-bottom)] pt-3 lg:hidden">
+    <div className={`fixed inset-x-0 z-30 flex min-h-[92px] items-center justify-between gap-4 border-t border-vd-line bg-white px-4 pt-3 lg:hidden ${reserveMobileNavigation ? "bottom-[calc(88px+env(safe-area-inset-bottom))] pb-3 md:bottom-0 md:pb-[env(safe-area-inset-bottom)]" : "bottom-0 pb-[env(safe-area-inset-bottom)]"}`}>
       <div className="min-w-0">
         <p className="text-xs text-vd-muted">{label}</p>
         <strong className="mt-1 block truncate text-base font-extrabold text-jade-dark">{value}</strong>

@@ -126,6 +126,21 @@ html:has(.vd-home)::-webkit-scrollbar {
   display: none;
 }
 
+/* Reserve the phone safe area once for every storefront surface that owns the
+   shared fixed bottom navigation. Checkout/auth routes do not render it. */
+@media (width < 48rem) {
+  body:has(.vd-mobile-bottom-nav) {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+
+  .vd-mobile-bottom-nav {
+    height: calc(5.5rem + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    border-start-start-radius: 1.25rem;
+    border-start-end-radius: 1.25rem;
+  }
+}
+
 @media (width >= 64rem) {
   /* Bootstrap's global `.border` utility is important, so the desktop
      dashboard rows need an explicit reset to avoid an inner rectangular frame.

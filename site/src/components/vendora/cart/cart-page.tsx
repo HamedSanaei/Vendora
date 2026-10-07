@@ -71,7 +71,7 @@ export function VendoraCartPage() {
             <div className="mt-11"><CartTrustBar locale={locale} /></div>
             <p className="mt-6 text-center text-xs leading-6 text-vd-muted lg:hidden">{t.termsNote}</p>
 
-            <CheckoutStickyAction label={t.payable} value={formatPrice(totals.subtotal, locale)} action={<Link href={withLocalePath("/shipping", locale)} className="vd-focus flex h-[60px] min-w-[176px] items-center justify-center rounded-control bg-jade px-5 text-sm font-extrabold text-white hover:bg-jade-dark">{t.checkout}</Link>} />
+            <CheckoutStickyAction reserveMobileNavigation label={t.payable} value={formatPrice(totals.subtotal, locale)} action={<Link href={withLocalePath("/shipping", locale)} className="vd-focus flex h-[60px] min-w-[176px] items-center justify-center rounded-control bg-jade px-5 text-sm font-extrabold text-white hover:bg-jade-dark">{t.checkout}</Link>} />
           </>
         )}
       </div>

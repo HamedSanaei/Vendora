@@ -11,6 +11,7 @@ import type { Locale, MegaMenuCategory } from "@/lib/vendora/types";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
 import { CartIcon, ChevronIcon, CloseIcon, HeartIcon, MenuIcon, SearchIcon, UserIcon } from "@/components/vendora/icons";
 import { MiniCart } from "@/components/vendora/cart/mini-cart";
+import { MobileBottomNavigation } from "@/components/vendora/layout/mobile-bottom-navigation";
 
 const desktopLinks = [
   { key: "bestSellers", href: "/shop" },
@@ -63,6 +64,7 @@ export function StoreHeader() {
       {megaOpen && activeCategory ? <DesktopMegaMenu locale={locale} activeCategory={activeCategory} setActiveKey={setActiveKey} keepOpen={openMega} closeSoon={closeMegaSoon} close={() => setMegaOpen(false)} /> : null}
       {drawerOpen ? <MobileCategoryDrawer locale={locale} close={() => setDrawerOpen(false)} /> : null}
       <MiniCart open={miniCartOpen} locale={locale} onClose={() => setMiniCartOpen(false)} />
+      <MobileBottomNavigation locale={locale} pathname={pathname} cartQuantity={cartQuantity} />
     </header>
   );
 }

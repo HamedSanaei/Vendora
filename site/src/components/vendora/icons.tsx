@@ -68,6 +68,28 @@ export function HomeIcon({ size, ...props }: VendoraIconProps) {
   );
 }
 
+/** Four-tile catalog symbol used by the mobile primary navigation. */
+export function CategoriesIcon({ size, ...props }: VendoraIconProps) {
+  return (
+    <svg {...base(size, props)}>
+      <rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.5" />
+      <rect x="14" y="3.5" width="6.5" height="6.5" rx="1.5" />
+      <rect x="3.5" y="14" width="6.5" height="6.5" rx="1.5" />
+      <rect x="14" y="14" width="6.5" height="6.5" rx="1.5" />
+    </svg>
+  );
+}
+
+/** Wheeled cart symbol used where the destination is the full cart page. */
+export function ShoppingCartIcon({ size, ...props }: VendoraIconProps) {
+  return (
+    <svg {...base(size, props)}>
+      <path d="M3 4.5h2.2l1.6 10.2h10.7l2-7.3H6" />
+      <path d="M8 18.5h.1M17 18.5h.1" strokeWidth="3" />
+    </svg>
+  );
+}
+
 export function IdCardIcon({ size, ...props }: VendoraIconProps) {
   return (
     <svg {...base(size, props)}>

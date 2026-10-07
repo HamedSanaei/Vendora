@@ -38,6 +38,8 @@ const fa = {
     viewAllProducts: "مشاهده همه محصولات",
     mobileSearchPlaceholder: "جستجو در وندورا...",
     desktopSearchPlaceholder: "جستجو بین کیف‌ها...",
+    mobileAccount: "حساب من",
+    mobilePrimaryNavigation: "ناوبری اصلی موبایل",
   },
   footer: {
     tagline: "تولیدکننده تخصصی کیف‌های کاربردی",
@@ -561,6 +563,8 @@ const en: Dict = {
     viewAllProducts: "View all products",
     mobileSearchPlaceholder: "Search Vendora...",
     desktopSearchPlaceholder: "Search bags...",
+    mobileAccount: "My account",
+    mobilePrimaryNavigation: "Mobile primary navigation",
   },
   footer: {
     tagline: "Specialised manufacturer of practical bags",
