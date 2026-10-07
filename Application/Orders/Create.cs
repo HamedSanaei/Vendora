@@ -1,3 +1,4 @@
+using Application.Auth;
 using Application.Orders.DTOs;
 using Domain.Entities;
 using MediatR;
@@ -34,7 +35,9 @@ public static class Create
         string? Unit,
         string PostalCode,
         bool SaveToAddressBook,
-        bool IsDefault);
+        bool IsDefault,
+        double? Latitude = null,
+        double? Longitude = null);
 
     /// <summary>
     /// Represents a create-order command.
@@ -206,12 +209,19 @@ public static class Create
             order.ShippingPlaque = address.Plaque;
             order.ShippingUnit = address.Unit;
             order.ShippingPostalCode = address.PostalCode;
+            order.ShippingLatitude = address.Latitude;
+            order.ShippingLongitude = address.Longitude;
         }
 
         private static string? ApplyAddress(CustomerAddress address, AddressInput input)
         {
             string postalCode = NormalizeDigits(input.PostalCode)?.Trim() ?? string.Empty;
             string phoneNumber = NormalizeDigits(input.PhoneNumber)?.Trim() ?? string.Empty;
+            string? coordinateError = AddressCoordinates.Validate(input.Latitude, input.Longitude);
+            if (coordinateError is not null)
+            {
+                return coordinateError;
+            }
 
             if (string.IsNullOrWhiteSpace(input.RecipientName))
             {
@@ -252,6 +262,8 @@ public static class Create
             address.Plaque = string.IsNullOrWhiteSpace(input.Plaque) ? null : NormalizeDigits(input.Plaque)?.Trim();
             address.Unit = string.IsNullOrWhiteSpace(input.Unit) ? null : NormalizeDigits(input.Unit)?.Trim();
             address.PostalCode = postalCode;
+            address.Latitude = input.Latitude;
+            address.Longitude = input.Longitude;
             return null;
         }
 

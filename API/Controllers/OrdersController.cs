@@ -43,7 +43,9 @@ public class OrdersController : BaseApiController
                         request.NewAddress.Unit,
                         request.NewAddress.PostalCode,
                         request.NewAddress.SaveToAddressBook,
-                        request.NewAddress.IsDefault),
+                        request.NewAddress.IsDefault,
+                        request.NewAddress.Latitude,
+                        request.NewAddress.Longitude),
                     (request.Items ?? []).Select(item => new Create.ItemInput(item.ProductId, item.Quantity)).ToList()),
                 cancellationToken);
         }
@@ -119,4 +121,6 @@ public sealed record CreateOrderAddressRequest(
     string? Unit,
     string PostalCode,
     bool SaveToAddressBook,
-    bool IsDefault);
+    bool IsDefault,
+    double? Latitude = null,
+    double? Longitude = null);

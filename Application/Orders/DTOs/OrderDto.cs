@@ -12,7 +12,9 @@ public sealed record OrderShippingAddressDto(
     string StreetAddress,
     string? Plaque,
     string? Unit,
-    string PostalCode);
+    string PostalCode,
+    double? Latitude = null,
+    double? Longitude = null);
 
 /// <summary>
 /// Represents an order summary.

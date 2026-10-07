@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="backdrop" x2="1" y2="1"><stop stop-color="#e3e9df"/><stop offset=".55" stop-color="#f0eee4"/><stop offset="1" stop-color="#ccd9cd"/></linearGradient>
+    <radialGradient id="light"><stop stop-color="#fffdf3" stop-opacity=".92"/><stop offset="1" stop-color="#fffdf3" stop-opacity="0"/></radialGradient>
+    <linearGradient id="canvas" x1="0" y1="0" x2=".3" y2="1"><stop stop-color="#728070"/><stop offset=".32" stop-color="#536750"/><stop offset=".72" stop-color="#3d523c"/><stop offset="1" stop-color="#293c2b"/></linearGradient>
+    <linearGradient id="pocket" x2="0" y2="1"><stop stop-color="#71816a"/><stop offset=".6" stop-color="#4d6549"/><stop offset="1" stop-color="#394d34"/></linearGradient>
+    <linearGradient id="trim" x2="0" y2="1"><stop stop-color="#57604d"/><stop offset=".5" stop-color="#283627"/><stop offset="1" stop-color="#151f16"/></linearGradient>
+    <linearGradient id="leather" x2="1" y2="1"><stop stop-color="#bd9470"/><stop offset=".45" stop-color="#8b6448"/><stop offset="1" stop-color="#62462f"/></linearGradient>
+    <linearGradient id="metal" x2="1" y2="1"><stop stop-color="#e8dcb8"/><stop offset=".45" stop-color="#928469"/><stop offset="1" stop-color="#d9cca5"/></linearGradient>
+    <pattern id="weave" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 1h6M1 0v6" stroke="#e0e5c6" stroke-opacity=".13" stroke-width=".7"/><path d="M0 4h6M4 0v6" stroke="#0c2111" stroke-opacity=".2" stroke-width=".8"/></pattern>
+    <pattern id="webbing" width="6" height="5" patternUnits="userSpaceOnUse"><path d="M0 0v5M2 0v5M4 0v5" stroke="#a1ac8b" stroke-opacity=".24" stroke-width="1"/></pattern>
+    <filter id="blur"><feGaussianBlur stdDeviation="20"/></filter>
+    <filter id="soft"><feGaussianBlur stdDeviation="5"/></filter>
+    <clipPath id="case"><path d="M282 392Q294 355 341 359L1162 451Q1242 459 1300 495Q1341 519 1343 557L1341 600Q1340 629 1303 633L344 696Q300 699 281 669Q266 649 266 613L265 448Q265 415 282 392Z"/></clipPath>
+  </defs>
+  <rect width="1600" height="900" fill="url(#backdrop)"/>
+  <ellipse cx="460" cy="235" rx="860" ry="670" fill="url(#light)"/>
+  <path d="M1380-100Q1104 24 1197 292T1630 583" fill="none" stroke="#8eae93" stroke-opacity=".16" stroke-width="140"/>
+  <path d="M0 734Q747 693 1600 744V900H0Z" fill="#d2d9cc" fill-opacity=".28"/>
+  <ellipse cx="816" cy="733" rx="568" ry="38" fill="#2a4531" fill-opacity=".23" filter="url(#blur)"/>
+  <ellipse cx="801" cy="699" rx="474" ry="13" fill="#1a3520" fill-opacity=".24" filter="url(#soft)"/>
+  <!-- A shoulder strap, wrapped carry handles and zipped shell identify a closed carrying bag. -->
+  <path d="M315 541C278 689 441 778 683 777C918 777 1208 735 1274 583" fill="none" stroke="#293a29" stroke-width="28"/>
+  <path d="M315 541C278 689 441 778 683 777C918 777 1208 735 1274 583" fill="none" stroke="#5a6d50" stroke-width="19"/>
+  <path d="M315 541C278 689 441 778 683 777C918 777 1208 735 1274 583" fill="none" stroke="url(#webbing)" stroke-width="19"/>
+  <path d="M681 777Q789 777 875 764" fill="none" stroke="#253b28" stroke-width="43" stroke-linecap="round"/>
+  <path d="M689 775Q788 775 867 764" fill="none" stroke="#4e6345" stroke-width="29" stroke-linecap="round"/>
+  <path d="M693 772Q784 773 861 762" fill="none" stroke="#9eaa86" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="3 4"/>
+  <g transform="translate(502 764) rotate(9)"><rect x="-22" y="-17" width="44" height="34" rx="5" fill="none" stroke="url(#metal)" stroke-width="5"/><path d="M0-16V16" stroke="#b9ad87" stroke-width="4"/></g>
+  <path d="M642 423 649 334Q654 284 704 282L758 286Q806 290 808 341L808 444" fill="none" stroke="#293c29" stroke-width="24"/>
+  <path d="M642 423 649 334Q654 284 704 282L758 286Q806 290 808 341L808 444" fill="none" stroke="#69795a" stroke-width="13"/>
+  <path d="M642 423 649 334Q654 284 704 282L758 286Q806 290 808 341L808 444" fill="none" stroke="url(#webbing)" stroke-width="13"/>
+  <path d="M663 428 671 345Q673 307 709 306L749 310Q785 313 785 346L785 442" fill="none" stroke="#33472f" stroke-width="18"/>
+  <path d="M663 428 671 345Q673 307 709 306L749 310Q785 313 785 346L785 442" fill="none" stroke="#7b8668" stroke-width="9"/>
+  <path d="m700 282 56 4q10 1 10 11v15q0 9-10 8l-56-4q-9-1-9-10v-14q0-10 9-10Z" fill="url(#leather)" stroke="#614932" stroke-width="2"/>
+  <path d="m701 289 53 4m-53 17 53 4" stroke="#dbc6a0" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <!-- Fully enclosed tapered padded shell; no firearm is pictured. -->
+  <path d="M280 408Q291 370 340 374L1165 466Q1244 474 1303 511Q1347 536 1348 574L1347 616Q1346 647 1305 650L344 713Q297 716 278 685Q264 664 264 630L263 465Q263 431 280 408Z" fill="url(#trim)" stroke="#263827" stroke-width="5"/>
+  <path d="M282 392Q294 355 341 359L1162 451Q1242 459 1300 495Q1341 519 1343 557L1341 600Q1340 629 1303 633L344 696Q300 699 281 669Q266 649 266 613L265 448Q265 415 282 392Z" fill="url(#canvas)" stroke="#2d422e" stroke-width="6"/>
+  <g clip-path="url(#case)">
+    <rect x="250" y="350" width="1120" height="380" fill="url(#weave)"/>
+    <path d="M317 407Q785 419 1271 519" fill="none" stroke="#bdc5a4" stroke-opacity=".17" stroke-width="42" filter="url(#soft)"/>
+    <path d="M309 665Q778 641 1336 600" fill="none" stroke="#172b1a" stroke-opacity=".25" stroke-width="32" filter="url(#soft)"/>
+    <path d="m365 367 32 314m151-290 28 283m399-244 16 221m138-204 13 194" stroke="#293f2a" stroke-opacity=".4" stroke-width="3"/>
+    <path d="m372 370 33 310m150-287 28 280m399-243 16 221m138-204 13 194" stroke="#a8b093" stroke-opacity=".22" stroke-width="2"/>
+  </g>
+  <path d="M298 405Q306 380 342 385L1158 473Q1234 481 1288 515Q1318 533 1319 560L1317 591Q1316 608 1297 611L345 675Q313 677 303 659Q290 638 291 610L290 449Q289 421 298 405Z" fill="none" stroke="#c0c3a3" stroke-opacity=".58" stroke-width="1.8" stroke-dasharray="4 5"/>
+  <path d="M281 394Q296 360 340 365L1161 457Q1238 465 1297 501Q1336 525 1338 558" fill="none" stroke="#1a2c1d" stroke-width="10"/>
+  <path d="M281 394Q296 360 340 365L1161 457Q1238 465 1297 501Q1336 525 1338 558" fill="none" stroke="#a3a589" stroke-width="3.5" stroke-dasharray="2 3"/>
+  <path d="M290 397Q299 371 340 377L1160 468Q1231 477 1290 513" fill="none" stroke="#a3b294" stroke-opacity=".48" stroke-width="2"/>
+  <!-- Reinforced heel panel and softly rounded utility compartments. -->
+  <path d="M281 421Q269 451 274 622Q274 665 299 681L375 687 355 383 318 379Q293 383 281 421Z" fill="url(#trim)"/>
+  <path d="M302 403Q289 431 291 466L293 617Q295 654 314 664L354 665 338 399Z" fill="none" stroke="#879173" stroke-width="1.5" stroke-dasharray="3 4"/>
+  <path d="M415 467Q416 446 439 450L565 464Q584 466 586 489L596 617Q598 639 576 642L443 650Q421 651 420 629Z" fill="#1c321f" opacity=".4" transform="translate(0 7)"/>
+  <path d="M415 467Q416 446 439 450L565 464Q584 466 586 489L596 617Q598 639 576 642L443 650Q421 651 420 629Z" fill="url(#pocket)" stroke="#354d31" stroke-width="3"/>
+  <path d="M415 467Q416 446 439 450L565 464Q584 466 586 489L596 617Q598 639 576 642L443 650Q421 651 420 629Z" fill="url(#weave)"/>
+  <path d="m429 484 142 13" stroke="#263b27" stroke-width="8"/><path d="m429 484 142 13" stroke="#b3b697" stroke-width="2.5" stroke-dasharray="2 3"/>
+  <path d="M433 474Q434 464 445 466L558 478Q570 479 571 494L580 614Q580 626 568 627L447 635Q435 636 435 625Z" fill="none" stroke="#b2bc97" stroke-opacity=".56" stroke-width="1.5" stroke-dasharray="3 4"/>
+  <g transform="translate(553 496) rotate(6)"><rect x="-6" y="-6" width="12" height="13" rx="3" fill="url(#metal)"/><path d="M0 6v10" stroke="#bdb090" stroke-width="3"/><rect x="-5" y="14" width="10" height="28" rx="3" fill="url(#leather)"/></g>
+  <path d="M844 504Q844 485 865 489L1058 511Q1079 513 1082 532L1087 610Q1088 629 1069 631L868 645Q848 646 847 626Z" fill="#203721" opacity=".42" transform="translate(0 7)"/>
+  <path d="M844 504Q844 485 865 489L1058 511Q1079 513 1082 532L1087 610Q1088 629 1069 631L868 645Q848 646 847 626Z" fill="url(#pocket)" stroke="#30482d" stroke-width="3"/>
+  <path d="M844 504Q844 485 865 489L1058 511Q1079 513 1082 532L1087 610Q1088 629 1069 631L868 645Q848 646 847 626Z" fill="url(#weave)"/>
+  <path d="m858 520 208 21" stroke="#273c27" stroke-width="8"/><path d="m858 520 208 21" stroke="#a8ad8d" stroke-width="2.5" stroke-dasharray="2 3"/>
+  <path d="M860 509Q860 501 871 504L1053 525Q1064 526 1065 536L1070 605Q1071 616 1058 617L875 630Q862 631 862 620Z" fill="none" stroke="#afba94" stroke-opacity=".6" stroke-width="1.5" stroke-dasharray="3 4"/>
+  <g transform="translate(1040 538) rotate(7)"><rect x="-6" y="-6" width="12" height="13" rx="3" fill="url(#metal)"/><path d="M0 6v10" stroke="#bdb090" stroke-width="3"/><rect x="-5" y="14" width="10" height="27" rx="3" fill="url(#leather)"/></g>
+  <!-- Two continuous load-bearing webbing straps and their stitched leather anchors. -->
+  <path d="m633 405 14 271m154-253 4 242" stroke="#293e2b" stroke-width="31"/><path d="m633 405 14 271m154-253 4 242" stroke="#657354" stroke-width="22"/><path d="m633 405 14 271m154-253 4 242" stroke="url(#webbing)" stroke-width="22"/>
+  <path d="m624 407 14 265m154-247 4 235m-154-250 14 261m154-243 4 232" fill="none" stroke="#a1ab88" stroke-opacity=".58" stroke-width="1.5" stroke-dasharray="3 4"/>
+  <g transform="translate(637 470) rotate(-3)"><rect x="-21" y="-39" width="42" height="78" rx="8" fill="url(#leather)" stroke="#664e34" stroke-width="2"/><path d="M-14-30H14V30H-14ZM-13-29 13 29M13-29-13 29" fill="none" stroke="#d6be95" stroke-width="1.5" stroke-dasharray="3 3"/></g>
+  <g transform="translate(802 484) rotate(-1)"><rect x="-21" y="-39" width="42" height="78" rx="8" fill="url(#leather)" stroke="#664e34" stroke-width="2"/><path d="M-14-30H14V30H-14ZM-13-29 13 29M13-29-13 29" fill="none" stroke="#d6be95" stroke-width="1.5" stroke-dasharray="3 3"/></g>
+  <path d="M1266 492Q1309 505 1321 539L1323 600 1274 604Z" fill="url(#trim)"/>
+  <path d="M1282 509Q1304 520 1308 543L1309 588 1288 590Z" fill="none" stroke="#8e997a" stroke-width="1.5" stroke-dasharray="3 4"/>
+  <g transform="translate(320 542) rotate(-7)"><rect x="-11" y="-25" width="22" height="38" rx="5" fill="url(#leather)"/><rect x="-13" y="-9" width="26" height="27" rx="8" fill="none" stroke="url(#metal)" stroke-width="5"/></g>
+  <g transform="translate(1274 566) rotate(15)"><rect x="-11" y="-25" width="22" height="38" rx="5" fill="url(#leather)"/><rect x="-13" y="-9" width="26" height="27" rx="8" fill="none" stroke="url(#metal)" stroke-width="5"/></g>
+  <g transform="translate(1210 468) rotate(19)"><rect x="-7" y="-6" width="14" height="15" rx="3" fill="url(#metal)"/><path d="M0 8v11" stroke="#c5b895" stroke-width="4"/><rect x="-6" y="16" width="12" height="34" rx="3" fill="url(#leather)"/></g>
+  <g transform="translate(1230 474) rotate(22)"><rect x="-7" y="-6" width="14" height="15" rx="3" fill="url(#metal)"/><path d="M0 8v10" stroke="#c5b895" stroke-width="4"/><rect x="-6" y="15" width="12" height="33" rx="3" fill="url(#leather)"/></g>
+  <path d="M311 697 1304 634" stroke="#778669" stroke-opacity=".4" stroke-width="2"/>
+</svg>

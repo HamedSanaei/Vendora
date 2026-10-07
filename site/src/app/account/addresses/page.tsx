@@ -4,6 +4,7 @@ import { getDict } from "@/lib/vendora/i18n";
 import { withLocalePath } from "@/lib/locale-path";
 import { AccountScreen } from "@/components/vendora/account/account-screen";
 import { AddressBookContent } from "@/components/vendora/account/addresses-content";
+import { SupportNoticeCard } from "@/components/vendora/account/dashboard-cards";
 import { VendoraButton } from "@/components/vendora/ui/button";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,6 +32,7 @@ export default async function AccountAddressesPage() {
       }
     >
       <AddressBookContent locale={locale} />
+      <SupportNoticeCard locale={locale} />
     </AccountScreen>
   );
 }

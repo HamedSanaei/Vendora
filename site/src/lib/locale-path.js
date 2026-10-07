@@ -1,13 +1,14 @@
 export const supportedLocales = ["fa", "en"];
 
 /**
- * Reads the active locale from the current pathname and defaults to Persian.
- * @param {string} pathname Current browser pathname.
+ * Reads the URL prefix, or the server-resolved locale when Next exposes an internal rewrite pathname.
+ * @param {string} pathname Current browser or internal server pathname.
+ * @param {"fa" | "en"} fallbackLocale Server locale for a pathname without a locale prefix.
  * @returns {"fa" | "en"} Locale extracted from the route.
  */
-export function getLocaleFromPathname(pathname = "") {
+export function getLocaleFromPathname(pathname = "", fallbackLocale = "fa") {
   const firstSegment = pathname.split("/").filter(Boolean)[0];
-  return firstSegment === "en" ? "en" : "fa";
+  return firstSegment === "en" ? "en" : firstSegment === "fa" ? "fa" : fallbackLocale;
 }
 
 /**

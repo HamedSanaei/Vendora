@@ -20,6 +20,8 @@ export interface ShippingAddressView {
   unit?: string | null;
   postalCode: string;
   isDefault?: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface ShippingAddressFormValues {

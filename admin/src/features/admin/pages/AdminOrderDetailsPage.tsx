@@ -64,6 +64,7 @@ export const AdminOrderDetailsPage = observer(function AdminOrderDetailsPage() {
             <div><dt>{isFa ? 'نشانی' : 'Address'}</dt><dd>{order.shipping.streetAddress || '—'}</dd></div>
             <div><dt>{isFa ? 'پلاک / واحد' : 'Plaque / Unit'}</dt><dd>{[order.shipping.plaque, order.shipping.unit].filter(Boolean).join(' / ') || '—'}</dd></div>
             <div><dt>{isFa ? 'کد پستی' : 'Postal code'}</dt><dd dir="ltr">{order.shipping.postalCode || '—'}</dd></div>
+            {order.shipping.latitude != null && order.shipping.longitude != null ? <div><dt>{isFa ? 'مختصات محل تحویل' : 'Delivery coordinates'}</dt><dd dir="ltr">{order.shipping.latitude.toFixed(6)}, {order.shipping.longitude.toFixed(6)}</dd></div> : null}
           </dl>
         </AdminPanel>
       </div>

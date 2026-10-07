@@ -39,4 +39,10 @@ public class CustomerAddress : AuditableEntity
 
     /// <summary>Gets or sets whether this address is the customer's default address.</summary>
     public bool IsDefault { get; set; }
+
+    /// <summary>Gets or sets the selected WGS84 latitude, or null when no location was selected.</summary>
+    public double? Latitude { get; set; }
+
+    /// <summary>Gets or sets the selected WGS84 longitude, or null when no location was selected.</summary>
+    public double? Longitude { get; set; }
 }

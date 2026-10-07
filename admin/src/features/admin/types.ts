@@ -155,6 +155,8 @@ export interface AdminOrderDetails {
     plaque: string | null;
     unit: string | null;
     postalCode: string;
+    latitude: number | null;
+    longitude: number | null;
   };
   items: Array<{
     productId: string;

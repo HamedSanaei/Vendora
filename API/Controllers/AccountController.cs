@@ -232,7 +232,9 @@ public sealed class AccountController : ControllerBase
             request.Plaque,
             request.Unit,
             request.PostalCode,
-            request.IsDefault);
+            request.IsDefault,
+            request.Latitude,
+            request.Longitude);
     }
 }
 
@@ -268,4 +270,6 @@ public sealed record AddressRequest(
     string? Plaque,
     string? Unit,
     string PostalCode,
-    bool IsDefault);
+    bool IsDefault,
+    double? Latitude = null,
+    double? Longitude = null);

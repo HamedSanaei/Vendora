@@ -26,7 +26,9 @@ internal static class OrderMappings
                 order.ShippingStreetAddress,
                 order.ShippingPlaque,
                 order.ShippingUnit,
-                order.ShippingPostalCode),
+                order.ShippingPostalCode,
+                order.ShippingLatitude,
+                order.ShippingLongitude),
             order.Items
                 .OrderBy(item => item.ProductTitle)
                 .Select(item => new OrderItemDto(

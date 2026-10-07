@@ -22,6 +22,8 @@ const emptyAddress = {
   unit: "",
   postalCode: "",
   isDefault: false,
+  latitude: null,
+  longitude: null,
 };
 
 const faText = {
@@ -124,6 +126,8 @@ const AddressBook = () => {
         unit: current.unit ?? "",
         postalCode: current.postalCode ?? "",
         isDefault: Boolean(current.isDefault),
+        latitude: current.latitude ?? null,
+        longitude: current.longitude ?? null,
       });
     }
   }, [addresses, editingId]);

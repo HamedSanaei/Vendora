@@ -23,10 +23,10 @@ const desktopLinks = [
 ] as const;
 
 /** Penpot navigation shell for the 1408px desktop and 390px mobile components. */
-export function StoreHeader() {
+export function StoreHeader({ initialLocale = "fa" }: { initialLocale?: Locale }) {
   const pathname = usePathname();
   const router = useRouter();
-  const locale: Locale = getLocaleFromPathname(pathname);
+  const locale: Locale = getLocaleFromPathname(pathname, initialLocale);
   const [query, setQuery] = useState("");
   const [megaOpen, setMegaOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);

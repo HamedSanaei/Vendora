@@ -62,7 +62,10 @@ export function proxy(request) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  return NextResponse.rewrite(new URL(nextPathname, request.url), {
+  // Preserve query parameters such as the address being edited through the locale rewrite.
+  const rewriteUrl = request.nextUrl.clone();
+  rewriteUrl.pathname = nextPathname;
+  return NextResponse.rewrite(rewriteUrl, {
     request: {
       headers: requestHeaders,
     },

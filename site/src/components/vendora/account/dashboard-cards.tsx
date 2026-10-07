@@ -145,19 +145,19 @@ export function RecentOrdersCard({ locale }: { locale: Locale }) {
   );
 }
 
-/** Support call-out band at the bottom of the overview. */
+/** Full-width support band with content-sized height and an accessible, responsive contact action. */
 export function SupportNoticeCard({ locale }: { locale: Locale }) {
   const t = getDict(locale);
   return (
-    <section className="relative min-h-[132px] rounded-card bg-jade-tint p-[24px] lg:!mt-[26px] lg:flex lg:h-[124px] lg:min-h-0 lg:flex-row lg:items-center lg:gap-[16px]">
-      <span className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-control bg-white text-jade lg:flex">
+    <section className="vd-support-notice flex w-full flex-col gap-[20px] rounded-card bg-jade-tint p-[20px] sm:flex-row sm:items-center lg:p-6">
+      <span aria-hidden className="flex h-14 w-14 shrink-0 items-center justify-center rounded-control bg-white text-jade">
         <SupportIcon size={26} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[1.0625rem] font-bold text-ink">{t.account.dashboard.supportTitle}</p>
+        <h2 className="text-[1.0625rem] font-bold leading-7 text-ink">{t.account.dashboard.supportTitle}</h2>
         <p className="vd-text-caption mt-1 text-vd-muted">{t.account.dashboard.supportBody}</p>
       </div>
-      <VendoraButton href={withLocalePath("/contact", locale)} variant="outline" size="lg" className="absolute inset-x-[24px] bottom-[6px] h-[38px] shrink-0 lg:static lg:h-auto">
+      <VendoraButton href={withLocalePath("/contact", locale)} variant="outline" size="lg" className="min-h-12 w-full shrink-0 sm:w-auto sm:min-w-[192px]">
         {t.account.dashboard.supportCta}
       </VendoraButton>
     </section>

@@ -1,14 +1,16 @@
 import type { ReactNode } from "react";
 import { StoreHeader } from "@/components/vendora/layout/store-chrome";
+import { getServerLocale } from "@/lib/vendora/server-locale";
 
 /**
  * Shared shell for every /account screen. The approved account frames end
  * with their page content and intentionally do not include the store footer.
  */
-export default function AccountLayout({ children }: { children: ReactNode }) {
+export default async function AccountLayout({ children }: { children: ReactNode }) {
+  const locale = await getServerLocale();
   return (
     <>
-      <StoreHeader />
+      <StoreHeader initialLocale={locale} />
       <main className="min-h-[60vh]">{children}</main>
     </>
   );

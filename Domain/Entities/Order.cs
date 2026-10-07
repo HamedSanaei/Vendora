@@ -91,6 +91,12 @@ public class Order : AuditableEntity
     /// </summary>
     public string ShippingPostalCode { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the selected WGS84 latitude snapshot captured at checkout.</summary>
+    public double? ShippingLatitude { get; set; }
+
+    /// <summary>Gets or sets the selected WGS84 longitude snapshot captured at checkout.</summary>
+    public double? ShippingLongitude { get; set; }
+
     /// <summary>
     /// Gets or sets the subtotal at the time the order was created.
     /// </summary>

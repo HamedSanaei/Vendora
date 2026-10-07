@@ -1,23 +1,25 @@
+import axios from "axios";
+import { http } from "@/lib/http";
 import { apiSlice } from "src/redux/api/apiSlice";
 import { userLoggedIn } from "./authSlice";
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5020";
 
+/** Uses the shared Axios transport for account requests, including empty 204 responses. */
 async function accountRequest(path, body, token, method) {
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    method: method ?? (body ? "POST" : "GET"),
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    return { error: { status: response.status, data: data ?? { message: "Request failed." } } };
+  try {
+    const response = await http.request({
+      url: path.replace(/^\/api(?=\/)/, ""),
+      method: method ?? (body ? "POST" : "GET"),
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      data: body ?? undefined,
+    });
+    return { data: response.data === "" ? null : response.data };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      return { error: { status: error.response?.status ?? "NETWORK_ERROR", data: error.response?.data ?? { message: "Request failed." } } };
+    }
+    return { error: { status: "CUSTOM_ERROR", data: { message: "Request failed." } } };
   }
-
-  return { data };
 }
 
 function toTemplateUser(account) {

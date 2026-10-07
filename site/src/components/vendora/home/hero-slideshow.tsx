@@ -14,37 +14,45 @@ interface HeroSlideshowProps {
   locale: Locale;
 }
 
-const fallbackImage = "/assets/img/vendora/hero-bags.jpg";
+const defaultSlides: SlideshowSlideDto[] = [
+  { id: "default-bags", imageUrl: "/assets/img/vendora/hero-bags.jpg", sortOrder: 0, durationSeconds: 5 },
+  { id: "default-camera-bag", imageUrl: "/assets/img/vendora/hero-camera-bag.webp", sortOrder: 1, durationSeconds: 5 },
+  { id: "default-rifle-bag", imageUrl: "/assets/img/vendora/hero-rifle-bag.webp", sortOrder: 2, durationSeconds: 5 },
+];
 const controlClass = "vd-focus flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-jade hover:bg-jade-tint";
 
-/** Displays API-configured hero photos without changing the original localized copy, crop or layout. */
+/** Displays the configured playlist, or the built-in bag editorial series, with localized accessible controls. */
 export function HeroSlideshow({ locale }: HeroSlideshowProps) {
   const t = getDict(locale).home;
   const controls = t.slideshow;
-  const [slides, setSlides] = useState<SlideshowSlideDto[]>([]);
+  const [slides, setSlides] = useState<SlideshowSlideDto[]>(defaultSlides);
   // A new cursor object also restarts the duration when the current indicator is selected again.
   const [cursor, setCursor] = useState({ index: 0 });
   const [autoplay, setAutoplay] = useState(false);
   const [tabHidden, setTabHidden] = useState(true);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
-  const photoCount = Math.max(slides.length, 1);
+  const photoCount = slides.length;
   const hasMultiple = slides.length > 1;
   const activeSlide = slides[cursor.index];
   const durationSeconds = activeSlide?.durationSeconds;
   const isRunning = hasMultiple && autoplay && !tabHidden && !hovered && !focused;
-  const imageUrl = activeSlide?.imageUrl ?? fallbackImage;
+  const imageUrl = activeSlide?.imageUrl ?? defaultSlides[0].imageUrl;
+  const isEditorialSlide = activeSlide?.id === "default-camera-bag" || activeSlide?.id === "default-rifle-bag";
   const currentNumber = formatNumber(cursor.index + 1, locale);
   const totalNumber = formatNumber(photoCount, locale);
   const positionLabel = controls.position(currentNumber, totalNumber);
 
-  // Keep the original photo for an empty configuration or unavailable API; cancel requests on unmount.
+  // A configured playlist completely replaces the defaults; cancel requests on unmount.
   useEffect(() => {
     const controller = new AbortController();
     getSlideshow(controller.signal)
-      .then(setSlides)
+      .then((configuredSlides) => {
+        setSlides(configuredSlides.length > 0 ? configuredSlides : defaultSlides);
+        setCursor({ index: 0 });
+      })
       .catch(() => {
-        if (!controller.signal.aborted) setSlides([]);
+        if (!controller.signal.aborted) setSlides(defaultSlides);
       });
     return () => controller.abort();
   }, []);
@@ -116,11 +124,11 @@ export function HeroSlideshow({ locale }: HeroSlideshowProps) {
             fill
             priority
             unoptimized={imageUrl.includes("/uploads/")}
-            sizes="(max-width: 768px) 100vw, 1312px"
-            className="h-[248px]! object-cover object-center md:h-auto!"
+            sizes={isEditorialSlide ? "(max-width: 768px) 100vw, 656px" : "(max-width: 768px) 100vw, 1312px"}
+            className={`h-[248px]! object-cover object-center ${isEditorialSlide ? "md:h-full! md:start-1/2! md:w-1/2! md:object-contain" : "md:h-auto!"}`}
           />
         </div>
-        <div className="absolute inset-x-0 top-0 hidden h-full bg-gradient-to-l from-white/95 via-white/80 to-transparent rtl:bg-gradient-to-r md:block" />
+        <div className={`absolute start-0 top-0 hidden h-full bg-gradient-to-r from-white/95 via-white/80 to-transparent rtl:bg-gradient-to-l md:block ${isEditorialSlide ? "w-[55%]" : "w-full"}`} />
         <div className="relative flex flex-col px-[26px] pb-[26px] pt-[270px] md:h-full md:justify-center md:px-[44px] md:py-[28px] lg:min-h-[510px] lg:px-14 lg:py-10">
           <span className="inline-flex w-fit items-center rounded-full bg-jade-tint px-3 py-1 text-xs font-semibold text-jade">
             {t.heroBadge}

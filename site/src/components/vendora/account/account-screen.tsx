@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AccountPageFrame } from "@/components/vendora/account/account-chrome";
+import { getServerLocale } from "@/lib/vendora/server-locale";
 import {
   AccountPageHeader,
   type Crumb,
@@ -10,7 +11,7 @@ import {
  * breadcrumb row and the title/subtitle/action header, matching the
  * Penpot account layout composition.
  */
-export function AccountScreen({
+export async function AccountScreen({
   crumbs,
   title,
   subtitle,
@@ -23,8 +24,9 @@ export function AccountScreen({
   action?: ReactNode;
   children: ReactNode;
 }) {
+  const locale = await getServerLocale();
   return (
-    <AccountPageFrame crumbs={crumbs}>
+    <AccountPageFrame crumbs={crumbs} initialLocale={locale}>
       <div className="space-y-6">
         <div className="hidden lg:block lg:pt-[11px]">
           <AccountPageHeader title={title} subtitle={subtitle} action={action} />

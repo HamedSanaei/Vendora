@@ -289,6 +289,30 @@ openssl rand -hex 32   # -> Auth__AdminInviteCode
 
 Never commit `production.env`; it is gitignored and mode 600.
 
+For address-map selection, create a **Web map** key in the
+[Neshan panel](https://platform.neshan.org/panel), restrict its allowed domains
+to `vendora.tofanservice.ir` (and the development origin if required), and set
+`NESHAN_WEB_API_KEY` in `production.env`. Compose passes it to `vendora-site`
+at runtime; the address page does not require a build-time `NEXT_PUBLIC_*`
+key. This key is intentionally visible to the browser: never substitute a
+private Neshan server/service key. A missing key disables map selection with
+a localized explanation but does not prevent saving a textual address.
+
+After rotating the web-map key, recreate the site container with the existing
+environment file; rebuilding the image is unnecessary:
+
+```bash
+docker compose --env-file deploy/env/production.env -f deploy/docker-compose.production.yml up -d --no-deps vendora-site
+```
+
+Allow the browser to load the official SDK and tiles from Neshan. Street-map
+verification requires an authorized key and working network access.
+Browser geolocation is opt-in and requires HTTPS (or localhost).
+The `AddAddressDeliveryCoordinates` EF migration adds only nullable fields;
+the normal deployment migration step must complete before serving the new
+address forms. Verify saved points, clearing a point, and order shipping
+snapshots in both `/fa` and `/en`.
+
 ### 4.5 Firewall notes
 
 Restrict inbound traffic on the origin to Cloudflare networks for ports

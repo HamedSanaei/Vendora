@@ -20,6 +20,7 @@ export default async function AccountQuickPayResultPage() {
   const t = getDict(locale);
   return (
     <AccountPageFrame
+      initialLocale={locale}
       crumbs={[
         { label: t.common.home, href: withLocalePath("/", locale) },
         { label: t.account.crumbRoot, href: withLocalePath("/account", locale) },

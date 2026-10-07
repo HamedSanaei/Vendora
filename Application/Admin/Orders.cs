@@ -47,7 +47,9 @@ public static class Orders
         string StreetAddress,
         string? Plaque,
         string? Unit,
-        string PostalCode);
+        string PostalCode,
+        double? Latitude = null,
+        double? Longitude = null);
 
     /// <summary>Represents a full admin invoice.</summary>
     public sealed record AdminOrderDetailsDto(
@@ -188,7 +190,9 @@ public static class Orders
                         order.ShippingStreetAddress,
                         order.ShippingPlaque,
                         order.ShippingUnit,
-                        order.ShippingPostalCode),
+                        order.ShippingPostalCode,
+                        order.ShippingLatitude,
+                        order.ShippingLongitude),
                     order.Items
                         .OrderBy(item => item.ProductTitle)
                         .Select(item => new AdminOrderItemDto(

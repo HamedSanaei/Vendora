@@ -36,7 +36,9 @@ public static class Account
         string? Plaque,
         string? Unit,
         string PostalCode,
-        bool IsDefault);
+        bool IsDefault,
+        double? Latitude = null,
+        double? Longitude = null);
 
     /// <summary>Represents editable shipping address input.</summary>
     public sealed record AddressInput(
@@ -49,7 +51,9 @@ public static class Account
         string? Plaque,
         string? Unit,
         string PostalCode,
-        bool IsDefault);
+        bool IsDefault,
+        double? Latitude = null,
+        double? Longitude = null);
 
     /// <summary>Represents a command result.</summary>
     public sealed record Result(bool Succeeded, string? Error, AccountDto? Account = null, string? Token = null)
@@ -386,7 +390,9 @@ public static class Account
                         address.Plaque,
                         address.Unit,
                         address.PostalCode,
-                        address.IsDefault))
+                        address.IsDefault,
+                        address.Latitude,
+                        address.Longitude))
                     .ToListAsync(cancellationToken);
             }
         }
@@ -686,26 +692,15 @@ public static class Account
         return new Result(true, null, new AccountDto(user.Id, user.FullName, user.Email ?? string.Empty, role, token, user.PhoneNumber, user.Bio));
     }
 
-    private static AddressDto MapAddress(CustomerAddress address)
-    {
-        return new AddressDto(
-            address.Id,
-            address.Title,
-            address.RecipientName,
-            address.PhoneNumber,
-            address.Province,
-            address.City,
-            address.StreetAddress,
-            address.Plaque,
-            address.Unit,
-            address.PostalCode,
-            address.IsDefault);
-    }
-
     private static string? ApplyAddress(CustomerAddress address, AddressInput input)
     {
         string postalCode = NormalizeDigits(input.PostalCode)?.Trim() ?? string.Empty;
         string phoneNumber = NormalizeDigits(input.PhoneNumber)?.Trim() ?? string.Empty;
+        string? coordinateError = AddressCoordinates.Validate(input.Latitude, input.Longitude);
+        if (coordinateError is not null)
+        {
+            return coordinateError;
+        }
 
         if (string.IsNullOrWhiteSpace(input.RecipientName))
         {
@@ -746,6 +741,8 @@ public static class Account
         address.Plaque = string.IsNullOrWhiteSpace(input.Plaque) ? null : NormalizeDigits(input.Plaque)?.Trim();
         address.Unit = string.IsNullOrWhiteSpace(input.Unit) ? null : NormalizeDigits(input.Unit)?.Trim();
         address.PostalCode = postalCode;
+        address.Latitude = input.Latitude;
+        address.Longitude = input.Longitude;
         return null;
     }
 

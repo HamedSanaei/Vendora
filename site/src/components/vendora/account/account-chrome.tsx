@@ -45,9 +45,9 @@ const menuIcons: Record<string, (props: VendoraIconProps) => ReactNode> = {
  * breadcrumb row on top, then a two-column grid — content plus the 300px
  * sidebar card. Below `lg` the sidebar becomes the mobile nav bar + drawer.
  */
-export function AccountPageFrame({ crumbs, children }: { crumbs: Crumb[]; children: ReactNode }) {
+export function AccountPageFrame({ crumbs, children, initialLocale }: { crumbs: Crumb[]; children: ReactNode; initialLocale: Locale }) {
   const pathname = usePathname();
-  const locale: Locale = getLocaleFromPathname(pathname);
+  const locale: Locale = getLocaleFromPathname(pathname, initialLocale);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const t = getDict(locale);
   const activeItem = accountNavItems.find((item) => isAccountItemActive(item.href, pathname));
