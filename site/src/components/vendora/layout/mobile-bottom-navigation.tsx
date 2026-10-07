@@ -30,7 +30,7 @@ function resolveDestination(pathname: string): MobileNavigationDestination | nul
 }
 
 /**
- * Fixed primary navigation for phone-sized storefront views.
+ * Fixed primary navigation for phone and tablet storefront views.
  * It owns route highlighting and the live persisted cart badge so pages only
  * consume one reusable navigation family.
  */
@@ -49,28 +49,28 @@ export function MobileBottomNavigation({ locale, pathname, cartQuantity }: Mobil
   return (
     <nav
       aria-label={t.nav.mobilePrimaryNavigation}
-      className="vd-mobile-bottom-nav fixed inset-x-0 bottom-0 z-40 block border-t border-vd-line bg-white shadow-[0_-12px_30px_-22px_rgba(11,11,11,0.45)] md:hidden"
+      className="vd-mobile-bottom-nav fixed inset-x-0 bottom-0 z-40 block border-t border-vd-line bg-white shadow-[0_-12px_30px_-22px_rgba(11,11,11,0.45)] xl:hidden"
       dir={locale === "fa" ? "rtl" : "ltr"}
     >
-      <ul className="mx-auto grid h-[88px] max-w-[480px] grid-cols-4 items-stretch px-2">
+      <ul className="mx-auto grid h-[88px] max-w-[480px] grid-cols-4 items-stretch px-2 md:h-[96px] md:max-w-[1024px] md:items-center md:px-6">
         {items.map(({ id, href, label, Icon }) => {
           const active = activeDestination === id;
           return (
-            <li key={id} className="min-w-0">
+            <li key={id} className="min-w-0 md:flex md:items-center md:justify-center">
               <Link
                 href={withLocalePath(href, locale)}
                 aria-current={active ? "page" : undefined}
-                className={`vd-focus relative flex h-full min-h-11 flex-col items-center justify-center gap-1 rounded-control px-1 text-center transition-colors ${active ? "font-extrabold text-jade" : "font-semibold text-vd-muted hover:text-jade"}`}
+                className={`vd-focus relative flex h-full min-h-11 flex-col items-center justify-center gap-1 rounded-control px-1 text-center transition-colors md:h-[72px] md:w-[clamp(120px,15.625vw,160px)] ${active ? "font-extrabold text-jade md:bg-jade-tint" : "font-semibold text-vd-muted hover:text-jade md:hover:bg-surface-soft"}`}
               >
-                <span className={`relative flex h-10 w-12 items-center justify-center rounded-control transition-colors ${active ? "bg-jade-tint" : "bg-transparent"}`}>
-                  <Icon size={23} strokeWidth={active ? 2 : 1.7} />
+                <span className={`relative flex h-10 w-12 items-center justify-center rounded-control transition-colors md:h-[34px] md:w-[34px] ${active ? "bg-jade-tint md:bg-transparent" : "bg-transparent"}`}>
+                  <Icon size={23} strokeWidth={active ? 2 : 1.7} className="md:h-[26px] md:w-[26px]" />
                   {id === "cart" && cartQuantity > 0 ? (
                     <span className="absolute -end-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-jade px-1 text-[10px] font-extrabold leading-none text-white">
                       {formatNumber(cartQuantity, locale)}
                     </span>
                   ) : null}
                 </span>
-                <span className="block max-w-full truncate text-[11px] leading-4">{label}</span>
+                <span className="block max-w-full truncate text-[11px] leading-4 md:text-xs">{label}</span>
               </Link>
             </li>
           );
