@@ -18,6 +18,9 @@ export default async function AccountAddressNewPage({ searchParams }: { searchPa
   const { id } = await searchParams;
   const t = getDict(locale);
   const title = id ? t.account.addresses.form.titleEdit : t.account.addresses.form.titleAdd;
+  const configuredKey = process.env.NESHAN_WEB_API_KEY?.trim() ?? "";
+  // Never serialize a private service key into the browser's page payload.
+  const mapApiKey = configuredKey.startsWith("web.") ? configuredKey : "";
   return (
     <AccountScreen
       crumbs={[
@@ -29,7 +32,7 @@ export default async function AccountAddressNewPage({ searchParams }: { searchPa
       title={title}
       subtitle={t.account.addresses.form.subtitle}
     >
-      <AddressFormContent locale={locale} addressId={id} mapApiKey={process.env.NESHAN_WEB_API_KEY?.trim() ?? ""} />
+      <AddressFormContent locale={locale} addressId={id} mapApiKey={mapApiKey} mapKeyInvalid={Boolean(configuredKey) && !mapApiKey} />
     </AccountScreen>
   );
 }

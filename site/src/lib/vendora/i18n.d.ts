@@ -203,6 +203,10 @@ declare const fa: {
                 loading: string;
                 unavailable: string;
                 failed: string;
+                invalidKey: string;
+                rejected: string;
+                tilesFailed: string;
+                outsideIran: string;
                 instructions: string;
                 locate: string;
                 locating: string;

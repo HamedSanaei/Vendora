@@ -294,9 +294,13 @@ For address-map selection, create a **Web map** key in the
 to `vendora.tofanservice.ir` (and the development origin if required), and set
 `NESHAN_WEB_API_KEY` in `production.env`. Compose passes it to `vendora-site`
 at runtime; the address page does not require a build-time `NEXT_PUBLIC_*`
-key. This key is intentionally visible to the browser: never substitute a
-private Neshan server/service key. A missing key disables map selection with
-a localized explanation but does not prevent saving a textual address.
+key. This key is intentionally visible to the browser: it must start with
+`web.`. Never substitute a private Neshan server/service key. The address page
+keeps non-web keys on the server and reports invalid configuration. A missing
+or invalid key disables map selection but does not prevent saving a textual
+address. If an earlier release exposed a `service.` key through this setting,
+revoke/rotate that key in the Neshan panel as well as replacing the environment
+value; changing this setting alone does not revoke the exposed credential.
 
 After rotating the web-map key, recreate the site container with the existing
 environment file; rebuilding the image is unnecessary:
@@ -306,8 +310,16 @@ docker compose --env-file deploy/env/production.env -f deploy/docker-compose.pro
 ```
 
 Allow the browser to load the official SDK and tiles from Neshan. Street-map
-verification requires an authorized key and working network access.
-Browser geolocation is opt-in and requires HTTPS (or localhost).
+verification requires an authorized key and working network access. Gray
+watermarked tiles indicate that the SDK has fallen back to its empty map;
+the picker now reports this state and disables selecting a point on it.
+Check the **Web map** key, the exact allowed website domain and remaining
+quota in the Neshan panel. The SDK expects HTTP 204 from its quota request;
+an invalid key can return HTTP 480 with `API Key not found or is not valid.`
+Browser geolocation is opt-in and requires HTTPS (or localhost). New maps
+start over Tehran; panning/zoom-out and new selections stay within the
+rectangular Iran viewport. An out-of-area geolocation never replaces the
+customer's selected point.
 The `AddAddressDeliveryCoordinates` EF migration adds only nullable fields;
 the normal deployment migration step must complete before serving the new
 address forms. Verify saved points, clearing a point, and order shipping

@@ -1,7 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { PinIcon } from "@/components/vendora/icons";
 import { VendoraButton } from "@/components/vendora/ui/button";
 import type { MapCoordinates } from "@/lib/account-addresses";
@@ -10,9 +10,29 @@ import type { Locale } from "@/lib/vendora/types";
 
 const sdkRoot = "https://static.neshan.org/sdk/leaflet/v1.9.4/neshan-sdk/v1.0.8";
 type LatLng = { lat: number; lng: number };
+const tehranCenter: [number, number] = [35.699756, 51.338076];
+const iranBounds: [[number, number], [number, number]] = [[25, 44], [40, 63.5]];
+
+/** Limits new delivery selections to the Iran viewport without changing stored legacy addresses. */
+function isWithinIran(point: MapCoordinates | null): point is MapCoordinates {
+  return point !== null && Number.isFinite(point.latitude) && Number.isFinite(point.longitude)
+    && point.latitude >= iranBounds[0][0] && point.latitude <= iranBounds[1][0]
+    && point.longitude >= iranBounds[0][1] && point.longitude <= iranBounds[1][1];
+}
+
+interface NeshanTileLayer {
+  getTileUrl?: (coordinates: { x: number; y: number; z: number }) => string;
+  on(event: "tileload" | "tileerror", handler: (event: { tile: HTMLImageElement }) => void): void;
+  off(event: "tileload" | "tileerror", handler: (event: { tile: HTMLImageElement }) => void): void;
+}
 
 interface NeshanMap {
   on(event: "click", handler: (event: { latlng: LatLng }) => void): void;
+  on(event: "layeradd", handler: (event: { layer: NeshanTileLayer }) => void): void;
+  eachLayer(handler: (layer: NeshanTileLayer) => void): void;
+  getBoundsZoom(bounds: [[number, number], [number, number]], inside: boolean): number;
+  setMinZoom(zoom: number): void;
+  panInsideBounds(bounds: [[number, number], [number, number]], options: { animate: boolean }): void;
   getCenter(): LatLng;
   setView(center: [number, number], zoom: number): void;
   invalidateSize(): void;
@@ -28,7 +48,10 @@ interface NeshanMarker {
 }
 
 interface NeshanSdk {
-  Map: new (element: HTMLElement, options: { key: string; maptype: string; center: [number, number]; zoom: number; scrollWheelZoom: boolean }) => NeshanMap;
+  Map: new (element: HTMLElement, options: {
+    key: string; maptype: string; center: [number, number]; zoom: number; scrollWheelZoom: boolean;
+    minZoom: number; maxBounds: [[number, number], [number, number]]; maxBoundsViscosity: number;
+  }) => NeshanMap;
   marker(point: [number, number], options: { draggable: boolean; title: string; alt: string; icon: object }): NeshanMarker;
   divIcon(options: { className: string; html: string; iconSize: [number, number]; iconAnchor: [number, number] }): object;
 }
@@ -36,12 +59,13 @@ interface NeshanSdk {
 interface NeshanLocationPickerProps {
   locale: Locale;
   apiKey: string;
+  invalidKey: boolean;
   value: MapCoordinates | null;
   onChange: (value: MapCoordinates | null) => void;
 }
 
 /** Expands the official Neshan map on demand; selected points remain part of the parent address form. */
-export function NeshanLocationPicker({ locale, apiKey, value, onChange }: NeshanLocationPickerProps) {
+export function NeshanLocationPicker({ locale, apiKey, invalidKey, value, onChange }: NeshanLocationPickerProps) {
   const t = getDict(locale).account.addresses;
   const panelId = useId();
   const [expanded, setExpanded] = useState(false);
@@ -54,7 +78,7 @@ export function NeshanLocationPicker({ locale, apiKey, value, onChange }: Neshan
         <span className="hidden shrink-0 text-sm font-bold text-jade sm:block">{expanded ? t.map.collapse : t.form.mapCta}</span>
       </button>
       <div id={panelId} hidden={!expanded}>
-        {expanded ? (apiKey ? <NeshanMapCanvas locale={locale} apiKey={apiKey} value={value} onChange={onChange} /> : <p role="alert" className="px-5 pb-5 text-sm leading-7 text-vd-muted">{t.map.unavailable}</p>) : null}
+        {expanded ? (apiKey ? <NeshanMapCanvas locale={locale} apiKey={apiKey} invalidKey={invalidKey} value={value} onChange={onChange} /> : <p role="alert" className="px-5 pb-5 text-sm leading-7 text-vd-muted">{invalidKey ? t.map.invalidKey : t.map.unavailable}</p>) : null}
       </div>
       {value ? <div className="flex flex-wrap items-center justify-between gap-3 border-t border-vd-line px-[20px] py-4">
         <p className="vd-text-caption text-jade"><span className="block font-bold">{t.locationSaved}</span><span dir="ltr" aria-label={t.map.coordinates}>{value.latitude.toFixed(6)}, {value.longitude.toFixed(6)}</span></p>
@@ -71,13 +95,27 @@ function NeshanMapCanvas({ locale, apiKey, value, onChange }: NeshanLocationPick
   const map = useRef<NeshanMap | null>(null);
   const marker = useRef<NeshanMarker | null>(null);
   const initialValue = useRef(value);
+  const selectedValue = useRef(value);
   const alive = useRef(false);
   const locatingRef = useRef(false);
   const [sdkReady, setSdkReady] = useState(false);
   const [mapInstance, setMapInstance] = useState<NeshanMap | null>(null);
+  const tilesReadyRef = useRef(false);
+  const [tilesReady, setTilesReady] = useState(false);
+  const [mapError, setMapError] = useState("");
   const [error, setError] = useState("");
   const [locating, setLocating] = useState(false);
-  const mapReady = mapInstance !== null;
+  const mapReady = mapInstance !== null && tilesReady && !mapError;
+
+  /** Accepts deliberate in-range selections only after street tiles have loaded. */
+  const selectPoint = useCallback((point: LatLng) => {
+    if (!tilesReadyRef.current) return false;
+    const coordinates = { latitude: point.lat, longitude: point.lng };
+    if (!isWithinIran(coordinates)) { setError(t.outsideIran); return false; }
+    setError("");
+    onChange(coordinates);
+    return true;
+  }, [onChange, t.outsideIran]);
 
   useEffect(() => {
     alive.current = true;
@@ -87,42 +125,93 @@ function NeshanMapCanvas({ locale, apiKey, value, onChange }: NeshanLocationPick
   useEffect(() => {
     if (!sdkReady || !container.current) return;
     const sdk = (window as Window & { L?: NeshanSdk }).L;
-    if (!sdk) { setError(t.failed); return; }
+    if (!sdk) { setMapError(t.failed); return; }
+    tilesReadyRef.current = false;
+    setTilesReady(false);
+    setMapError("");
     try {
-      const point = initialValue.current;
+      const point = isWithinIran(initialValue.current) ? initialValue.current : null;
       const instance = new sdk.Map(container.current, {
         key: apiKey,
         maptype: "dreamy",
-        center: point ? [point.latitude, point.longitude] : [35.699756, 51.338076],
-        zoom: point ? 16 : 12,
+        center: point ? [point.latitude, point.longitude] : tehranCenter,
+        zoom: point ? 16 : 13,
         scrollWheelZoom: false,
+        minZoom: 6,
+        maxBounds: iranBounds,
+        maxBoundsViscosity: 1,
       });
       map.current = instance;
-      /** Saves an intentional selection and normalizes longitudes from repeated world tiles. */
-      function select(point: LatLng) {
-        onChange({ latitude: point.lat, longitude: ((point.lng + 180) % 360 + 360) % 360 - 180 });
+      let disposed = false;
+      let rejected = false;
+      const layers = new Set<NeshanTileLayer>();
+
+      /** The SDK's empty watermark tile is a rejected map, not a successful street-map load. */
+      function tileLoaded(event: { tile: HTMLImageElement }) {
+        if (disposed) return;
+        const url = new URL(event.tile.currentSrc || event.tile.src);
+        if (url.hostname === "static.neshan.org" && url.pathname.endsWith("/tile-empty.png")) {
+          rejected = true;
+          tilesReadyRef.current = false;
+          setTilesReady(false);
+          setMapError(t.rejected);
+        } else if (!rejected && /^tile\d+\.neshan\.org$/.test(url.hostname)) {
+          tilesReadyRef.current = true;
+          setTilesReady(true);
+          setMapError("");
+        }
       }
-      instance.on("click", (event) => select(event.latlng));
-      const observer = new ResizeObserver(() => instance.invalidateSize());
+
+      /** Keeps failed street-tile requests visible instead of enabling selection on a blank map. */
+      function tileFailed() {
+        if (disposed) return;
+        tilesReadyRef.current = false;
+        setTilesReady(false);
+        setMapError(t.tilesFailed);
+      }
+
+      /** Observes existing and replacement tile layers, including the SDK's quota-error layer. */
+      function observeLayer(layer: NeshanTileLayer) {
+        if (!layer.getTileUrl || layers.has(layer)) return;
+        layers.add(layer);
+        layer.on("tileload", tileLoaded);
+        layer.on("tileerror", tileFailed);
+      }
+
+      instance.eachLayer(observeLayer);
+      instance.on("layeradd", (event) => observeLayer(event.layer));
+      instance.on("click", (event) => selectPoint(event.latlng));
+      const observer = new ResizeObserver(() => {
+        instance.invalidateSize();
+        instance.setMinZoom(Math.max(6, instance.getBoundsZoom(iranBounds, true)));
+        instance.panInsideBounds(iranBounds, { animate: false });
+      });
       observer.observe(container.current);
       setMapInstance(instance);
       return () => {
+        disposed = true;
+        tilesReadyRef.current = false;
         observer.disconnect();
+        for (const layer of layers) {
+          layer.off("tileload", tileLoaded);
+          layer.off("tileerror", tileFailed);
+        }
         instance.remove();
         map.current = null;
         marker.current = null;
         setMapInstance(null);
       };
     } catch {
-      setError(t.failed);
+      setMapError(t.failed);
     }
-  }, [apiKey, onChange, sdkReady, t.failed]);
+  }, [apiKey, sdkReady, selectPoint, t.failed, t.rejected, t.tilesFailed]);
 
   useEffect(() => {
+    selectedValue.current = value;
     const instance = mapInstance;
     const sdk = (window as Window & { L?: NeshanSdk }).L;
     if (!instance || !sdk) return;
-    if (!value) { marker.current?.remove(); marker.current = null; return; }
+    if (!mapReady || !isWithinIran(value)) { marker.current?.remove(); marker.current = null; return; }
     const point: [number, number] = [value.latitude, value.longitude];
     if (marker.current) { marker.current.setLatLng(point); return; }
     const pin = sdk.marker(point, {
@@ -137,11 +226,11 @@ function NeshanMapCanvas({ locale, apiKey, value, onChange }: NeshanLocationPick
       }),
     }).addTo(instance);
     pin.on("dragend", () => {
-      const point = pin.getLatLng();
-      onChange({ latitude: point.lat, longitude: ((point.lng + 180) % 360 + 360) % 360 - 180 });
+      const previous = selectedValue.current;
+      if (!selectPoint(pin.getLatLng()) && previous) pin.setLatLng([previous.latitude, previous.longitude]);
     });
     marker.current = pin;
-  }, [mapInstance, onChange, t.marker, value]);
+  }, [mapInstance, mapReady, selectPoint, t.marker, value]);
 
   /** Requests location only after a user gesture; stale callbacks cannot update a closed map. */
   function locate() {
@@ -154,9 +243,10 @@ function NeshanMapCanvas({ locale, apiKey, value, onChange }: NeshanLocationPick
       locatingRef.current = false;
       if (!alive.current) return;
       const point = { latitude: position.coords.latitude, longitude: position.coords.longitude };
-      map.current?.setView([point.latitude, point.longitude], 16);
-      onChange(point);
       setLocating(false);
+      if (selectPoint({ lat: point.latitude, lng: point.longitude })) {
+        map.current?.setView([point.latitude, point.longitude], 16);
+      }
     }, (failure) => {
       locatingRef.current = false;
       if (!alive.current) return;
@@ -168,22 +258,23 @@ function NeshanMapCanvas({ locale, apiKey, value, onChange }: NeshanLocationPick
   /** Enables keyboard users to choose the center after panning with the SDK's arrow-key controls. */
   function selectCenter() {
     const point = map.current?.getCenter();
-    if (point) onChange({ latitude: point.lat, longitude: ((point.lng + 180) % 360 + 360) % 360 - 180 });
+    if (point) selectPoint(point);
   }
 
   return (
     <div className="border-t border-vd-line p-[16px] md:p-[20px]">
       <link rel="stylesheet" href={`${sdkRoot}/index.css`} />
-      <Script src={`${sdkRoot}/index.js`} strategy="afterInteractive" onReady={() => setSdkReady(true)} onError={() => setError(t.failed)} />
+      <Script src={`${sdkRoot}/index.js`} strategy="afterInteractive" onReady={() => setSdkReady(true)} onError={() => setMapError(t.failed)} />
       <p className="vd-text-caption mb-3 text-vd-muted">{t.instructions}</p>
       <div className="relative isolate overflow-hidden rounded-control border border-vd-line bg-tile-steel">
         <div ref={container} className="vd-neshan-map h-[320px] w-full text-jade md:h-[400px]" dir="ltr" aria-label={t.marker} />
-        {!mapReady && !error ? <p role="status" className="absolute inset-0 flex items-center justify-center bg-surface-soft text-sm text-vd-muted">{t.loading}</p> : null}
+        {!mapReady && !mapError ? <p role="status" className="absolute inset-0 flex items-center justify-center bg-surface-soft text-sm text-vd-muted">{t.loading}</p> : null}
       </div>
       <div className="mt-4 flex flex-wrap gap-3">
         <VendoraButton type="button" variant="outline" disabled={!mapReady || locating} onClick={locate}>{locating ? t.locating : t.locate}</VendoraButton>
         <VendoraButton type="button" variant="outline" disabled={!mapReady} onClick={selectCenter}>{t.selectCenter}</VendoraButton>
       </div>
+      {mapError ? <p role="alert" className="mt-3 text-sm leading-7 text-vd-danger">{mapError}</p> : null}
       {error ? <p role="alert" className="mt-3 text-sm leading-7 text-vd-danger">{error}</p> : null}
     </div>
   );

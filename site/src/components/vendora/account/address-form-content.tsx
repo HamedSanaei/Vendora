@@ -26,10 +26,11 @@ interface AddressFormContentProps {
   locale: Locale;
   addressId?: string;
   mapApiKey: string;
+  mapKeyInvalid: boolean;
 }
 
 /** Creates or edits a real account address, preserving an explicitly selected Neshan delivery point. */
-export function AddressFormContent({ locale, addressId, mapApiKey }: AddressFormContentProps) {
+export function AddressFormContent({ locale, addressId, mapApiKey, mapKeyInvalid }: AddressFormContentProps) {
   const a = getDict(locale).account.addresses;
   const t = a.form;
   const router = useRouter();
@@ -111,7 +112,7 @@ export function AddressFormContent({ locale, addressId, mapApiKey }: AddressForm
             <TextField label={t.unit} maxLength={50} {...register("unit")} />
             <TextareaField label={t.addressLine} rows={3} className="md:col-span-2" autoComplete="street-address" maxLength={1000} error={errors.streetAddress?.message} {...register("streetAddress", { validate: required })} />
           </div>
-          <NeshanLocationPicker locale={locale} apiKey={mapApiKey} value={location} onChange={selectLocation} />
+          <NeshanLocationPicker locale={locale} apiKey={mapApiKey} invalidKey={mapKeyInvalid} value={location} onChange={selectLocation} />
           <div className="mt-7 flex flex-col gap-[20px] border-t border-vd-line pt-6 md:flex-row md:items-center md:justify-between">
             <Switch checked={Boolean(isDefault)} onChange={(checked) => setValue("isDefault", checked, { shouldDirty: true })} label={t.defaultSwitch} />
             <div className="flex flex-wrap gap-3">
