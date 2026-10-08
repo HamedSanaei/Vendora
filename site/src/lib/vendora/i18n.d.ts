@@ -241,6 +241,12 @@ declare const fa: {
                 city: string;
                 postalCode: string;
                 addressLine: string;
+                addressLookupHint: string;
+                addressLookupLoading: string;
+                addressLookupResolved: string;
+                addressLookupFailed: string;
+                addressLookupNotConfigured: string;
+                addressLookupNotFound: string;
                 mapTitle: string;
                 mapBody: string;
                 mapCta: string;

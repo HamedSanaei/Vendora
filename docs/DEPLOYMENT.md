@@ -325,6 +325,35 @@ the normal deployment migration step must complete before serving the new
 address forms. Verify saved points, clearing a point, and order shipping
 snapshots in both `/fa` and `/en`.
 
+Automatic address text needs a **separate, private service key** with
+[Neshan v5 reverse-geocoding access](https://platform.neshan.org/docs/api/search-category/reverse-geocoding/).
+Set `Neshan__ServiceApiKey` in `production.env` (or `Neshan:ServiceApiKey`
+in private API configuration). It must start with `service.`. The API
+already reads the environment file; do not add this value to the site
+container, `NESHAN_WEB_API_KEY`, or any `NEXT_PUBLIC_*` setting. If the key
+uses an IP allowlist, allow the API server's outbound IP, not just the website
+domain. Requests go from the API to `https://api.neshan.org/v5/reverse`;
+ensure outbound HTTPS works and monitor the provider's quota in its panel.
+Each deliberate point selection can use reverse-geocoding quota; merely
+opening the map or loading an existing address does not.
+
+After configuring or rotating the service key, recreate only the API
+container with the existing environment file:
+
+```bash
+docker compose --env-file deploy/env/production.env -f deploy/docker-compose.production.yml up -d --no-deps vendora-api
+```
+
+Select a point in `/fa/account/addresses/new` and `/en/account/addresses/new`
+and verify the editable **Address** textbox is populated. Neshan returns
+Persian address content in both locales; review it and enter building/unit
+numbers and postal code separately. Move the point quickly, edit text while
+a lookup is pending, save and reopen, and clear the point without losing the
+text. Missing service configuration, no address found, or provider errors
+leave the selected point and manual text entry usable. This feature does not
+require a new database migration. Controlled responses verify the integration,
+but real authorized keys are required to verify actual address accuracy.
+
 ### 4.5 Firewall notes
 
 Restrict inbound traffic on the origin to Cloudflare networks for ports

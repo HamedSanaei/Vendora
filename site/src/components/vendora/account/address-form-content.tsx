@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import useAuthCheck from "@/hooks/use-auth-check";
 import { useCreateAddressMutation, useGetAddressesQuery, useUpdateAddressMutation } from "@/redux/features/auth/authApi";
-import { normalizeAddressDigits, type AddressInput, type CustomerAddress, type MapCoordinates } from "@/lib/account-addresses";
+import { getAddressLookupFailure, normalizeAddressDigits, reverseGeocodeAddress, type AddressInput, type AddressLookupFailure, type CustomerAddress, type MapCoordinates } from "@/lib/account-addresses";
 import { getDict } from "@/lib/vendora/i18n";
 import { withLocalePath } from "@/lib/locale-path";
 import type { Locale } from "@/lib/vendora/types";
@@ -22,6 +22,8 @@ const emptyAddress: AddressInput = {
   plaque: "", unit: "", postalCode: "", isDefault: false, latitude: null, longitude: null,
 };
 
+type AddressLookupState = "idle" | "loading" | "resolved" | AddressLookupFailure;
+
 interface AddressFormContentProps {
   locale: Locale;
   addressId?: string;
@@ -35,31 +37,80 @@ export function AddressFormContent({ locale, addressId, mapApiKey, mapKeyInvalid
   const t = a.form;
   const router = useRouter();
   const authChecked = useAuthCheck();
-  const user = useSelector((state: { auth: { user?: { name?: string; phone?: string } } }) => state.auth.user);
+  const { user, accessToken } = useSelector((state: { auth: { user?: { name?: string; phone?: string }; accessToken?: string } }) => state.auth);
   const { data, isLoading, isError, refetch } = useGetAddressesQuery(undefined, { skip: !authChecked || !user || !addressId });
   const [createAddress, { isLoading: creating }] = useCreateAddressMutation();
   const [updateAddress, { isLoading: updating }] = useUpdateAddressMutation();
   const [saveError, setSaveError] = useState("");
-  const { register, handleSubmit, reset, setValue, control, formState: { errors } } = useForm<AddressInput>({ defaultValues: emptyAddress });
+  const [lookupState, setLookupState] = useState<AddressLookupState>("idle");
+  const lookup = useRef<{ version: number; controller: AbortController | null; timer: number | undefined }>({ version: 0, controller: null, timer: undefined });
+  const { register, handleSubmit, reset, setValue, getValues, control, formState: { errors } } = useForm<AddressInput>({ defaultValues: emptyAddress });
   const addresses = (data ?? []) as CustomerAddress[];
   const address = addressId ? addresses.find((item) => item.id === addressId) : undefined;
   const [latitude, longitude, isDefault] = useWatch({ control, name: ["latitude", "longitude", "isDefault"] });
   const location = latitude != null && longitude != null ? { latitude, longitude } : null;
   const busy = creating || updating;
+  const lookupFailed = lookupState === "failed" || lookupState === "notConfigured" || lookupState === "notFound";
+  const lookupMessages: Record<AddressLookupState, string> = {
+    idle: "", loading: t.addressLookupLoading, resolved: t.addressLookupResolved,
+    failed: t.addressLookupFailed, notConfigured: t.addressLookupNotConfigured, notFound: t.addressLookupNotFound,
+  };
+
+  /** Invalidates pending work so a stale point or unmounted form cannot replace address text. */
+  const cancelLookup = useCallback(() => {
+    lookup.current.version += 1;
+    window.clearTimeout(lookup.current.timer);
+    lookup.current.controller?.abort();
+    lookup.current.timer = undefined;
+    lookup.current.controller = null;
+  }, []);
+
+  useEffect(() => cancelLookup, [accessToken, addressId, cancelLookup]);
 
   useEffect(() => {
+    cancelLookup();
+    setLookupState("idle");
     if (addressId) {
       if (address) reset({ ...address, latitude: address.latitude ?? null, longitude: address.longitude ?? null });
     } else if (user) {
       reset({ ...emptyAddress, recipientName: user.name ?? "", phoneNumber: user.phone ?? "" });
     }
-  }, [address, addressId, reset, user]);
+  }, [address, addressId, cancelLookup, reset, user]);
 
-  /** Stores both coordinate components together; clearing the pin explicitly sends two nulls. */
+  /** Selects both coordinates, then resolves only the latest point after rapid map gestures settle. */
   const selectLocation = useCallback((point: MapCoordinates | null) => {
+    cancelLookup();
     setValue("latitude", point?.latitude ?? null, { shouldDirty: true });
     setValue("longitude", point?.longitude ?? null, { shouldDirty: true });
-  }, [setValue]);
+    if (!point) { setLookupState("idle"); return; }
+    if (!accessToken) { setLookupState("failed"); return; }
+    const version = lookup.current.version;
+    const previousText = getValues("streetAddress");
+    setLookupState("loading");
+    lookup.current.timer = window.setTimeout(async () => {
+      lookup.current.timer = undefined;
+      const controller = new AbortController();
+      lookup.current.controller = controller;
+      try {
+        const result = await reverseGeocodeAddress(point, accessToken, controller.signal);
+        if (version !== lookup.current.version || controller.signal.aborted) return;
+        if (getValues("streetAddress") !== previousText) { setLookupState("idle"); return; }
+        setValue("streetAddress", result.formattedAddress, { shouldDirty: true, shouldValidate: true });
+        setLookupState("resolved");
+      } catch (error: unknown) {
+        if (version !== lookup.current.version || controller.signal.aborted) return;
+        setLookupState(getAddressLookupFailure(error));
+      } finally {
+        if (version === lookup.current.version) lookup.current.controller = null;
+      }
+    }, 300);
+  }, [accessToken, cancelLookup, getValues, setValue]);
+
+  /** Manual typing takes precedence over a pending map lookup; the selected point is retained. */
+  function preserveManualAddress() {
+    cancelLookup();
+    setLookupState("idle");
+  }
 
   /** Keeps required text fields nonblank before the server performs authoritative address validation. */
   function required(value: string | null) {
@@ -68,6 +119,8 @@ export function AddressFormContent({ locale, addressId, mapApiKey, mapKeyInvalid
 
   /** Persists the entire address and navigates back only after the authenticated write succeeds. */
   async function save(values: AddressInput) {
+    if (lookup.current.timer || lookup.current.controller) return;
+    cancelLookup();
     setSaveError("");
     const payload: AddressInput = {
       ...values,
@@ -90,9 +143,10 @@ export function AddressFormContent({ locale, addressId, mapApiKey, mapKeyInvalid
   if (!user) return <AddressSignInNotice locale={locale} returnTo={`/account/addresses/new${addressId ? `?id=${addressId}` : ""}`} />;
   if (addressId && isError) return <div role="alert" className="rounded-card border border-vd-line p-6"><p className="mb-4 text-sm text-vd-danger">{a.loadFailed}</p><VendoraButton type="button" variant="outline" onClick={() => refetch()}>{a.retry}</VendoraButton></div>;
   if (addressId && !address) return <div role="alert" className="rounded-card border border-vd-line p-6"><p className="mb-4 text-sm text-vd-danger">{t.notFound}</p><VendoraButton href={withLocalePath("/account/addresses", locale)} variant="outline">{getDict(locale).common.back}</VendoraButton></div>;
+  const streetAddressField = register("streetAddress", { validate: required });
 
   return (
-    <form className="vd-address-form" noValidate onSubmit={handleSubmit(save)}>
+    <form className="vd-address-form" noValidate onSubmit={(event) => { void handleSubmit(save)(event); }}>
       <div className="vd-address-form-card rounded-card border border-vd-line bg-white p-[20px] md:p-8">
         <fieldset disabled={busy} className="min-w-0 border-0 p-0">
           <legend className="mb-5 text-[1.1875rem] font-bold text-ink">{t.sectionRecipient}</legend>
@@ -110,14 +164,15 @@ export function AddressFormContent({ locale, addressId, mapApiKey, mapKeyInvalid
             <TextField label={t.postalCode} inputMode="numeric" dir="ltr" autoComplete="postal-code" maxLength={10} error={errors.postalCode?.message} {...register("postalCode", { validate: (value) => /^\d{10}$/.test(normalizeAddressDigits(value)) || t.postalError })} />
             <TextField label={t.plaque} maxLength={50} {...register("plaque")} />
             <TextField label={t.unit} maxLength={50} {...register("unit")} />
-            <TextareaField label={t.addressLine} rows={3} className="md:col-span-2" autoComplete="street-address" maxLength={1000} error={errors.streetAddress?.message} {...register("streetAddress", { validate: required })} />
           </div>
           <NeshanLocationPicker locale={locale} apiKey={mapApiKey} invalidKey={mapKeyInvalid} value={location} onChange={selectLocation} />
+          <TextareaField label={t.addressLine} rows={3} className="mt-5" dir="auto" autoComplete="street-address" maxLength={1000} hint={t.addressLookupHint} aria-busy={lookupState === "loading"} error={errors.streetAddress?.message} {...streetAddressField} onChange={(event) => { preserveManualAddress(); void streetAddressField.onChange(event); }} />
+          {lookupState !== "idle" ? <p role={lookupFailed ? "alert" : "status"} aria-live="polite" className={`mt-2 text-sm leading-7 ${lookupFailed ? "text-vd-danger" : "text-vd-muted"}`}>{lookupMessages[lookupState]}</p> : null}
           <div className="mt-7 flex flex-col gap-[20px] border-t border-vd-line pt-6 md:flex-row md:items-center md:justify-between">
             <Switch checked={Boolean(isDefault)} onChange={(checked) => setValue("isDefault", checked, { shouldDirty: true })} label={t.defaultSwitch} />
             <div className="flex flex-wrap gap-3">
               <VendoraButton href={withLocalePath("/account/addresses", locale)} variant="outline">{getDict(locale).common.back}</VendoraButton>
-              <VendoraButton type="submit" disabled={busy}>{busy ? t.saving : t.submit}</VendoraButton>
+              <VendoraButton type="submit" disabled={busy || lookupState === "loading"}>{busy ? t.saving : t.submit}</VendoraButton>
             </div>
           </div>
         </fieldset>
