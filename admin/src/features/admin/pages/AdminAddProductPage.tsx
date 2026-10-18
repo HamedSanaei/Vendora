@@ -7,6 +7,7 @@ import { adminPath, adminText, normalizeAdminLocale } from '../i18n';
 import { useAdminStore } from '../stores/AdminStoreContext';
 import type { CreateAdminProductInput } from '../types';
 import { getAsciiDigits, formatNumberInput, parseNumberInput } from '../utils/formatters';
+import { AdminProductPricing } from '../components/AdminProductPricing';
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
 const maxImageBytes = 5 * 1024 * 1024;
@@ -32,6 +33,8 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [priceMode, setPriceMode] = useState<'toman' | 'usd'>('toman');
+  const [usdPrice, setUsdPrice] = useState('');
   const [stockQuantity, setStockQuantity] = useState('0');
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [brandId, setBrandId] = useState('');
@@ -63,6 +66,8 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       setSlug(product.slug);
       setDescription(product.description ?? '');
       setPrice(formatNumberInput(String(product.price), locale));
+      setPriceMode(product.usdPrice != null ? 'usd' : 'toman');
+      setUsdPrice(product.usdPrice != null ? String(product.usdPrice) : '');
       setStockQuantity(String(product.stockQuantity));
       setCategoryIds(product.categoryIds.length > 0 ? product.categoryIds : product.categoryId ? [product.categoryId] : []);
       setBrandId(product.brandId ?? '');
@@ -169,6 +174,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
     event.preventDefault();
     clearErrors();
     const numericPrice = parseNumberInput(price);
+    const numericUsdPrice = Number(usdPrice);
     const normalizedTitle = title.trim();
     const normalizedSlug = slug.trim();
     const normalizedDescription = description.trim();
@@ -179,8 +185,13 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       return;
     }
 
-    if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
+    if (priceMode === 'toman' && (!Number.isFinite(numericPrice) || numericPrice <= 0)) {
       setFormError(isFa ? 'قیمت محصول باید بیشتر از صفر باشد.' : 'Product price must be greater than zero.');
+      return;
+    }
+
+    if (priceMode === 'usd' && (!/^\d+(\.\d{1,4})?$/.test(usdPrice) || numericUsdPrice <= 0 || numericUsdPrice > 1000000)) {
+      setFormError(isFa ? 'قیمت دلاری باید مثبت، حداکثر یک میلیون و دارای حداکثر چهار رقم اعشار باشد.' : 'Dollar price must be positive, at most one million, with up to four decimal places.');
       return;
     }
 
@@ -200,6 +211,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       slug: normalizedSlug,
       description: normalizedDescription,
       price: numericPrice,
+      usdPrice: priceMode === 'usd' ? numericUsdPrice : undefined,
       stockQuantity: numericStock,
       categoryId: categoryIds[0] || undefined,
       categoryIds,
@@ -217,7 +229,9 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       : await products.createProduct(payload);
 
     if (!saved) {
-      setFormError(products.saveError ?? (isFa ? 'ذخیره محصول ناموفق بود.' : 'Unable to save product.'));
+      setFormError(isFa && products.saveError?.startsWith('Dollar pricing is unavailable')
+        ? 'هنوز نرخ معتبر داخلی دریافت نشده است. پس از به‌روزرسانی نرخ، محصول دلاری را ذخیره کنید.'
+        : products.saveError ?? (isFa ? 'ذخیره محصول ناموفق بود.' : 'Unable to save product.'));
       return;
     }
 
@@ -240,19 +254,9 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
               {isFa ? 'اسلاگ' : 'Slug'}
               <input name="slug" value={slug} onChange={(event) => { clearErrors(); setSlug(event.target.value); }} placeholder="laptop-briefcase" />
             </label>
-            <label>
-              {isFa ? `قیمت (${adminText(locale, 'toman')})` : `Price (${adminText(locale, 'toman')})`}
-              <input
-                inputMode="numeric"
-                name="price"
-                value={price}
-                onChange={(event) => {
-                  clearErrors();
-                  setPrice(formatNumberInput(event.target.value, locale));
-                }}
-                placeholder="1,250,000"
-              />
-            </label>
+            <AdminProductPricing locale={locale} mode={priceMode} value={priceMode === 'usd' ? usdPrice : price}
+              onModeChange={(value) => { clearErrors(); setPriceMode(value); }}
+              onChange={(value) => { clearErrors(); if (priceMode === 'usd') setUsdPrice(value); else setPrice(value); }} />
             <label>
               {isFa ? 'تعداد موجودی' : 'Stock quantity'}
               <input

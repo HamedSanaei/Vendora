@@ -25,6 +25,7 @@ import type {
   AdminSlideshowSlide,
   AdminSlideshowInput,
   CreateAdminProductInput,
+  InternalExchangeRate,
 } from '../types';
 
 const fallbackImageUrl = 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=700&q=80';
@@ -48,6 +49,8 @@ function mapProduct(product: AdminProductDto): AdminProduct {
     slug: product.slug,
     description: product.description,
     price: product.price,
+    usdPrice: product.usdPrice,
+    priceExchangeRate: product.priceExchangeRate,
     stockQuantity: product.stockQuantity,
     categoryId: primaryCategory?.id ?? product.categoryId,
     categoryIds: productCategories.map((category) => category.id),
@@ -74,6 +77,11 @@ export async function getAdminProducts(): Promise<AdminProduct[]> {
   return response.data.map(mapProduct);
 }
 
+/** Reads the stored internal rate for a preview; only the backend scheduler polls exchanges. */
+export async function getInternalExchangeRate(): Promise<InternalExchangeRate> {
+  return (await httpClient.get<InternalExchangeRate>('/api/admin/pricing/exchange-rate')).data;
+}
+
 /** Loads real category options from the ASP.NET Core admin API. */
 export async function getAdminCategoryOptions(): Promise<AdminCategoryOption[]> {
   const response = await httpClient.get<AdminCategoryOption[]>('/api/admin/categories');
@@ -87,6 +95,7 @@ export async function createAdminProduct(input: CreateAdminProductInput): Promis
   formData.append('slug', input.slug ?? '');
   formData.append('description', input.description ?? '');
   formData.append('price', input.price.toString());
+  if (input.usdPrice !== undefined) formData.append('usdPrice', input.usdPrice.toString());
   formData.append('stockQuantity', input.stockQuantity.toString());
   formData.append('status', input.status);
 
@@ -132,6 +141,7 @@ export async function updateAdminProduct(id: string, input: CreateAdminProductIn
   formData.append('slug', input.slug ?? '');
   formData.append('description', input.description ?? '');
   formData.append('price', input.price.toString());
+  if (input.usdPrice !== undefined) formData.append('usdPrice', input.usdPrice.toString());
   formData.append('stockQuantity', input.stockQuantity.toString());
   formData.append('status', input.status);
 

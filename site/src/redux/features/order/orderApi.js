@@ -1,23 +1,17 @@
 import { apiSlice } from "../../api/apiSlice";
 import { set_client_secret } from "./orderSlice";
-
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5020";
+import axios from "axios";
+import { http } from "@/lib/http";
 
 async function orderRequest(path, body, token, method = "POST") {
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    return { error: { status: response.status, data: data ?? { message: "Request failed." } } };
+  try {
+    const response = await http.request({ url: path.replace(/^\/api\//, "/"), method, data: body,
+      headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    return { data: response.data };
+  } catch (error) {
+    return { error: { status: axios.isAxiosError(error) ? error.response?.status ?? "FETCH_ERROR" : "FETCH_ERROR",
+      data: axios.isAxiosError(error) ? error.response?.data ?? { message: "Request failed." } : { message: "Request failed." } } };
   }
-
-  return { data };
 }
 
 export const orderApi = apiSlice.injectEndpoints({

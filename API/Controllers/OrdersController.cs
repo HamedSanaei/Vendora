@@ -46,8 +46,13 @@ public class OrdersController : BaseApiController
                         request.NewAddress.IsDefault,
                         request.NewAddress.Latitude,
                         request.NewAddress.Longitude),
-                    (request.Items ?? []).Select(item => new Create.ItemInput(item.ProductId, item.Quantity)).ToList()),
+                    (request.Items ?? []).Select(item => new Create.ItemInput(item.ProductId, item.Quantity, item.ExpectedUnitPrice)).ToList()),
                 cancellationToken);
+        }
+        catch (Application.Pricing.PriceChangedException exception)
+        {
+            return Conflict(new { code = "PRICE_CHANGED", message = exception.Message,
+                productId = exception.ProductId, currentPrice = exception.CurrentPrice });
         }
         catch (InvalidOperationException exception)
         {
@@ -107,7 +112,7 @@ public sealed record CreateOrderRequest(
     IReadOnlyList<CreateOrderItemRequest> Items);
 
 /// <summary>Represents an order item request body.</summary>
-public sealed record CreateOrderItemRequest(Guid ProductId, int Quantity);
+public sealed record CreateOrderItemRequest(Guid ProductId, int Quantity, decimal? ExpectedUnitPrice = null);
 
 /// <summary>Represents a new shipping address request body used during checkout.</summary>
 public sealed record CreateOrderAddressRequest(

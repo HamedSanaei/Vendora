@@ -47,6 +47,11 @@ public sealed class AdminController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>Reads the internal 30-minute rate for product price previews; never polls exchanges.</summary>
+    [HttpGet("pricing/exchange-rate")]
+    public async Task<ActionResult> GetExchangeRate(CancellationToken cancellationToken)
+        => Ok(await _mediator.Send(new Application.Pricing.ExchangeRateQueries.Query(), cancellationToken));
+
     /// <summary>
     /// Returns all products for admin management screens.
     /// </summary>
@@ -122,7 +127,8 @@ public sealed class AdminController : ControllerBase
                 productStatus,
                 request.ColorIds,
                 uploads,
-                request.PrimaryNewImageIndex),
+                request.PrimaryNewImageIndex,
+                request.UsdPrice),
             cancellationToken);
 
         if (result.Succeeded)
@@ -186,7 +192,8 @@ public sealed class AdminController : ControllerBase
                 request.DeletedImageIds,
                 request.PrimaryImageId,
                 uploads,
-                request.PrimaryNewImageIndex),
+                request.PrimaryNewImageIndex,
+                request.UsdPrice),
             cancellationToken);
 
         if (result.Succeeded)
@@ -627,6 +634,9 @@ public sealed class CreateAdminProductRequest
 
     /// <summary>Gets or sets the product price.</summary>
     public decimal Price { get; set; }
+
+    /// <summary>Optional dollar base price; omitted for existing fixed-Toman products.</summary>
+    public decimal? UsdPrice { get; set; }
 
     /// <summary>Gets or sets the available stock quantity.</summary>
     public int StockQuantity { get; set; }

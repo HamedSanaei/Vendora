@@ -49,7 +49,9 @@ internal static class AdminProductMappings
                     color.CatalogColor.Name,
                     color.CatalogColor.Slug,
                     color.CatalogColor.HexCode))
-                .ToList());
+                .ToList(),
+            product.UsdPrice,
+            product.PriceExchangeRate);
     }
 
     private static Guid? ResolvePrimaryCategoryId(Product product)

@@ -7,6 +7,7 @@ import { store } from "src/redux/store";
 import { get_cart_products } from "src/redux/features/cartSlice";
 import { get_wishlist_products } from "src/redux/features/wishlist-slice";
 import { CartToastViewport } from "@components/vendora/feedback/cart-toast";
+import { CartPriceRuntime } from "@components/vendora/cart/cart-price-runtime";
 if (typeof window !== "undefined") {
   require("bootstrap/dist/js/bootstrap");
 }
@@ -29,6 +30,7 @@ function StorefrontRuntime({ children }) {
   return (
     <>
       {children}
+      <CartPriceRuntime />
       <CartToastViewport />
     </>
   );

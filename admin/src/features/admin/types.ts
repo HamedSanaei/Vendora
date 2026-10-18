@@ -43,6 +43,8 @@ export interface AdminProductDto {
   slug: string;
   description: string | null;
   price: number;
+  usdPrice?: number | null;
+  priceExchangeRate?: number | null;
   stockQuantity: number;
   status: string;
   inventoryStatus: string;
@@ -77,6 +79,8 @@ export interface AdminProduct {
   slug: string;
   description: string | null;
   price: number;
+  usdPrice?: number | null;
+  priceExchangeRate?: number | null;
   stockQuantity: number;
   categoryId: string | null;
   categoryIds: string[];
@@ -239,6 +243,7 @@ export interface CreateAdminProductInput {
   slug?: string;
   description?: string;
   price: number;
+  usdPrice?: number;
   stockQuantity: number;
   categoryId?: string;
   categoryIds: string[];
@@ -249,6 +254,16 @@ export interface CreateAdminProductInput {
   deletedImageIds?: string[];
   primaryImageId?: string;
   primaryNewImageIndex?: number;
+}
+
+/** Persisted internal rate; reading it never triggers a request to exchanges. */
+export interface InternalExchangeRate {
+  tomanPerUsdt: number | null;
+  updatedAtUtc: string | null;
+  nextRefreshAtUtc: string;
+  sources: string;
+  lastError: string | null;
+  refreshIntervalMinutes: number;
 }
 
 export interface AdminCategoryInput {

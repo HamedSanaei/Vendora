@@ -4,6 +4,7 @@ using MediatR;
 using Persistence.Carts;
 using Persistence.Common;
 using Persistence.Products;
+using Persistence;
 
 namespace Application.Carts;
 
@@ -25,20 +26,23 @@ public static class AddItem
         private readonly ICartRepository _cartRepository;
         private readonly IProductReadRepository _productReadRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly AppDbContext _db;
 
         /// <summary>
         /// Creates the handler.
         /// </summary>
-        public Handler(ICartRepository cartRepository, IProductReadRepository productReadRepository, IUnitOfWork unitOfWork)
+        public Handler(ICartRepository cartRepository, IProductReadRepository productReadRepository, IUnitOfWork unitOfWork, AppDbContext db)
         {
             _cartRepository = cartRepository;
             _productReadRepository = productReadRepository;
             _unitOfWork = unitOfWork;
+            _db = db;
         }
 
         /// <inheritdoc />
         public async Task<CartDto> Handle(Command request, CancellationToken cancellationToken)
         {
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
             if (request.Quantity <= 0)
             {
                 throw new InvalidOperationException("Quantity must be greater than zero.");
@@ -86,6 +90,7 @@ public static class AddItem
 
             cart.Touch();
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
 
             return CartMappings.Map(cart);
         }

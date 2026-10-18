@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { clear_cart } from "@/redux/features/cartSlice";
+import { sync_cart_prices } from "@/redux/features/cartSlice";
+import { apiSlice } from "@/redux/api/apiSlice";
+import { getCartUnitPrice } from "@/components/vendora/cart/cart-model";
 import { clear_coupon } from "@/redux/features/coupon/couponSlice";
 import { useAddOrderMutation } from "@/redux/features/order/orderApi";
 import { reset_checkout, set_payment } from "@/redux/features/order/orderSlice";
@@ -32,7 +35,7 @@ interface PaymentRootState {
 
 interface AddOrderResult {
   data?: { orderNumber?: string };
-  error?: { data?: { message?: string } };
+  error?: { data?: { message?: string; code?: string; productId?: string; currentPrice?: number } };
 }
 
 /** Coordinates client-side payment selection and the existing pending-order API. */
@@ -108,10 +111,19 @@ export function usePaymentCheckout() {
       items: items.map((item) => ({
         productId: item._id,
         quantity: item.orderQuantity || 1,
+        expectedUnitPrice: getCartUnitPrice(item),
       })),
     }) as AddOrderResult;
 
     if (result.error || !result.data?.orderNumber) {
+      if (result.error?.data?.code === "PRICE_CHANGED") {
+        const { productId, currentPrice } = result.error.data;
+        if (productId && currentPrice) dispatch(sync_cart_prices([{ _id: productId, originalPrice: currentPrice, price: currentPrice, discount: 0 }]));
+        dispatch(apiSlice.util.invalidateTags(["Products", "Product", "RelatedProducts"]));
+        setErrorMessage(locale === "fa" ? "قیمت محصول با نرخ داخلی جدید به‌روز شد. مبلغ سفارش را بررسی و دوباره تأیید کنید." : "Product prices were updated. Review the new total and confirm again.");
+        setPhase("error");
+        return;
+      }
       setErrorMessage(result.error?.data?.message ?? (locale === "fa" ? "ثبت سفارش انجام نشد. دوباره تلاش کنید." : "The order could not be created. Try again."));
       setPhase("error");
       return;

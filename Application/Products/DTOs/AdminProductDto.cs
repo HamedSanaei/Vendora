@@ -19,4 +19,6 @@ public sealed record AdminProductDto(
     string? BrandName,
     string? PrimaryImageUrl,
     IReadOnlyList<ProductImageDto> Images,
-    IReadOnlyList<CatalogColorDto> Colors);
+    IReadOnlyList<CatalogColorDto> Colors,
+    decimal? UsdPrice = null,
+    decimal? PriceExchangeRate = null);

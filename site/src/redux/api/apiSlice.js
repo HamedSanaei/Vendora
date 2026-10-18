@@ -1,17 +1,13 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { getProductById, getRelatedProducts, mockStoreData } from "src/data/mock-store-data";
+import { http } from "@/lib/http";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5020";
 const fallbackProductImage = "/assets/img/product/product-1.jpg";
 const fallbackCategoryImage = "/assets/img/banner/banner-1.jpg";
 
 async function catalogFetch(path) {
-  const response = await fetch(`${apiBaseUrl}${path}`, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`Catalog API failed with ${response.status}`);
-  }
-
-  return response.json();
+  return (await http.get(path.replace(/^\/api\//, "/"))).data;
 }
 
 function resolveImageUrl(imageUrl) {
@@ -156,11 +152,13 @@ const mockBaseQuery = async (args) => {
 const hybridBaseQuery = async (args) => {
   const url = typeof args === "string" ? args : args?.url ?? "";
   const normalizedUrl = url.replace(/^\//, "");
+  if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true") return mockBaseQuery(args);
 
   try {
-    if (normalizedUrl === "api/products/show") {
+    if (normalizedUrl === "api/products/show" || normalizedUrl === "api/products/discount") {
       const products = await catalogFetch("/api/catalog/products");
-      return { data: { success: true, products: products.map(mapCatalogProduct) } };
+      const mapped = products.map(mapCatalogProduct);
+      return { data: { success: true, products: normalizedUrl.endsWith("/discount") ? mapped.filter((product) => product.discount > 0) : mapped } };
     }
 
     if (normalizedUrl === "api/category/show") {
@@ -173,14 +171,22 @@ const hybridBaseQuery = async (args) => {
       return { data: { success: true, colors: colors.map(mapCatalogColor) } };
     }
 
-    if (normalizedUrl.startsWith("api/products/") && !normalizedUrl.startsWith("api/products/relatedProduct")) {
+    if (normalizedUrl.startsWith("api/products/relatedProduct")) {
+      const products = (await catalogFetch("/api/catalog/products")).map(mapCatalogProduct);
+      const tags = new URLSearchParams(normalizedUrl.split("?")[1] ?? "").get("tags")?.split(",").filter(Boolean) ?? [];
+      return { data: { status: true, product: products.filter((product) => tags.length === 0 || product.tags.some((tag) => tags.includes(tag))) } };
+    }
+
+    if (normalizedUrl.startsWith("api/products/")) {
       const products = await catalogFetch("/api/catalog/products");
       const productId = normalizedUrl.replace("api/products/", "");
       const mapped = products.map(mapCatalogProduct);
-      return { data: mapped.find((product) => product._id === productId || product.slug === productId) ?? mapped[0] };
+      const product = mapped.find((product) => product._id === productId || product.slug === productId);
+      return product ? { data: product } : { error: { status: 404, data: { message: "Product was not found." } } };
     }
   } catch (error) {
-    return mockBaseQuery(args);
+    // Never substitute synthetic product prices when the real catalog is unavailable.
+    return { error: { status: error.response?.status ?? "FETCH_ERROR", data: { message: "Catalog prices are temporarily unavailable." } } };
   }
 
   return mockBaseQuery(args);

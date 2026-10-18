@@ -515,6 +515,10 @@ namespace Persistence.Migrations
                     b.Property<Guid>("OrderId")
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal?>("PriceExchangeRate")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("ProductId")
                         .HasColumnType("TEXT");
 
@@ -528,6 +532,10 @@ namespace Persistence.Migrations
 
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("UsdUnitPrice")
+                        .HasPrecision(18, 4)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -611,6 +619,10 @@ namespace Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal?>("PriceExchangeRate")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(280)
@@ -628,6 +640,10 @@ namespace Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("UsdPrice")
+                        .HasPrecision(18, 4)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -747,6 +763,46 @@ namespace Persistence.Migrations
                             t.HasCheckConstraint("CK_SlideshowSlides_DurationSeconds", "DurationSeconds >= 1 AND DurationSeconds <= 120");
 
                             t.HasCheckConstraint("CK_SlideshowSlides_SortOrder", "SortOrder >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entities.UsdtExchangeRate", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastAttemptAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("NextRefreshAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sources")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("TomanPerUsdt")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UsdtExchangeRates", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            NextRefreshAtUtc = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Sources = ""
                         });
                 });
 

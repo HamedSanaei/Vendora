@@ -6,6 +6,8 @@ using Domain.Enums;
 using MediatR;
 using Persistence.Common;
 using Persistence.Products;
+using Persistence;
+using Application.Pricing;
 
 namespace Application.Products;
 
@@ -38,7 +40,8 @@ public static class Create
         ProductStatus Status,
         IReadOnlyList<Guid> ColorIds,
         IReadOnlyList<ProductImageUpload> Images,
-        int? PrimaryNewImageIndex) : IRequest<Result>;
+        int? PrimaryNewImageIndex,
+        decimal? UsdPrice = null) : IRequest<Result>;
 
     /// <summary>
     /// Represents the create-product outcome.
@@ -72,6 +75,7 @@ public static class Create
         private readonly IProductAdminRepository _productAdminRepository;
         private readonly IProductImageStorage _productImageStorage;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly AppDbContext _db;
 
         /// <summary>
         /// Creates the handler.
@@ -79,11 +83,13 @@ public static class Create
         public Handler(
             IProductAdminRepository productAdminRepository,
             IProductImageStorage productImageStorage,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            AppDbContext db)
         {
             _productAdminRepository = productAdminRepository;
             _productImageStorage = productImageStorage;
             _unitOfWork = unitOfWork;
+            _db = db;
         }
 
         /// <inheritdoc />
@@ -95,7 +101,7 @@ public static class Create
                 return Invalid("Product title is required.");
             }
 
-            if (request.Price <= 0)
+            if (!request.UsdPrice.HasValue && request.Price <= 0)
             {
                 return Invalid("Product price must be greater than zero.");
             }
@@ -151,6 +157,7 @@ public static class Create
                 return new Result(CreateFailure.ColorNotFound, "One or more selected colors do not exist.", null);
             }
 
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
             var product = new Product
             {
                 Title = title,
@@ -171,6 +178,9 @@ public static class Create
                     .ToList()
             };
 
+            var pricingError = await ProductPriceWriter.ApplyAsync(_db, product, request.Price, request.UsdPrice, cancellationToken);
+            if (pricingError is not null) return Invalid(pricingError);
+
             for (int index = 0; index < request.Images.Count; index++)
             {
                 var storedImage = await _productImageStorage.SaveAsync(request.Images[index], cancellationToken);
@@ -190,6 +200,7 @@ public static class Create
 
             await _productAdminRepository.AddAsync(product, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
 
             return new Result(CreateFailure.None, null, AdminProductMappings.MapProduct(product));
         }

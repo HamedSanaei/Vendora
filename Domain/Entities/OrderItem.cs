@@ -32,6 +32,12 @@ public class OrderItem : EntityBase
     /// </summary>
     public decimal UnitPrice { get; set; }
 
+    /// <summary>Immutable dollar unit price at order creation, if dollar pricing was used.</summary>
+    public decimal? UsdUnitPrice { get; set; }
+
+    /// <summary>Immutable internal Toman/USDT rate used for this order line.</summary>
+    public decimal? PriceExchangeRate { get; set; }
+
     /// <summary>
     /// Gets or sets the quantity purchased.
     /// </summary>

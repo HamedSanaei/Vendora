@@ -21,6 +21,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <summary>Gets the products.</summary>
     public DbSet<Product> Products => Set<Product>();
 
+    /// <summary>Gets the durable internal USDT/Toman rate and refresh schedule.</summary>
+    public DbSet<UsdtExchangeRate> UsdtExchangeRates => Set<UsdtExchangeRate>();
+
     /// <summary>Gets multi-category product links.</summary>
     public DbSet<ProductCategory> ProductCategories => Set<ProductCategory>();
 
@@ -108,6 +111,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             builder.Property(x => x.Slug).HasMaxLength(280).IsRequired();
             builder.Property(x => x.Description).HasMaxLength(4000);
             builder.Property(x => x.Price).HasPrecision(18, 2);
+            builder.Property(x => x.UsdPrice).HasPrecision(18, 4);
+            builder.Property(x => x.PriceExchangeRate).HasPrecision(18, 6);
             builder.Property(x => x.Status).HasConversion<int>();
             builder.Property(x => x.InventoryStatus).HasConversion<int>();
             builder.HasIndex(x => x.Slug).IsUnique();
@@ -136,6 +141,22 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 .WithMany(x => x.ProductCategories)
                 .HasForeignKey(x => x.CategoryId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UsdtExchangeRate>(builder =>
+        {
+            builder.ToTable("UsdtExchangeRates");
+            builder.HasKey(x => x.Id);
+            builder.Property(x => x.Id).ValueGeneratedNever();
+            builder.Property(x => x.TomanPerUsdt).HasPrecision(18, 6);
+            builder.Property(x => x.Sources).HasMaxLength(200);
+            builder.Property(x => x.LastError).HasMaxLength(500);
+            var utcTimestamp = new ValueConverter<DateTime, DateTime>(
+                value => value.Kind == DateTimeKind.Utc ? value : value.ToUniversalTime(),
+                value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
+            builder.Property(x => x.UpdatedAtUtc).HasConversion(utcTimestamp);
+            builder.Property(x => x.LastAttemptAtUtc).HasConversion(utcTimestamp);
+            builder.HasData(new UsdtExchangeRate());
         });
 
         modelBuilder.Entity<CatalogColor>(builder =>
@@ -229,6 +250,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             builder.HasKey(x => x.Id);
             builder.Property(x => x.ProductTitle).HasMaxLength(250).IsRequired();
             builder.Property(x => x.UnitPrice).HasPrecision(18, 2);
+            builder.Property(x => x.UsdUnitPrice).HasPrecision(18, 4);
+            builder.Property(x => x.PriceExchangeRate).HasPrecision(18, 6);
             builder.HasIndex(x => new { x.OrderId, x.ProductId }).IsUnique();
             builder.HasOne(x => x.Order)
                 .WithMany(x => x.Items)

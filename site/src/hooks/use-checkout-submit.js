@@ -196,6 +196,7 @@ const useCheckoutSubmit = () => {
       items: cart_products.map((item) => ({
         productId: item.id ?? item._id,
         quantity: item.orderQuantity ?? item.quantity ?? 1,
+        expectedUnitPrice: Number(item.originalPrice ?? item.price),
       })),
     };
 

@@ -28,6 +28,31 @@ public class Product : AuditableEntity
     /// </summary>
     public decimal Price { get; set; }
 
+    /// <summary>Optional dollar base price; null retains fixed Toman pricing.</summary>
+    public decimal? UsdPrice { get; set; }
+
+    /// <summary>Internal Toman/USDT rate that produced the persisted Toman unit price.</summary>
+    public decimal? PriceExchangeRate { get; set; }
+
+    /// <summary>Sets a fixed Toman price or materializes a dollar price using the internal rate.</summary>
+    public void SetPricing(decimal tomanPrice, decimal? usdPrice, decimal? exchangeRate)
+    {
+        if (usdPrice.HasValue)
+        {
+            Price = Domain.Pricing.DollarPricing.ToToman(usdPrice.Value,
+                exchangeRate ?? throw new InvalidOperationException("An internal exchange rate is required."));
+            UsdPrice = usdPrice;
+            PriceExchangeRate = exchangeRate;
+        }
+        else
+        {
+            if (tomanPrice <= 0) throw new ArgumentOutOfRangeException(nameof(tomanPrice));
+            Price = tomanPrice;
+            UsdPrice = null;
+            PriceExchangeRate = null;
+        }
+    }
+
     /// <summary>
     /// Gets or sets the available quantity.
     /// </summary>

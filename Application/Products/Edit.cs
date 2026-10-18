@@ -6,6 +6,9 @@ using Domain.Enums;
 using MediatR;
 using Persistence.Common;
 using Persistence.Products;
+using Persistence;
+using Application.Pricing;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Products;
 
@@ -39,7 +42,8 @@ public static class Edit
         IReadOnlyList<Guid> DeletedImageIds,
         Guid? PrimaryImageId,
         IReadOnlyList<ProductImageUpload> Images,
-        int? PrimaryNewImageIndex) : IRequest<Result>;
+        int? PrimaryNewImageIndex,
+        decimal? UsdPrice = null) : IRequest<Result>;
 
     /// <summary>Represents the edit product result.</summary>
     public sealed record Result(EditFailure Failure, string? Error, AdminProductDto? Product)
@@ -66,18 +70,21 @@ public static class Edit
         private readonly IProductAdminRepository _repository;
         private readonly IProductImageStorage _imageStorage;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly AppDbContext _db;
 
         /// <summary>Creates the handler.</summary>
-        public Handler(IProductAdminRepository repository, IProductImageStorage imageStorage, IUnitOfWork unitOfWork)
+        public Handler(IProductAdminRepository repository, IProductImageStorage imageStorage, IUnitOfWork unitOfWork, AppDbContext db)
         {
             _repository = repository;
             _imageStorage = imageStorage;
             _unitOfWork = unitOfWork;
+            _db = db;
         }
 
         /// <inheritdoc />
         public async Task<Result> Handle(Command request, CancellationToken cancellationToken)
         {
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
             var product = await _repository.GetProductAsync(request.Id, trackChanges: true, cancellationToken);
             if (product is null)
             {
@@ -90,7 +97,7 @@ public static class Edit
                 return Invalid("Product title is required.");
             }
 
-            if (request.Price <= 0)
+            if (!request.UsdPrice.HasValue && request.Price <= 0)
             {
                 return Invalid("Product price must be greater than zero.");
             }
@@ -149,7 +156,8 @@ public static class Edit
             product.Title = title;
             product.Slug = slug;
             product.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
-            product.Price = request.Price;
+            var pricingError = await ProductPriceWriter.ApplyAsync(_db, product, request.Price, request.UsdPrice, cancellationToken);
+            if (pricingError is not null) return Invalid(pricingError);
             product.StockQuantity = request.StockQuantity;
             product.CategoryId = categoryIds.FirstOrDefault();
             product.BrandId = request.BrandId;
@@ -183,6 +191,9 @@ public static class Edit
             NormalizePrimaryImage(product, request.PrimaryImageId, primaryNewImageId);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _db.CartItems.Where(item => item.ProductId == product.Id)
+                .ExecuteUpdateAsync(update => update.SetProperty(item => item.UnitPrice, product.Price), cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
             return new Result(EditFailure.None, null, AdminProductMappings.MapProduct(product));
         }
 

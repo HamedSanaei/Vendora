@@ -38,6 +38,8 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
         services.AddHostedService<ApplicationDatabaseInitializerHostedService>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddHostedService<Pricing.ExchangeRateRefreshService>();
 
         return services;
     }

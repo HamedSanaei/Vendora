@@ -8,6 +8,7 @@ using Persistence.Carts;
 using Persistence.Common;
 using Persistence.Orders;
 using Persistence.Products;
+using Application.Pricing;
 
 namespace Application.Orders;
 
@@ -19,7 +20,7 @@ public static class Create
     /// <summary>
     /// Represents a cart item selected by the customer at checkout.
     /// </summary>
-    public sealed record ItemInput(Guid ProductId, int Quantity);
+    public sealed record ItemInput(Guid ProductId, int Quantity, decimal? ExpectedUnitPrice = null);
 
     /// <summary>
     /// Represents a new shipping address entered during checkout.
@@ -81,6 +82,7 @@ public static class Create
         /// <inheritdoc />
         public async Task<OrderDto> Handle(Command request, CancellationToken cancellationToken)
         {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             var checkoutItems = await ResolveCheckoutItemsAsync(request, cancellationToken);
 
             var order = new Order
@@ -104,6 +106,10 @@ public static class Create
                     throw new InvalidOperationException($"Product {product.Title} does not have enough stock.");
                 }
 
+                // Dollar prices may move between display and submit. Require an explicit reconfirmation.
+                if (product.UsdPrice.HasValue && cartItem.ExpectedUnitPrice != product.Price)
+                    throw new PriceChangedException(product.Id, product.Price);
+
                 product.StockQuantity -= cartItem.Quantity;
 
                 order.Items.Add(new OrderItem
@@ -111,6 +117,8 @@ public static class Create
                     ProductId = product.Id,
                     ProductTitle = product.Title,
                     UnitPrice = product.Price,
+                    UsdUnitPrice = product.UsdPrice,
+                    PriceExchangeRate = product.PriceExchangeRate,
                     Quantity = cartItem.Quantity
                 });
             }
@@ -126,6 +134,7 @@ public static class Create
             }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
 
             return OrderMappings.Map(order);
         }
@@ -137,7 +146,9 @@ public static class Create
                 var validItems = request.Items
                     .Where(item => item.ProductId != Guid.Empty && item.Quantity > 0)
                     .GroupBy(item => item.ProductId)
-                    .Select(group => new ItemInput(group.Key, group.Sum(item => item.Quantity)))
+                    .Select(group => new ItemInput(group.Key, group.Sum(item => item.Quantity),
+                        group.Select(item => item.ExpectedUnitPrice).Distinct().Count() == 1
+                            ? group.First().ExpectedUnitPrice : null))
                     .ToList();
 
                 if (validItems.Count == 0)
