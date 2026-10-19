@@ -5,9 +5,10 @@ import { AdminButton, AdminEmptyState, AdminFeedback, AdminFilterBar, AdminPageH
 import { LoadingState } from '../components/LoadingState';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAdminProductQuery } from '../hooks/useAdminProductQuery';
-import { adminPath, normalizeAdminLocale } from '../i18n';
+import { adminPath, adminText, normalizeAdminLocale } from '../i18n';
 import { useAdminStore } from '../stores/AdminStoreContext';
 import { formatMoney } from '../utils/formatters';
+import { productStorefrontUrl } from '../utils/storefront';
 
 /** Renders the shared product dataset in the Penpot responsive card-grid view. */
 export const AdminProductGridPage = observer(function AdminProductGridPage() {
@@ -65,7 +66,14 @@ export const AdminProductGridPage = observer(function AdminProductGridPage() {
                   <StatusBadge locale={locale} value={product.inventoryStatus} />
                   <StatusBadge locale={locale} value={product.status} />
                 </div>
-                <AdminButton icon="edit" to={adminPath(locale, `products/${product.id}/edit`)} variant="secondary">{isFa ? 'ویرایش محصول' : 'Edit product'}</AdminButton>
+                <div className="admin-product-actions">
+                  <AdminButton external icon="eye" variant="secondary" disabled={product.status !== 'Active'}
+                    title={product.status !== 'Active' ? adminText(locale, 'publishToView') : undefined}
+                    to={product.status === 'Active' ? productStorefrontUrl(locale, product.id) : undefined}>
+                    {adminText(locale, 'viewProduct')}
+                  </AdminButton>
+                  <AdminButton icon="edit" to={adminPath(locale, `products/${product.id}/edit`)} variant="secondary">{isFa ? 'ویرایش محصول' : 'Edit product'}</AdminButton>
+                </div>
               </div>
             </article>
           ))}

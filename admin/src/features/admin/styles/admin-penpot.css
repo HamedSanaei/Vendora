@@ -190,8 +190,8 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   border-radius: 10px;
   background: transparent;
   color: rgb(255 255 255 / 70%);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 700;
   text-align: start;
   text-decoration: none;
   cursor: pointer;
@@ -267,7 +267,8 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   padding: 7px 13px;
   border-radius: 8px;
   color: rgb(255 255 255 / 48%);
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
   text-decoration: none;
 }
 
@@ -1001,15 +1002,20 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-stat-label {
   display: block;
   margin: 0 0 12px;
-  color: var(--va-muted);
-  font-size: 11px;
+  color: var(--va-graphite);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.8;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-stat-card strong {
   display: block;
   color: var(--va-ink);
-  font-size: clamp(19px, 3vw, 27px);
+  font-size: clamp(21px, 2.4vw, 30px);
   font-weight: 700;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-stat-blue { color: var(--va-blue); border-top: 3px solid var(--va-blue); }
@@ -1020,6 +1026,48 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-grid {
   display: grid;
   gap: 16px;
+}
+
+/* Keep the larger Persian dashboard type within the shared responsive panels. */
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-page-heading p {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-surface-header h2 {
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-surface-header p,
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-empty-state p {
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-list-row {
+  flex-wrap: wrap;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-list-row > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-list-row strong {
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-list-row small {
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-list-end {
+  margin-inline-start: auto;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-chart-canvas {
@@ -1071,6 +1119,78 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 14px;
+}
+
+.admin-product-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-product-actions .admin-action,
+.admin-shell[data-admin-theme="penpot"] .admin-table td .admin-product-actions .admin-action {
+  min-height: 44px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table-wrap {
+  container: admin-products / inline-size;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table {
+  min-width: 0;
+}
+
+/* The sidebar changes the available table width independently of the viewport. */
+@container admin-products (width < 56rem) {
+  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table thead {
+    display: none;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table,
+  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table tbody {
+    display: grid;
+    min-width: 0;
+    gap: 12px;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table tr {
+    display: grid;
+    min-width: 0;
+    padding: 8px 12px;
+    border: 1px solid var(--va-border);
+    border-radius: 12px;
+    background: var(--va-surface-2);
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table td {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    text-align: end;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table td::before {
+    flex: 0 0 auto;
+    color: var(--va-muted);
+    content: attr(data-label);
+    font-size: 11px;
+    text-align: start;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-product-cell {
+    min-width: 0;
+    flex: 1;
+    text-align: start;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table td:last-child {
+    border-bottom: 0;
+  }
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-product-card {

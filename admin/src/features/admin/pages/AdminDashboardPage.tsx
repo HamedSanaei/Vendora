@@ -32,12 +32,12 @@ export const AdminDashboardPage = observer(function AdminDashboardPage() {
   }, [dashboard]);
 
   if (dashboard.isLoading && !dashboard.stats) {
-    return <section className="admin-page"><LoadingState label={isFa ? 'در حال بارگذاری داشبورد…' : 'Loading dashboard…'} /></section>;
+    return <section className="admin-page admin-dashboard-page"><LoadingState label={isFa ? 'در حال بارگذاری داشبورد…' : 'Loading dashboard…'} /></section>;
   }
 
   if (dashboard.error) {
     return (
-      <section className="admin-page">
+      <section className="admin-page admin-dashboard-page">
         <AdminPageHeader title={isFa ? 'داشبورد' : 'Dashboard'} description={isFa ? 'نمای کلی عملکرد واقعی فروشگاه وندورا' : 'A real overview of Vendora commerce operations'} />
         <AdminFeedback tone="error">{dashboard.error}</AdminFeedback>
       </section>
@@ -48,6 +48,7 @@ export const AdminDashboardPage = observer(function AdminDashboardPage() {
   if (!stats) return null;
 
   const monthFormatter = new Intl.DateTimeFormat(isFa ? 'fa-IR' : 'en-US', { month: 'short' });
+  const chartFont = { family: isFa ? 'Vazirmatn, Tahoma, sans-serif' : 'Roboto, sans-serif', size: isFa ? 12 : 10, weight: isFa ? 700 : 400 };
   const chartData = {
     labels: stats.monthlySales.map((item) => monthFormatter.format(new Date(Date.UTC(item.year, item.month - 1, 1)))),
     datasets: [
@@ -67,7 +68,7 @@ export const AdminDashboardPage = observer(function AdminDashboardPage() {
   };
 
   return (
-    <section className="admin-page">
+    <section className="admin-page admin-dashboard-page">
       <AdminPageHeader
         eyebrow={isFa ? 'مرکز فرماندهی فروشگاه' : 'Commerce command centre'}
         title={isFa ? 'داشبورد' : 'Dashboard'}
@@ -89,14 +90,14 @@ export const AdminDashboardPage = observer(function AdminDashboardPage() {
               options={{
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: { legend: { display: false }, tooltip: { titleFont: chartFont, bodyFont: chartFont, padding: 12 } },
                 interaction: { intersect: false, mode: 'index' },
                 scales: {
-                  x: { grid: { display: false }, ticks: { color: '#74797C', font: { size: 10 } } },
+                  x: { grid: { display: false }, ticks: { color: '#5B6267', font: chartFont } },
                   y: {
                     beginAtZero: true,
                     grid: { color: 'rgba(221,216,206,.55)' },
-                    ticks: { color: '#74797C', font: { size: 10 }, callback: (value: string | number) => formatMoney(Number(value), locale) },
+                    ticks: { color: '#5B6267', font: chartFont, maxTicksLimit: 5, callback: (value: string | number) => formatMoney(Number(value), locale) },
                   },
                 },
               }}

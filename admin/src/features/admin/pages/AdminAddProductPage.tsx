@@ -8,6 +8,7 @@ import { useAdminStore } from '../stores/AdminStoreContext';
 import type { CreateAdminProductInput } from '../types';
 import { getAsciiDigits, formatNumberInput, parseNumberInput } from '../utils/formatters';
 import { AdminProductPricing } from '../components/AdminProductPricing';
+import { productStorefrontUrl } from '../utils/storefront';
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
 const maxImageBytes = 5 * 1024 * 1024;
@@ -44,6 +45,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
   const [deletedImageIds, setDeletedImageIds] = useState<string[]>([]);
   const [primaryImageKey, setPrimaryImageKey] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>();
 
   useEffect(() => {
     void products.loadCategoryOptions();
@@ -63,6 +65,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       }
 
       setTitle(product.title);
+      setPreviewUrl(product.status === 'Active' ? productStorefrontUrl(locale, product.id) : undefined);
       setSlug(product.slug);
       setDescription(product.description ?? '');
       setPrice(formatNumberInput(String(product.price), locale));
@@ -241,7 +244,9 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
 
   return (
     <section className="admin-page">
-      <AdminPageHeader eyebrow={isFa ? 'فرم کاتالوگ' : 'Catalog form'} title={isEdit ? adminText(locale, 'editProduct') : adminText(locale, 'addProduct')} description={isFa ? (isEdit ? 'اطلاعات، ویژگی‌ها و گالری محصول را با حفظ تصاویر موجود به‌روزرسانی کنید.' : 'محصول تازه را همراه دسته‌بندی، رنگ و گالری تصاویر ایجاد کنید.') : (isEdit ? 'Update product data and optionally replace images.' : 'Create a catalog product with local image upload.')} />
+      <AdminPageHeader eyebrow={isFa ? 'فرم کاتالوگ' : 'Catalog form'} title={isEdit ? adminText(locale, 'editProduct') : adminText(locale, 'addProduct')} description={isFa ? (isEdit ? 'اطلاعات، ویژگی‌ها و گالری محصول را با حفظ تصاویر موجود به‌روزرسانی کنید.' : 'محصول تازه را همراه دسته‌بندی، رنگ و گالری تصاویر ایجاد کنید.') : (isEdit ? 'Update product data and optionally replace images.' : 'Create a catalog product with local image upload.')}
+        actions={isEdit ? <AdminButton external icon="eye" variant="secondary" to={previewUrl} disabled={!previewUrl}
+          title={!previewUrl ? adminText(locale, 'publishToView') : undefined}>{adminText(locale, 'viewProduct')}</AdminButton> : undefined} />
 
       <form className="admin-product-form" onSubmit={handleSubmit}>
         <article className="admin-panel">

@@ -5,9 +5,10 @@ import { AdminActionMenu, AdminBulkSelectionBar, AdminButton, AdminCheckbox, Adm
 import { LoadingState } from '../components/LoadingState';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAdminProductQuery } from '../hooks/useAdminProductQuery';
-import { adminPath, normalizeAdminLocale } from '../i18n';
+import { adminPath, adminText, normalizeAdminLocale } from '../i18n';
 import { useAdminStore } from '../stores/AdminStoreContext';
 import { formatMoney } from '../utils/formatters';
+import { productStorefrontUrl } from '../utils/storefront';
 
 /** Renders the searchable, responsive product table using persisted catalog data. */
 export const AdminProductsPage = observer(function AdminProductsPage() {
@@ -41,11 +42,11 @@ export const AdminProductsPage = observer(function AdminProductsPage() {
   }
 
   if (products.isLoading && products.products.length === 0) {
-    return <section className="admin-page"><LoadingState label={isFa ? 'در حال بارگذاری محصولات…' : 'Loading products…'} /></section>;
+    return <section className="admin-page admin-products-page"><LoadingState label={isFa ? 'در حال بارگذاری محصولات…' : 'Loading products…'} /></section>;
   }
 
   return (
-    <section className="admin-page">
+    <section className="admin-page admin-products-page">
       <AdminPageHeader
         eyebrow={isFa ? 'مدیریت کاتالوگ' : 'Catalog management'}
         title={isFa ? 'محصولات' : 'Products'}
@@ -98,7 +99,16 @@ export const AdminProductsPage = observer(function AdminProductsPage() {
                     <td data-label={isFa ? 'قیمت' : 'Price'}>{formatMoney(product.price, locale)}</td>
                     <td data-label={isFa ? 'موجودی' : 'Stock'}><span>{product.stockQuantity.toLocaleString(isFa ? 'fa-IR' : 'en-US')}</span><StatusBadge locale={locale} value={product.inventoryStatus} /></td>
                     <td data-label={isFa ? 'انتشار' : 'Publishing'}><StatusBadge locale={locale} value={product.status} /></td>
-                    <td data-label={isFa ? 'عملیات' : 'Action'}><AdminActionMenu label={isFa ? `عملیات ${product.title}` : `${product.title} actions`}><AdminButton icon="edit" to={adminPath(locale, `products/${product.id}/edit`)} variant="ghost">{isFa ? 'ویرایش' : 'Edit'}</AdminButton></AdminActionMenu></td>
+                    <td data-label={isFa ? 'عملیات' : 'Action'}>
+                      <div className="admin-product-actions">
+                        <AdminButton external icon="eye" variant="secondary" disabled={product.status !== 'Active'}
+                          title={product.status !== 'Active' ? adminText(locale, 'publishToView') : undefined}
+                          to={product.status === 'Active' ? productStorefrontUrl(locale, product.id) : undefined}>
+                          {adminText(locale, 'viewProduct')}
+                        </AdminButton>
+                        <AdminActionMenu label={isFa ? `عملیات ${product.title}` : `${product.title} actions`}><AdminButton icon="edit" to={adminPath(locale, `products/${product.id}/edit`)} variant="ghost">{isFa ? 'ویرایش' : 'Edit'}</AdminButton></AdminActionMenu>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
