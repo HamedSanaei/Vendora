@@ -41,7 +41,8 @@ public static class Create
         IReadOnlyList<Guid> ColorIds,
         IReadOnlyList<ProductImageUpload> Images,
         int? PrimaryNewImageIndex,
-        decimal? UsdPrice = null) : IRequest<Result>;
+        decimal? UsdPrice = null,
+        IReadOnlyList<ProductAttributeInput>? Attributes = null) : IRequest<Result>;
 
     /// <summary>
     /// Represents the create-product outcome.
@@ -165,14 +166,17 @@ public static class Create
             }
 
             await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            var attributes = await ProductAttributeWriter.ResolveAsync(_db, request.Attributes, null, cancellationToken);
+            if (attributes.Error is not null) return Invalid(attributes.Error);
             var product = new Product
             {
                 Title = title,
+                Attributes = attributes.Attributes ?? [],
                 Slug = slug,
                 Description = description,
                 Price = request.Price,
                 StockQuantity = request.StockQuantity,
-                CategoryId = categoryIds.FirstOrDefault(),
+                CategoryId = categoryIds.Count > 0 ? categoryIds[0] : null,
                 BrandId = request.BrandId,
                 Status = request.Status,
                 InventoryStatus = ResolveInventoryStatus(request.StockQuantity),

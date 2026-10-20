@@ -50,6 +50,8 @@ function mapCatalogProduct(product) {
     description: product.description || "",
     descriptionHtml: product.descriptionHtml || "",
     priceFreshness: product.priceFreshness || null,
+    attributes: product.attributes || [],
+    colorNames: (product.colors || []).map((color) => color.name),
     brand: {
       name: product.brandName || "Vendora",
       id: product.brandId || "vendora",

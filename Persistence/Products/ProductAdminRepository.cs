@@ -46,6 +46,9 @@ public sealed class ProductAdminRepository : IProductAdminRepository
             .Include(product => product.Images)
             .Include(product => product.Colors)
             .ThenInclude(productColor => productColor.CatalogColor)
+            .Include(product => product.Attributes).ThenInclude(attribute => attribute.CatalogAttribute)
+            .Include(product => product.Attributes).ThenInclude(attribute => attribute.Values).ThenInclude(value => value.CatalogAttributeTerm)
+            .AsSplitQuery()
             .Where(product => product.Id == id);
 
         if (!trackChanges)

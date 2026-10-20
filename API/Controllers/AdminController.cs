@@ -8,6 +8,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
+using System.Text.Json;
+using Application.Products.DTOs;
 
 namespace API.Controllers;
 
@@ -104,6 +106,8 @@ public sealed class AdminController : ControllerBase
         [FromForm] CreateAdminProductRequest request,
         CancellationToken cancellationToken)
     {
+        if (!TryReadAttributes(request.AttributesJson, out var attributes))
+            return BadRequest(new { message = "Attributes: invalid attribute data." });
         // TODO: Protect admin endpoints with role-based authorization before production.
         if (!TryParseStatus(request.Status, out var productStatus))
         {
@@ -138,7 +142,8 @@ public sealed class AdminController : ControllerBase
                 request.ColorIds,
                 uploads,
                 request.PrimaryNewImageIndex,
-                request.UsdPrice),
+                request.UsdPrice,
+                attributes),
             cancellationToken);
 
         if (result.Succeeded)
@@ -166,6 +171,8 @@ public sealed class AdminController : ControllerBase
         [FromForm] CreateAdminProductRequest request,
         CancellationToken cancellationToken)
     {
+        if (!TryReadAttributes(request.AttributesJson, out var attributes))
+            return BadRequest(new { message = "Attributes: invalid attribute data." });
         // TODO: Protect admin endpoints with role-based authorization before production.
         if (!TryParseStatus(request.Status, out var productStatus))
         {
@@ -203,7 +210,8 @@ public sealed class AdminController : ControllerBase
                 request.PrimaryImageId,
                 uploads,
                 request.PrimaryNewImageIndex,
-                request.UsdPrice),
+                request.UsdPrice,
+                attributes),
             cancellationToken);
 
         if (result.Succeeded)
@@ -587,6 +595,20 @@ public sealed class AdminController : ControllerBase
         return Ok(payload);
     }
 
+    /// <summary>Decodes the optional multipart specification field; omission preserves legacy updates.</summary>
+    private static bool TryReadAttributes(string? json, out IReadOnlyList<ProductAttributeInput>? attributes)
+    {
+        attributes = null;
+        if (json is null) return true;
+        if (json.Length > 600_000) return false;
+        try
+        {
+            attributes = JsonSerializer.Deserialize<List<ProductAttributeInput>>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            return attributes is not null && attributes.All(x => x is not null);
+        }
+        catch (JsonException) { return false; }
+    }
+
     private static bool TryParseStatus(string? status, out ProductStatus productStatus)
     {
         if (string.IsNullOrWhiteSpace(status))
@@ -633,6 +655,9 @@ public sealed class AdminController : ControllerBase
 /// </summary>
 public sealed class CreateAdminProductRequest
 {
+    /// <summary>Optional JSON specifications; [] explicitly clears assignments, omission preserves them.</summary>
+    public string? AttributesJson { get; set; }
+
     /// <summary>Gets or sets the product title.</summary>
     public string Title { get; set; } = string.Empty;
 

@@ -70,6 +70,7 @@ function mapProduct(product: AdminProductDto): AdminProduct {
     imageUrls: imageUrls.length > 0 ? imageUrls : [primaryImageUrl],
     images: sortedImages.map((image) => ({ ...image, imageUrl: resolveImageUrl(image.imageUrl) })),
     colors: product.colors ?? [],
+    attributes: product.attributes ?? [],
     status: product.status === 'Archived' ? 'Archived' : product.status === 'Active' ? 'Active' : 'Draft',
     inventoryStatus: product.inventoryStatus === 'OutOfStock'
       ? 'OutOfStock'
@@ -99,6 +100,7 @@ export async function getAdminCategoryOptions(): Promise<AdminCategoryOption[]> 
 /** Creates a product using the ASP.NET Core multipart admin API. */
 export async function createAdminProduct(input: CreateAdminProductInput): Promise<AdminProduct> {
   const formData = new FormData();
+  if (input.attributes !== undefined) formData.append('attributesJson', JSON.stringify(input.attributes));
   formData.append('title', input.title);
   formData.append('slug', input.slug ?? '');
   formData.append('description', input.description ?? '');
@@ -145,6 +147,7 @@ export async function getAdminProduct(id: string): Promise<AdminProduct> {
 /** Updates a product using the ASP.NET Core multipart admin API. */
 export async function updateAdminProduct(id: string, input: CreateAdminProductInput): Promise<AdminProduct> {
   const formData = new FormData();
+  if (input.attributes !== undefined) formData.append('attributesJson', JSON.stringify(input.attributes));
   formData.append('title', input.title);
   formData.append('slug', input.slug ?? '');
   formData.append('description', input.description ?? '');

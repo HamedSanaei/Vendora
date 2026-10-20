@@ -24,6 +24,34 @@
   --va-purple-soft: #ece9f3;
 }
 
+/* Product specifications share the existing graphite/brass form primitives. */
+.admin-attributes { margin-block: 24px; padding-block-start: 24px; border-block-start: 1px solid var(--va-border); min-width: 0; }
+.admin-attributes .admin-panel-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+.admin-attribute-help { color: var(--va-muted); font-size: 13px; line-height: 1.9; margin-block: 12px; overflow-wrap: anywhere; }
+.admin-attribute-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.admin-attribute-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-block: 16px; }
+.admin-attribute-toolbar > label { flex: 1 1 200px; min-width: 0; }
+.admin-attribute-row { border: 1px solid var(--va-border); border-radius: 12px; margin-block: 12px; background: var(--va-surface); overflow: hidden; }
+.admin-attribute-row > summary { padding: 14px 16px; min-height: 48px; cursor: pointer; font-weight: 700; overflow-wrap: anywhere; }
+.admin-attribute-row > summary:focus-visible { outline: 2px solid var(--va-brass-dark); outline-offset: -3px; }
+.admin-attribute-body { display: grid; gap: 16px; padding: 16px; min-width: 0; }
+.admin-attribute-body label { display: grid; gap: 8px; min-width: 0; }
+.admin-attribute-body .admin-attribute-checkbox, .admin-attribute-terms label { display: flex; align-items: center; gap: 10px; min-height: 44px; overflow-wrap: anywhere; }
+.admin-shell[data-admin-theme="penpot"] .admin-attribute-checkbox input[type="checkbox"], .admin-shell[data-admin-theme="penpot"] .admin-attribute-terms input[type="checkbox"] { width: 20px; height: 20px; min-height: 20px; padding: 0; flex-shrink: 0; margin: 0; accent-color: var(--va-brass-dark); }
+.admin-attribute-terms { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.admin-attribute-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-attributes .admin-action, .admin-attribute-registry .admin-action { min-height: 44px; }
+.admin-attributes .admin-form-grid { align-items: start; }
+.admin-attributes .admin-panel-heading > a { display: inline-flex; align-items: center; min-height: 44px; }
+.admin-shell[data-admin-theme="penpot"] .admin-attribute-body .admin-attribute-checkbox { display: flex; align-items: center; }
+.admin-attribute-actions .admin-action { white-space: normal; }
+.admin-attribute-registry { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+.admin-attribute-registry .admin-panel { min-width: 0; }
+.admin-attribute-list { padding: 0; list-style: none; display: grid; gap: 10px; }
+.admin-attribute-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-block: 8px; border-block-end: 1px solid var(--va-border); overflow-wrap: anywhere; }
+.admin-attribute-list .admin-action { white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
+@media (min-width: 1024px) { .admin-attribute-registry { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+
 .sr-only {
   position: absolute;
   width: 1px;

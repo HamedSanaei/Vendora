@@ -101,6 +101,9 @@ public class Product : AuditableEntity
     /// </summary>
     public List<ProductColor> Colors { get; set; } = [];
 
+    /// <summary>Gets ordered, optionally visible global and product-specific specifications.</summary>
+    public List<ProductAttribute> Attributes { get; set; } = [];
+
     /// <summary>
     /// Gets the product images.
     /// </summary>

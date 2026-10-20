@@ -21,4 +21,5 @@ public sealed record AdminProductDto(
     IReadOnlyList<ProductImageDto> Images,
     IReadOnlyList<CatalogColorDto> Colors,
     decimal? UsdPrice = null,
-    decimal? PriceExchangeRate = null);
+    decimal? PriceExchangeRate = null,
+    IReadOnlyList<ProductAttributeDto>? Attributes = null);

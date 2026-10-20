@@ -36,6 +36,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <summary>Gets product color links.</summary>
     public DbSet<ProductColor> ProductColors => Set<ProductColor>();
 
+    /// <summary>Gets reusable attribute definitions and values.</summary>
+    public DbSet<CatalogAttribute> CatalogAttributes => Set<CatalogAttribute>();
+    public DbSet<CatalogAttributeTerm> CatalogAttributeTerms => Set<CatalogAttributeTerm>();
+
+    /// <summary>Gets product-local attribute assignments and ordered values.</summary>
+    public DbSet<ProductAttribute> ProductAttributes => Set<ProductAttribute>();
+    public DbSet<ProductAttributeValue> ProductAttributeValues => Set<ProductAttributeValue>();
+
     /// <summary>Gets the shopping carts.</summary>
     public DbSet<Cart> Carts => Set<Cart>();
 
@@ -183,6 +191,39 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 .WithMany(x => x.Products)
                 .HasForeignKey(x => x.CatalogColorId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CatalogAttribute>(builder =>
+        {
+            builder.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            builder.Property(x => x.Slug).HasMaxLength(120).IsRequired();
+            builder.HasIndex(x => x.Slug).IsUnique();
+        });
+        modelBuilder.Entity<CatalogAttributeTerm>(builder =>
+        {
+            builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            builder.Property(x => x.Slug).HasMaxLength(220).IsRequired();
+            builder.HasIndex(x => new { x.CatalogAttributeId, x.Slug }).IsUnique();
+            builder.HasOne(x => x.CatalogAttribute).WithMany(x => x.Terms)
+                .HasForeignKey(x => x.CatalogAttributeId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<ProductAttribute>(builder =>
+        {
+            builder.Property(x => x.CustomName).HasMaxLength(100);
+            builder.HasIndex(x => new { x.ProductId, x.SortOrder });
+            builder.HasOne(x => x.Product).WithMany(x => x.Attributes)
+                .HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(x => x.CatalogAttribute).WithMany()
+                .HasForeignKey(x => x.CatalogAttributeId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<ProductAttributeValue>(builder =>
+        {
+            builder.Property(x => x.CustomValue).HasMaxLength(500);
+            builder.HasIndex(x => new { x.ProductAttributeId, x.SortOrder });
+            builder.HasOne(x => x.ProductAttribute).WithMany(x => x.Values)
+                .HasForeignKey(x => x.ProductAttributeId).OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(x => x.CatalogAttributeTerm).WithMany()
+                .HasForeignKey(x => x.CatalogAttributeTermId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<ProductImage>(builder =>

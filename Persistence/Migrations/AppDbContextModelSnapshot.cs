@@ -129,6 +129,75 @@ namespace Persistence.Migrations
                     b.ToTable("CartItems", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.CatalogAttribute", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("CatalogAttributes");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CatalogAttributeTerm", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CatalogAttributeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(220)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CatalogAttributeId", "Slug")
+                        .IsUnique();
+
+                    b.ToTable("CatalogAttributeTerms");
+                });
+
             modelBuilder.Entity("Domain.Entities.CatalogColor", b =>
                 {
                     b.Property<Guid>("Id")
@@ -660,6 +729,65 @@ namespace Persistence.Migrations
                     b.ToTable("Products", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.ProductAttribute", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CatalogAttributeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CatalogAttributeId");
+
+                    b.HasIndex("ProductId", "SortOrder");
+
+                    b.ToTable("ProductAttributes");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ProductAttributeValue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CatalogAttributeTermId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomValue")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProductAttributeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CatalogAttributeTermId");
+
+                    b.HasIndex("ProductAttributeId", "SortOrder");
+
+                    b.ToTable("ProductAttributeValues");
+                });
+
             modelBuilder.Entity("Domain.Entities.ProductCategory", b =>
                 {
                     b.Property<Guid>("ProductId")
@@ -1054,6 +1182,17 @@ namespace Persistence.Migrations
                     b.Navigation("Cart");
                 });
 
+            modelBuilder.Entity("Domain.Entities.CatalogAttributeTerm", b =>
+                {
+                    b.HasOne("Domain.Entities.CatalogAttribute", "CatalogAttribute")
+                        .WithMany("Terms")
+                        .HasForeignKey("CatalogAttributeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CatalogAttribute");
+                });
+
             modelBuilder.Entity("Domain.Entities.Category", b =>
                 {
                     b.HasOne("Domain.Entities.Category", "ParentCategory")
@@ -1120,6 +1259,42 @@ namespace Persistence.Migrations
                     b.Navigation("Brand");
 
                     b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ProductAttribute", b =>
+                {
+                    b.HasOne("Domain.Entities.CatalogAttribute", "CatalogAttribute")
+                        .WithMany()
+                        .HasForeignKey("CatalogAttributeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Product", "Product")
+                        .WithMany("Attributes")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CatalogAttribute");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ProductAttributeValue", b =>
+                {
+                    b.HasOne("Domain.Entities.CatalogAttributeTerm", "CatalogAttributeTerm")
+                        .WithMany()
+                        .HasForeignKey("CatalogAttributeTermId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.ProductAttribute", "ProductAttribute")
+                        .WithMany("Values")
+                        .HasForeignKey("ProductAttributeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CatalogAttributeTerm");
+
+                    b.Navigation("ProductAttribute");
                 });
 
             modelBuilder.Entity("Domain.Entities.ProductCategory", b =>
@@ -1227,6 +1402,11 @@ namespace Persistence.Migrations
                     b.Navigation("Items");
                 });
 
+            modelBuilder.Entity("Domain.Entities.CatalogAttribute", b =>
+                {
+                    b.Navigation("Terms");
+                });
+
             modelBuilder.Entity("Domain.Entities.CatalogColor", b =>
                 {
                     b.Navigation("Products");
@@ -1253,11 +1433,18 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Entities.Product", b =>
                 {
+                    b.Navigation("Attributes");
+
                     b.Navigation("Categories");
 
                     b.Navigation("Colors");
 
                     b.Navigation("Images");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ProductAttribute", b =>
+                {
+                    b.Navigation("Values");
                 });
 #pragma warning restore 612, 618
         }

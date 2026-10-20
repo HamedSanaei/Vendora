@@ -38,6 +38,7 @@ export interface PublicProductDto {
 }
 
 export interface AdminProductDto {
+  attributes?: ProductAttribute[];
   id: string;
   title: string;
   slug: string;
@@ -74,6 +75,7 @@ export interface AdminProductImageDto {
 }
 
 export interface AdminProduct {
+  attributes: ProductAttribute[];
   id: string;
   title: string;
   slug: string;
@@ -239,6 +241,7 @@ export interface AdminNewsletterSubscription {
 }
 
 export interface CreateAdminProductInput {
+  attributes?: ProductAttributeInput[];
   title: string;
   slug?: string;
   description?: string;
@@ -255,6 +258,26 @@ export interface CreateAdminProductInput {
   primaryImageId?: string;
   primaryNewImageIndex?: number;
 }
+
+/** Product-local specification, or a reference to a global attribute and its values. Array order is display order. */
+export interface ProductAttributeInput {
+  catalogAttributeId?: string | null;
+  name?: string | null;
+  termIds: string[];
+  values: string[];
+  isVisible: boolean;
+}
+
+/** Resolved attribute names and values returned for editing and storefront specifications. */
+export interface ProductAttribute extends ProductAttributeInput {
+  name: string;
+  sortOrder: number;
+}
+
+/** Reusable definition or term data. Disabling an entry preserves existing assignments. */
+export interface AttributeNameInput { name: string; slug?: string; isActive: boolean }
+export interface AttributeTerm extends AttributeNameInput { id: string; slug: string }
+export interface AttributeDefinition extends AttributeTerm { terms: AttributeTerm[] }
 
 /** Persisted internal rate; reading it never triggers a request to exchanges. */
 export interface InternalExchangeRate {

@@ -4,6 +4,15 @@ export interface ProductPriceFreshness {
   expiresAtUtc: string;
 }
 
+/** A resolved, ordered specification returned only on public product detail requests. */
+export interface ProductSpecification {
+  catalogAttributeId?: string | null;
+  name: string;
+  values: string[];
+  isVisible: boolean;
+  sortOrder: number;
+}
+
 /** Product shape returned by the current storefront API. */
 export interface StoreProduct {
   _id: string;
@@ -26,6 +35,8 @@ export interface StoreProduct {
   category?: { name?: string; slug?: string };
   brand?: { name?: string; slug?: string };
   colors?: string[];
+  colorNames?: string[];
+  attributes?: ProductSpecification[];
   tags?: string[];
   rating?: number;
   reviewCount?: number;
@@ -47,6 +58,8 @@ export interface CatalogProductModel {
   category: string;
   brand: string;
   colors: string[];
+  colorNames: string[];
+  attributes: ProductSpecification[];
   tags: string[];
   rating: number;
   reviewCount: number;
@@ -55,8 +68,8 @@ export interface CatalogProductModel {
 
 /** Converts the permissive API DTO into the stable catalog view model. */
 export function toCatalogProduct(product: StoreProduct): CatalogProductModel {
-  // Keep long article bodies out of localStorage cart/wishlist snapshots.
-  const { descriptionHtml, ...source } = product;
+  // Keep detail-only articles and specifications out of localStorage cart/wishlist snapshots.
+  const { descriptionHtml, attributes, ...source } = product;
   const price = Number(product.originalPrice) || 0;
   const discount = Number(product.discount) || 0;
   const gallery = Array.from(new Set([product.image, ...(product.relatedImages ?? [])].filter((value): value is string => Boolean(value))));
@@ -76,6 +89,8 @@ export function toCatalogProduct(product: StoreProduct): CatalogProductModel {
     category: product.category?.name ?? product.parent ?? product.tags?.[0] ?? "Vendora",
     brand: product.brand?.name ?? "Vendora Studio",
     colors: product.colors ?? [],
+    colorNames: product.colorNames ?? product.colors ?? [],
+    attributes: (attributes ?? []).filter(row => row.isVisible).sort((a, b) => a.sortOrder - b.sortOrder),
     tags: product.tags ?? [],
     rating: Math.min(5, Math.max(0, Number(product.rating) || 0)),
     reviewCount: Math.max(0, Math.trunc(Number(product.reviewCount) || 0)),

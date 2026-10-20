@@ -43,7 +43,8 @@ public static class Edit
         Guid? PrimaryImageId,
         IReadOnlyList<ProductImageUpload> Images,
         int? PrimaryNewImageIndex,
-        decimal? UsdPrice = null) : IRequest<Result>;
+        decimal? UsdPrice = null,
+        IReadOnlyList<ProductAttributeInput>? Attributes = null) : IRequest<Result>;
 
     /// <summary>Represents the edit product result.</summary>
     public sealed record Result(EditFailure Failure, string? Error, AdminProductDto? Product)
@@ -160,13 +161,23 @@ public static class Edit
                 return new Result(EditFailure.ColorNotFound, "One or more selected colors do not exist.", null);
             }
 
+            var attributes = await ProductAttributeWriter.ResolveAsync(_db, request.Attributes, product, cancellationToken);
+            if (attributes.Error is not null) return Invalid(attributes.Error);
+            if (attributes.Attributes is not null)
+            {
+                _db.ProductAttributes.RemoveRange(product.Attributes);
+                product.Attributes = attributes.Attributes;
+                // Explicit Added state avoids treating preassigned GUIDs as existing rows on a tracked product.
+                _db.ProductAttributes.AddRange(product.Attributes);
+            }
+
             product.Title = title;
             product.Slug = slug;
             product.Description = description;
             var pricingError = await ProductPriceWriter.ApplyAsync(_db, product, request.Price, request.UsdPrice, cancellationToken);
             if (pricingError is not null) return Invalid(pricingError);
             product.StockQuantity = request.StockQuantity;
-            product.CategoryId = categoryIds.FirstOrDefault();
+            product.CategoryId = categoryIds.Count > 0 ? categoryIds[0] : null;
             product.BrandId = request.BrandId;
             product.Status = request.Status;
             product.InventoryStatus = ResolveInventoryStatus(request.StockQuantity);

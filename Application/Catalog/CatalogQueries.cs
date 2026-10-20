@@ -32,7 +32,8 @@ public static class CatalogQueries
         IReadOnlyList<ProductCategoryDto> Categories,
         IReadOnlyList<CatalogColorDto> Colors,
         string? DescriptionHtml = null,
-        ProductPriceFreshnessDto? PriceFreshness = null);
+        ProductPriceFreshnessDto? PriceFreshness = null,
+        IReadOnlyList<ProductAttributeDto>? Attributes = null);
 
     /// <summary>Represents a recursive category node.</summary>
     public sealed record CatalogCategoryDto(Guid Id, string Name, string Slug, Guid? ParentCategoryId, IReadOnlyList<CatalogCategoryDto> Children);
@@ -77,6 +78,8 @@ public static class CatalogQueries
                     .Where(product => product.Status == ProductStatus.Active);
                 if (request.Identifier is not null)
                 {
+                    query = query.Include(product => product.Attributes.Where(attribute => attribute.IsVisible)).ThenInclude(attribute => attribute.CatalogAttribute)
+                        .Include(product => product.Attributes.Where(attribute => attribute.IsVisible)).ThenInclude(attribute => attribute.Values).ThenInclude(value => value.CatalogAttributeTerm);
                     string identifier = request.Identifier;
                     bool isId = Guid.TryParse(identifier, out Guid productId);
                     query = query.Where(product => (isId && product.Id == productId) || product.Slug == identifier);
@@ -126,7 +129,8 @@ public static class CatalogQueries
                             .Select(color => new CatalogColorDto(color.Id, color.Name, color.Slug, color.HexCode))
                             .ToList(),
                         request.Identifier is null ? null : _descriptions.Sanitize(product.Description),
-                        ProductPriceFreshness.Verify(product, rate, now));
+                        ProductPriceFreshness.Verify(product, rate, now),
+                        request.Identifier is null ? null : Application.Products.ProductAttributeWriter.Map(product.Attributes, publicOnly: true));
                 }).ToList();
             }
 

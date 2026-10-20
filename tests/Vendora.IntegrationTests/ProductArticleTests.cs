@@ -176,7 +176,7 @@ public sealed class ProductArticleTests
     private static byte[] Png() => Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6N2QAAAAASUVORK5CYII=");
 
     /// <summary>Hosts the actual controllers with isolated SQLite and a temporary upload root.</summary>
-    private sealed class ArticleHost(WebApplication app, SqliteConnection connection, string root, Guid categoryId) : IAsyncDisposable
+    internal sealed class ArticleHost(WebApplication app, SqliteConnection connection, string root, Guid categoryId) : IAsyncDisposable
     {
         public WebApplication App => app;
         public string Root => root;

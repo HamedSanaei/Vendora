@@ -12,6 +12,8 @@ import type { CreateAdminProductInput } from '../types';
 import { getAsciiDigits, formatNumberInput, parseNumberInput } from '../utils/formatters';
 import { AdminProductPricing } from '../components/AdminProductPricing';
 import { productStorefrontUrl } from '../utils/storefront';
+import { ProductAttributesEditor } from '../components/attributes/ProductAttributesEditor';
+import { attributeDrafts, serializeAttributes, type AttributeDraft } from '../components/attributes/attribute-drafts';
 
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -38,6 +40,10 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
   const [articleUploading, setArticleUploading] = useState(false);
+  const [attributes, setAttributes] = useState<AttributeDraft[]>([]);
+  const [attributeBusy, setAttributeBusy] = useState(false);
+  const [loadedProductId, setLoadedProductId] = useState<string | null>(null);
+  const productReady = !isEdit || loadedProductId === productId;
   const [price, setPrice] = useState('');
   const [priceMode, setPriceMode] = useState<'toman' | 'usd'>('toman');
   const [usdPrice, setUsdPrice] = useState('');
@@ -73,6 +79,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       setPreviewUrl(product.status === 'Active' ? productStorefrontUrl(locale, product.id) : undefined);
       setSlug(product.slug);
       setDescription(product.description ?? '');
+      setAttributes(attributeDrafts(product.attributes));
       setPrice(formatNumberInput(String(product.price), locale));
       setPriceMode(product.usdPrice != null ? 'usd' : 'toman');
       setUsdPrice(product.usdPrice != null ? String(product.usdPrice) : '');
@@ -95,6 +102,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       setGallery(existingGallery);
       setDeletedImageIds([]);
       setPrimaryImageKey(existingGallery.find((image) => image.isPrimary)?.key ?? existingGallery[0]?.key ?? null);
+      setLoadedProductId(productId);
     });
 
     return () => {
@@ -180,7 +188,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
-    if (articleUploading || products.isSaving) return;
+    if (!productReady || articleUploading || attributeBusy || products.isSaving) return;
     clearErrors();
     const numericPrice = parseNumberInput(price);
     const numericUsdPrice = Number(usdPrice);
@@ -219,7 +227,12 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       ? newImages.findIndex((image) => image.key === selectedPrimary.key)
       : undefined;
 
+    let attributeInput: CreateAdminProductInput['attributes'];
+    try { attributeInput = serializeAttributes(attributes, locale); }
+    catch (error) { setFormError(error instanceof Error ? error.message : 'Invalid attributes.'); return; }
+
     const payload: CreateAdminProductInput = {
+      attributes: attributeInput,
       title: normalizedTitle,
       slug: normalizedSlug,
       description: normalizedDescription,
@@ -356,6 +369,9 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
             </div>
           ) : null}
 
+          <ProductAttributesEditor locale={locale} value={attributes} disabled={!productReady || products.isSaving || attributeBusy}
+            onChange={rows => { clearErrors(); setAttributes(rows); }} onBusyChange={setAttributeBusy} />
+
           {gallery.length > 0 ? (
             <div className="admin-gallery-section">
               <strong>{isFa ? 'گالری محصول' : 'Product gallery'}</strong>
@@ -378,7 +394,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
 
           <div className="admin-form-actions">
             <AdminButton onClick={() => navigate(adminPath(locale, 'product-list'))} variant="secondary">{adminText(locale, 'cancel')}</AdminButton>
-            <AdminButton disabled={products.isSaving || articleUploading} type="submit" variant="brass">{products.isSaving ? adminText(locale, 'saving') : adminText(locale, 'save')}</AdminButton>
+            <AdminButton disabled={!productReady || products.isSaving || articleUploading || attributeBusy} type="submit" variant="brass">{products.isSaving ? adminText(locale, 'saving') : adminText(locale, 'save')}</AdminButton>
           </div>
         </article>
       </form>
