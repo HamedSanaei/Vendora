@@ -48,6 +48,7 @@ function mapCatalogProduct(product) {
     discount: 0,
     relatedImages: images.length ? images : [primaryImage],
     description: product.description || "",
+    descriptionHtml: product.descriptionHtml || "",
     brand: {
       name: product.brandName || "Vendora",
       id: product.brandId || "vendora",
@@ -178,11 +179,9 @@ const hybridBaseQuery = async (args) => {
     }
 
     if (normalizedUrl.startsWith("api/products/")) {
-      const products = await catalogFetch("/api/catalog/products");
       const productId = normalizedUrl.replace("api/products/", "");
-      const mapped = products.map(mapCatalogProduct);
-      const product = mapped.find((product) => product._id === productId || product.slug === productId);
-      return product ? { data: product } : { error: { status: 404, data: { message: "Product was not found." } } };
+      const product = await catalogFetch(`/api/catalog/products/${encodeURIComponent(productId)}`);
+      return { data: mapCatalogProduct(product) };
     }
   } catch (error) {
     // Never substitute synthetic product prices when the real catalog is unavailable.

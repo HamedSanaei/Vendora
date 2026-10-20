@@ -74,6 +74,16 @@ public sealed class AdminController : ControllerBase
         return result is null ? NotFound(new { message = "Product was not found." }) : Ok(result);
     }
 
+    /// <summary>Uploads one image for insertion into a product article, independently of its gallery.</summary>
+    [HttpPost("products/description-images")]
+    [RequestSizeLimit(6 * 1024 * 1024)]
+    public async Task<ActionResult> UploadProductDescriptionImage([FromForm] IFormFile file, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new UploadDescriptionImage.Command(new ProductImageUpload(
+            file.FileName, file.ContentType, file.Length, file.OpenReadStream)), cancellationToken);
+        return result.Error is null ? Ok(new { url = result.Url }) : BadRequest(new { message = result.Error });
+    }
+
     /// <summary>
     /// Returns category options for admin product forms.
     /// </summary>

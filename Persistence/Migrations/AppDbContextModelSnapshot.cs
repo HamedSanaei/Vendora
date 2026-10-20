@@ -609,7 +609,7 @@ namespace Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(4000)
+                        .HasMaxLength(200000)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("InventoryStatus")

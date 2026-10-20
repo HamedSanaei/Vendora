@@ -19,6 +19,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
         services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
+        services.AddScoped<IProductDescriptionService, Infrastructure.Content.ProductDescriptionService>();
         services.AddHttpClient("UsdtPublicRates", client =>
         {
             client.Timeout = TimeSpan.FromSeconds(8);

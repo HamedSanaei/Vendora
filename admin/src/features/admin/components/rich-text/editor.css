@@ -1,0 +1,43 @@
+.article-editor { min-width: 0; max-width: 100%; }
+.article-help { margin: 8px 0; color: var(--va-muted, #63686c); font-size: 13px; line-height: 1.9; font-weight: 400; }
+.article-frame { border: 1px solid var(--va-border, #ddd8ce); border-radius: 12px; overflow: clip; background: var(--va-surface, white); }
+.article-frame:focus-within { outline: 2px solid var(--va-brass, #b89555); outline-offset: 2px; }
+.article-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 10px; background: var(--va-surface-2, #f7f5f0); border-bottom: 1px solid var(--va-border, #ddd8ce); }
+.article-editor .article-tool, .article-editor .article-toolbar select, .article-editor .article-color {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 44px;
+  padding: 6px 10px; border: 1px solid transparent; border-radius: 7px; background: transparent;
+  color: var(--va-ink, #171b1f); font: inherit; font-size: 14px; cursor: pointer; margin: 0;
+}
+.article-editor .article-toolbar select { border-color: var(--va-border, #ddd8ce); max-width: 145px; background: var(--va-surface, white); }
+.article-editor .article-tool:hover:not(:disabled) { background: var(--va-surface-3, #ece9e2); }
+.article-editor .article-tool[aria-pressed="true"] { background: var(--va-brass-soft, #f0e7d6); border-color: var(--va-brass, #b89555); color: var(--va-brass-dark, #8d6b36); }
+.article-editor .article-tool:disabled { opacity: .4; cursor: not-allowed; }
+.article-editor .article-tool:focus-visible, .article-editor .article-toolbar select:focus-visible { outline: 2px solid var(--va-brass, #b89555); outline-offset: 1px; }
+.admin-shell .admin-product-form .article-editor .article-color input { width: 28px; min-height: 28px; height: 28px; padding: 0; border: 0; cursor: pointer; }
+.article-insert-panel { display: grid; gap: 12px; padding: 16px; background: var(--va-brass-soft, #f0e7d6); border-bottom: 1px solid var(--va-border, #ddd8ce); }
+.article-editor .article-insert-panel input { width: 100%; max-width: 100%; min-width: 0; background: var(--va-surface, white); }
+.article-editor .article-insert-panel input[type="file"] { height: auto; padding-block: 10px; white-space: normal; }
+.article-panel-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.article-error { color: var(--va-red, #9b433e); font-weight: 600; font-size: 13px; line-height: 1.9; }
+.article-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--va-border, #ddd8ce); color: var(--va-muted, #63686c); font-size: 12px; font-weight: 400; }
+.article-editor .article-document { min-height: 360px; max-height: 760px; overflow-y: auto; overflow-wrap: anywhere; padding: 24px; outline: none; color: var(--va-ink, #171b1f); font-size: 16px; font-weight: 400; line-height: 1.9; }
+.article-document > *:first-child { margin-top: 0; }
+.article-document p { margin: 0 0 1em; font-weight: inherit; line-height: inherit; }
+.article-document h2 { font-size: 1.6em; }
+.article-document h3 { font-size: 1.3em; }
+.article-document h4 { font-size: 1.15em; }
+.article-document h2, .article-document h3, .article-document h4 { margin: 1.2em 0 .6em; font-weight: 700; line-height: 1.7; }
+.article-document strong, .article-document b { font-weight: 700; }
+.article-document em, .article-document i { font-style: italic; }
+.article-document ul { list-style: disc; }
+.article-document ol { list-style: decimal; }
+.article-document ul, .article-document ol { padding-inline-start: 1.8em; margin-block: 1em; }
+.article-document li { margin-block: .3em; }
+.article-document li > p { margin: 0; }
+.article-document blockquote { border-inline-start: 3px solid var(--va-brass, #b89555); margin: 1em 0; padding: .5em 1em; background: var(--va-surface-2, #f7f5f0); }
+.article-document a { color: #006b4f; text-decoration: underline; cursor: pointer; }
+.article-document img { display: block; max-width: 100%; height: auto; margin: 1.4em auto; border-radius: 10px; }
+.article-document img.ProseMirror-selectednode { outline: 3px solid var(--va-brass, #b89555); outline-offset: 3px; }
+.article-document hr { border: 0; border-top: 1px solid var(--va-border, #ddd8ce); margin: 1.5em 0; }
+.article-document .ProseMirror-gapcursor { position: relative; }
+@media (max-width: 640px) { .article-editor .article-document { padding: 16px; min-height: 300px; } .article-toolbar { padding: 6px; } }

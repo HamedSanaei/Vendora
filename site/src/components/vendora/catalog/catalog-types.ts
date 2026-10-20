@@ -3,6 +3,7 @@ export interface StoreProduct {
   _id: string;
   title: string;
   description?: string;
+  descriptionHtml?: string;
   image?: string;
   relatedImages?: string[];
   originalPrice: number | string;
@@ -28,6 +29,7 @@ export interface CatalogProductModel {
   id: string;
   title: string;
   description: string;
+  descriptionHtml: string;
   image: string;
   gallery: string[];
   price: number;
@@ -45,6 +47,8 @@ export interface CatalogProductModel {
 
 /** Converts the permissive API DTO into the stable catalog view model. */
 export function toCatalogProduct(product: StoreProduct): CatalogProductModel {
+  // Keep long article bodies out of localStorage cart/wishlist snapshots.
+  const { descriptionHtml, ...source } = product;
   const price = Number(product.originalPrice) || 0;
   const discount = Number(product.discount) || 0;
   const gallery = Array.from(new Set([product.image, ...(product.relatedImages ?? [])].filter((value): value is string => Boolean(value))));
@@ -53,6 +57,7 @@ export function toCatalogProduct(product: StoreProduct): CatalogProductModel {
     id: product._id,
     title: product.title,
     description: product.description ?? "",
+    descriptionHtml: descriptionHtml ?? "",
     image: product.image ?? "",
     gallery,
     price: discount > 0 ? Math.round(price * (1 - discount / 100)) : price,
@@ -65,7 +70,7 @@ export function toCatalogProduct(product: StoreProduct): CatalogProductModel {
     tags: product.tags ?? [],
     rating: Math.min(5, Math.max(0, Number(product.rating) || 0)),
     reviewCount: Math.max(0, Math.trunc(Number(product.reviewCount) || 0)),
-    source: product,
+    source,
   };
 }
 

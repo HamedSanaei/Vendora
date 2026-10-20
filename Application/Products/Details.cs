@@ -1,4 +1,5 @@
 using Application.Products.DTOs;
+using Application.Interfaces;
 using MediatR;
 using Persistence.Products;
 
@@ -20,13 +21,15 @@ public static class Details
     public sealed class Handler : IRequestHandler<Query, ProductDetailDto?>
     {
         private readonly IProductReadRepository _productReadRepository;
+        private readonly IProductDescriptionService _descriptions;
 
         /// <summary>
         /// Creates the handler.
         /// </summary>
-        public Handler(IProductReadRepository productReadRepository)
+        public Handler(IProductReadRepository productReadRepository, IProductDescriptionService descriptions)
         {
             _productReadRepository = productReadRepository;
+            _descriptions = descriptions;
         }
 
         /// <inheritdoc />
@@ -42,7 +45,7 @@ public static class Details
                 product.Id,
                 product.Title,
                 product.Slug,
-                product.Description,
+                _descriptions.Sanitize(product.Description),
                 product.Price,
                 product.StockQuantity,
                 product.Category?.Name,

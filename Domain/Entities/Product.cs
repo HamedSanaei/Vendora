@@ -8,6 +8,9 @@ namespace Domain.Entities;
 /// </summary>
 public class Product : AuditableEntity
 {
+    /// <summary>Maximum persisted article length, including formatting markup.</summary>
+    public const int MaxDescriptionLength = 200_000;
+
     /// <summary>
     /// Gets or sets the product title.
     /// </summary>

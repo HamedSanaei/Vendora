@@ -76,6 +76,7 @@ public static class Create
         private readonly IProductImageStorage _productImageStorage;
         private readonly IUnitOfWork _unitOfWork;
         private readonly AppDbContext _db;
+        private readonly IProductDescriptionService _descriptions;
 
         /// <summary>
         /// Creates the handler.
@@ -84,18 +85,24 @@ public static class Create
             IProductAdminRepository productAdminRepository,
             IProductImageStorage productImageStorage,
             IUnitOfWork unitOfWork,
-            AppDbContext db)
+            AppDbContext db, IProductDescriptionService descriptions)
         {
             _productAdminRepository = productAdminRepository;
             _productImageStorage = productImageStorage;
             _unitOfWork = unitOfWork;
             _db = db;
+            _descriptions = descriptions;
         }
 
         /// <inheritdoc />
         public async Task<Result> Handle(Command request, CancellationToken cancellationToken)
         {
             string title = request.Title.Trim();
+            if (request.Description?.Length > Product.MaxDescriptionLength)
+                return Invalid($"Product description must be {Product.MaxDescriptionLength} characters or fewer.");
+            string? description = _descriptions.Sanitize(request.Description);
+            if (description?.Length > Product.MaxDescriptionLength)
+                return Invalid($"Product description must be {Product.MaxDescriptionLength} characters or fewer.");
             if (string.IsNullOrWhiteSpace(title))
             {
                 return Invalid("Product title is required.");
@@ -162,7 +169,7 @@ public static class Create
             {
                 Title = title,
                 Slug = slug,
-                Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
+                Description = description,
                 Price = request.Price,
                 StockQuantity = request.StockQuantity,
                 CategoryId = categoryIds.FirstOrDefault(),

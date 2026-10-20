@@ -1,4 +1,5 @@
 using Application.Products.DTOs;
+using Application.Interfaces;
 using Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +29,8 @@ public static class CatalogQueries
         string? PrimaryImageUrl,
         IReadOnlyList<ProductImageDto> Images,
         IReadOnlyList<ProductCategoryDto> Categories,
-        IReadOnlyList<CatalogColorDto> Colors);
+        IReadOnlyList<CatalogColorDto> Colors,
+        string? DescriptionHtml = null);
 
     /// <summary>Represents a recursive category node.</summary>
     public sealed record CatalogCategoryDto(Guid Id, string Name, string Slug, Guid? ParentCategoryId, IReadOnlyList<CatalogCategoryDto> Children);
@@ -40,23 +42,25 @@ public static class CatalogQueries
     public static class Products
     {
         /// <summary>Represents a product list query.</summary>
-        public sealed record Query : IRequest<IReadOnlyList<CatalogProductDto>>;
+        public sealed record Query(string? Identifier = null) : IRequest<IReadOnlyList<CatalogProductDto>>;
 
         /// <summary>Handles catalog product list queries.</summary>
         public sealed class Handler : IRequestHandler<Query, IReadOnlyList<CatalogProductDto>>
         {
             private readonly AppDbContext _dbContext;
+            private readonly IProductDescriptionService _descriptions;
 
             /// <summary>Creates the handler.</summary>
-            public Handler(AppDbContext dbContext)
+            public Handler(AppDbContext dbContext, IProductDescriptionService descriptions)
             {
                 _dbContext = dbContext;
+                _descriptions = descriptions;
             }
 
             /// <inheritdoc />
             public async Task<IReadOnlyList<CatalogProductDto>> Handle(Query request, CancellationToken cancellationToken)
             {
-                var products = await _dbContext.Products
+                var query = _dbContext.Products
                     .AsNoTracking()
                     .Include(product => product.Category)
                     .Include(product => product.Categories)
@@ -66,7 +70,14 @@ public static class CatalogQueries
                     .Include(product => product.Colors)
                     .ThenInclude(productColor => productColor.CatalogColor)
                     .AsSplitQuery()
-                    .Where(product => product.Status == ProductStatus.Active)
+                    .Where(product => product.Status == ProductStatus.Active);
+                if (request.Identifier is not null)
+                {
+                    string identifier = request.Identifier;
+                    bool isId = Guid.TryParse(identifier, out Guid productId);
+                    query = query.Where(product => (isId && product.Id == productId) || product.Slug == identifier);
+                }
+                var products = await query
                     .OrderByDescending(product => product.CreatedAtUtc)
                     .ToListAsync(cancellationToken);
 
@@ -81,7 +92,7 @@ public static class CatalogQueries
                         product.Id,
                         product.Title,
                         product.Slug,
-                        product.Description,
+                        _descriptions.Excerpt(product.Description),
                         product.Price,
                         product.StockQuantity,
                         ResolvePrimaryCategoryId(product),
@@ -105,7 +116,8 @@ public static class CatalogQueries
                             .Select(color => color.CatalogColor)
                             .OrderBy(color => color.Name)
                             .Select(color => new CatalogColorDto(color.Id, color.Name, color.Slug, color.HexCode))
-                            .ToList());
+                            .ToList(),
+                        request.Identifier is null ? null : _descriptions.Sanitize(product.Description));
                 }).ToList();
             }
 

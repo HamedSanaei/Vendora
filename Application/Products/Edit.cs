@@ -71,19 +71,26 @@ public static class Edit
         private readonly IProductImageStorage _imageStorage;
         private readonly IUnitOfWork _unitOfWork;
         private readonly AppDbContext _db;
+        private readonly IProductDescriptionService _descriptions;
 
         /// <summary>Creates the handler.</summary>
-        public Handler(IProductAdminRepository repository, IProductImageStorage imageStorage, IUnitOfWork unitOfWork, AppDbContext db)
+        public Handler(IProductAdminRepository repository, IProductImageStorage imageStorage, IUnitOfWork unitOfWork, AppDbContext db, IProductDescriptionService descriptions)
         {
             _repository = repository;
             _imageStorage = imageStorage;
             _unitOfWork = unitOfWork;
             _db = db;
+            _descriptions = descriptions;
         }
 
         /// <inheritdoc />
         public async Task<Result> Handle(Command request, CancellationToken cancellationToken)
         {
+            if (request.Description?.Length > Product.MaxDescriptionLength)
+                return Invalid($"Product description must be {Product.MaxDescriptionLength} characters or fewer.");
+            string? description = _descriptions.Sanitize(request.Description);
+            if (description?.Length > Product.MaxDescriptionLength)
+                return Invalid($"Product description must be {Product.MaxDescriptionLength} characters or fewer.");
             await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
             var product = await _repository.GetProductAsync(request.Id, trackChanges: true, cancellationToken);
             if (product is null)
@@ -155,7 +162,7 @@ public static class Edit
 
             product.Title = title;
             product.Slug = slug;
-            product.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
+            product.Description = description;
             var pricingError = await ProductPriceWriter.ApplyAsync(_db, product, request.Price, request.UsdPrice, cancellationToken);
             if (pricingError is not null) return Invalid(pricingError);
             product.StockQuantity = request.StockQuantity;

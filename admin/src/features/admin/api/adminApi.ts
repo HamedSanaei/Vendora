@@ -36,6 +36,14 @@ const multipartRequestConfig = {
   },
 };
 
+/** Uploads an article image using the shared authenticated client and returns its portable relative URL. */
+export async function uploadProductArticleImage(file: File): Promise<string> {
+  const body = new FormData();
+  body.append('file', file);
+  const response = await httpClient.post<{ url: string }>('/api/admin/products/description-images', body, multipartRequestConfig);
+  return response.data.url;
+}
+
 function mapProduct(product: AdminProductDto): AdminProduct {
   const sortedImages = [...(product.images ?? [])].sort((first, second) => first.sortOrder - second.sortOrder);
   const imageUrls = sortedImages.map((image) => resolveImageUrl(image.imageUrl));

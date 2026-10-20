@@ -1,14 +1,18 @@
 import { observer } from 'mobx-react-lite';
-import { type ChangeEvent, type FormEvent, useEffect, useState } from 'react';
+import { type ChangeEvent, type FormEvent, Suspense, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { AdminButton, AdminFeedback, AdminPageHeader, AdminSelect, AdminTextarea } from '../components/AdminUi';
+import { AdminButton, AdminFeedback, AdminPageHeader, AdminSelect } from '../components/AdminUi';
+import { uploadProductArticleImage } from '../api/adminApi';
+import { LazyArticleEditor } from '../components/rich-text/LazyArticleEditor';
+
 import { adminPath, adminText, normalizeAdminLocale } from '../i18n';
 import { useAdminStore } from '../stores/AdminStoreContext';
 import type { CreateAdminProductInput } from '../types';
 import { getAsciiDigits, formatNumberInput, parseNumberInput } from '../utils/formatters';
 import { AdminProductPricing } from '../components/AdminProductPricing';
 import { productStorefrontUrl } from '../utils/storefront';
+
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
 const maxImageBytes = 5 * 1024 * 1024;
@@ -33,6 +37,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
+  const [articleUploading, setArticleUploading] = useState(false);
   const [price, setPrice] = useState('');
   const [priceMode, setPriceMode] = useState<'toman' | 'usd'>('toman');
   const [usdPrice, setUsdPrice] = useState('');
@@ -175,6 +180,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
+    if (articleUploading || products.isSaving) return;
     clearErrors();
     const numericPrice = parseNumberInput(price);
     const numericUsdPrice = Number(usdPrice);
@@ -182,6 +188,10 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
     const normalizedSlug = slug.trim();
     const normalizedDescription = description.trim();
     const numericStock = parseNumberInput(stockQuantity);
+    if (normalizedDescription.length > 200_000) {
+      setFormError(isFa ? 'حجم مقاله نباید بیشتر از ۲۰۰٬۰۰۰ کاراکتر باشد.' : 'Article must not exceed 200,000 characters.');
+      return;
+    }
 
     if (!normalizedTitle) {
       setFormError(isFa ? 'عنوان محصول الزامی است.' : 'Product title is required.');
@@ -232,6 +242,10 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       : await products.createProduct(payload);
 
     if (!saved) {
+      if (isFa && products.saveError?.startsWith('Product description must be')) {
+        setFormError('حجم مقاله پس از قالب‌بندی نباید بیشتر از ۲۰۰٬۰۰۰ کاراکتر باشد. بخشی از محتوا را کوتاه کنید.');
+        return;
+      }
       setFormError(isFa && products.saveError?.startsWith('Dollar pricing is unavailable')
         ? 'هنوز نرخ معتبر داخلی دریافت نشده است. پس از به‌روزرسانی نرخ، محصول دلاری را ذخیره کنید.'
         : products.saveError ?? (isFa ? 'ذخیره محصول ناموفق بود.' : 'Unable to save product.'));
@@ -290,7 +304,10 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
             </AdminSelect>
           </div>
 
-          <AdminTextarea className="admin-form-full" label={isFa ? 'توضیحات محصول' : 'Description'} name="description" value={description} onChange={(event) => { clearErrors(); setDescription(event.target.value); }} rows={5} />
+          <Suspense fallback={<p role="status">{isFa ? 'در حال آماده‌سازی ویرایشگر…' : 'Loading editor…'}</p>}>
+            <LazyArticleEditor key={productId ?? 'new'} locale={locale} value={description} disabled={products.isSaving}
+              onChange={(html) => { clearErrors(); setDescription(html); }} onBusyChange={setArticleUploading} uploadImage={uploadProductArticleImage} />
+          </Suspense>
 
           {products.categoryOptions.length > 0 ? (
             <div className="admin-gallery-section">
@@ -361,7 +378,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
 
           <div className="admin-form-actions">
             <AdminButton onClick={() => navigate(adminPath(locale, 'product-list'))} variant="secondary">{adminText(locale, 'cancel')}</AdminButton>
-            <AdminButton disabled={products.isSaving} type="submit" variant="brass">{products.isSaving ? adminText(locale, 'saving') : adminText(locale, 'save')}</AdminButton>
+            <AdminButton disabled={products.isSaving || articleUploading} type="submit" variant="brass">{products.isSaving ? adminText(locale, 'saving') : adminText(locale, 'save')}</AdminButton>
           </div>
         </article>
       </form>

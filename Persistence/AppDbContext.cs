@@ -109,7 +109,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Title).HasMaxLength(250).IsRequired();
             builder.Property(x => x.Slug).HasMaxLength(280).IsRequired();
-            builder.Property(x => x.Description).HasMaxLength(4000);
+            builder.Property(x => x.Description).HasMaxLength(Product.MaxDescriptionLength);
             builder.Property(x => x.Price).HasPrecision(18, 2);
             builder.Property(x => x.UsdPrice).HasPrecision(18, 4);
             builder.Property(x => x.PriceExchangeRate).HasPrecision(18, 6);

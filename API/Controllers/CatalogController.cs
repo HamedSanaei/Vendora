@@ -28,6 +28,14 @@ public sealed class CatalogController : ControllerBase
         return Ok(await _mediator.Send(new CatalogQueries.Products.Query(), cancellationToken));
     }
 
+    /// <summary>Returns one active product with its sanitized full article by GUID or slug.</summary>
+    [HttpGet("products/{identifier}")]
+    public async Task<ActionResult> GetProduct(string identifier, CancellationToken cancellationToken)
+    {
+        var products = await _mediator.Send(new CatalogQueries.Products.Query(identifier), cancellationToken);
+        return products.Count == 0 ? NotFound() : Ok(products[0]);
+    }
+
     /// <summary>Returns active categories as a recursive tree.</summary>
     [HttpGet("categories/tree")]
     public async Task<ActionResult> GetCategoriesTree(CancellationToken cancellationToken)
