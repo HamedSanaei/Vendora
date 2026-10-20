@@ -26,6 +26,9 @@ public class Product : AuditableEntity
     /// </summary>
     public string? Description { get; set; }
 
+    /// <summary>Optional editorial metadata; absent on legacy products until first assessment/save.</summary>
+    public SeoMetadata? Seo { get; set; }
+
     /// <summary>
     /// Gets or sets the product price in Toman.
     /// </summary>

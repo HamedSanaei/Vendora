@@ -121,9 +121,9 @@ function MiniCartLine({ item, locale }: { item: CartLine; locale: Locale }) {
   const stock = Number(item.quantity);
   return (
     <article className="grid min-h-[132px] grid-cols-[82px_minmax(0,1fr)] gap-3 border-b border-vd-line px-4 py-3">
-      <Link href={withLocalePath(`/product-details/${item._id}`, locale)} className="vd-focus rounded-card"><CartProductMedia item={item} locale={locale} compact /></Link>
+      <Link href={withLocalePath(`/product/${encodeURIComponent(item.slug || item._id)}`, locale)} className="vd-focus rounded-card"><CartProductMedia item={item} locale={locale} compact /></Link>
       <div className="min-w-0">
-        <Link href={withLocalePath(`/product-details/${item._id}`, locale)} className="vd-focus line-clamp-2 rounded-sm text-[14px] font-extrabold leading-6 text-ink hover:text-jade">{item.title}</Link>
+        <Link href={withLocalePath(`/product/${encodeURIComponent(item.slug || item._id)}`, locale)} className="vd-focus line-clamp-2 rounded-sm text-[14px] font-extrabold leading-6 text-ink hover:text-jade">{item.title}</Link>
         <p className="mt-1 text-xs text-vd-muted">{item.category?.name ?? item.parent ?? t.variantFallback}</p>
         <div className="mt-2 flex items-end justify-between gap-2">
           <div><p className="text-[13px] font-extrabold text-ink">{formatPrice(getCartUnitPrice(item), locale)}</p><button type="button" onClick={() => dispatch(remove_product(item))} className="vd-focus mt-1 flex items-center gap-1 rounded-sm text-xs font-bold text-vd-danger"><TrashIcon size={14} />{t.remove}</button></div>

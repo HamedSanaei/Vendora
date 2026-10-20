@@ -1,6 +1,7 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { getProductById, getRelatedProducts, mockStoreData } from "src/data/mock-store-data";
 import { http } from "@/lib/http";
+import { mapCatalogProduct } from "@/lib/catalog-product-mapping";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5020";
 const fallbackProductImage = "/assets/img/product/product-1.jpg";
@@ -20,56 +21,6 @@ function resolveImageUrl(imageUrl) {
   }
 
   return `${apiBaseUrl}${imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`}`;
-}
-
-function mapCatalogProduct(product) {
-  const images = [...(product.images || [])].sort((a, b) => a.sortOrder - b.sortOrder).map((image) => resolveImageUrl(image.imageUrl));
-  const primaryImage = resolveImageUrl(product.primaryImageUrl || images[0]);
-  const categories = product.categories || [];
-  const primaryCategory = categories[0] || null;
-  const categoryName = primaryCategory?.name || product.categoryName || "Bags";
-  const categorySlug = primaryCategory?.slug || product.categorySlug || "bags";
-  const categoryId = primaryCategory?.id || product.categoryId || "bags";
-  const categorySlugs = categories.length > 0 ? categories.map((category) => category.slug) : [categorySlug];
-
-  return {
-    _id: product.id,
-    id: product.id,
-    sku: product.slug,
-    title: product.title,
-    slug: product.slug,
-    parent: categoryName,
-    children: categorySlug,
-    categorySlugs,
-    tags: [categoryName, product.brandName, ...categories.map((category) => category.name), ...(product.colors || []).map((color) => color.name)].filter(Boolean),
-    image: primaryImage,
-    originalPrice: Number(product.price),
-    price: Number(product.price),
-    discount: 0,
-    relatedImages: images.length ? images : [primaryImage],
-    description: product.description || "",
-    descriptionHtml: product.descriptionHtml || "",
-    priceFreshness: product.priceFreshness || null,
-    attributes: product.attributes || [],
-    colorNames: (product.colors || []).map((color) => color.name),
-    brand: {
-      name: product.brandName || "Vendora",
-      id: product.brandId || "vendora",
-      slug: product.brandSlug || "vendora",
-    },
-    category: {
-      name: categoryName,
-      id: categoryId,
-      slug: categorySlug,
-    },
-    categories,
-    unit: `${product.stockQuantity} pcs`,
-    quantity: product.stockQuantity,
-    colors: (product.colors || []).map((color) => color.slug),
-    type: "Bag",
-    itemInfo: "latest",
-    status: "active",
-  };
 }
 
 function flattenCategories(categories, parentName = null) {

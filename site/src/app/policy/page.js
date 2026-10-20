@@ -1,12 +1,12 @@
+import { staticPageMetadata } from "@/lib/catalog.server";
 import Footer from "@layout/footer";
 import Header from "@layout/header";
 import Wrapper from "@layout/wrapper";
 import SectionTop from "@components/terms-policy/section-top-bar";
 import PolicyArea from "@components/terms-policy/policy-area";
 
-export const metadata = {
-  title: "Policy - Harri Shop",
-};
+/** Shared site title and launch policy for this public page. */
+export async function generateMetadata() { return staticPageMetadata("حریم خصوصی","Privacy policy","/policy"); }
 
 export default function Policy() {
   return (

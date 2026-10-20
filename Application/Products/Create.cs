@@ -8,6 +8,7 @@ using Persistence.Common;
 using Persistence.Products;
 using Persistence;
 using Application.Pricing;
+using Application.Seo;
 
 namespace Application.Products;
 
@@ -42,7 +43,9 @@ public static class Create
         IReadOnlyList<ProductImageUpload> Images,
         int? PrimaryNewImageIndex,
         decimal? UsdPrice = null,
-        IReadOnlyList<ProductAttributeInput>? Attributes = null) : IRequest<Result>;
+        IReadOnlyList<ProductAttributeInput>? Attributes = null,
+        SeoInput? Seo = null,
+        IReadOnlyList<string>? NewImageAlts = null) : IRequest<Result>;
 
     /// <summary>
     /// Represents the create-product outcome.
@@ -99,6 +102,8 @@ public static class Create
         public async Task<Result> Handle(Command request, CancellationToken cancellationToken)
         {
             string title = request.Title.Trim();
+            if (SeoMapping.Validate(request.Seo) is string seoError) return Invalid(seoError);
+            if (request.NewImageAlts?.Any(x => x is null || x.Length > 250) == true) return Invalid("Image alternate text must be at most 250 characters.");
             if (request.Description?.Length > Product.MaxDescriptionLength)
                 return Invalid($"Product description must be {Product.MaxDescriptionLength} characters or fewer.");
             string? description = _descriptions.Sanitize(request.Description);
@@ -147,6 +152,7 @@ public static class Create
             {
                 return new Result(CreateFailure.DuplicateSlug, "A product with this slug already exists.", null);
             }
+            if (await SeoWriter.ReservedAsync(_db, "product", slug, null, cancellationToken)) return Invalid("This slug is reserved by an existing product URL.");
 
             var categoryIds = ResolveCategoryIds(request.CategoryId, request.CategoryIds);
             if (!await _productAdminRepository.CategoriesExistAsync(categoryIds, cancellationToken))
@@ -176,7 +182,7 @@ public static class Create
                 Description = description,
                 Price = request.Price,
                 StockQuantity = request.StockQuantity,
-                CategoryId = categoryIds.Count > 0 ? categoryIds[0] : null,
+                CategoryId = request.CategoryId ?? (categoryIds.Count > 0 ? categoryIds[0] : null),
                 BrandId = request.BrandId,
                 Status = request.Status,
                 InventoryStatus = ResolveInventoryStatus(request.StockQuantity),
@@ -198,7 +204,7 @@ public static class Create
                 product.Images.Add(new ProductImage
                 {
                     ImageUrl = storedImage.Url,
-                    AltText = product.Title,
+                    AltText = request.NewImageAlts?.ElementAtOrDefault(index)?.Trim() ?? product.Title,
                     IsPrimary = request.PrimaryNewImageIndex == index || (!request.PrimaryNewImageIndex.HasValue && index == 0),
                     SortOrder = index + 1
                 });
@@ -209,11 +215,14 @@ public static class Create
                 product.Images.OrderBy(image => image.SortOrder).First().IsPrimary = true;
             }
 
+            product.Seo = await SeoWriter.AssessAsync(_db, new("product", product.Id, product.Title, product.Slug, product.Description, request.Seo,
+                product.Images.Select(x => new SeoImage(x.ImageUrl, x.AltText)).ToList()), null, _descriptions, cancellationToken);
             await _productAdminRepository.AddAsync(product, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 
-            return new Result(CreateFailure.None, null, AdminProductMappings.MapProduct(product));
+            var saved = await _productAdminRepository.GetProductAsync(product.Id, trackChanges: false, cancellationToken);
+            return new Result(CreateFailure.None, null, AdminProductMappings.MapProduct(saved!));
         }
 
         private static Result Invalid(string error)

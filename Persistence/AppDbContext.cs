@@ -44,6 +44,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<ProductAttribute> ProductAttributes => Set<ProductAttribute>();
     public DbSet<ProductAttributeValue> ProductAttributeValues => Set<ProductAttributeValue>();
 
+    /// <summary>Public SEO configuration and stable URL history.</summary>
+    public DbSet<SeoSettings> SeoSettings => Set<SeoSettings>();
+    public DbSet<SlugHistory> SlugHistories => Set<SlugHistory>();
+    public DbSet<SeoRedirect> SeoRedirects => Set<SeoRedirect>();
+
     /// <summary>Gets the shopping carts.</summary>
     public DbSet<Cart> Carts => Set<Cart>();
 
@@ -100,6 +105,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Name).HasMaxLength(150).IsRequired();
             builder.Property(x => x.Slug).HasMaxLength(180).IsRequired();
+            builder.Property(x => x.Description).HasMaxLength(Product.MaxDescriptionLength);
+            builder.Property(x => x.ImageUrl).HasMaxLength(500);
+            builder.OwnsOne(x => x.Seo, seo => ConfigureSeo(seo));
             builder.Property(x => x.IsActive).HasDefaultValue(true);
             builder.HasIndex(x => x.Slug).IsUnique();
             builder.HasIndex(x => x.ParentCategoryId);
@@ -118,6 +126,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             builder.Property(x => x.Title).HasMaxLength(250).IsRequired();
             builder.Property(x => x.Slug).HasMaxLength(280).IsRequired();
             builder.Property(x => x.Description).HasMaxLength(Product.MaxDescriptionLength);
+            builder.OwnsOne(x => x.Seo, seo => ConfigureSeo(seo));
             builder.Property(x => x.Price).HasPrecision(18, 2);
             builder.Property(x => x.UsdPrice).HasPrecision(18, 4);
             builder.Property(x => x.PriceExchangeRate).HasPrecision(18, 6);
@@ -133,6 +142,31 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 .WithMany()
                 .HasForeignKey(x => x.BrandId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<SeoSettings>(builder =>
+        {
+            builder.Property(x => x.Id).ValueGeneratedNever();
+            builder.Property(x => x.SiteName).HasMaxLength(150);
+            builder.Property(x => x.SiteUrl).HasMaxLength(500);
+            builder.Property(x => x.TitleTemplate).HasMaxLength(250);
+            builder.Property(x => x.DefaultDescription).HasMaxLength(500);
+            builder.Property(x => x.LogoUrl).HasMaxLength(500);
+            builder.Property(x => x.SocialProfiles).HasMaxLength(2000);
+            builder.HasData(new SeoSettings());
+        });
+        modelBuilder.Entity<SlugHistory>(builder =>
+        {
+            builder.Property(x => x.Kind).HasMaxLength(20);
+            builder.Property(x => x.Slug).HasMaxLength(280);
+            builder.HasIndex(x => new { x.Kind, x.Slug }).IsUnique();
+            builder.HasIndex(x => new { x.Kind, x.EntityId });
+        });
+        modelBuilder.Entity<SeoRedirect>(builder =>
+        {
+            builder.Property(x => x.SourcePath).HasMaxLength(600);
+            builder.Property(x => x.TargetPath).HasMaxLength(600);
+            builder.HasIndex(x => x.SourcePath).IsUnique();
         });
 
         modelBuilder.Entity<ProductCategory>(builder =>
@@ -452,6 +486,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         return base.SaveChanges();
     }
 
+    /// <summary>Uses the same bounded optional metadata shape for products and categories.</summary>
+    private static void ConfigureSeo<T>(Microsoft.EntityFrameworkCore.Metadata.Builders.OwnedNavigationBuilder<T, SeoMetadata> seo) where T : class
+    {
+        seo.Property(x => x.Title).HasMaxLength(250);
+        seo.Property(x => x.Description).HasMaxLength(500);
+        seo.Property(x => x.FocusKeyphrase).HasMaxLength(150);
+        seo.Property(x => x.RelatedKeyphrases).HasMaxLength(1000);
+        seo.Property(x => x.CanonicalUrl).HasMaxLength(1000);
+        seo.Property(x => x.SocialTitle).HasMaxLength(250);
+        seo.Property(x => x.SocialDescription).HasMaxLength(500);
+        seo.Property(x => x.SocialImageUrl).HasMaxLength(500);
+        seo.Property(x => x.AnalysisVersion).HasMaxLength(30);
+    }
+
     private void ApplyAuditTimestamps()
     {
         var now = DateTime.UtcNow;
@@ -463,7 +511,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
                 entry.Entity.CreatedAtUtc = now;
                 entry.Entity.UpdatedAtUtc = null;
             }
-            else if (entry.State == EntityState.Modified)
+            else if (entry.State == EntityState.Modified || entry.References.Any(reference => reference.TargetEntry is { Metadata: var metadata, State: var state }
+                && metadata.IsOwned() && state is EntityState.Added or EntityState.Modified or EntityState.Deleted))
             {
                 entry.Entity.UpdatedAtUtc = now;
             }

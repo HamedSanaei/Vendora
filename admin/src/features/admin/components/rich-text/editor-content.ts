@@ -33,6 +33,8 @@ export const ArticleImage = Image.extend({
 
 /** Rejects executable, protocol-relative, and malformed link targets before they enter the document. */
 export function isArticleLink(value: string): boolean {
+  if (/^\/(fa|en)\//.test(value) && !value.includes(String.fromCharCode(92))
+    && [...value].every(character => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127)) return true;
   try { return ['https:', 'http:', 'mailto:'].includes(new URL(value).protocol); }
   catch { return false; }
 }

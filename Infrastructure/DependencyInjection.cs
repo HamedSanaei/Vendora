@@ -20,6 +20,12 @@ public static class DependencyInjection
     {
         services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
         services.AddScoped<IProductDescriptionService, Infrastructure.Content.ProductDescriptionService>();
+        services.AddScoped<ISeoAiGateway, Seo.NineRouterSeoGateway>();
+        services.AddHttpClient("SeoNineRouter", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(60);
+            client.MaxResponseContentBufferSize = 1024 * 1024;
+        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.AddHttpClient("UsdtPublicRates", client =>
         {
             client.Timeout = TimeSpan.FromSeconds(8);

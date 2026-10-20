@@ -15,6 +15,9 @@ export interface ProductSpecification {
 
 /** Product shape returned by the current storefront API. */
 export interface StoreProduct {
+  slug?: string;
+  galleryAlts?: string[];
+  breadcrumbs?: Array<{id:string;name:string;slug:string}>;
   _id: string;
   title: string;
   description?: string;
@@ -44,6 +47,9 @@ export interface StoreProduct {
 
 /** Display-safe view of an API product shared by cards and details. */
 export interface CatalogProductModel {
+  slug: string;
+  galleryAlts: string[];
+  breadcrumbs: Array<{id:string;name:string;slug:string}>;
   id: string;
   title: string;
   description: string;
@@ -76,6 +82,9 @@ export function toCatalogProduct(product: StoreProduct): CatalogProductModel {
 
   return {
     id: product._id,
+    slug: product.slug || product.sku || product._id,
+    galleryAlts: product.galleryAlts ?? [],
+    breadcrumbs: product.breadcrumbs ?? [],
     title: product.title,
     description: product.description ?? "",
     descriptionHtml: descriptionHtml ?? "",

@@ -9,6 +9,7 @@ using Persistence.Products;
 using Persistence;
 using Application.Pricing;
 using Microsoft.EntityFrameworkCore;
+using Application.Seo;
 
 namespace Application.Products;
 
@@ -44,7 +45,13 @@ public static class Edit
         IReadOnlyList<ProductImageUpload> Images,
         int? PrimaryNewImageIndex,
         decimal? UsdPrice = null,
-        IReadOnlyList<ProductAttributeInput>? Attributes = null) : IRequest<Result>;
+        IReadOnlyList<ProductAttributeInput>? Attributes = null,
+        SeoInput? Seo = null,
+        IReadOnlyList<ImageAltInput>? ImageAlts = null,
+        IReadOnlyList<string>? NewImageAlts = null) : IRequest<Result>;
+
+    /// <summary>Explicit alt updates leave other persisted image descriptions untouched.</summary>
+    public sealed record ImageAltInput(Guid Id, string Alt);
 
     /// <summary>Represents the edit product result.</summary>
     public sealed record Result(EditFailure Failure, string? Error, AdminProductDto? Product)
@@ -87,6 +94,9 @@ public static class Edit
         /// <inheritdoc />
         public async Task<Result> Handle(Command request, CancellationToken cancellationToken)
         {
+            if (SeoMapping.Validate(request.Seo) is string seoError) return Invalid(seoError);
+            if (request.ImageAlts?.Any(x => x is null || x.Alt is null || x.Alt.Length > 250) == true
+                || request.NewImageAlts?.Any(x => x is null || x.Length > 250) == true) return Invalid("Image alternate text must be at most 250 characters.");
             if (request.Description?.Length > Product.MaxDescriptionLength)
                 return Invalid($"Product description must be {Product.MaxDescriptionLength} characters or fewer.");
             string? description = _descriptions.Sanitize(request.Description);
@@ -146,6 +156,7 @@ public static class Edit
             }
 
             var categoryIds = ResolveCategoryIds(request.CategoryId, request.CategoryIds);
+            if (await SeoWriter.ReservedAsync(_db, "product", slug, product.Id, cancellationToken)) return Invalid("This slug is reserved by an existing product URL.");
             if (!await _repository.CategoriesExistAsync(categoryIds, cancellationToken))
             {
                 return new Result(EditFailure.CategoryNotFound, "One or more selected categories do not exist.", null);
@@ -172,12 +183,13 @@ public static class Edit
             }
 
             product.Title = title;
+            await SeoWriter.RememberAsync(_db, "product", product.Id, product.Slug, slug, cancellationToken);
             product.Slug = slug;
             product.Description = description;
             var pricingError = await ProductPriceWriter.ApplyAsync(_db, product, request.Price, request.UsdPrice, cancellationToken);
             if (pricingError is not null) return Invalid(pricingError);
             product.StockQuantity = request.StockQuantity;
-            product.CategoryId = categoryIds.Count > 0 ? categoryIds[0] : null;
+            product.CategoryId = request.CategoryId ?? (categoryIds.Count > 0 ? categoryIds[0] : null);
             product.BrandId = request.BrandId;
             product.Status = request.Status;
             product.InventoryStatus = ResolveInventoryStatus(request.StockQuantity);
@@ -185,6 +197,12 @@ public static class Edit
             _repository.ReplaceColors(product, request.ColorIds);
 
             _repository.RemoveImages(product, request.DeletedImageIds);
+            foreach (var alt in request.ImageAlts ?? [])
+            {
+                var existingImage = product.Images.SingleOrDefault(x => x.Id == alt.Id);
+                if (existingImage is null) return Invalid("Image alternate text references an unknown image.");
+                existingImage.AltText = alt.Alt.Trim();
+            }
 
             Guid? primaryNewImageId = null;
             int sortOrder = product.Images.Count == 0 ? 1 : product.Images.Max(image => image.SortOrder) + 1;
@@ -194,7 +212,7 @@ public static class Edit
                 var image = new ProductImage
                 {
                     ImageUrl = storedImage.Url,
-                    AltText = product.Title,
+                    AltText = request.NewImageAlts?.ElementAtOrDefault(index)?.Trim() ?? product.Title,
                     IsPrimary = request.PrimaryNewImageIndex == index,
                     SortOrder = sortOrder + index
                 };
@@ -208,11 +226,15 @@ public static class Edit
 
             NormalizePrimaryImage(product, request.PrimaryImageId, primaryNewImageId);
 
+            product.Seo = await SeoWriter.AssessAsync(_db, new("product", product.Id, product.Title, product.Slug, product.Description, request.Seo,
+                product.Images.Select(x => new SeoImage(x.ImageUrl, x.AltText)).ToList()), product.Seo, _descriptions, cancellationToken);
+
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             await _db.CartItems.Where(item => item.ProductId == product.Id)
                 .ExecuteUpdateAsync(update => update.SetProperty(item => item.UnitPrice, product.Price), cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-            return new Result(EditFailure.None, null, AdminProductMappings.MapProduct(product));
+            var saved = await _repository.GetProductAsync(product.Id, trackChanges: false, cancellationToken);
+            return new Result(EditFailure.None, null, AdminProductMappings.MapProduct(saved!));
         }
 
         private static Result Invalid(string error)
@@ -250,7 +272,6 @@ public static class Edit
 
             foreach (var image in product.Images)
             {
-                image.AltText = product.Title;
                 if (matchedExisting)
                 {
                     image.IsPrimary = image.Id == primaryImageId;

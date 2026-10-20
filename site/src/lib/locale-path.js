@@ -45,6 +45,10 @@ export function withLocalePath(href = "/", locale = "fa") {
  * @returns {string} Locale-aware shop URL.
  */
 export function buildLocalizedShopPath(locale, params = {}) {
+  const entries = Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== "");
+  if (entries.length === 1 && ["category", "Category"].includes(entries[0][0])) {
+    return withLocalePath(`/category/${encodeURIComponent(String(entries[0][1]))}`, locale);
+  }
   const query = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {

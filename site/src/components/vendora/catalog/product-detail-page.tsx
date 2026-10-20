@@ -10,11 +10,10 @@ import Footer from "@/layout/footer";
 import { BagArtwork } from "@/components/vendora/product/bag-artwork";
 import { CartIcon, CheckIcon, ChevronIcon, HeartIcon, QualityIcon, ReturnIcon, SupportIcon, TruckIcon } from "@/components/vendora/icons";
 import { QuantityStepper } from "@/components/vendora/cart/cart-components";
-import { bagProducts } from "@/lib/vendora/catalog";
 import { formatNumber, formatPrice } from "@/lib/vendora/format";
 import { getDict } from "@/lib/vendora/i18n";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
-import type { Locale, ProductSummary } from "@/lib/vendora/types";
+import type { Locale } from "@/lib/vendora/types";
 import { useGetProductQuery, useGetShowingProductsQuery } from "@/redux/features/productApi";
 import { add_cart_product, quantityDecrement, quantityIncrement } from "@/redux/features/cartSlice";
 import { add_to_wishlist } from "@/redux/features/wishlist-slice";
@@ -26,29 +25,28 @@ import type { CatalogProductModel, StoreProduct } from "./catalog-types";
 import { isVendoraProductImage, toCatalogProduct } from "./catalog-types";
 
 /** Full product page with reusable gallery, information, purchase and specification sections. */
-export function ProductDetailPage({ id }: { id: string }) {
+export function ProductDetailPage({ id, initialProduct }: { id: string; initialProduct?: StoreProduct }) {
   const pathname = usePathname();
   const locale: Locale = getLocaleFromPathname(pathname);
   const t = getCatalogCopy(locale);
   const dispatch = useDispatch();
-  const localSummary = bagProducts.find((item) => item.slug === id || item.id === id);
-  const { data, isLoading, isError } = useGetProductQuery(id, { skip: Boolean(localSummary) });
+  const { data, isLoading, isError } = useGetProductQuery(id, { skip: Boolean(initialProduct) });
   const { data: catalogData } = useGetShowingProductsQuery(undefined);
   const cartProducts = useSelector((state: { cart: { cart_products: Array<StoreProduct & { orderQuantity: number }> } }) => state.cart.cart_products);
   const wishlist = useSelector((state: { wishlist: { wishlist: StoreProduct[] } }) => state.wishlist.wishlist);
-  const sourceProduct = useMemo<StoreProduct | null>(() => localSummary ? fromSummary(localSummary, locale) : data ?? null, [data, localSummary, locale]);
+  const sourceProduct = useMemo<StoreProduct | null>(() => initialProduct ?? data ?? null, [data, initialProduct]);
   const product = useMemo<CatalogProductModel | null>(() => sourceProduct ? toCatalogProduct(sourceProduct) : null, [sourceProduct]);
   const related = useMemo<CatalogProductModel[]>(() => (catalogData?.products ?? []).filter((item: StoreProduct) => item._id !== id).slice(0, 4).map(toCatalogProduct), [catalogData, id]);
 
-  if (isLoading && !localSummary) return <ProductPageShell><ProductDetailSkeleton /></ProductPageShell>;
-  if ((isError && !localSummary) || !product) return <ProductPageShell><div className="vd-container py-24 text-center text-base font-bold text-vd-muted">{t.productNotFound}</div></ProductPageShell>;
+  if (isLoading && !initialProduct) return <ProductPageShell><ProductDetailSkeleton /></ProductPageShell>;
+  if ((isError && !initialProduct) || !product) return <ProductPageShell><div className="vd-container py-24 text-center text-base font-bold text-vd-muted">{t.productNotFound}</div></ProductPageShell>;
 
   const favorited = wishlist.some((item) => item._id === product.id);
   const productCartItem = cartProducts.find((item) => item._id === product.id);
   return (
     <ProductPageShell>
       <main className="vd-container pb-4 pt-5 md:pt-8 lg:pt-10">
-        <ProductBreadcrumb locale={locale} title={product.title} />
+        <ProductBreadcrumb locale={locale} title={product.title} categories={product.breadcrumbs} />
         <section className="vd-product-hero mt-5 grid gap-5 lg:mt-7 lg:grid-cols-[minmax(0,1.12fr)_minmax(300px,.86fr)_320px] lg:items-start xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,.9fr)_340px] xl:gap-7">
           <ProductGallery product={product} locale={locale} favorited={favorited} onFavorite={() => dispatch(add_to_wishlist(product.source))} />
           <ProductInformation product={product} locale={locale} />
@@ -92,9 +90,9 @@ function ProductPageShell({ children }: { children: React.ReactNode }) {
 }
 
 /** Locale-aware breadcrumb shared by every product detail. */
-function ProductBreadcrumb({ locale, title }: { locale: Locale; title: string }) {
+function ProductBreadcrumb({ locale, title, categories }: { locale: Locale; title: string; categories: CatalogProductModel["breadcrumbs"] }) {
   const t = getCatalogCopy(locale);
-  return <nav aria-label="breadcrumb" className="flex min-w-0 items-center gap-2 overflow-hidden text-xs text-vd-muted"><Link href={withLocalePath("/", locale)} className="vd-focus shrink-0 rounded-sm hover:text-jade">{t.home}</Link><ChevronIcon size={14} /><Link href={withLocalePath("/shop", locale)} className="vd-focus shrink-0 rounded-sm hover:text-jade">{t.products}</Link><ChevronIcon size={14} /><span className="truncate font-semibold text-ink">{title}</span></nav>;
+  return <nav aria-label="breadcrumb" className="flex min-w-0 items-center gap-2 overflow-hidden text-xs text-vd-muted"><Link href={withLocalePath("/", locale)} className="vd-focus shrink-0 rounded-sm hover:text-jade">{t.home}</Link><ChevronIcon size={14} /><Link href={withLocalePath("/shop", locale)} className="vd-focus shrink-0 rounded-sm hover:text-jade">{t.products}</Link><ChevronIcon size={14} />{categories.map(category => <span key={category.id} className="contents"><Link href={withLocalePath(`/category/${encodeURIComponent(category.slug)}`, locale)} className="vd-focus shrink-0 rounded-sm hover:text-jade">{category.name}</Link><ChevronIcon size={14} /></span>)}<span className="truncate font-semibold text-ink">{title}</span></nav>;
 }
 
 /** Responsive media gallery with selectable thumbnails and the preserved wishlist action. */
@@ -110,7 +108,7 @@ function ProductGallery({ product, locale, favorited, onFavorite }: { product: C
     <div className="vd-product-hero__gallery min-w-0">
       <div className="vd-product-hero__media relative aspect-[1.08/1] overflow-hidden rounded-[22px] border border-vd-line bg-surface-soft md:aspect-[1.18/1] lg:aspect-square">
         <button type="button" onClick={onFavorite} aria-label={favorited ? t.removeFromWishlist : t.addToWishlist} aria-pressed={favorited} className={`vd-focus absolute start-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-vd-line shadow-sm ${favorited ? "bg-vd-danger-tint text-vd-danger" : "bg-white/95 text-ink hover:text-vd-danger"}`}><HeartIcon size={20} filled={favorited} /></button>
-        {activeImage ? <Image src={activeImage} alt={product.title} fill priority unoptimized={activeImage.includes("/uploads/")} sizes="(max-width: 1023px) 92vw, 42vw" className="object-contain" /> : <div className="flex h-full items-center justify-center"><BagArtwork color="jade" className="h-[58%] w-auto" /></div>}
+        {activeImage ? <Image src={activeImage} alt={product.galleryAlts[product.gallery.indexOf(activeImage)] ?? product.title} fill priority unoptimized={activeImage.includes("/uploads/")} sizes="(max-width: 1023px) 92vw, 42vw" className="object-contain" /> : <div className="flex h-full items-center justify-center"><BagArtwork color="jade" className="h-[58%] w-auto" /></div>}
       </div>
       {gallery.length > 1 ? <div className="mt-3 flex gap-2 overflow-x-auto pb-1">{gallery.map((image, index) => <button key={image} type="button" onClick={() => setActiveImage(image)} aria-label={`${product.title} ${index + 1}`} className={`vd-focus relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-control border bg-surface-soft ${activeImage === image ? "border-jade ring-1 ring-jade" : "border-vd-line"}`}><Image src={image} alt="" fill unoptimized={image.includes("/uploads/")} sizes="72px" className="object-contain" /></button>)}</div> : null}
     </div>
@@ -257,14 +255,9 @@ function ProductContent({ product, locale }: { product: CatalogProductModel; loc
   return (
     <section className="mt-10 md:mt-14 lg:mt-16">
       <div className="flex gap-2 overflow-x-auto border-b border-vd-line">{tabs.map((tab) => <button key={tab.key} type="button" onClick={() => setActiveTab(tab.key)} className={`vd-focus h-12 shrink-0 border-b-2 px-4 text-sm font-extrabold ${activeTab === tab.key ? "border-jade text-jade" : "border-transparent text-vd-muted"}`}>{tab.label}</button>)}</div>
-      <div className="py-6 md:py-8">{activeTab === "specifications" ? <dl className="overflow-hidden rounded-[18px] border border-vd-line">{rows.map(([label, value], index) => <div key={`${index}-${label}`} className={`grid min-h-14 grid-cols-[42%_58%] items-center ${index > 0 ? "border-t border-vd-line" : ""}`}><dt className="h-full min-w-0 bg-surface-soft px-4 py-4 text-xs font-bold break-words text-vd-muted md:px-6 md:text-sm">{label}</dt><dd className="m-0 min-w-0 px-4 py-4 text-xs font-semibold break-words text-ink md:px-6 md:text-sm">{value}</dd></div>)}</dl> : null}{activeTab === "description" ? <div className="max-w-4xl"><h2 className="text-xl font-extrabold text-ink">{product.title}</h2><div className="mt-4"><ProductArticle content={product.descriptionHtml || product.description || (locale === "fa" ? "این محصول با تمرکز بر دوام، استفاده روزمره و جزئیات کاربردی در کارگاه وندورا تولید شده است." : "This product is made with a focus on durability, everyday use and practical details.")} /></div></div> : null}{activeTab === "reviews" ? <div className="rounded-[18px] border border-dashed border-vd-line bg-surface-soft p-10 text-center text-sm font-semibold text-vd-muted">{locale === "fa" ? "هنوز دیدگاهی برای این محصول ثبت نشده است." : "No reviews have been submitted yet."}</div> : null}</div>
+      <div className="py-6 md:py-8">{activeTab === "specifications" ? <dl className="overflow-hidden rounded-[18px] border border-vd-line">{rows.map(([label, value], index) => <div key={`${index}-${label}`} className={`grid min-h-14 grid-cols-[42%_58%] items-center ${index > 0 ? "border-t border-vd-line" : ""}`}><dt className="h-full min-w-0 bg-surface-soft px-4 py-4 text-xs font-bold break-words text-vd-muted md:px-6 md:text-sm">{label}</dt><dd className="m-0 min-w-0 px-4 py-4 text-xs font-semibold break-words text-ink md:px-6 md:text-sm">{value}</dd></div>)}</dl> : null}{<div hidden={activeTab !== "description"} className="max-w-4xl"><h2 className="text-xl font-extrabold text-ink">{product.title}</h2><div className="mt-4"><ProductArticle content={product.descriptionHtml || product.description} /></div></div>}{activeTab === "reviews" ? <div className="rounded-[18px] border border-dashed border-vd-line bg-surface-soft p-10 text-center text-sm font-semibold text-vd-muted">{locale === "fa" ? "هنوز دیدگاهی برای این محصول ثبت نشده است." : "No reviews have been submitted yet."}</div> : null}</div>
     </section>
   );
-}
-
-/** Converts the approved homepage mock into the API-compatible product contract. */
-function fromSummary(summary: ProductSummary, locale: Locale): StoreProduct {
-  return { _id: summary.slug, title: locale === "fa" ? summary.name : summary.nameEn, description: locale === "fa" ? summary.meta : summary.metaEn, originalPrice: summary.price, quantity: 12, sku: summary.id, parent: locale === "fa" ? "کیف‌های وندورا" : "Vendora bags", brand: { name: "Vendora Studio" }, tags: [locale === "fa" ? summary.meta : summary.metaEn], colors: ["jade"] };
 }
 
 /** Skeleton matching the three-column product hero. */

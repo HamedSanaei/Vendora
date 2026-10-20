@@ -16,7 +16,7 @@ const SingleListProduct = ({ product }) => {
   const { _id, image, title, price, discount } = product || {};
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
-  const detailsPath = withLocalePath(`/product-details/${_id}`, locale);
+  const detailsPath = withLocalePath(`/product/${encodeURIComponent(product?.slug || _id)}`, locale);
   // handle dispatch
   const dispatch = useDispatch();
 

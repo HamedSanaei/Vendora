@@ -24,7 +24,7 @@ export function ProductCard({ product, locale, favorited = false, onToggleFavori
   const name = locale === "fa" ? product.name : product.nameEn;
   const meta = locale === "fa" ? product.meta : product.metaEn;
   const badge = product.badge ? (locale === "fa" ? product.badge.label : product.badge.labelEn) : null;
-  const productHref = withLocalePath(`/product-details/${product.slug}`, locale);
+  const productHref = withLocalePath(`/product/${encodeURIComponent(product.slug)}`, locale);
   return (
     <article className="group relative h-full w-full overflow-hidden rounded-[14px] border border-vd-line bg-white transition-shadow hover:shadow-pop lg:rounded-card">
       <div className="absolute inset-x-[10px] top-[10px] flex h-[154px] items-center justify-center overflow-hidden rounded-[10px] bg-surface-soft md:h-[180px] lg:inset-x-3 lg:top-3 lg:h-[210px] lg:rounded-control">

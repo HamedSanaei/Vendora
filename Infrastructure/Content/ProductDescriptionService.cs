@@ -46,8 +46,10 @@ public sealed partial class ProductDescriptionService : IProductDescriptionServi
             if (element.LocalName == "a")
             {
                 string href = element.GetAttribute("href") ?? "";
-                if (!Uri.TryCreate(href, UriKind.Absolute, out var uri)
-                    || uri.Scheme is not ("https" or "http" or "mailto")) element.RemoveAttribute("href");
+                bool local = (href.StartsWith("/fa/", StringComparison.Ordinal) || href.StartsWith("/en/", StringComparison.Ordinal))
+                    && !href.Contains('\\') && !href.Any(char.IsControl);
+                if (!local && (!Uri.TryCreate(href, UriKind.Absolute, out var uri)
+                    || uri.Scheme is not ("https" or "http" or "mailto"))) element.RemoveAttribute("href");
                 element.SetAttribute("rel", "noopener noreferrer");
             }
             var styles = (element.GetAttribute("style") ?? "").Split(';', StringSplitOptions.RemoveEmptyEntries)

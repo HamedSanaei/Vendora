@@ -64,7 +64,6 @@ public sealed class ProductAdminRepository : IProductAdminRepository
     {
         return await _dbContext.Categories
             .AsNoTracking()
-            .Where(category => category.IsActive)
             .OrderBy(category => category.Name)
             .ToListAsync(cancellationToken);
     }

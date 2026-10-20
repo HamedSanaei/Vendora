@@ -1,9 +1,8 @@
+import { staticPageMetadata } from "@/lib/catalog.server";
 import { AboutPage } from "@components/vendora/about/about-page";
 
-export const metadata = {
-  title: "درباره وندورا | Vendora",
-  description: "داستان وندورا، فرایند تولید کیف و ارزش‌هایی که در محصولات ما دیده می‌شوند.",
-};
+/** Shared site title and launch policy for this public page. */
+export async function generateMetadata() { return staticPageMetadata("درباره ما","About","/about"); }
 
 export default function About() {
   return <AboutPage />;

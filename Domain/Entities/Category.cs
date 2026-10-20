@@ -17,6 +17,11 @@ public class Category : AuditableEntity
     /// </summary>
     public string Slug { get; set; } = string.Empty;
 
+    /// <summary>Sanitized category introduction using the shared catalog article editor.</summary>
+    public string? Description { get; set; }
+    public string? ImageUrl { get; set; }
+    public SeoMetadata? Seo { get; set; }
+
     /// <summary>
     /// Gets or sets whether the category is visible in the storefront.
     /// </summary>

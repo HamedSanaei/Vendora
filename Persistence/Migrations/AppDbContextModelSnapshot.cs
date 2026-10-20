@@ -248,6 +248,14 @@ namespace Persistence.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(200000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
@@ -859,6 +867,86 @@ namespace Persistence.Migrations
                     b.ToTable("ProductImages", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.SeoRedirect", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SourcePath")
+                        .IsRequired()
+                        .HasMaxLength(600)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StatusCode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TargetPath")
+                        .IsRequired()
+                        .HasMaxLength(600)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SourcePath")
+                        .IsUnique();
+
+                    b.ToTable("SeoRedirects");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SeoSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DefaultDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsIndexingEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SiteName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SiteUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SocialProfiles")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TitleTemplate")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SeoSettings");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000002"),
+                            IsIndexingEnabled = false,
+                            SiteName = "وندورا",
+                            SiteUrl = "",
+                            TitleTemplate = "{title} | {siteName}"
+                        });
+                });
+
             modelBuilder.Entity("Domain.Entities.SlideshowSlide", b =>
                 {
                     b.Property<Guid>("Id")
@@ -892,6 +980,35 @@ namespace Persistence.Migrations
 
                             t.HasCheckConstraint("CK_SlideshowSlides_SortOrder", "SortOrder >= 0");
                         });
+                });
+
+            modelBuilder.Entity("Domain.Entities.SlugHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(280)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind", "EntityId");
+
+                    b.HasIndex("Kind", "Slug")
+                        .IsUnique();
+
+                    b.ToTable("SlugHistories");
                 });
 
             modelBuilder.Entity("Domain.Entities.UsdtExchangeRate", b =>
@@ -1200,7 +1317,67 @@ namespace Persistence.Migrations
                         .HasForeignKey("ParentCategoryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.OwnsOne("Domain.Entities.SeoMetadata", "Seo", b1 =>
+                        {
+                            b1.Property<Guid>("CategoryId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("AnalysisVersion")
+                                .HasMaxLength(30)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("CanonicalUrl")
+                                .HasMaxLength(1000)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Description")
+                                .HasMaxLength(500)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("FocusKeyphrase")
+                                .HasMaxLength(150)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<bool>("Follow")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<bool>("Index")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<string>("RelatedKeyphrases")
+                                .HasMaxLength(1000)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int?>("Score")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<string>("SocialDescription")
+                                .HasMaxLength(500)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("SocialImageUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("SocialTitle")
+                                .HasMaxLength(250)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Title")
+                                .HasMaxLength(250)
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("CategoryId");
+
+                            b1.ToTable("Categories");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CategoryId");
+                        });
+
                     b.Navigation("ParentCategory");
+
+                    b.Navigation("Seo");
                 });
 
             modelBuilder.Entity("Domain.Entities.CouponCategory", b =>
@@ -1256,9 +1433,69 @@ namespace Persistence.Migrations
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.OwnsOne("Domain.Entities.SeoMetadata", "Seo", b1 =>
+                        {
+                            b1.Property<Guid>("ProductId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("AnalysisVersion")
+                                .HasMaxLength(30)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("CanonicalUrl")
+                                .HasMaxLength(1000)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Description")
+                                .HasMaxLength(500)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("FocusKeyphrase")
+                                .HasMaxLength(150)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<bool>("Follow")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<bool>("Index")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<string>("RelatedKeyphrases")
+                                .HasMaxLength(1000)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int?>("Score")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<string>("SocialDescription")
+                                .HasMaxLength(500)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("SocialImageUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("SocialTitle")
+                                .HasMaxLength(250)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Title")
+                                .HasMaxLength(250)
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("ProductId");
+
+                            b1.ToTable("Products");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProductId");
+                        });
+
                     b.Navigation("Brand");
 
                     b.Navigation("Category");
+
+                    b.Navigation("Seo");
                 });
 
             modelBuilder.Entity("Domain.Entities.ProductAttribute", b =>

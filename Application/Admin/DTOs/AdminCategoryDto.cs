@@ -10,4 +10,8 @@ public sealed record AdminCategoryDto(
     Guid? ParentCategoryId,
     string? ParentCategoryName,
     int ProductCount,
-    bool IsActive);
+    bool IsActive,
+    string? Description = null,
+    string? ImageUrl = null,
+    Application.Seo.SeoDto? Seo = null,
+    int SubtreeProductCount = 0);

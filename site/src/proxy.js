@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { http } from './lib/http';
 
 const locales = ['fa', 'en'];
 const defaultLocale = 'fa';
@@ -15,6 +16,8 @@ const routePrefixes = [
   '/order',
   '/policy',
   '/product-details',
+  '/product',
+  '/category',
   '/register',
   '/search',
   '/shop',
@@ -24,7 +27,7 @@ const routePrefixes = [
   '/wishlist',
 ];
 
-export function proxy(request) {
+export async function proxy(request) {
   const { pathname } = request.nextUrl;
   const localeRewrite = request.headers.get('x-vendora-locale-rewrite');
 
@@ -51,10 +54,36 @@ export function proxy(request) {
     return NextResponse.next();
   }
 
+  // Keep historical English identifiers functional while the English storefront remains noindex.
+  if (locale === 'en' && /^\/en\/(product|product-details|category)\/[^/]+$/.test(pathname)) {
+    try {
+      const [, , kind, identifier] = pathname.split('/');
+      const { data } = await http.get(`/catalog/${kind === 'category' ? 'categories' : 'products'}/${identifier}`, { timeout: 5000 });
+      const canonical = `/en/${kind === 'category' ? 'category' : 'product'}/${encodeURIComponent(data.slug)}`;
+      if (canonical !== pathname) { const target = request.nextUrl.clone(); target.pathname = canonical; return NextResponse.redirect(target, 301); }
+    } catch { /* The page distinguishes missing content from temporary API failure. */ }
+  }
+
+  // The backend owns alias history and manual redirect validation; preserve campaign/filter queries.
+  if (locale === 'fa' && /^\/fa\/(product|product-details|category|shop|about|contact|faq|policy|terms)(\/|$)/.test(pathname)) {
+    try {
+      const { data } = await http.get('/catalog/seo/redirect', { params: { path: pathname }, timeout: 5000 });
+      if (data?.location?.startsWith('/fa/') && [301, 302].includes(data.statusCode)) {
+        const target = request.nextUrl.clone();
+        target.pathname = data.location;
+        return NextResponse.redirect(target, data.statusCode);
+      }
+    } catch {
+      // A redirect lookup failure never manufactures content. The page read reports genuine API failures.
+    }
+  }
+
   const nextPathname = pathname === `/${locale}` ? '/' : pathname.replace(`/${locale}`, '');
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-vendora-locale', locale);
   requestHeaders.set('x-vendora-locale-rewrite', locale);
+  requestHeaders.set('x-vendora-pathname', pathname);
+  requestHeaders.set('x-vendora-faceted', [...request.nextUrl.searchParams.keys()].some(key => !['page', 'utm_source', 'utm_medium', 'utm_campaign'].includes(key)) ? '1' : '0');
 
   // `/` itself redirects back to the default locale; rewriting `/fa` onto it
   // would ping-pong forever, so pass it through with the locale header only.

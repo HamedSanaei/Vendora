@@ -21,7 +21,7 @@ const SingleProduct = ({ product, discountPrd = false }) => {
   const { _id, image, title, price, discount, originalPrice } = product || {};
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
-  const detailsPath = withLocalePath(`/product-details/${_id}`, locale);
+  const detailsPath = withLocalePath(`/product/${encodeURIComponent(product?.slug || _id)}`, locale);
   const dispatch = useDispatch();
   const { cart_products } = useSelector((state) => state.cart);
   const { wishlist } = useSelector((state) => state.wishlist);

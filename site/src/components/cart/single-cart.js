@@ -15,7 +15,7 @@ const SingleCartItem = ({item}) => {
   const dispatch = useDispatch()
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
-  const detailsPath = withLocalePath(`/product-details/${_id}`, locale);
+  const detailsPath = withLocalePath(`/product/${encodeURIComponent(item?.slug || _id)}`, locale);
   const removeLabel = locale === "fa" ? "حذف محصول" : "Remove product";
   const imageAlt = locale === "fa" ? `تصویر ${title || "محصول"}` : `${title || "Product"} image`;
 

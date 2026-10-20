@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
 using Application.Products.DTOs;
+using Application.Seo;
 
 namespace API.Controllers;
 
@@ -108,6 +109,7 @@ public sealed class AdminController : ControllerBase
     {
         if (!TryReadAttributes(request.AttributesJson, out var attributes))
             return BadRequest(new { message = "Attributes: invalid attribute data." });
+        if (!TryReadJson<SeoInput>(request.SeoJson, out var seo)) return BadRequest(new { message = "SEO: invalid metadata." });
         // TODO: Protect admin endpoints with role-based authorization before production.
         if (!TryParseStatus(request.Status, out var productStatus))
         {
@@ -143,7 +145,7 @@ public sealed class AdminController : ControllerBase
                 uploads,
                 request.PrimaryNewImageIndex,
                 request.UsdPrice,
-                attributes),
+                attributes, seo, request.NewImageAlts),
             cancellationToken);
 
         if (result.Succeeded)
@@ -173,6 +175,8 @@ public sealed class AdminController : ControllerBase
     {
         if (!TryReadAttributes(request.AttributesJson, out var attributes))
             return BadRequest(new { message = "Attributes: invalid attribute data." });
+        if (!TryReadJson<SeoInput>(request.SeoJson, out var seo)
+            || !TryReadJson<List<Edit.ImageAltInput>>(request.ImageAltsJson, out var imageAlts)) return BadRequest(new { message = "SEO: invalid metadata or image alternates." });
         // TODO: Protect admin endpoints with role-based authorization before production.
         if (!TryParseStatus(request.Status, out var productStatus))
         {
@@ -211,7 +215,7 @@ public sealed class AdminController : ControllerBase
                 uploads,
                 request.PrimaryNewImageIndex,
                 request.UsdPrice,
-                attributes),
+                attributes, seo, imageAlts, request.NewImageAlts),
             cancellationToken);
 
         if (result.Succeeded)
@@ -248,7 +252,7 @@ public sealed class AdminController : ControllerBase
     public async Task<ActionResult> CreateCategory(AdminCategoryRequest request, CancellationToken cancellationToken)
     {
         // TODO: Protect admin endpoints with role-based authorization before production.
-        var result = await _mediator.Send(new Categories.Create.Command(request.Name, request.Slug, request.ParentCategoryId, request.IsActive), cancellationToken);
+        var result = await _mediator.Send(new Categories.Create.Command(request.Name, request.Slug, request.ParentCategoryId, request.IsActive, request.Description, request.ImageUrl, request.Seo), cancellationToken);
         return ToMutationResponse(result.Action, result.Category, nameof(CreateCategory));
     }
 
@@ -259,7 +263,7 @@ public sealed class AdminController : ControllerBase
     public async Task<ActionResult> EditCategory(Guid id, AdminCategoryRequest request, CancellationToken cancellationToken)
     {
         // TODO: Protect admin endpoints with role-based authorization before production.
-        var result = await _mediator.Send(new Categories.Edit.Command(id, request.Name, request.Slug, request.ParentCategoryId, request.IsActive), cancellationToken);
+        var result = await _mediator.Send(new Categories.Edit.Command(id, request.Name, request.Slug, request.ParentCategoryId, request.IsActive, request.Description, request.ImageUrl, request.Seo), cancellationToken);
         return ToMutationResponse(result.Action, result.Category);
     }
 
@@ -609,6 +613,16 @@ public sealed class AdminController : ControllerBase
         catch (JsonException) { return false; }
     }
 
+    /// <summary>Decodes optional bounded multipart fields without letting malformed JSON escape as a server error.</summary>
+    private static bool TryReadJson<T>(string? json, out T? value) where T : class
+    {
+        value = null;
+        if (json is null) return true;
+        if (json.Length > 100_000) return false;
+        try { value = JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web)); return value is not null; }
+        catch (JsonException) { return false; }
+    }
+
     private static bool TryParseStatus(string? status, out ProductStatus productStatus)
     {
         if (string.IsNullOrWhiteSpace(status))
@@ -655,6 +669,9 @@ public sealed class AdminController : ControllerBase
 /// </summary>
 public sealed class CreateAdminProductRequest
 {
+    public string? SeoJson { get; set; }
+    public string? ImageAltsJson { get; set; }
+    public List<string> NewImageAlts { get; set; } = [];
     /// <summary>Optional JSON specifications; [] explicitly clears assignments, omission preserves them.</summary>
     public string? AttributesJson { get; set; }
 
@@ -709,6 +726,9 @@ public sealed class CreateAdminProductRequest
 /// </summary>
 public sealed class AdminCategoryRequest
 {
+    public string? Description { get; set; }
+    public string? ImageUrl { get; set; }
+    public SeoInput? Seo { get; set; }
     /// <summary>Gets or sets the category name.</summary>
     public string Name { get; set; } = string.Empty;
 

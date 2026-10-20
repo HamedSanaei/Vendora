@@ -16,6 +16,8 @@ import ShippingPage from "../../shipping/page";
 import TermsPage from "../../terms/page";
 import WishlistPage from "../../wishlist/page";
 import OrderPage from "../../order/[id]/page";
+import ProductPage from "../../product/[slug]/page";
+import CategoryPage from "../../category/[slug]/page";
 
 const locales = new Set(["fa", "en"]);
 
@@ -52,6 +54,8 @@ export default async function LocalizedStorefrontPage({ params, searchParams }) 
   if (slug[0] === "product-details" && slug[1]) {
     return <ProductDetailsPage params={Promise.resolve({ id: slug[1] })} />;
   }
+  if (slug[0] === "product" && slug.length === 2) return <ProductPage params={Promise.resolve({slug:slug[1]})} />;
+  if (slug[0] === "category" && slug.length === 2) return <CategoryPage params={Promise.resolve({slug:slug[1]})} searchParams={Promise.resolve(resolvedSearchParams)} />;
 
   if (slug[0] === "order" && slug[1]) {
     return <OrderPage params={Promise.resolve({ id: slug[1] })} />;

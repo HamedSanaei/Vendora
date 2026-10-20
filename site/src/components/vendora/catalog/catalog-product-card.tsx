@@ -28,7 +28,7 @@ export interface CatalogProductCardProps {
 /** Reusable commerce card for catalog grids, recommendations and carousels. */
 export function CatalogProductCard({ product, locale, compact = false, favorited = false, artworkColor = "jade", cartQuantity = 0, onAddToCart, onIncreaseCart, onDecreaseCart, onToggleFavorite }: CatalogProductCardProps) {
   const t = getCatalogCopy(locale);
-  const href = withLocalePath(`/product-details/${product.id}`, locale);
+  const href = withLocalePath(`/product/${encodeURIComponent(product.slug)}`, locale);
   const hasCartQuantity = cartQuantity > 0;
   const handleInitialAdd = onIncreaseCart ?? onAddToCart;
 

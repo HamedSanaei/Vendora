@@ -77,7 +77,7 @@ interface CartItemProps {
 /** Responsive cart line matching the approved desktop row and mobile card. */
 export function CartItem({ item, locale, onDecrease, onIncrease, onRemove }: CartItemProps) {
   const t = getDict(locale).cart;
-  const detailsHref = withLocalePath(`/product-details/${item._id}`, locale);
+  const detailsHref = withLocalePath(`/product/${encodeURIComponent(item.slug || item._id)}`, locale);
   const meta = item.category?.name ?? item.parent ?? item.brand?.name ?? t.variantFallback;
   const stock = Number(item.quantity);
 

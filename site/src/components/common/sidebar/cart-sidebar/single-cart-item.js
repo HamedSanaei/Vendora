@@ -14,7 +14,7 @@ const SingleCartItem = ({ item }) => {
   const dispatch = useDispatch();
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
-  const detailsPath = withLocalePath(`/product-details/${_id}`, locale);
+  const detailsPath = withLocalePath(`/product/${encodeURIComponent(item?.slug || _id)}`, locale);
   const imageAlt = locale === "fa" ? `تصویر ${title || "محصول"}` : `${title || "Product"} image`;
   const removeLabel = locale === "fa" ? "حذف از سبد خرید" : "Remove from cart";
   const discountedPrice = (originalPrice - (originalPrice * discount) / 100) * orderQuantity;

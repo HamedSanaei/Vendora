@@ -195,6 +195,9 @@ public sealed class ProductArticleTests
             builder.WebHost.ConfigureKestrel(options => options.Listen(IPAddress.Loopback, 0));
             builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connection));
             builder.Services.AddScoped<IProductAdminRepository, ProductAdminRepository>();
+            builder.Services.AddScoped<Persistence.Admin.IAdminRepository, Persistence.Admin.AdminRepository>();
+            builder.Services.AddSingleton<Application.Seo.SeoAiRateGate>();
+            builder.Services.AddSingleton<ISeoAiGateway, UnconfiguredSeoGateway>();
             builder.Services.AddScoped<IUnitOfWork>(services => services.GetRequiredService<AppDbContext>());
             builder.Services.AddScoped<IProductDescriptionService, ProductDescriptionService>();
             builder.Services.AddSingleton(TimeProvider.System);
@@ -233,6 +236,15 @@ public sealed class ProductArticleTests
             // Only the GUID-named directory created above belongs to this fixture.
             Directory.Delete(root, recursive: true);
         }
+    }
+
+    /// <summary>Test hosts never invoke an external AI provider or carry a real credential.</summary>
+    private sealed class UnconfiguredSeoGateway : ISeoAiGateway
+    {
+        public bool IsConfigured => false;
+        public Task<IReadOnlyList<string>> GetModelsAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<string>>([]);
+        public Task<SeoAiSuggestion> SuggestAsync(string operation, Application.Seo.SeoDraft draft, CancellationToken ct)
+            => throw new InvalidOperationException("No AI provider in the isolated test host.");
     }
 
     /// <summary>Authenticates test headers only in this isolated test host, never in the production pipeline.</summary>

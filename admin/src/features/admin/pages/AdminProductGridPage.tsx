@@ -61,6 +61,7 @@ export const AdminProductGridPage = observer(function AdminProductGridPage() {
               <div className="admin-product-card-body">
                 <div><h2>{product.title}</h2><p>{product.categoryName} · {product.brandName ?? (isFa ? 'بدون برند' : 'No brand')}</p></div>
                 <strong>{formatMoney(product.price, locale)}</strong>
+                {isFa && <small>امتیاز سئو: {product.seo?.score == null ? 'بررسی نشده' : `${product.seo.score.toLocaleString('fa-IR')} از ۱۰۰`}</small>}
                 <div className="admin-card-footer">
                   <span>{product.stockQuantity.toLocaleString(isFa ? 'fa-IR' : 'en-US')} {isFa ? 'عدد' : 'in stock'}</span>
                   <StatusBadge locale={locale} value={product.inventoryStatus} />
@@ -69,7 +70,7 @@ export const AdminProductGridPage = observer(function AdminProductGridPage() {
                 <div className="admin-product-actions">
                   <AdminButton external icon="eye" variant="secondary" disabled={product.status !== 'Active'}
                     title={product.status !== 'Active' ? adminText(locale, 'publishToView') : undefined}
-                    to={product.status === 'Active' ? productStorefrontUrl(locale, product.id) : undefined}>
+                    to={product.status === 'Active' ? productStorefrontUrl(locale, product.slug) : undefined}>
                     {adminText(locale, 'viewProduct')}
                   </AdminButton>
                   <AdminButton icon="edit" to={adminPath(locale, `products/${product.id}/edit`)} variant="secondary">{isFa ? 'ویرایش محصول' : 'Edit product'}</AdminButton>

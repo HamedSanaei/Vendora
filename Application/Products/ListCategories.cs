@@ -34,7 +34,7 @@ public static class ListCategories
         {
             var categories = await _productAdminRepository.GetCategoriesAsync(cancellationToken);
             return categories
-                .Select(category => new AdminCategoryDto(category.Id, category.Name, category.Slug, category.ParentCategoryId))
+                .Select(category => new AdminCategoryDto(category.Id, category.Name, category.Slug, category.ParentCategoryId, category.IsActive))
                 .ToList();
         }
     }

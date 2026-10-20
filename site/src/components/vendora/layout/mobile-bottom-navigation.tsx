@@ -24,7 +24,7 @@ function resolveDestination(pathname: string): MobileNavigationDestination | nul
 
   if (hiddenRoutes.has(firstSegment)) return null;
   if (firstSegment === "cart") return "cart";
-  if (["shop", "search", "product-details"].includes(firstSegment)) return "categories";
+  if (["shop", "search", "product-details", "product", "category"].includes(firstSegment)) return "categories";
   if (["account", "wishlist", "user-dashboard", "order"].includes(firstSegment)) return "account";
   return "home";
 }

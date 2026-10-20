@@ -1,14 +1,12 @@
 
-import ShopDetailsMainArea from "@components/product-details/product-details-area-main";
+import { ProductRoute, productMetadata } from "@/components/vendora/catalog/product-route";
 
 
-export const metadata = {
-  title: "جزئیات محصول | وندورا",
-};
+export async function generateMetadata({ params }) { return productMetadata((await params).id); }
 
 const ProductDetailsPage = async ({ params }) => {
   const { id } = await params;
-  return <ShopDetailsMainArea id={id} />;
+  return <ProductRoute identifier={id} legacy />;
 };
 
 export default ProductDetailsPage;

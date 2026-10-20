@@ -1,11 +1,8 @@
-import SearchAreaMain from "@components/search-area";
+import { CatalogRoute } from "@/components/vendora/catalog/catalog-route";
+import { staticPageMetadata } from "@/lib/catalog.server";
 
-export const metadata = {
-  title: "Search Product - Harri Shop",
-};
+export async function generateMetadata() { return staticPageMetadata("نتایج جستجو","Search","/search",false); }
 
-export default function SearchPage({searchParams:{query}}) {
-  return (
-    <SearchAreaMain searchText={query} />
-  );
+export default async function SearchPage({searchParams}) {
+  return <CatalogRoute params={await searchParams} />;
 }

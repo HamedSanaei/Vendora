@@ -94,7 +94,7 @@ export const AdminProductsPage = observer(function AdminProductsPage() {
                 {list.pageItems.map((product) => (
                   <tr key={product.id}>
                     <td className="admin-selection-cell" data-label={isFa ? 'انتخاب' : 'Select'}><AdminCheckbox aria-label={`${isFa ? 'انتخاب' : 'Select'} ${product.title}`} checked={selectedIds.includes(product.id)} label={<span className="sr-only">{product.title}</span>} onChange={() => toggleProduct(product.id)} /></td>
-                    <td data-label={isFa ? 'محصول' : 'Product'}><div className="admin-product-cell"><img src={product.imageUrl} alt="" /><div><strong>{product.title}</strong><small>{product.slug}</small><small>{product.brandName ?? (isFa ? 'بدون برند' : 'No brand')}</small></div></div></td>
+                    <td data-label={isFa ? 'محصول' : 'Product'}><div className="admin-product-cell"><img src={product.imageUrl} alt="" /><div><strong>{product.title}</strong><small>{product.slug}</small><small>{product.brandName ?? (isFa ? 'بدون برند' : 'No brand')}</small>{isFa && <small>امتیاز سئو: {product.seo?.score != null ? `${product.seo.score.toLocaleString('fa-IR')} از ۱۰۰` : 'ارزیابی نشده'}</small>}</div></div></td>
                     <td data-label={isFa ? 'دسته‌بندی' : 'Category'}>{product.categoryName}</td>
                     <td data-label={isFa ? 'قیمت' : 'Price'}>{formatMoney(product.price, locale)}</td>
                     <td data-label={isFa ? 'موجودی' : 'Stock'}><span>{product.stockQuantity.toLocaleString(isFa ? 'fa-IR' : 'en-US')}</span><StatusBadge locale={locale} value={product.inventoryStatus} /></td>
@@ -103,7 +103,7 @@ export const AdminProductsPage = observer(function AdminProductsPage() {
                       <div className="admin-product-actions">
                         <AdminButton external icon="eye" variant="secondary" disabled={product.status !== 'Active'}
                           title={product.status !== 'Active' ? adminText(locale, 'publishToView') : undefined}
-                          to={product.status === 'Active' ? productStorefrontUrl(locale, product.id) : undefined}>
+                          to={product.status === 'Active' ? productStorefrontUrl(locale, product.slug) : undefined}>
                           {adminText(locale, 'viewProduct')}
                         </AdminButton>
                         <AdminActionMenu label={isFa ? `عملیات ${product.title}` : `${product.title} actions`}><AdminButton icon="edit" to={adminPath(locale, `products/${product.id}/edit`)} variant="ghost">{isFa ? 'ویرایش' : 'Edit'}</AdminButton></AdminActionMenu>

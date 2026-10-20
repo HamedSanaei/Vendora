@@ -12,6 +12,9 @@ import type { CreateAdminProductInput } from '../types';
 import { getAsciiDigits, formatNumberInput, parseNumberInput } from '../utils/formatters';
 import { AdminProductPricing } from '../components/AdminProductPricing';
 import { productStorefrontUrl } from '../utils/storefront';
+import { CategoryTree } from '../components/CategoryTree';
+import { SeoPanel } from '../components/SeoPanel';
+import { emptySeo, type SeoInput } from '../seo/types';
 import { ProductAttributesEditor } from '../components/attributes/ProductAttributesEditor';
 import { attributeDrafts, serializeAttributes, type AttributeDraft } from '../components/attributes/attribute-drafts';
 
@@ -49,6 +52,8 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
   const [usdPrice, setUsdPrice] = useState('');
   const [stockQuantity, setStockQuantity] = useState('0');
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
+  const [primaryCategoryId, setPrimaryCategoryId] = useState('');
+  const [seo, setSeo] = useState<SeoInput>(emptySeo);
   const [brandId, setBrandId] = useState('');
   const [colorIds, setColorIds] = useState<string[]>([]);
   const [status, setStatus] = useState<CreateAdminProductInput['status']>('Draft');
@@ -76,7 +81,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       }
 
       setTitle(product.title);
-      setPreviewUrl(product.status === 'Active' ? productStorefrontUrl(locale, product.id) : undefined);
+      setPreviewUrl(product.status === 'Active' ? productStorefrontUrl(locale, product.slug) : undefined);
       setSlug(product.slug);
       setDescription(product.description ?? '');
       setAttributes(attributeDrafts(product.attributes));
@@ -85,6 +90,8 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       setUsdPrice(product.usdPrice != null ? String(product.usdPrice) : '');
       setStockQuantity(String(product.stockQuantity));
       setCategoryIds(product.categoryIds.length > 0 ? product.categoryIds : product.categoryId ? [product.categoryId] : []);
+      setPrimaryCategoryId(product.categoryId ?? '');
+      setSeo(product.seo?.fields ?? emptySeo);
       setBrandId(product.brandId ?? '');
       setColorIds(product.colors.map((color) => color.id));
       setStatus(product.status);
@@ -179,13 +186,6 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       : [...current, colorId]);
   }
 
-  function toggleCategory(categoryId: string): void {
-    clearErrors();
-    setCategoryIds((current) => current.includes(categoryId)
-      ? current.filter((id) => id !== categoryId)
-      : [...current, categoryId]);
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     if (!productReady || articleUploading || attributeBusy || products.isSaving) return;
@@ -232,6 +232,9 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
     catch (error) { setFormError(error instanceof Error ? error.message : 'Invalid attributes.'); return; }
 
     const payload: CreateAdminProductInput = {
+      seo,
+      imageAlts: gallery.filter((image): image is Extract<GalleryItem, {kind:'existing'}> => image.kind === 'existing').map(image => ({id:image.id,alt:image.name})),
+      newImageAlts: newImages.map(image => image.name),
       attributes: attributeInput,
       title: normalizedTitle,
       slug: normalizedSlug,
@@ -239,7 +242,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       price: numericPrice,
       usdPrice: priceMode === 'usd' ? numericUsdPrice : undefined,
       stockQuantity: numericStock,
-      categoryId: categoryIds[0] || undefined,
+      categoryId: (categoryIds.includes(primaryCategoryId) ? primaryCategoryId : categoryIds[0]) || undefined,
       categoryIds,
       brandId: brandId || undefined,
       colorIds,
@@ -325,22 +328,14 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
           {products.categoryOptions.length > 0 ? (
             <div className="admin-gallery-section">
               <strong>{isFa ? 'دسته‌بندی‌ها' : 'Categories'}</strong>
-              <small>{isFa ? 'تمام دسته‌های مرتبط را انتخاب کنید؛ اولین انتخاب به‌عنوان دسته اصلی سازگار ذخیره می‌شود.' : 'Select every category that describes this product. The first selected category is kept as the legacy primary category.'}</small>
-              <div className="admin-category-options">
-                {products.categoryOptions.map((category) => (
-                  <label
-                    key={category.id}
-                    className={category.parentCategoryId ? 'admin-category-option admin-category-option-child' : 'admin-category-option admin-category-option-parent'}
-                  >
-                    <input
-                      checked={categoryIds.includes(category.id)}
-                      type="checkbox"
-                      onChange={() => toggleCategory(category.id)}
-                    />
-                    {category.name}
-                  </label>
-                ))}
-              </div>
+              <small>فقط دسته‌های انتخاب‌شده ثبت می‌شوند؛ محصول در فیلتر والدها نیز پیدا خواهد شد.</small>
+              <CategoryTree categories={products.categoryOptions} selectedIds={categoryIds} disabled={!productReady || products.isSaving}
+                onChange={ids => { clearErrors(); setCategoryIds(ids); if (!ids.includes(primaryCategoryId)) setPrimaryCategoryId(ids[0] ?? ''); }} />
+              <AdminSelect label="دستهٔ اصلی برای مسیر راهنما" value={categoryIds.includes(primaryCategoryId) ? primaryCategoryId : categoryIds[0] ?? ''}
+                onChange={event => setPrimaryCategoryId(event.target.value)}>
+                {categoryIds.length === 0 && <option value="">بدون دسته</option>}
+                {products.categoryOptions.filter(category => categoryIds.includes(category.id)).map(category => <option value={category.id} key={category.id}>{category.name}</option>)}
+              </AdminSelect>
             </div>
           ) : null}
 
@@ -380,6 +375,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
                   <figure key={image.key} className={primaryImageKey === image.key ? 'admin-image-primary' : ''}>
                     <img src={image.url} alt={image.name} />
                     <figcaption>{primaryImageKey === image.key ? (isFa ? 'تصویر اصلی' : 'Primary') : image.name}</figcaption>
+                    <label>متن جایگزین تصویر<input maxLength={250} value={image.name} onChange={event => setGallery(items => items.map(item => item.key === image.key ? {...item,name:event.target.value} : item))} /></label>
                     <div className="admin-gallery-actions">
                       <AdminButton onClick={() => setPrimaryImageKey(image.key)} variant="secondary">{isFa ? 'انتخاب به‌عنوان اصلی' : 'Make primary'}</AdminButton>
                       <AdminButton onClick={() => removeGalleryItem(image)} variant="danger">{isFa ? 'حذف' : 'Remove'}</AdminButton>
@@ -389,6 +385,9 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
               </div>
             </div>
           ) : null}
+
+          {isFa && <SeoPanel draft={{kind:'product',id:productId,name:title,slug,content:description,seo,images:gallery.map(image => ({url:image.url,alt:image.name}))}}
+            onChange={setSeo} onContentChange={setDescription} disabled={!productReady || products.isSaving || articleUploading} />}
 
           {formError ?? products.saveError ? <AdminFeedback tone="error">{formError ?? products.saveError}</AdminFeedback> : null}
 

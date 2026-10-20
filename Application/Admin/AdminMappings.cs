@@ -18,7 +18,7 @@ public static class AdminMappings
             category.ParentCategoryId,
             category.ParentCategory?.Name,
             category.Products.Count,
-            category.IsActive);
+            category.IsActive, category.Description, category.ImageUrl, Application.Seo.SeoMapping.Map(category.Seo));
     }
 
     /// <summary>Maps a brand to an admin DTO.</summary>

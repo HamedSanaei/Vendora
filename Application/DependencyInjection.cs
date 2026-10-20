@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
         services.AddHostedService<ApplicationDatabaseInitializerHostedService>();
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<Seo.SeoAiRateGate>();
         services.AddHostedService<Pricing.ExchangeRateRefreshService>();
 
         return services;

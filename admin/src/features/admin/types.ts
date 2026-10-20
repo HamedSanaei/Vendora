@@ -37,7 +37,10 @@ export interface PublicProductDto {
   primaryImageUrl: string | null;
 }
 
+import type { SeoDto, SeoInput } from './seo/types';
+
 export interface AdminProductDto {
+  seo?: SeoDto | null;
   attributes?: ProductAttribute[];
   id: string;
   title: string;
@@ -75,6 +78,7 @@ export interface AdminProductImageDto {
 }
 
 export interface AdminProduct {
+  seo?: SeoDto | null;
   attributes: ProductAttribute[];
   id: string;
   title: string;
@@ -107,6 +111,7 @@ export interface AdminProductImage {
 }
 
 export interface AdminCategoryOption {
+  isActive?: boolean;
   id: string;
   name: string;
   slug: string;
@@ -114,6 +119,10 @@ export interface AdminCategoryOption {
 }
 
 export interface AdminCategory {
+  description?: string | null;
+  imageUrl?: string | null;
+  seo?: SeoDto | null;
+  subtreeProductCount?: number;
   id: string;
   name: string;
   slug: string;
@@ -241,6 +250,9 @@ export interface AdminNewsletterSubscription {
 }
 
 export interface CreateAdminProductInput {
+  seo?: SeoInput;
+  imageAlts?: Array<{ id: string; alt: string }>;
+  newImageAlts?: string[];
   attributes?: ProductAttributeInput[];
   title: string;
   slug?: string;
@@ -290,6 +302,9 @@ export interface InternalExchangeRate {
 }
 
 export interface AdminCategoryInput {
+  description?: string;
+  imageUrl?: string;
+  seo?: SeoInput;
   name: string;
   slug?: string;
   parentCategoryId?: string;

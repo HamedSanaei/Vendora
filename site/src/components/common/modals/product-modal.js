@@ -151,7 +151,7 @@ const ProductModal = () => {
                     Add To Wishlist
                   </span>
                 </button>
-                <Link href={withLocalePath(`/product-details/${_id}`, locale)}>
+                <Link href={withLocalePath(`/product/${encodeURIComponent(product?.slug || _id)}`, locale)}>
                   <button type="button" className="product-action-btn">
                     <i className="fa-solid fa-link"></i>
                     <span className="product-action-tooltip">

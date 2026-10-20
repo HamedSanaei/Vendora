@@ -121,7 +121,7 @@ export default function AdminRichTextEditor({ locale, value, disabled = false, o
           {!editingImage ? <label>{t.file}<input type="file" accept="image/jpeg,image/png,image/webp" disabled={disabled || uploading}
             onChange={(event) => { setFile(event.target.files?.[0] ?? null); setError(''); }} /></label> : null}
           <label>{t.alt}<input type="text" maxLength={300} value={alt} disabled={disabled || uploading} onChange={(event) => setAlt(event.target.value)} /></label>
-        </> : <label>{t.url}<input type="url" dir="ltr" placeholder="https://" disabled={disabled} value={url} onChange={(event) => setUrl(event.target.value)} /></label>}
+        </> : <label>{t.url}<input type="text" dir="ltr" placeholder="https://… or /fa/category/…" disabled={disabled} value={url} onChange={(event) => setUrl(event.target.value)} /></label>}
         {error ? <p className="article-error" role="alert">{error}</p> : null}
         <div className="article-panel-actions"><AdminButton variant="brass" disabled={disabled || uploading}
           onClick={() => { if (panel === 'image') void applyImage(); else applyLink(); }}>{uploading ? t.uploading : panel === 'link' || editingImage ? t.apply : t.insert}</AdminButton>

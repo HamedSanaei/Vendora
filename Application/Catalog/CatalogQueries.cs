@@ -1,6 +1,7 @@
 using Application.Products.DTOs;
 using Application.Interfaces;
 using Application.Pricing;
+using Application.Seo;
 using Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -33,7 +34,9 @@ public static class CatalogQueries
         IReadOnlyList<CatalogColorDto> Colors,
         string? DescriptionHtml = null,
         ProductPriceFreshnessDto? PriceFreshness = null,
-        IReadOnlyList<ProductAttributeDto>? Attributes = null);
+        IReadOnlyList<ProductAttributeDto>? Attributes = null,
+        SeoDto? Seo = null,
+        IReadOnlyList<CatalogSearch.CategoryLink>? Breadcrumbs = null);
 
     /// <summary>Represents a recursive category node.</summary>
     public sealed record CatalogCategoryDto(Guid Id, string Name, string Slug, Guid? ParentCategoryId, IReadOnlyList<CatalogCategoryDto> Children);
@@ -45,7 +48,7 @@ public static class CatalogQueries
     public static class Products
     {
         /// <summary>Represents a product list query.</summary>
-        public sealed record Query(string? Identifier = null) : IRequest<IReadOnlyList<CatalogProductDto>>;
+        public sealed record Query(string? Identifier = null, IReadOnlyList<Guid>? Ids = null) : IRequest<IReadOnlyList<CatalogProductDto>>;
 
         /// <summary>Handles catalog product list queries.</summary>
         public sealed class Handler : IRequestHandler<Query, IReadOnlyList<CatalogProductDto>>
@@ -82,8 +85,10 @@ public static class CatalogQueries
                         .Include(product => product.Attributes.Where(attribute => attribute.IsVisible)).ThenInclude(attribute => attribute.Values).ThenInclude(value => value.CatalogAttributeTerm);
                     string identifier = request.Identifier;
                     bool isId = Guid.TryParse(identifier, out Guid productId);
-                    query = query.Where(product => (isId && product.Id == productId) || product.Slug == identifier);
+                    var alias = await _dbContext.SlugHistories.AsNoTracking().Where(x => x.Kind == "product" && x.Slug == identifier).Select(x => (Guid?)x.EntityId).SingleOrDefaultAsync(cancellationToken);
+                    query = query.Where(product => (isId && product.Id == productId) || product.Slug == identifier || product.Id == alias);
                 }
+                if (request.Ids is not null) query = query.Where(product => request.Ids.Contains(product.Id));
                 var products = await query
                     .OrderByDescending(product => product.CreatedAtUtc)
                     .ToListAsync(cancellationToken);
@@ -91,6 +96,8 @@ public static class CatalogQueries
                 // One local database read for the entire result; never one exchange request per product or user.
                 var rate = await _dbContext.UsdtExchangeRates.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
                 var now = _time.GetUtcNow().UtcDateTime;
+                var categoryGraph = request.Identifier is null ? [] : await _dbContext.Categories.AsNoTracking().ToListAsync(cancellationToken);
+                var hierarchy = new CategoryHierarchy(categoryGraph);
 
                 return products.Select(product =>
                 {
@@ -130,23 +137,26 @@ public static class CatalogQueries
                             .ToList(),
                         request.Identifier is null ? null : _descriptions.Sanitize(product.Description),
                         ProductPriceFreshness.Verify(product, rate, now),
-                        request.Identifier is null ? null : Application.Products.ProductAttributeWriter.Map(product.Attributes, publicOnly: true));
+                        request.Identifier is null ? null : Application.Products.ProductAttributeWriter.Map(product.Attributes, publicOnly: true),
+                        SeoMapping.Map(product.Seo),
+                        request.Identifier is null ? null : hierarchy.Path(product.CategoryId ?? product.Categories.FirstOrDefault()?.CategoryId ?? Guid.Empty)
+                            .Where(x => hierarchy.IsPublic(x.Id)).Select(x => new CatalogSearch.CategoryLink(x.Id, x.Name, x.Slug)).ToList());
                 }).ToList();
             }
 
             private static Guid? ResolvePrimaryCategoryId(Domain.Entities.Product product)
             {
-                return product.Categories.FirstOrDefault()?.CategoryId ?? product.CategoryId;
+                return product.CategoryId ?? product.Categories.FirstOrDefault()?.CategoryId;
             }
 
             private static string? ResolvePrimaryCategoryName(Domain.Entities.Product product)
             {
-                return product.Categories.FirstOrDefault()?.Category?.Name ?? product.Category?.Name;
+                return product.Category?.Name ?? product.Categories.FirstOrDefault()?.Category?.Name;
             }
 
             private static string? ResolvePrimaryCategorySlug(Domain.Entities.Product product)
             {
-                return product.Categories.FirstOrDefault()?.Category?.Slug ?? product.Category?.Slug;
+                return product.Category?.Slug ?? product.Categories.FirstOrDefault()?.Category?.Slug;
             }
         }
     }
@@ -173,11 +183,10 @@ public static class CatalogQueries
             {
                 var categories = await _dbContext.Categories
                     .AsNoTracking()
-                    .Where(category => category.IsActive)
                     .OrderBy(category => category.Name)
                     .ToListAsync(cancellationToken);
-
-                return BuildTree(categories, null);
+                var hierarchy = new CategoryHierarchy(categories);
+                return BuildTree(categories.Where(x => hierarchy.IsPublic(x.Id)).ToList(), null);
             }
 
             private static IReadOnlyList<CatalogCategoryDto> BuildTree(IReadOnlyList<Domain.Entities.Category> categories, Guid? parentId)

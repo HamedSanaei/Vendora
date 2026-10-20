@@ -21,7 +21,7 @@ const SingleWishlist = ({ item }) => {
   const dispatch = useDispatch();
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
-  const detailsPath = withLocalePath(`/product-details/${_id}`, locale);
+  const detailsPath = withLocalePath(`/product/${encodeURIComponent(item?.slug || _id)}`, locale);
   const orderQuantity = isAddToCart?.orderQuantity || 0;
   const removeLabel = locale === "fa" ? "حذف از علاقه‌مندی‌ها" : "Remove from wishlist";
   const imageAlt = locale === "fa" ? `تصویر ${title || "محصول"}` : `${title || "Product"} image`;

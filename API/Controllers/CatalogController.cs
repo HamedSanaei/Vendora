@@ -28,6 +28,22 @@ public sealed class CatalogController : ControllerBase
         return Ok(await _mediator.Send(new CatalogQueries.Products.Query(), cancellationToken));
     }
 
+    /// <summary>Filters by complete category subtrees without changing the legacy product list contract.</summary>
+    [HttpGet("products/search")]
+    public async Task<ActionResult> Search([FromQuery] string[]? category, [FromQuery] string? baseCategory,
+        [FromQuery] string[]? brand, [FromQuery] string[]? color, [FromQuery] decimal? priceMin,
+        [FromQuery] decimal? priceMax, [FromQuery] bool inStock = false, [FromQuery] string sort = "newest",
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 12, [FromQuery] string? search = null, CancellationToken cancellationToken = default)
+        => Ok(await _mediator.Send(new CatalogSearch.Query(category, baseCategory, brand, color, priceMin, priceMax, inStock, sort, page, pageSize, search), cancellationToken));
+
+    /// <summary>Reads a visible category landing page by current or historical slug.</summary>
+    [HttpGet("categories/{slug}")]
+    public async Task<ActionResult> Category(string slug, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new CatalogSearch.CategoryQuery(slug), ct);
+        return result is null ? NotFound() : Ok(result);
+    }
+
     /// <summary>Returns one active product with its sanitized full article by GUID or slug.</summary>
     [HttpGet("products/{identifier}")]
     public async Task<ActionResult> GetProduct(string identifier, CancellationToken cancellationToken)

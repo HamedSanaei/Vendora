@@ -3,10 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  bagProducts,
-  categoryCircles,
-  popularProductIds,
-  newestProductIds,
   type ArtworkColor,
 } from "@/lib/vendora/catalog";
 import { getDict } from "@/lib/vendora/i18n";
@@ -15,7 +11,14 @@ import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
 import { SectionHeading } from "@/components/vendora/ui/section-heading";
 import { CategoryTile, EditorialPromoTile } from "./commerce-components";
 import { HeroSlideshow } from "./hero-slideshow";
-import { ProductCard } from "@/components/vendora/product/product-card";
+import { useDispatch, useSelector } from "react-redux";
+import { add_cart_product, quantityDecrement, quantityIncrement } from "@/redux/features/cartSlice";
+import { add_to_wishlist } from "@/redux/features/wishlist-slice";
+import { CatalogProductCard } from "@/components/vendora/catalog/catalog-product-card";
+import type { StoreProduct } from "@/components/vendora/catalog/catalog-types";
+import { toCatalogProduct } from "@/components/vendora/catalog/catalog-types";
+import type { CatalogCategory, CatalogProductDto } from "@/lib/catalog-contracts";
+import { mapCatalogProduct } from "@/lib/catalog-product-mapping";
 import { BagArtwork } from "@/components/vendora/product/bag-artwork";
 import { VendoraButton } from "@/components/vendora/ui/button";
 import {
@@ -71,66 +74,38 @@ export function QuickLinksSection() {
   );
 }
 
-/** Horizontal product row bound to a set of catalog ids. */
-export function ProductRowSection({
-  title,
-  ids,
-  artworkColors,
-}: {
-  title: string;
-  ids: string[];
-  artworkColors?: ArtworkColor[];
-}) {
+/** Homepage rows use the same real product card, quantities and canonical links as the shop. */
+export function ProductRowSection({ title, products, newest = false }: {title: string; products: CatalogProductDto[]; newest?: boolean}) {
   const { locale, t } = useVendoraLocale();
-  const products = ids.map((id) => bagProducts.find((p) => p.id === id)).filter(Boolean);
-  const isNewest = ids === newestProductIds;
-  return (
-    <section className={`vd-container ${isNewest ? "mt-[44px] md:mt-[48px] lg:mt-[56px]" : "mt-[33px] md:mt-[48px]"}`}>
-      <SectionHeading
-        compact
-        title={title}
-        mobileTitle={locale === "fa" ? (isNewest ? "تازه‌ها" : "پرفروش‌ها") : (isNewest ? "New arrivals" : "Best sellers")}
-        linkLabel={t.common.viewAll}
-        linkHref={withLocalePath("/shop", locale)}
-      />
-      <div className="mt-[10px] grid grid-cols-2 gap-[16px] md:mt-[14px] md:grid-cols-3 md:gap-[28px] lg:mt-[16px] lg:grid-cols-5">
-        {products.map(
-          (product, index) =>
-            product ? (
-              <div key={product.id} className={`h-[324px] w-[166px] md:h-[360px] md:w-[216px] lg:h-[386px] lg:w-auto ${index >= 4 ? "hidden lg:block" : index >= 3 ? "md:hidden lg:block" : ""}`}>
-                <ProductCard
-                  product={product}
-                  locale={locale}
-                  artworkColor={artworkColors?.[index % (artworkColors.length || 1)] ?? "jade"}
-                />
-              </div>
-            ) : null,
-        )}
-      </div>
-    </section>
-  );
+  const dispatch = useDispatch();
+  const cart = useSelector((state: {cart:{cart_products:Array<StoreProduct & {orderQuantity:number}>}}) => state.cart.cart_products);
+  const wishlist = useSelector((state: {wishlist:{wishlist:StoreProduct[]}}) => state.wishlist.wishlist);
+  return <section className={`vd-container ${newest ? "mt-12" : "mt-8"}`}>
+    <SectionHeading compact title={title} mobileTitle={title} linkLabel={t.common.viewAll} linkHref={withLocalePath("/shop",locale)} />
+    <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-5">
+      {products.slice(0,5).map(raw => {
+        const product = toCatalogProduct(mapCatalogProduct(raw));
+        const item = cart.find(entry => entry._id === product.id);
+        return <CatalogProductCard key={product.id} product={product} locale={locale} compact
+          cartQuantity={item?.orderQuantity ?? 0} favorited={wishlist.some(entry => entry._id === product.id)}
+          onIncreaseCart={selected => dispatch(item ? quantityIncrement(selected.source) : add_cart_product(selected.source))}
+          onDecreaseCart={selected => dispatch(quantityDecrement(selected.source))}
+          onToggleFavorite={selected => dispatch(add_to_wishlist(selected.source))} />;
+      })}
+    </div>
+  </section>;
 }
 
-export function PopularProductsSection() {
-  const { t } = useVendoraLocale();
-  return (
-    <ProductRowSection
-      title={t.home.popularTitle}
-      ids={popularProductIds}
-      artworkColors={["jade", "clay", "steel", "jade", "clay"]}
-    />
-  );
+/** Reuses published catalog data without inventing products or review/ranking metrics. */
+export function PopularProductsSection({products}: {products:CatalogProductDto[]}) {
+  const {t} = useVendoraLocale();
+  return <ProductRowSection title={t.home.popularTitle} products={products} />;
 }
 
-export function NewestProductsSection() {
-  const { t } = useVendoraLocale();
-  return (
-    <ProductRowSection
-      title={t.home.newestTitle}
-      ids={newestProductIds}
-      artworkColors={["steel", "jade", "clay", "steel", "jade"]}
-    />
-  );
+/** New arrivals share the canonical product card implementation. */
+export function NewestProductsSection({products}: {products:CatalogProductDto[]}) {
+  const {t} = useVendoraLocale();
+  return <ProductRowSection title={t.home.newestTitle} products={products} newest />;
 }
 
 const benefitIcons = [
@@ -186,7 +161,7 @@ export function EditorialPromosSection() {
 }
 
 /** Category circle row (8 categories, pill-shaped tiles). */
-export function CategoryCirclesSection() {
+export function CategoryCirclesSection({categories}: {categories:CatalogCategory[]}) {
   const { locale, t } = useVendoraLocale();
   return (
     <section className="vd-container mt-[42px] md:hidden lg:mt-[54px] lg:block">
@@ -198,8 +173,8 @@ export function CategoryCirclesSection() {
         linkHref={withLocalePath("/shop", locale)}
       />
       <div className="mt-[10px] grid h-[362px] grid-cols-2 justify-items-center gap-[16px] lg:flex lg:h-[176px] lg:justify-between lg:overflow-visible">
-        {categoryCircles.map((cat, index) => (
-          <CategoryTile key={cat.key} href={withLocalePath(cat.href, locale)} label={locale === "fa" ? cat.label : cat.labelEn} color={(["jade", "clay", "steel"] as const)[index % 3]} hiddenOnMobile={index >= 4} />
+        {categories.slice(0,8).map((cat, index) => (
+          <CategoryTile key={cat.id} href={withLocalePath(`/category/${encodeURIComponent(cat.slug)}`, locale)} label={cat.name} color={(["jade", "clay", "steel"] as const)[index % 3]} hiddenOnMobile={index >= 4} />
         ))}
       </div>
     </section>

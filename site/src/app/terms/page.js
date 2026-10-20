@@ -1,12 +1,12 @@
+import { staticPageMetadata } from "@/lib/catalog.server";
 import Header from "@layout/header";
 import Wrapper from "@layout/wrapper";
 import SectionTop from "@components/terms-policy/section-top-bar";
 import Footer from "@layout/footer";
 import TermsArea from "@components/terms-policy/terms-area";
 
-export const metadata = {
-  title: "Terms & Conditions - Harri Shop",
-};
+/** Shared site title and launch policy for this public page. */
+export async function generateMetadata() { return staticPageMetadata("شرایط استفاده","Terms","/terms"); }
 
 export default function Terms() {
   return (

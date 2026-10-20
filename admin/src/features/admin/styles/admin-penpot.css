@@ -24,6 +24,34 @@
   --va-purple-soft: #ece9f3;
 }
 
+/* Shared taxonomy and SEO controls inherit the existing admin form/action tokens. */
+.admin-category-tree, .admin-seo-panel { min-width: 0; margin-block: 20px; }
+.admin-category-tree ul { list-style: none; margin: 0; padding: 0; }
+.admin-category-tree-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding-block: 6px; border-block-end: 1px solid var(--va-border); min-width: 0; }
+.admin-category-tree-name { display: flex !important; align-items: center; gap: 10px; min-height: 44px; flex: 1 1 150px; overflow-wrap: anywhere; }
+.admin-shell[data-admin-theme="penpot"] .admin-category-tree-name input, .admin-shell[data-admin-theme="penpot"] .admin-seo-panel input[type="checkbox"], .admin-shell[data-admin-theme="penpot"] .admin-seo-check input { width: 20px; height: 20px; min-height: 20px; margin: 0; padding: 0; flex: 0 0 20px; accent-color: var(--va-brass-dark); }
+.admin-category-tree-toggle { display: grid; place-items: center; min-width: 44px; min-height: 44px; border: 1px solid var(--va-border); border-radius: 8px; background: var(--va-surface); font-weight: 700; }
+.admin-category-tree-toggle:disabled { border-color: transparent; }
+.admin-category-tree-toggle:focus-visible, .admin-seo-panel summary:focus-visible { outline: 2px solid var(--va-brass-dark); outline-offset: 2px; }
+.admin-category-tree-toolbar { display: flex; align-items: end; flex-wrap: wrap; gap: 8px; margin-block-end: 12px; }
+.admin-category-tree-toolbar label { flex: 1 1 200px; min-width: 0; }
+.admin-seo-panel { border-block-start: 1px solid var(--va-border); padding-block-start: 24px; }
+.admin-seo-panel .admin-panel-heading { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+.admin-seo-panel .admin-form-grid { align-items: start; }
+.admin-seo-toggles { display: flex; flex-wrap: wrap; gap: 16px; margin-block: 16px; }
+.admin-shell[data-admin-theme="penpot"] .admin-seo-toggles label, .admin-shell[data-admin-theme="penpot"] .admin-seo-check { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.admin-serp-preview { max-width: 640px; padding: 20px; border: 1px solid var(--va-border); border-radius: 12px; margin-block: 16px; background: white; overflow-wrap: anywhere; }
+.admin-serp-preview h3 { color: #174ea6; font-size: 20px; line-height: 1.6; margin-block: 10px; }
+.admin-serp-preview p { color: #4d5156; line-height: 1.8; }
+.admin-serp-mobile { max-width: 360px; }
+.admin-ai-preview img { display: block; max-width: 100%; height: auto; margin-block: 12px; }
+.admin-seo-panel summary { padding-block: 14px; cursor: pointer; font-weight: 700; }
+.admin-seo-checks { padding-inline-start: 20px; line-height: 2; }
+.admin-ai-preview { background: var(--va-surface-2); border: 1px solid var(--va-border); border-radius: 12px; padding: 20px; margin-block: 20px; overflow-wrap: anywhere; }
+.admin-ai-preview img { max-width: 100%; height: auto; }
+.admin-ai-preview > label { display: flex; gap: 10px; align-items: start; margin-block: 14px; }
+.admin-seo-panel .admin-action, .admin-category-tree .admin-action { min-height: 44px; white-space: normal; }
+
 /* Product specifications share the existing graphite/brass form primitives. */
 .admin-attributes { margin-block: 24px; padding-block-start: 24px; border-block-start: 1px solid var(--va-border); min-width: 0; }
 .admin-attributes .admin-panel-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }

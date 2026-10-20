@@ -52,16 +52,17 @@ internal static class AdminProductMappings
                 .ToList(),
             product.UsdPrice,
             product.PriceExchangeRate,
-            ProductAttributeWriter.Map(product.Attributes));
+            ProductAttributeWriter.Map(product.Attributes),
+            Application.Seo.SeoMapping.Map(product.Seo));
     }
 
     private static Guid? ResolvePrimaryCategoryId(Product product)
     {
-        return product.Categories.FirstOrDefault()?.CategoryId ?? product.CategoryId;
+        return product.CategoryId ?? product.Categories.FirstOrDefault()?.CategoryId;
     }
 
     private static string? ResolvePrimaryCategoryName(Product product)
     {
-        return product.Categories.FirstOrDefault()?.Category?.Name ?? product.Category?.Name;
+        return product.Category?.Name ?? product.Categories.FirstOrDefault()?.Category?.Name;
     }
 }
