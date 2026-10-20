@@ -197,6 +197,7 @@ public sealed class ProductArticleTests
             builder.Services.AddScoped<IProductAdminRepository, ProductAdminRepository>();
             builder.Services.AddScoped<IUnitOfWork>(services => services.GetRequiredService<AppDbContext>());
             builder.Services.AddScoped<IProductDescriptionService, ProductDescriptionService>();
+            builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
             builder.Services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<UploadDescriptionImage.Command>());
             builder.Services.AddControllers().AddApplicationPart(typeof(AdminController).Assembly);

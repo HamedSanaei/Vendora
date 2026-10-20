@@ -1,5 +1,6 @@
 using Application.Products.DTOs;
 using Application.Interfaces;
+using Application.Pricing;
 using Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +31,8 @@ public static class CatalogQueries
         IReadOnlyList<ProductImageDto> Images,
         IReadOnlyList<ProductCategoryDto> Categories,
         IReadOnlyList<CatalogColorDto> Colors,
-        string? DescriptionHtml = null);
+        string? DescriptionHtml = null,
+        ProductPriceFreshnessDto? PriceFreshness = null);
 
     /// <summary>Represents a recursive category node.</summary>
     public sealed record CatalogCategoryDto(Guid Id, string Name, string Slug, Guid? ParentCategoryId, IReadOnlyList<CatalogCategoryDto> Children);
@@ -49,12 +51,14 @@ public static class CatalogQueries
         {
             private readonly AppDbContext _dbContext;
             private readonly IProductDescriptionService _descriptions;
+            private readonly TimeProvider _time;
 
             /// <summary>Creates the handler.</summary>
-            public Handler(AppDbContext dbContext, IProductDescriptionService descriptions)
+            public Handler(AppDbContext dbContext, IProductDescriptionService descriptions, TimeProvider time)
             {
                 _dbContext = dbContext;
                 _descriptions = descriptions;
+                _time = time;
             }
 
             /// <inheritdoc />
@@ -80,6 +84,10 @@ public static class CatalogQueries
                 var products = await query
                     .OrderByDescending(product => product.CreatedAtUtc)
                     .ToListAsync(cancellationToken);
+
+                // One local database read for the entire result; never one exchange request per product or user.
+                var rate = await _dbContext.UsdtExchangeRates.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+                var now = _time.GetUtcNow().UtcDateTime;
 
                 return products.Select(product =>
                 {
@@ -117,7 +125,8 @@ public static class CatalogQueries
                             .OrderBy(color => color.Name)
                             .Select(color => new CatalogColorDto(color.Id, color.Name, color.Slug, color.HexCode))
                             .ToList(),
-                        request.Identifier is null ? null : _descriptions.Sanitize(product.Description));
+                        request.Identifier is null ? null : _descriptions.Sanitize(product.Description),
+                        ProductPriceFreshness.Verify(product, rate, now));
                 }).ToList();
             }
 

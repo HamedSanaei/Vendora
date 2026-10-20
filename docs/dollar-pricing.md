@@ -49,6 +49,38 @@ The median of valid consistent quotes is used. Nonpositive/out-of-range rates ar
 Quotes more than 10% from the median are excluded; a conflicting pair cannot publish a rate.
 A single available valid source can be used. Rejected/failed sources never become zero rates.
 
+## Customer-visible price freshness
+
+Catalog and detail responses include optional `priceFreshness` metadata only when:
+
+- The product is dollar-priced and has positive stock.
+- A successful internal quote is less than 30 minutes old, has a known source,
+  has no refresh error, and is not future-dated.
+- The product's materialized exchange rate equals that quote and its stored Toman
+  price equals the existing upward-rounded dollar conversion.
+
+`verifiedAtUtc` records when the server confirmed that the displayed price is
+current. It is intentionally not the product's last manual edit timestamp: even
+an unchanged quote can certify today's price. `expiresAtUtc` is the earlier of
+the quote's 30-minute expiry and the next Tehran midnight. Neither value is stored
+in the database and no additional exchange requests are made.
+
+The shared storefront component shows "آخرین به‌روزرسانی قیمت محصول" on catalog,
+wishlist/related cards, and the product purchase panel. Persian dates use the
+Persian calendar, Persian digits, and `Asia/Tehran`, based on the server-confirmed
+date. Fixed-price, unavailable, failed/stale-rate, and mismatched-price products
+do not show it. A local timer and focus/visibility checks remove expired labels;
+they do not poll the API. Refreshing or a normal catalog reload obtains a new
+confirmation. English routes retain their existing Gregorian date conventions.
+
+`ProductPriceFreshnessTests` covers fresh/fixed/unavailable prices, missing and
+failed quotes, exact expiry, future timestamps, mismatched amounts/rates, Tehran
+midnight, and catalog/detail consistency. Manual browser checks covered stocked,
+unavailable and fixed-price products, Persian/English routes, and 390/768/1024/1440px
+layouts, including an item already in the cart. Dates, prices, quantity controls,
+and purchase buttons remained inside their cards. This display feature requires
+no new package or database migration and adds no API polling.
+
 ## Checkout and historical orders
 
 The storefront submits `expectedUnitPrice` for each line. A dollar-priced line with a missing

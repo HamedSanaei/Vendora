@@ -20,6 +20,7 @@ import { add_cart_product, quantityDecrement, quantityIncrement } from "@/redux/
 import { add_to_wishlist } from "@/redux/features/wishlist-slice";
 import { CatalogProductCard } from "./catalog-product-card";
 import { ProductArticle } from "./product-article";
+import { ProductPriceFreshness } from "./product-price-freshness";
 import { getCatalogCopy } from "./catalog-copy";
 import type { CatalogProductModel, StoreProduct } from "./catalog-types";
 import { isVendoraProductImage, toCatalogProduct } from "./catalog-types";
@@ -221,7 +222,7 @@ function PurchasePanel({ product, locale, quantity, onIncrement, onDecrement, on
         {isInCart ? <CheckIcon size={16} /> : <span className={`h-2.5 w-2.5 rounded-full ${product.stock > 0 ? "bg-jade-light" : "bg-vd-danger"}`} />}
         {statusLabel}
       </div>
-      <div className="mt-5 border-t border-vd-line pt-5">{product.oldPrice ? <p className="text-xs text-vd-muted line-through">{formatPrice(product.oldPrice, locale)}</p> : null}<p className="text-[24px] font-extrabold text-ink">{formatPrice(product.price, locale)}</p></div>
+      <div className="mt-5 border-t border-vd-line pt-5">{product.oldPrice ? <p className="text-xs text-vd-muted line-through">{formatPrice(product.oldPrice, locale)}</p> : null}<p className="text-[24px] font-extrabold text-ink">{formatPrice(product.price, locale)}</p><ProductPriceFreshness product={product} locale={locale} /></div>
       {isInCart ? (
         <div className="mt-5 flex items-center justify-between gap-4">
           <span className="text-xs font-bold text-vd-muted">{t.quantity}</span>

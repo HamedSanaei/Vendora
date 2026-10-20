@@ -209,7 +209,7 @@ public sealed class CatalogSeedTests
         await SeedData.SeedCatalogAsync(context);
         await context.SaveChangesAsync();
 
-        var handler = new CatalogQueries.Products.Handler(context, new Infrastructure.Content.ProductDescriptionService());
+        var handler = new CatalogQueries.Products.Handler(context, new Infrastructure.Content.ProductDescriptionService(), TimeProvider.System);
         var result = await handler.Handle(new CatalogQueries.Products.Query(), CancellationToken.None);
 
         Assert.NotEmpty(result);

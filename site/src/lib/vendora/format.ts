@@ -10,6 +10,17 @@ const numberFormatters: Record<Locale, Intl.NumberFormat> = {
   en: new Intl.NumberFormat("en-US"),
 };
 
+const priceDateFormatters: Record<Locale, Intl.DateTimeFormat> = {
+  fa: new Intl.DateTimeFormat("fa-IR-u-ca-persian", { timeZone: "Asia/Tehran", year: "numeric", month: "long", day: "numeric" }),
+  en: new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Tehran", year: "numeric", month: "long", day: "numeric" }),
+};
+
+/** Formats a server-confirmed pricing date in Tehran, using the Persian calendar for Persian storefronts. */
+export function formatPriceUpdateDate(verifiedAtUtc: string, locale: Locale): string {
+  const date = new Date(verifiedAtUtc);
+  return Number.isNaN(date.getTime()) ? "" : priceDateFormatters[locale].format(date);
+}
+
 /**
  * Formats a plain number with locale digits and separators.
  * @param value Numeric value.

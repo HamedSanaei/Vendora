@@ -1,9 +1,16 @@
+/** Short-lived server confirmation that a stocked dollar product matches the valid internal rate. */
+export interface ProductPriceFreshness {
+  verifiedAtUtc: string;
+  expiresAtUtc: string;
+}
+
 /** Product shape returned by the current storefront API. */
 export interface StoreProduct {
   _id: string;
   title: string;
   description?: string;
   descriptionHtml?: string;
+  priceFreshness?: ProductPriceFreshness | null;
   image?: string;
   relatedImages?: string[];
   originalPrice: number | string;
@@ -30,6 +37,7 @@ export interface CatalogProductModel {
   title: string;
   description: string;
   descriptionHtml: string;
+  priceFreshness?: ProductPriceFreshness | null;
   image: string;
   gallery: string[];
   price: number;
@@ -58,6 +66,7 @@ export function toCatalogProduct(product: StoreProduct): CatalogProductModel {
     title: product.title,
     description: product.description ?? "",
     descriptionHtml: descriptionHtml ?? "",
+    priceFreshness: product.priceFreshness,
     image: product.image ?? "",
     gallery,
     price: discount > 0 ? Math.round(price * (1 - discount / 100)) : price,

@@ -49,6 +49,7 @@ function mapCatalogProduct(product) {
     relatedImages: images.length ? images : [primaryImage],
     description: product.description || "",
     descriptionHtml: product.descriptionHtml || "",
+    priceFreshness: product.priceFreshness || null,
     brand: {
       name: product.brandName || "Vendora",
       id: product.brandId || "vendora",

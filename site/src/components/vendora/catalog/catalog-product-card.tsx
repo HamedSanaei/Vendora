@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BagArtwork, type ArtworkColor } from "@/components/vendora/product/bag-artwork";
 import { CartIcon, HeartIcon } from "@/components/vendora/icons";
 import { QuantityStepper } from "@/components/vendora/cart/cart-components";
+import { ProductPriceFreshness } from "./product-price-freshness";
 import { formatPrice } from "@/lib/vendora/format";
 import { withLocalePath } from "@/lib/locale-path";
 import type { Locale } from "@/lib/vendora/types";
@@ -66,6 +67,7 @@ export function CatalogProductCard({ product, locale, compact = false, favorited
             ) : null}
           </div>
         </div>
+        <ProductPriceFreshness product={product} locale={locale} />
       </div>
     </article>
   );
