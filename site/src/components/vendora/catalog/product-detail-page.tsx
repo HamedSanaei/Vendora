@@ -215,24 +215,33 @@ function PurchasePanel({ product, locale, quantity, onIncrement, onDecrement, on
   const statusLabel = isInCart ? cartT.inCart : product.stock > 0 ? t.available : t.unavailable;
 
   return (
-    <aside className="vd-product-hero__purchase rounded-[18px] border border-vd-line bg-surface-soft p-5 shadow-[0_16px_46px_-36px_rgba(0,77,58,.7)] lg:sticky lg:top-4 lg:p-6">
-      <div className={`flex items-center gap-2 text-xs font-bold ${product.stock > 0 || isInCart ? "text-jade" : "text-vd-danger"}`}>
+    <aside className="vd-product-hero__purchase rounded-[18px] border border-vd-line bg-surface-soft shadow-[0_16px_46px_-36px_rgba(0,77,58,.7)] lg:sticky lg:top-4">
+      <div className={`vd-product-hero__stock flex items-center gap-2 text-sm font-bold ${product.stock > 0 || isInCart ? "text-jade" : "text-vd-danger"}`}>
         {isInCart ? <CheckIcon size={16} /> : <span className={`h-2.5 w-2.5 rounded-full ${product.stock > 0 ? "bg-jade-light" : "bg-vd-danger"}`} />}
         {statusLabel}
       </div>
-      <div className="mt-5 border-t border-vd-line pt-5">{product.oldPrice ? <p className="text-xs text-vd-muted line-through">{formatPrice(product.oldPrice, locale)}</p> : null}<p className="text-[24px] font-extrabold text-ink">{formatPrice(product.price, locale)}</p><ProductPriceFreshness product={product} locale={locale} /></div>
-      {isInCart ? (
-        <div className="mt-5 flex items-center justify-between gap-4">
-          <span className="text-xs font-bold text-vd-muted">{t.quantity}</span>
-          <QuantityStepper locale={locale} quantity={quantity} max={product.stock} size="regular" onDecrease={onDecrement} onIncrease={onIncrement} />
-        </div>
-      ) : null}
-      {isInCart ? (
-        <Link href={withLocalePath("/cart", locale)} className="vd-focus mt-5 flex h-12 w-full items-center justify-center rounded-control border border-jade bg-white px-4 text-sm font-extrabold text-jade hover:bg-jade-tint">{cartT.viewCart}</Link>
-      ) : (
-        <button type="button" onClick={onAdd} disabled={product.stock < 1} className="vd-focus mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-control bg-jade px-4 text-sm font-extrabold text-white hover:bg-jade-dark disabled:bg-vd-line disabled:text-vd-muted"><CartIcon size={20} />{t.addToCart}</button>
-      )}
-      <div className="vd-product-hero__warranty mt-5 flex items-start gap-2 border-t border-vd-line pt-4 text-[11px] leading-6 text-vd-muted"><QualityIcon size={18} className="mt-1 shrink-0 text-jade" /><span>{t.warranty}</span></div>
+      <div className="vd-product-hero__pricing border-t border-vd-line">
+        {product.oldPrice ? <p className="text-xs text-vd-muted line-through">{formatPrice(product.oldPrice, locale)}</p> : null}
+        <p className="vd-product-hero__amount text-[24px] font-extrabold text-ink">{formatPrice(product.price, locale)}</p>
+        <ProductPriceFreshness product={product} locale={locale} />
+      </div>
+      <div className="vd-product-hero__actions">
+        {isInCart ? (
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-sm font-bold text-vd-muted">{t.quantity}</span>
+            <QuantityStepper locale={locale} quantity={quantity} max={product.stock} size="regular" onDecrease={onDecrement} onIncrease={onIncrement} />
+          </div>
+        ) : null}
+        {isInCart ? (
+          <Link href={withLocalePath("/cart", locale)} className="vd-focus flex min-h-12 w-full items-center justify-center rounded-control border border-jade bg-white px-4 py-3 text-sm font-extrabold text-jade hover:bg-jade-tint">{cartT.viewCart}</Link>
+        ) : (
+          <button type="button" onClick={onAdd} disabled={product.stock < 1} className="vd-focus flex min-h-12 w-full items-center justify-center gap-2 rounded-control bg-jade px-4 py-3 text-sm font-extrabold text-white hover:bg-jade-dark disabled:bg-vd-line disabled:text-vd-muted"><CartIcon size={20} />{t.addToCart}</button>
+        )}
+      </div>
+      <div className="vd-product-hero__warranty border-t border-vd-line text-vd-muted">
+        <div className="vd-product-hero__assurance"><QualityIcon size={18} className="shrink-0 text-jade" /><span>{t.warranty}</span></div>
+        <div className="vd-product-hero__assurance"><QualityIcon size={18} className="shrink-0 text-jade" /><span>{t.unusedReturn}</span></div>
+      </div>
     </aside>
   );
 }

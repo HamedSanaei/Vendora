@@ -32,7 +32,7 @@ export function ProductPriceFreshness({ product, locale }: ProductPriceFreshness
   const date = formatPriceUpdateDate(verifiedAt, locale);
   if (!fresh || product.stock <= 0 || !date) return null;
 
-  return <div className="vd-product-price-freshness mt-2 flex flex-wrap items-baseline gap-x-1 text-[11px] font-medium leading-5 text-vd-muted">
+  return <div className="vd-product-price-freshness flex flex-wrap items-baseline gap-x-1 text-[11px] font-medium leading-5 text-vd-muted">
     <span>{getCatalogCopy(locale).priceLastUpdated}:</span>
     <time dateTime={verifiedAt} className="whitespace-nowrap font-semibold text-jade">{date}</time>
   </div>;

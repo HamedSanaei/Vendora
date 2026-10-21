@@ -328,6 +328,57 @@ html:has(.vd-home)::-webkit-scrollbar {
   padding: 1.25rem !important;
 }
 
+/* Use explicit group spacing instead of legacy Bootstrap/Tailwind margin collisions. */
+.vd-product-hero__purchase {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vd-product-hero__purchase > * {
+  flex-shrink: 0;
+}
+
+.vd-product-hero__stock {
+  min-height: 24px;
+}
+
+.vd-product-hero__pricing {
+  display: grid;
+  gap: 8px;
+  padding-block-start: 16px;
+}
+
+.vd-product-hero__amount {
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.vd-product-hero__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vd-product-hero__warranty {
+  display: grid;
+  gap: 8px;
+  padding-block-start: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+.vd-product-hero__assurance {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.vd-product-hero__assurance > svg {
+  margin-block-start: 3px;
+}
+
 .vd-product-hero__title {
   min-width: 0;
 }
@@ -474,12 +525,8 @@ html:has(.vd-home)::-webkit-scrollbar {
   }
 
   .vd-product-hero__purchase {
-    display: flex;
-    height: 392px;
+    height: auto;
     min-height: 392px;
-    max-height: 392px;
-    flex-direction: column;
-    overflow: hidden;
     padding: 1.5rem !important;
   }
 
