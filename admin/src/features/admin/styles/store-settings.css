@@ -1,0 +1,9 @@
+.admin-store-settings fieldset { min-inline-size: 0; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-block: 16px; }
+.admin-store-settings legend { font-weight: 700; padding-inline: 8px; }
+.admin-store-setting-field { display: flex; flex-direction: column; gap: 8px; min-inline-size: 0; }
+.admin-store-setting-field input, .admin-store-setting-field textarea { inline-size: 100%; max-inline-size: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; color: #0b0b0b; }
+.admin-store-setting-field input:focus-visible, .admin-store-setting-field textarea:focus-visible { outline: 2px solid #006b4f; outline-offset: 2px; }
+.admin-store-setting-field [aria-invalid="true"] { border-color: #b42318; }
+.admin-store-setting-field small[role="alert"] { color: #b42318; }
+.admin-store-image-preview { inline-size: 120px; block-size: 80px; object-fit: contain; }
+.admin-store-brand-image { max-inline-size: 100%; inline-size: 44px; block-size: 36px; object-fit: contain; }

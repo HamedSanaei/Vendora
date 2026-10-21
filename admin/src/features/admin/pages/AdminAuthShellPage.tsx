@@ -6,6 +6,7 @@ import { AdminIcon } from '../components/AdminIcon';
 import { AdminButton, AdminFeedback, AdminField } from '../components/AdminUi';
 import { adminPath, normalizeAdminLocale } from '../i18n';
 import { useAdminStore } from '../stores/AdminStoreContext';
+import { brandText, storeImageUrl, storePresentation, useAdminStoreSettings } from '../storeSettings';
 
 interface AdminAuthShellPageProps {
   mode: 'login' | 'register' | 'forgot' | 'reset';
@@ -17,6 +18,8 @@ export const AdminAuthShellPage = observer(function AdminAuthShellPage({ mode }:
   const navigate = useNavigate();
   const locale = normalizeAdminLocale(useParams().locale);
   const isFa = locale === 'fa';
+  const { profile } = useAdminStoreSettings();
+  const brand = storePresentation(profile, locale);
   const [searchParams] = useSearchParams();
   const [fullName, setFullName] = useState(''); const [email, setEmail] = useState(searchParams.get('email') ?? ''); const [phoneNumber, setPhoneNumber] = useState(''); const [password, setPassword] = useState(''); const [inviteCode, setInviteCode] = useState(''); const [resetToken, setResetToken] = useState(''); const [showPassword, setShowPassword] = useState(false);
   const isRegister = mode === 'register'; const isForgot = mode === 'forgot'; const isReset = mode === 'reset';
@@ -41,15 +44,15 @@ export const AdminAuthShellPage = observer(function AdminAuthShellPage({ mode }:
   return (
     <main className="admin-auth-page" data-admin-theme={isFa ? 'penpot' : 'legacy'} dir={isFa ? 'rtl' : 'ltr'} lang={locale}>
       <section className="admin-auth-brand-panel">
-        <div className="admin-auth-brand"><span><AdminIcon name="brand" size={28} /></span><div><strong>VENDORA</strong><small>{isFa ? 'مدیریت دقیق، تصمیم‌های بهتر' : 'Precise operations, better decisions'}</small></div></div>
-        <div className="admin-auth-brand-copy"><span>{isFa ? 'پنل مدیریت فروشگاه' : 'Store administration'}</span><h1>{isFa ? 'کنترل آرام و دقیق تمام عملیات وندورا.' : 'Calm, precise control over every Vendora operation.'}</h1><p>{isFa ? 'محصولات، سفارش‌ها، مشتریان و رشد فروشگاه در یک فضای امن و منسجم.' : 'Products, orders, customers, and growth in one secure, coherent workspace.'}</p></div>
+        <div className="admin-auth-brand"><span>{profile.logoUrl ? <img className="admin-store-brand-image" src={storeImageUrl(profile.logoUrl)} alt={brand.name} /> : <AdminIcon name="brand" size={28} />}</span><div><strong>{brand.wordmark}</strong><small>{isFa ? 'مدیریت دقیق، تصمیم‌های بهتر' : 'Precise operations, better decisions'}</small></div></div>
+        <div className="admin-auth-brand-copy"><span>{isFa ? 'پنل مدیریت فروشگاه' : 'Store administration'}</span><h1>{brandText(isFa ? 'کنترل آرام و دقیق تمام عملیات وندورا.' : 'Calm, precise control over every Vendora operation.', profile, locale)}</h1><p>{isFa ? 'محصولات، سفارش‌ها، مشتریان و رشد فروشگاه در یک فضای امن و منسجم.' : 'Products, orders, customers, and growth in one secure, coherent workspace.'}</p></div>
         <ul><li><AdminIcon name="products" size={18} />{isFa ? 'مدیریت کامل کاتالوگ' : 'Complete catalog management'}</li><li><AdminIcon name="orders" size={18} />{isFa ? 'گردش امن سفارش‌ها' : 'Guarded order lifecycle'}</li><li><AdminIcon name="dashboard" size={18} />{isFa ? 'آمار واقعی فروشگاه' : 'Real commerce metrics'}</li></ul>
       </section>
 
       <section className="admin-auth-form-panel">
-        <div className="admin-auth-mobile-brand"><AdminIcon name="brand" size={23} /><strong>VENDORA</strong></div>
+        <div className="admin-auth-mobile-brand">{profile.logoUrl ? <img className="admin-store-brand-image" src={storeImageUrl(profile.logoUrl)} alt={brand.name} /> : <AdminIcon name="brand" size={23} />}<strong>{brand.wordmark}</strong></div>
         <div className="admin-auth-card">
-          <header><span className="admin-eyebrow">{isFa ? 'دسترسی امن' : 'Secure access'}</span><h2>{title}</h2><p>{description}</p></header>
+          <header><span className="admin-eyebrow">{isFa ? 'دسترسی امن' : 'Secure access'}</span><h2>{title}</h2><p>{brandText(description, profile, locale)}</p></header>
           <form className="admin-auth-form" onSubmit={handleSubmit}>
             {isRegister ? <AdminField autoComplete="name" label={isFa ? 'نام کامل' : 'Full name'} onChange={(event) => setFullName(event.target.value)} required value={fullName} /> : null}
             <AdminField autoComplete="email" dir="ltr" label={isFa ? 'ایمیل' : 'Email'} onChange={(event) => setEmail(event.target.value)} placeholder="admin@vendora.local" required type="email" value={email} />

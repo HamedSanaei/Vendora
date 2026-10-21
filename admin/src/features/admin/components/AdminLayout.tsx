@@ -6,6 +6,7 @@ import { adminPath, adminText, normalizeAdminLocale, type AdminLocale, type Admi
 import { useAdminStore } from '../stores/AdminStoreContext';
 import { AdminIcon, type AdminIconName } from './AdminIcon';
 import { LoadingState } from './LoadingState';
+import { brandText, storeImageUrl, storePresentation, useAdminStoreSettings } from '../storeSettings';
 
 interface AdminMenuItem {
   titleKey: AdminMessageKey;
@@ -93,6 +94,8 @@ export const AdminLayout = observer(function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const locale = normalizeAdminLocale(params.locale);
+  const { profile: storeProfile } = useAdminStoreSettings();
+  const storeBrand = storePresentation(storeProfile, locale);
   const [isReady, setIsReady] = useState(false);
   const [openMenu, setOpenMenu] = useState<AdminMessageKey | null>('products');
   const [globalSearch, setGlobalSearch] = useState('');
@@ -195,8 +198,8 @@ export const AdminLayout = observer(function AdminLayout() {
     <div className="admin-shell" data-admin-theme={locale === 'fa' ? 'penpot' : 'legacy'} lang={locale} dir={locale === 'fa' ? 'rtl' : 'ltr'}>
       <aside aria-modal={store.ui.isSidebarOpen ? 'true' : undefined} className={`admin-sidebar ${store.ui.isSidebarOpen ? 'admin-sidebar-open' : ''}`} id="admin-navigation" ref={sidebarRef} role={store.ui.isSidebarOpen ? 'dialog' : undefined}>
         <div className="admin-brand">
-          <span className="admin-brand-mark"><AdminIcon name="brand" size={22} /></span>
-          <span className="admin-brand-copy"><strong>VENDORA</strong><small>{adminText(locale, 'adminPanel')}</small></span>
+          <span className="admin-brand-mark">{storeProfile.logoUrl ? <img className="admin-store-brand-image" src={storeImageUrl(storeProfile.logoUrl)} alt={storeBrand.name} /> : <AdminIcon name="brand" size={22} />}</span>
+          <span className="admin-brand-copy"><strong>{storeBrand.wordmark}</strong><small>{brandText(adminText(locale, 'adminPanel'), storeProfile, locale)}</small></span>
           <button className="admin-sidebar-close" onClick={() => store.ui.closeSidebar()} type="button" aria-label={locale === 'fa' ? 'بستن منو' : 'Close menu'}>
             <AdminIcon name="close" size={20} />
           </button>

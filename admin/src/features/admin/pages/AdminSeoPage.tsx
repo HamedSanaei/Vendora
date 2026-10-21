@@ -3,9 +3,12 @@ import { toast } from 'react-toastify';
 import { getSeoModels, getSeoRedirects, getSeoSettings, saveSeoRedirect, saveSeoSettings, seoError } from '../api/seoApi';
 import { AdminButton, AdminFeedback, AdminPageHeader, AdminPanel } from '../components/AdminUi';
 import type { SeoRedirect, SiteSeoSettings } from '../seo/types';
+import { useParams } from 'react-router-dom';
+import { adminPath, normalizeAdminLocale } from '../i18n';
 
 /** Site-wide launch/indexing gate and safe local redirects; inference secrets are configured exclusively on the server. */
 export function AdminSeoPage() {
+  const locale = normalizeAdminLocale(useParams().locale);
   const [settings, setSettings] = useState<SiteSeoSettings | null>(null);
   const [redirects, setRedirects] = useState<SeoRedirect[]>([]);
   const [editing, setEditing] = useState<SeoRedirect>({sourcePath:'',targetPath:'',statusCode:301,isActive:true});
@@ -35,7 +38,8 @@ export function AdminSeoPage() {
     {!settings ? <p role="status">در حال بارگیری تنظیمات…</p> : <AdminPanel title="تنظیمات عمومی سایت">
       <form className="admin-form" onSubmit={event => void submit(event,false)}><fieldset disabled={busy} className="admin-attribute-fieldset">
         <div className="admin-form-grid">{([['siteName','نام فروشگاه'],['siteUrl','آدرس اصلی سایت (بدون مسیر)'],['titleTemplate','الگوی عنوان: {title} | {siteName}'],['defaultDescription','توضیح پیش‌فرض سایت'],['logoUrl','آدرس لوگوی عمومی'],['socialProfiles','پروفایل‌های اجتماعی؛ هر آدرس در یک خط']] as const).map(([key,label]) =>
-          <label key={key}>{label}<input required={['siteName','siteUrl','titleTemplate'].includes(key)} value={String(settings[key] ?? '')} onChange={event => setSettings({...settings,[key]:event.target.value})} /></label>)}</div>
+          <label key={key}>{label}<input readOnly={['siteName','logoUrl','socialProfiles'].includes(key)} required={['siteName','siteUrl','titleTemplate'].includes(key)} value={String(settings[key] ?? '')} onChange={event => setSettings({...settings,[key]:event.target.value})} /></label>)}</div>
+        <AdminButton to={adminPath(locale, 'online-store')} variant="secondary">{locale === 'fa' ? 'ویرایش نام، لوگو و شبکه‌های اجتماعی در تنظیمات فروشگاه' : 'Edit name, logo and social profiles in store settings'}</AdminButton>
         <label className="admin-seo-check"><input type="checkbox" checked={settings.isIndexingEnabled} onChange={event => setSettings({...settings,isIndexingEnabled:event.target.checked})} />اجازهٔ ایندکس عمومی سایت فارسی پس از آماده‌شدن برای انتشار</label>
         {!settings.isIndexingEnabled && <AdminFeedback tone="warning">حالت پیش‌انتشار فعال است؛ صفحات عمومی فعلاً noindex هستند و نقشهٔ سایت خالی خواهد بود.</AdminFeedback>}
         <AdminButton type="submit" variant="brass">ذخیره تنظیمات عمومی</AdminButton>
