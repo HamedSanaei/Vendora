@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { getDict } from "@/lib/vendora/i18n";
+import { useBrandCopy, useStoreSettings, storePresentation } from './store-settings-provider';
+import { resolveApiImageUrl } from '@/lib/http';
 import type { Locale } from "@/lib/vendora/types";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
 import { BagArtwork } from "@/components/vendora/product/bag-artwork";
@@ -15,14 +17,25 @@ import { BagArtwork } from "@/components/vendora/product/bag-artwork";
 export function StoreFooter() {
   const pathname = usePathname();
   const locale: Locale = getLocaleFromPathname(pathname);
-  const t = getDict(locale);
+  const t = useBrandCopy(locale);
+  const profile = useStoreSettings();
+  const brand = storePresentation(profile, locale);
+  const expanded = Boolean(profile.logoUrl || profile.nameFa || profile.nameEn || profile.taglineFa || profile.taglineEn || profile.introFa || profile.introEn || profile.phone || profile.email || brand.address || brand.hours || profile.socialProfiles || profile.enamadEnabled || profile.copyrightFa || profile.copyrightEn);
   return (
-    <footer className="mt-[40px] h-[120px] overflow-hidden bg-surface-soft md:mt-[50px] md:h-[220px] lg:mt-[72px] lg:h-[300px]">
+    <footer className={`mt-[40px] bg-surface-soft md:mt-[50px] lg:mt-[72px] ${expanded ? 'min-h-[120px]' : 'h-[120px] overflow-hidden md:h-[220px] lg:h-[300px]'}`}>
       <div className="vd-container py-[16px] md:py-14">
         <div className="grid gap-10 md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
           <div>
-            <p className="text-center text-[22px] font-extrabold tracking-tight text-ink md:text-start md:text-3xl">VENDORA</p>
-            <p className="hidden mt-2 text-sm font-medium text-vd-muted md:block">{t.footer.tagline}</p>
+            {profile.logoUrl ? <Image unoptimized width={180} height={48} src={resolveApiImageUrl(profile.logoUrl)} alt={brand.name} className="mx-auto h-12 max-w-[180px] object-contain md:mx-0" /> : <p className="break-words text-center text-[22px] font-extrabold tracking-tight text-ink md:text-start md:text-3xl">{brand.wordmark}</p>}
+            <p className={`${expanded ? '' : 'hidden md:block'} mt-2 text-sm font-medium text-vd-muted`}>{brand.intro || t.footer.tagline}</p>
+            {expanded && <div className="mt-4 space-y-2 text-sm leading-7 text-vd-muted">
+              {profile.phone && <p><a className="vd-focus" dir="ltr" href={`tel:${profile.phone.replace(/[^+0-9]/g, '')}`}>{profile.phone}</a></p>}
+              {profile.email && <p><a className="vd-focus break-all" dir="ltr" href={`mailto:${profile.email}`}>{profile.email}</a></p>}
+              {brand.address && <address className="whitespace-pre-line not-italic">{brand.address}</address>}
+              {brand.hours && <p>{brand.hours}</p>}
+              {profile.socialProfiles && <nav aria-label={locale === 'fa' ? 'شبکه‌های اجتماعی' : 'Social profiles'} className="flex flex-wrap gap-3">{profile.socialProfiles.split('\n').filter(Boolean).map(url => <a className="vd-focus break-all text-jade" key={url} href={url} target="_blank" rel="noopener noreferrer" dir="ltr">{socialLabel(url)}</a>)}</nav>}
+              {profile.enamadEnabled && profile.enamad && <a className="vd-focus inline-block" href={profile.enamad.href} target="_blank" rel="noopener" referrerPolicy="origin"><Image unoptimized src={profile.enamad.imageUrl} referrerPolicy="origin" alt={locale === 'fa' ? 'نماد اعتماد الکترونیکی؛ مشاهده اعتبار' : 'eNamad: verify trust seal'} width={100} height={100} className="h-[100px] w-[100px] object-contain" /></a>}
+            </div>}
             <div className="mt-6 hidden gap-2 md:flex" aria-hidden>
               {(["jade", "clay", "steel"] as const).map((color) => (
                 <span key={color} className="flex h-12 w-12 items-center justify-center rounded-control bg-white">
@@ -58,6 +71,11 @@ export function StoreFooter() {
       </div>
     </footer>
   );
+}
+
+/** Uses a readable host name for social links without requiring a fixed list of providers. */
+function socialLabel(url: string): string {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
 }
 
 /** Maps the designed footer labels onto real storefront routes. */

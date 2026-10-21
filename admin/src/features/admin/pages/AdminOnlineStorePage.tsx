@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { AdminButton, AdminFeedback, AdminPageHeader } from '../components/AdminUi';
 import { AdminIcon } from '../components/AdminIcon';
 import { AdminSlideshowManager } from '../components/AdminSlideshowManager';
+import { AdminStoreSettingsForm } from '../components/AdminStoreSettingsForm';
 import { normalizeAdminLocale } from '../i18n';
 import { slideshowCopy } from '../slideshowCopy';
 
@@ -21,6 +22,7 @@ export function AdminOnlineStorePage() {
     <section className="admin-page">
       <AdminPageHeader eyebrow={isFa ? 'پیش‌نمایش Storefront' : 'Storefront preview'} title={isFa ? 'فروشگاه آنلاین' : 'Online store'} description={copy.pageDescription} />
       <AdminSlideshowManager key={locale} locale={locale} />
+      <AdminStoreSettingsForm key={`settings-${locale}`} locale={locale} />
       <AdminFeedback tone="info"><span dir="ltr">VITE_STOREFRONT_URL = {storefrontBaseUrl}</span></AdminFeedback>
       <div className="admin-storefront-grid">
         {links.map((item) => <article className="admin-storefront-card" key={item.path}><span><AdminIcon name={item.icon} size={24} /></span><h2>{item.title}</h2><p>{item.description}</p><AdminButton external icon="arrow" to={`${storefrontBaseUrl}${item.path}`} variant="secondary">{isFa ? 'باز کردن' : 'Open'}</AdminButton></article>)}

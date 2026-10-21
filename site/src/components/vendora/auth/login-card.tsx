@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
@@ -11,6 +12,8 @@ import type { Locale } from "@/lib/vendora/types";
 import { unavailableAuthAdapter, type AuthAccount, type GoogleAuthAdapter, type PhoneAuthAdapter } from "@/lib/auth/auth-adapter";
 import { notifySuccess } from "@/utils/toast";
 import { CheckoutContextNotice, GoogleButton, LoginModeTabs, OtpInput, PhoneField, type LoginMode } from "./login-components";
+import { brandText, storePresentation, useStoreSettings } from '../layout/store-settings-provider';
+import { resolveApiImageUrl } from '@/lib/http';
 
 type PhoneStep = "identifier" | "otp";
 
@@ -24,6 +27,8 @@ interface LoginCardProps {
 /** Penpot-aligned responsive login card with email, phone OTP and Google modes. */
 export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdapter, googleAdapter = unavailableAuthAdapter }: LoginCardProps) {
   const isFa = locale === "fa";
+  const storeProfile = useStoreSettings();
+  const brand = storePresentation(storeProfile, locale);
   const router = useRouter();
   const dispatch = useDispatch();
   const [loginUser, { isLoading: emailLoading }] = useLoginUserMutation();
@@ -157,9 +162,9 @@ export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdap
   return (
     <section className="vd-root min-h-[calc(100vh-132px)] bg-surface-soft px-4 py-8 md:px-8 md:py-12" dir={isFa ? "rtl" : "ltr"}>
       <div className="mx-auto grid w-full max-w-[1120px] items-stretch gap-6 lg:grid-cols-[minmax(0,1fr)_500px] lg:gap-10">
-        <aside className="hidden rounded-[28px] bg-jade p-10 text-white lg:flex lg:flex-col lg:justify-between"><div><p className="text-sm font-bold text-jade-glow">VENDORA / AUTH</p><h1 className="mt-6 text-[40px] font-extrabold leading-[1.45]">{isFa ? "خرید خوب، از ورود ساده شروع می‌شود." : "A better purchase starts with a simple sign-in."}</h1><p className="mt-5 max-w-md text-sm leading-8 text-on-dark-soft">{isFa ? "آدرس‌ها، سبد خرید و پیگیری سفارش‌ها را یکجا و امن مدیریت کنید." : "Keep your addresses, cart and orders together in one secure account."}</p></div><ul className="space-y-4 text-sm font-semibold text-on-dark-soft"><li>✓ {isFa ? "سبد خرید شما حفظ می‌شود" : "Your cart stays with you"}</li><li>✓ {isFa ? "ارسال قابل پیگیری" : "Trackable delivery"}</li><li>✓ {isFa ? "پشتیبانی واقعی وندورا" : "Real Vendora support"}</li></ul></aside>
+        <aside className="hidden rounded-[28px] bg-jade p-10 text-white lg:flex lg:flex-col lg:justify-between"><div><p className="text-sm font-bold text-jade-glow">{brand.wordmark} / AUTH</p><h1 className="mt-6 text-[40px] font-extrabold leading-[1.45]">{isFa ? "خرید خوب، از ورود ساده شروع می‌شود." : "A better purchase starts with a simple sign-in."}</h1><p className="mt-5 max-w-md text-sm leading-8 text-on-dark-soft">{isFa ? "آدرس‌ها، سبد خرید و پیگیری سفارش‌ها را یکجا و امن مدیریت کنید." : "Keep your addresses, cart and orders together in one secure account."}</p></div><ul className="space-y-4 text-sm font-semibold text-on-dark-soft"><li>✓ {isFa ? "سبد خرید شما حفظ می‌شود" : "Your cart stays with you"}</li><li>✓ {isFa ? "ارسال قابل پیگیری" : "Trackable delivery"}</li><li>✓ {brandText(isFa ? "پشتیبانی واقعی وندورا" : "Real Vendora support", storeProfile, locale)}</li></ul></aside>
         <div className="rounded-[24px] border border-vd-line bg-white p-5 shadow-[0_24px_70px_-45px_rgba(0,77,58,.65)] md:p-8">
-          <div className="text-center"><span className="text-[26px] font-extrabold tracking-tight text-ink">VENDORA</span><p className="mt-1 text-xs font-semibold text-jade">{isFa ? "وندورا" : "Bag manufacturer"}</p><h2 className="mt-7 text-2xl font-extrabold text-ink">{isFa ? "خوش آمدید" : "Welcome back"}</h2><p className="mt-2 text-sm leading-7 text-vd-muted">{isFa ? "برای ادامه، یکی از روش‌های ورود را انتخاب کنید." : "Choose a sign-in method to continue."}</p></div>
+          <div className="text-center"><span className="text-[26px] font-extrabold tracking-tight text-ink">{storeProfile.logoUrl ? <Image unoptimized width={180} height={48} className="mx-auto h-12 max-w-[180px] object-contain" src={resolveApiImageUrl(storeProfile.logoUrl)} alt={brand.name} /> : brand.wordmark}</span><p className="mt-1 text-xs font-semibold text-jade">{brand.tagline}</p><h2 className="mt-7 text-2xl font-extrabold text-ink">{isFa ? "خوش آمدید" : "Welcome back"}</h2><p className="mt-2 text-sm leading-7 text-vd-muted">{isFa ? "برای ادامه، یکی از روش‌های ورود را انتخاب کنید." : "Choose a sign-in method to continue."}</p></div>
           {destination.includes("/shipping") ? <CheckoutContextNotice locale={locale} /> : null}
           <LoginModeTabs locale={locale} mode={mode} onChange={changeMode} />
 

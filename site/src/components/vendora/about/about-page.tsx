@@ -16,7 +16,7 @@ import {
   type VendoraIconProps,
 } from "@/components/vendora/icons";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
-import { getDict } from "@/lib/vendora/i18n";
+import { useBrandCopy } from "@/components/vendora/layout/store-settings-provider";
 
 const principleIcons: ComponentType<VendoraIconProps>[] = [
   StoreIcon,
@@ -92,7 +92,7 @@ function ValueCard({ icon: Icon, title, body }: { icon: ComponentType<VendoraIco
 export function AboutPage() {
   const pathname = usePathname();
   const locale = getLocaleFromPathname(pathname);
-  const copy = getDict(locale).about;
+  const copy = useBrandCopy(locale).about;
   const shopHref = withLocalePath("/shop", locale);
 
   return (

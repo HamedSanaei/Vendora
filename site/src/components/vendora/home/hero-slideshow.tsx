@@ -7,7 +7,7 @@ import { VendoraButton } from "@/components/vendora/ui/button";
 import { withLocalePath } from "@/lib/locale-path";
 import { getSlideshow, type SlideshowSlideDto } from "@/lib/slideshow-api";
 import { formatNumber, localizeDigits } from "@/lib/vendora/format";
-import { getDict } from "@/lib/vendora/i18n";
+import { useBrandCopy } from "@/components/vendora/layout/store-settings-provider";
 import type { Locale } from "@/lib/vendora/types";
 
 interface HeroSlideshowProps {
@@ -23,7 +23,7 @@ const controlClass = "vd-focus flex h-11 w-11 shrink-0 items-center justify-cent
 
 /** Displays the configured playlist, or the built-in bag editorial series, with localized accessible controls. */
 export function HeroSlideshow({ locale }: HeroSlideshowProps) {
-  const t = getDict(locale).home;
+  const t = useBrandCopy(locale).home;
   const controls = t.slideshow;
   const [slides, setSlides] = useState<SlideshowSlideDto[]>(defaultSlides);
   // A new cursor object also restarts the duration when the current indicator is selected again.

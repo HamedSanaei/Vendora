@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   type ArtworkColor,
 } from "@/lib/vendora/catalog";
-import { getDict } from "@/lib/vendora/i18n";
+import { useBrandCopy, useStoreSettings, storePresentation } from "@/components/vendora/layout/store-settings-provider";
 import type { Locale } from "@/lib/vendora/types";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
 import { SectionHeading } from "@/components/vendora/ui/section-heading";
@@ -32,7 +32,7 @@ import {
 function useVendoraLocale() {
   const pathname = usePathname();
   const locale: Locale = getLocaleFromPathname(pathname);
-  return { locale, t: getDict(locale) };
+  return { locale, t: useBrandCopy(locale) };
 }
 
 /** Homepage hero backed by the configured slideshow, retaining the original layout and copy. */
@@ -149,8 +149,9 @@ const promoArtwork: ArtworkColor[] = ["jade", "clay", "steel"];
 
 /** Editorial promo cards ("VENDORA JOURNAL"). */
 export function EditorialPromosSection() {
-  const { t } = useVendoraLocale();
-  const promos = [...t.home.promos, { eyebrow: "VENDORA", title: t.home.storyTitle, body: t.home.storyBody, cta: t.common.view }];
+  const { t, locale } = useVendoraLocale();
+  const brand = storePresentation(useStoreSettings(), locale);
+  const promos = [...t.home.promos, { eyebrow: brand.wordmark, title: t.home.storyTitle, body: t.home.storyBody, cta: t.common.view }];
   return (
     <section aria-label={t.home.promos.map((p) => p.title).join(" · ")} className="vd-container mt-[32px] grid gap-[20px] md:mt-[64px] md:h-[444px] md:grid-cols-2 md:grid-rows-[206px_206px] md:content-start md:gap-x-[16px] md:gap-y-[24px] lg:mt-[61px] lg:h-[260px] lg:grid-cols-[repeat(3,425px)] lg:grid-rows-[260px] lg:!gap-[18px] lg:!ps-[65px] lg:!pe-[64px]">
       {promos.map((promo, index) => (

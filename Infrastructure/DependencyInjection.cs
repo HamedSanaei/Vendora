@@ -20,6 +20,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
         services.AddScoped<IProductDescriptionService, Infrastructure.Content.ProductDescriptionService>();
+        services.AddScoped<IEnamadCodeParser, Infrastructure.Content.EnamadCodeParser>();
         services.AddScoped<ISeoAiGateway, Seo.NineRouterSeoGateway>();
         services.AddHttpClient("SeoNineRouter", client =>
         {

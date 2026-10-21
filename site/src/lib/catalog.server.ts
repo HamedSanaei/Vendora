@@ -4,6 +4,8 @@ import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { http } from './http';
 import { pageMetadata } from './catalog-seo';
+import { readStoreSettings } from './store-settings.server';
+import { storePresentation } from '@/lib/store-settings';
 import type { CatalogCategory, CatalogProductDto, CatalogSearchParams, CatalogSearchResult, CategoryDetail, SiteSeoSettings } from './catalog-contracts';
 
 /** Server-only public reads: 404 is distinguished from temporary failures, and no mock product is substituted. */
@@ -19,7 +21,10 @@ async function read<T>(path: string): Promise<T> {
 export const readCatalogProduct = cache((identifier: string) => read<CatalogProductDto>(`/catalog/products/${encodeURIComponent(identifier)}`));
 export const readCatalogCategory = cache((slug: string) => read<CategoryDetail>(`/catalog/categories/${encodeURIComponent(slug)}`));
 export const readCategoryTree = cache(() => read<CatalogCategory[]>('/catalog/categories/tree'));
-export const readSeoSite = cache(() => read<SiteSeoSettings>('/catalog/seo'));
+export const readSeoSite = cache(async (): Promise<SiteSeoSettings> => {
+  const [site, profile, locale] = await Promise.all([read<SiteSeoSettings>('/catalog/seo'), readStoreSettings(), requestLocale()]);
+  return { ...site, siteName: locale === 'en' ? storePresentation(profile, locale).name : site.siteName };
+});
 export const readCatalogSearch = cache((query: string) => read<CatalogSearchResult>(`/catalog/products/search?${query}`));
 export const readCatalogBrands = cache(() => read<Array<{id: string; name: string; slug: string}>>('/catalog/brands'));
 export const readCatalogColors = cache(() => read<Array<{id: string; name: string; slug: string}>>('/catalog/colors'));

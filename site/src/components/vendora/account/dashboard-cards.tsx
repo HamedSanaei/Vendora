@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { mockOrders, mockProfile } from "@/lib/vendora/account-data";
 import { getDict } from "@/lib/vendora/i18n";
+import { useBrandCopy, useStoreSettings, storePresentation } from '../layout/store-settings-provider';
 import type { Locale } from "@/lib/vendora/types";
 import { formatNumber, formatPrice, localizeDigits } from "@/lib/vendora/format";
 import { withLocalePath } from "@/lib/locale-path";
@@ -147,7 +148,8 @@ export function RecentOrdersCard({ locale }: { locale: Locale }) {
 
 /** Full-width support band with content-sized height and an accessible, responsive contact action. */
 export function SupportNoticeCard({ locale }: { locale: Locale }) {
-  const t = getDict(locale);
+  const t = useBrandCopy(locale);
+  const brand = storePresentation(useStoreSettings(), locale);
   return (
     <section className="vd-support-notice flex w-full flex-col gap-[20px] rounded-card bg-jade-tint p-[20px] sm:flex-row sm:items-center lg:p-6">
       <span aria-hidden className="flex h-14 w-14 shrink-0 items-center justify-center rounded-control bg-white text-jade">
@@ -155,7 +157,7 @@ export function SupportNoticeCard({ locale }: { locale: Locale }) {
       </span>
       <div className="min-w-0 flex-1">
         <h2 className="text-[1.0625rem] font-bold leading-7 text-ink">{t.account.dashboard.supportTitle}</h2>
-        <p className="vd-text-caption mt-1 text-vd-muted">{t.account.dashboard.supportBody}</p>
+        <p className="vd-text-caption mt-1 text-vd-muted">{brand.hours || t.account.dashboard.supportBody}</p>
       </div>
       <VendoraButton href={withLocalePath("/contact", locale)} variant="outline" size="lg" className="min-h-12 w-full shrink-0 sm:w-auto sm:min-w-[192px]">
         {t.account.dashboard.supportCta}

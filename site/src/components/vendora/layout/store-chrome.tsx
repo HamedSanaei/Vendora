@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useSelector } from "react-redux";
 import { megaMenuCategories } from "@/lib/vendora/catalog";
-import { getDict } from "@/lib/vendora/i18n";
+import { useBrandCopy, useStoreSettings, storePresentation } from './store-settings-provider';
+import { resolveApiImageUrl } from '@/lib/http';
 import { formatNumber } from "@/lib/vendora/format";
 import type { Locale, MegaMenuCategory } from "@/lib/vendora/types";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
@@ -73,7 +75,7 @@ interface SearchProps { locale: Locale; query: string; setQuery: (value: string)
 
 /** Exact 1408×132 desktop header component from Penpot. */
 function DesktopHeader({ locale, query, setQuery, submitSearch, megaOpen, openMega, closeMegaSoon, cartQuantity, openCart }: SearchProps & { megaOpen: boolean; openMega: () => void; closeMegaSoon: () => void; cartQuantity: number; openCart: () => void; }) {
-  const t = getDict(locale);
+  const t = useBrandCopy(locale);
   return (
     <div className="vd-desktop-header-frame hidden h-[132px] xl:block">
       <div className="relative h-[76px] border-b border-vd-line">
@@ -103,7 +105,7 @@ function DesktopHeader({ locale, query, setQuery, submitSearch, megaOpen, openMe
 
 /** Exact 390×116 mobile header component from Penpot. */
 function MobileHeader({ locale, query, setQuery, submitSearch, openDrawer, expanded, cartQuantity, openCart }: SearchProps & { openDrawer: () => void; expanded: boolean; cartQuantity: number; openCart: () => void; }) {
-  const t = getDict(locale);
+  const t = useBrandCopy(locale);
   return (
     <div className="vd-container h-[116px] xl:hidden">
       <div className="relative h-[68px]">
@@ -121,7 +123,7 @@ function MobileHeader({ locale, query, setQuery, submitSearch, openDrawer, expan
 
 /** Exact 628×648 desktop menu panel from the Penpot open state. */
 function DesktopMegaMenu({ locale, activeCategory, setActiveKey, keepOpen, closeSoon, close }: { locale: Locale; activeCategory: MegaMenuCategory; setActiveKey: (key: string) => void; keepOpen: () => void; closeSoon: () => void; close: () => void; }) {
-  const t = getDict(locale);
+  const t = useBrandCopy(locale);
   return (
     <div className="absolute inset-x-0 top-[132px] hidden h-[648px] xl:block" onMouseLeave={closeSoon}>
       <button type="button" tabIndex={-1} aria-label={t.common.close} onMouseEnter={close} onClick={close} className="absolute inset-x-4 inset-y-0 bg-ink/[0.72]" />
@@ -142,7 +144,7 @@ function DesktopMegaMenu({ locale, activeCategory, setActiveKey, keepOpen, close
 
 /** Exact 332px Penpot drawer plus drill-down submenus. */
 function MobileCategoryDrawer({ locale, close }: { locale: Locale; close: () => void }) {
-  const t = getDict(locale);
+  const t = useBrandCopy(locale);
   const closeRef = useRef<HTMLButtonElement>(null);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const selected = megaMenuCategories.find((category) => category.key === selectedKey);
@@ -167,11 +169,18 @@ function MobileCategoryDrawer({ locale, close }: { locale: Locale; close: () => 
   );
 }
 
-function BrandLogo({ locale, className = "" }: { locale: Locale; className?: string }) { return <Link href={withLocalePath("/", locale)} className={`vd-focus flex flex-col leading-none ${className}`}><span className="text-[26px] font-extrabold tracking-tight text-ink">VENDORA</span><span className="mt-1 text-xs font-semibold text-jade">{locale === "fa" ? "وندورا" : "Bag Manufacturer"}</span></Link>; }
+/** Uses the original wordmark until a saved localized name or logo overrides it. */
+function BrandLogo({ locale, className = "" }: { locale: Locale; className?: string }) {
+  const profile = useStoreSettings();
+  const brand = storePresentation(profile, locale);
+  return <Link href={withLocalePath("/", locale)} aria-label={brand.name} className={`vd-focus flex flex-col leading-none ${className}`}>
+    {profile.logoUrl ? <Image unoptimized width={150} height={30} src={resolveApiImageUrl(profile.logoUrl)} alt={brand.name} className="h-[30px] max-w-[150px] object-contain" /> : <span className="max-w-[180px] truncate text-[26px] font-extrabold tracking-tight text-ink">{brand.wordmark}</span>}
+    <span className="mt-1 max-w-[180px] truncate text-xs font-semibold text-jade">{brand.tagline}</span></Link>;
+}
 function HeaderIconLink({ href, label, className = "", children }: { href: string; label: string; className?: string; children: ReactNode }) { return <Link href={href} aria-label={label} className={`vd-focus flex h-11 w-11 items-center justify-center rounded-full border border-vd-line bg-white text-ink hover:border-jade hover:text-jade ${className}`}>{children}</Link>; }
 
 /** Cart icon button with the live persisted quantity badge. */
 function CartTrigger({ locale, quantity, onClick, className = "" }: { locale: Locale; quantity: number; onClick: () => void; className?: string }) {
-  const label = getDict(locale).common.cart;
+  const label = useBrandCopy(locale).common.cart;
   return <button type="button" onClick={onClick} aria-label={label} aria-haspopup="dialog" className={`vd-focus relative flex h-11 w-11 items-center justify-center rounded-full border border-vd-line bg-white text-ink hover:border-jade hover:text-jade ${className}`}><CartIcon size={18} />{quantity > 0 ? <span className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-jade px-1 text-[11px] font-extrabold text-white">{formatNumber(quantity, locale)}</span> : null}</button>;
 }

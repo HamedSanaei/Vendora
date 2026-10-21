@@ -927,6 +927,10 @@ namespace Persistence.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("StoreProfileJson")
+                        .HasMaxLength(20000)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("TitleTemplate")
                         .IsRequired()
                         .HasMaxLength(250)

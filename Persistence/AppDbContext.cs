@@ -153,6 +153,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             builder.Property(x => x.DefaultDescription).HasMaxLength(500);
             builder.Property(x => x.LogoUrl).HasMaxLength(500);
             builder.Property(x => x.SocialProfiles).HasMaxLength(2000);
+            builder.Property(x => x.StoreProfileJson).HasMaxLength(20000);
             builder.HasData(new SeoSettings());
         });
         modelBuilder.Entity<SlugHistory>(builder =>

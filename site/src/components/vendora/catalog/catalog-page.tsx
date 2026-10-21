@@ -19,6 +19,7 @@ import { add_cart_product, quantityDecrement, quantityIncrement } from "@/redux/
 import { add_to_wishlist } from "@/redux/features/wishlist-slice";
 import { CatalogProductCard } from "./catalog-product-card";
 import { getCatalogCopy } from "./catalog-copy";
+import { brandText, useStoreSettings } from '../layout/store-settings-provider';
 import type { CatalogProductModel, StoreProduct } from "./catalog-types";
 import { toCatalogProduct } from "./catalog-types";
 
@@ -52,7 +53,9 @@ interface FilterPanelProps {
 export function CatalogPage(props: CatalogPageProps) {
   const pathname = usePathname();
   const locale: Locale = getLocaleFromPathname(pathname);
-  const t = getCatalogCopy(locale);
+  const originalCopy = getCatalogCopy(locale);
+  const profile = useStoreSettings();
+  const t = { ...originalCopy, shopIntro: brandText(originalCopy.shopIntro, profile, locale) };
   const dispatch = useDispatch();
   const wishlist = useSelector((state: { wishlist: { wishlist: StoreProduct[] } }) => state.wishlist.wishlist);
   const cartProducts = useSelector((state: { cart: { cart_products: Array<StoreProduct & { orderQuantity: number }> } }) => state.cart.cart_products);

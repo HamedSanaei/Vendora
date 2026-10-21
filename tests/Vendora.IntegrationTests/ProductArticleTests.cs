@@ -200,6 +200,7 @@ public sealed class ProductArticleTests
             builder.Services.AddSingleton<ISeoAiGateway, UnconfiguredSeoGateway>();
             builder.Services.AddScoped<IUnitOfWork>(services => services.GetRequiredService<AppDbContext>());
             builder.Services.AddScoped<IProductDescriptionService, ProductDescriptionService>();
+            builder.Services.AddScoped<IEnamadCodeParser, EnamadCodeParser>();
             builder.Services.AddSingleton(TimeProvider.System);
             builder.Services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
             builder.Services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<UploadDescriptionImage.Command>());

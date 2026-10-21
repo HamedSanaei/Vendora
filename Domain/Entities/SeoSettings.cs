@@ -14,6 +14,8 @@ public sealed class SeoSettings : EntityBase
     public string? DefaultDescription { get; set; }
     public string? SocialProfiles { get; set; }
     public bool IsIndexingEnabled { get; set; }
+    /// <summary>Optional store presentation overrides; null retains the original Vendora presentation.</summary>
+    public string? StoreProfileJson { get; set; }
 }
 
 /// <summary>Reserves a previously published slug without changing entity identifiers.</summary>

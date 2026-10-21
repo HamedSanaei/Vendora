@@ -1,5 +1,6 @@
 
 import { useEffect } from 'react';
+import { AdminStoreDocument, AdminStoreSettingsProvider } from '../../features/admin/components/AdminStoreSettingsProvider';
 import { Navigate, Outlet, Route, BrowserRouter as Router, Routes, useParams } from 'react-router-dom';
 import { AdminErrorBoundary } from '../../features/admin/components/AdminErrorBoundary';
 import { AdminLayout } from '../../features/admin/components/AdminLayout';
@@ -38,13 +39,13 @@ function AdminLocaleRoot() {
     document.documentElement.dir = locale === 'fa' ? 'rtl' : 'ltr';
   }, [locale]);
 
-  return <Outlet />;
+  return <><AdminStoreDocument locale={locale} /><Outlet /></>;
 }
 
 function App() {
   return (
     <AdminErrorBoundary>
-      <Router>
+      <AdminStoreSettingsProvider><Router>
         <Routes>
           <Route path="/" element={<Navigate to="/fa/admin" replace />} />
           <Route path="/admin/*" element={<Navigate to="/fa/admin" replace />} />
@@ -77,7 +78,7 @@ function App() {
             </Route>
           </Route>
         </Routes>
-      </Router>
+      </Router></AdminStoreSettingsProvider>
     </AdminErrorBoundary>
   );
 }
