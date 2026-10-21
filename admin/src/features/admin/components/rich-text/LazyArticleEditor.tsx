@@ -1,4 +1,9 @@
-import { lazy } from 'react';
+import { lazy, type ComponentProps } from 'react';
+import { AdminErrorBoundary } from '../AdminErrorBoundary';
 
-/** Loads the editor engine only when a product form needs it; the caller supplies Suspense. */
-export const LazyArticleEditor = lazy(() => import('./AdminRichTextEditor'));
+const ArticleEditor = lazy(() => import('./AdminRichTextEditor'));
+
+/** Keeps a failed editor chunk local so product/category form state is not destroyed by the page boundary. */
+export function LazyArticleEditor(props: ComponentProps<typeof ArticleEditor>) {
+  return <AdminErrorBoundary inline><ArticleEditor {...props} /></AdminErrorBoundary>;
+}

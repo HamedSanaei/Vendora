@@ -41,8 +41,28 @@ server {
         return 200 "ok\n";
     }
 
-    # SPA fallback: every non-file path served by the React Router.
+    # Hashed build assets must never fall back to HTML. A stale tab requesting
+    # a removed chunk needs a real, non-cacheable 404 rather than cached HTML/200.
+    location ^~ /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        error_page 404 = @missing_asset;
+    }
+
+    location @missing_asset {
+        add_header Cache-Control "no-store" always;
+        return 404;
+    }
+
+    # Revalidate the module graph after every deployment, including direct SPA links.
+    location = /index.html {
+        add_header Cache-Control "no-store" always;
+        try_files $uri =404;
+    }
+
+    # SPA fallback is only for application routes, never for generated chunks.
     location / {
+        add_header Cache-Control "no-store" always;
         try_files $uri $uri/ /index.html;
     }
 

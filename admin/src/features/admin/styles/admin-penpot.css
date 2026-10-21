@@ -3,6 +3,13 @@
 .admin-discussion-entry header, .admin-discussion-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .admin-discussion-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 2; }
 .admin-discussion-entry small { overflow-wrap: anywhere; }
+.admin-error-panel { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--va-border); border-radius: 14px; background: var(--va-surface-2); min-width: 0; }
+.admin-error-panel h3 { font-size: 18px; font-weight: 700; }
+.admin-error-panel p { line-height: 1.9; overflow-wrap: anywhere; }
+.admin-error-panel button { justify-self: start; min-height: 44px; padding: 10px 18px; border: 1px solid var(--va-ink); border-radius: 10px; color: var(--va-surface); background: var(--va-ink); font: inherit; cursor: pointer; }
+.admin-error-panel button:focus-visible { outline: 3px solid var(--va-brass); outline-offset: 3px; }
+.admin-error-confirm { display: grid; gap: 16px; }
+.admin-error-confirm > div { display: flex; flex-wrap: wrap; gap: 12px; }
 :root {
   --va-canvas: #f3f1ec;
   --va-surface: #fcfbf8;
