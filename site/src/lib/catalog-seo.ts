@@ -48,6 +48,7 @@ export function productSchema(product: CatalogProductDto, site: SiteSeoSettings,
     {'@type':'Product','@id':`${url}#product`,name:product.title,url,description:product.description || product.title,
       image:(product.images || []).map(image => resolveApiImageUrl(image.imageUrl)),sku:product.id,
       ...(product.brandName ? {brand:{'@type':'Brand',name:product.brandName}} : {}),
+      ...((product.ratingCount ?? 0) > 0 ? {aggregateRating:{'@type':'AggregateRating',ratingValue:product.rating,ratingCount:product.ratingCount,bestRating:5,worstRating:1}} : {}),
       offers:{'@type':'Offer',url,priceCurrency:'IRR',price:String(product.price * 10),availability:`https://schema.org/${product.stockQuantity > 0 ? 'InStock' : 'OutOfStock'}`,seller:{'@id':publicUrl('/#organization',site)}}},
     {'@type':'BreadcrumbList',itemListElement:breadcrumbs.map((item,index) => ({'@type':'ListItem',position:index+1,...item}))}]};
 }

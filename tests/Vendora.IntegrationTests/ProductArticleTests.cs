@@ -207,8 +207,9 @@ public sealed class ProductArticleTests
             builder.Services.AddControllers().AddApplicationPart(typeof(AdminController).Assembly);
             builder.Services.AddAuthentication("Test").AddScheme<AuthenticationSchemeOptions, ArticleAuth>("Test", _ => { });
             builder.Services.AddAuthorization(options => options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin")));
+            API.DiscussionRateLimiting.AddDiscussionRateLimiting(builder.Services);
             var app = builder.Build();
-            app.UseAuthentication(); app.UseAuthorization(); app.MapControllers();
+            app.UseAuthentication(); app.UseAuthorization(); app.UseRateLimiter(); app.MapControllers();
             var category = new Category { Name = "Test bags", Slug = "test-bags", IsActive = true };
             using (var scope = app.Services.CreateScope())
             {
@@ -257,7 +258,8 @@ public sealed class ProductArticleTests
         {
             string role = Request.Headers["Test-Role"].ToString();
             if (role is not ("Admin" or "Customer")) return Task.FromResult(AuthenticateResult.NoResult());
-            var identity = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "article-test"), new Claim(ClaimTypes.Role, role)], Scheme.Name);
+            var subject = Request.Headers["Test-User"].ToString();
+            var identity = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, string.IsNullOrEmpty(subject) ? "article-test" : subject), new Claim(ClaimTypes.Role, role)], Scheme.Name);
             return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme.Name)));
         }
     }

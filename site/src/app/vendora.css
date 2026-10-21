@@ -316,6 +316,35 @@ html:has(.vd-home)::-webkit-scrollbar {
    notably `.p-5 !important`) cannot change its geometry or affect unrelated
    storefront panels. Below the desktop breakpoint the columns intentionally
    return to their natural, stacked heights. */
+.vd-discussion { display: grid; gap: 24px; min-width: 0; }
+.vd-discussion h2 { font-size: 20px; font-weight: 800; }
+.vd-discussion__form, .vd-discussion__entry, .vd-discussion__notice { border: 1px solid #e0e6e3; border-radius: 18px; padding: 20px; }
+.vd-discussion__form { background: #f6faf8; }
+.vd-discussion fieldset { border: 0; min-width: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 16px; }
+.vd-discussion__form > fieldset { flex-direction: column; align-items: flex-start; }
+.vd-discussion__form label { display: grid; gap: 8px; font-size: 14px; font-weight: 600; width: 100%; }
+.vd-discussion textarea { width: 100%; min-height: 120px; border: 1px solid #cbd7d1; border-radius: 12px; background: white; padding: 12px; font: inherit; resize: vertical; color: #0b0b0b; }
+.vd-discussion textarea:focus-visible { outline: 2px solid #006b4f; outline-offset: 3px; }
+.vd-discussion__button { display: inline-flex; justify-content: center; align-items: center; min-height: 44px; padding: 10px 18px; border: 1px solid #006b4f; border-radius: 12px; color: #006b4f; font-size: 14px; font-weight: 700; background: white; }
+.vd-discussion__button--primary { background: #006b4f; color: white; }
+.vd-discussion__button:disabled { opacity: .5; cursor: not-allowed; }
+.vd-discussion__notice { display: grid; gap: 16px; justify-items: start; background: #f6faf8; }
+.vd-discussion__help { font-size: 13px; color: #58685f; line-height: 1.9; }
+.vd-discussion__list { display: grid; gap: 16px; }
+.vd-discussion__entry { display: grid; gap: 16px; }
+.vd-discussion__entry header { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.vd-discussion__entry time { font-size: 12px; color: #58685f; margin-inline-start: auto; }
+.vd-discussion__text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 2; font-size: 14px; }
+.vd-discussion__badge { font-size: 12px; font-weight: 700; color: #006b4f; background: #e5f6ee; border-radius: 99px; padding: 4px 12px; }
+.vd-discussion__stars { color: #a76300; letter-spacing: 3px; }
+.vd-discussion__rating legend { font-size: 14px; margin-block-end: 8px; }
+.vd-discussion__rating label { display: inline-grid; position: relative; width: 44px; height: 44px; place-items: center; cursor: pointer; }
+.vd-discussion__rating input { position: absolute; inset: 0; opacity: 0; width: 44px; height: 44px; cursor: pointer; }
+.vd-discussion__rating span { font-size: 30px; color: #a76300; }
+.vd-discussion__rating input:focus-visible + span { outline: 2px solid #006b4f; outline-offset: 3px; border-radius: 6px; }
+.vd-discussion__rating:disabled { opacity: .5; }
+.vd-discussion__pagination { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 16px; }
+
 .vd-product-hero__gallery,
 .vd-product-hero__information,
 .vd-product-hero__purchase {

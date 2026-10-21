@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import Header from "@/layout/header";
 import Footer from "@/layout/footer";
@@ -20,6 +20,8 @@ import { add_to_wishlist } from "@/redux/features/wishlist-slice";
 import { CatalogProductCard } from "./catalog-product-card";
 import { ProductArticle } from "./product-article";
 import { ProductPriceFreshness } from "./product-price-freshness";
+import { ProductDiscussion } from "./product-discussion";
+import { discussionCopy } from "./discussion-copy";
 import { getCatalogCopy } from "./catalog-copy";
 import type { CatalogProductModel, StoreProduct } from "./catalog-types";
 import { isVendoraProductImage, toCatalogProduct } from "./catalog-types";
@@ -27,10 +29,11 @@ import { isVendoraProductImage, toCatalogProduct } from "./catalog-types";
 /** Full product page with reusable gallery, information, purchase and specification sections. */
 export function ProductDetailPage({ id, initialProduct }: { id: string; initialProduct?: StoreProduct }) {
   const pathname = usePathname();
+  const router = useRouter();
   const locale: Locale = getLocaleFromPathname(pathname);
   const t = getCatalogCopy(locale);
   const dispatch = useDispatch();
-  const { data, isLoading, isError } = useGetProductQuery(id, { skip: Boolean(initialProduct) });
+  const { data, isLoading, isError, refetch } = useGetProductQuery(id, { skip: Boolean(initialProduct) });
   const { data: catalogData } = useGetShowingProductsQuery(undefined);
   const cartProducts = useSelector((state: { cart: { cart_products: Array<StoreProduct & { orderQuantity: number }> } }) => state.cart.cart_products);
   const wishlist = useSelector((state: { wishlist: { wishlist: StoreProduct[] } }) => state.wishlist.wishlist);
@@ -54,7 +57,7 @@ export function ProductDetailPage({ id, initialProduct }: { id: string; initialP
         </section>
 
         <CommerceBenefits locale={locale} />
-        <ProductContent product={product} locale={locale} />
+        <ProductContent key={product.id} product={product} locale={locale} onDiscussionChanged={() => { if (initialProduct) router.refresh(); else void refetch(); }} />
 
         {related.length > 0 ? (
           <section className="mt-10 md:mt-14 lg:mt-16">
@@ -144,7 +147,7 @@ function getPrimaryFeatures(product: CatalogProductModel, fallback: string): str
 }
 
 /** Five-star rating summary matching the approved Product / Information component. */
-function ProductRating({ locale, rating, reviewCount }: { locale: Locale; rating: number; reviewCount: number }) {
+function ProductRating({ locale, rating, reviewCount, ratingCount }: { locale: Locale; rating: number; reviewCount: number; ratingCount: number }) {
   const t = getCatalogCopy(locale);
   const roundedRating = Math.round(rating);
   return (
@@ -156,7 +159,7 @@ function ProductRating({ locale, rating, reviewCount }: { locale: Locale; rating
           </svg>
         ))}
       </span>
-      <span className="whitespace-nowrap text-sm font-bold text-ink">{formatNumber(rating, locale)} {t.ratingOutOf} · {formatNumber(reviewCount, locale)} {t.reviewLabel}</span>
+      <span className="text-sm font-bold text-ink">{formatNumber(rating, locale)} {t.ratingOutOf} · {formatNumber(ratingCount, locale)} {discussionCopy(locale).ratingCount} · {formatNumber(reviewCount, locale)} {t.reviewLabel}</span>
     </div>
   );
 }
@@ -176,7 +179,7 @@ function ProductInformation({ product, locale }: { product: CatalogProductModel;
       <h1 id="product-information-title" className="vd-product-hero__title vd-product-information__title">{product.title}</h1>
       <p className="vd-product-information__subtitle" dir="ltr">{product.category}</p>
       <hr className="vd-product-information__divider border-vd-line" />
-      <ProductRating locale={locale} rating={product.rating} reviewCount={product.reviewCount} />
+      <ProductRating locale={locale} rating={product.rating} ratingCount={product.ratingCount} reviewCount={product.reviewCount} />
 
       <div className="vd-product-information__colors">
         <p className="vd-product-information__color-label">{t.selectedColor}: <strong>{selectedColorOption?.label ?? "—"}</strong></p>
@@ -254,17 +257,22 @@ function CommerceBenefits({ locale }: { locale: Locale }) {
 }
 
 /** Tabbed description and specification surface adapted from the Exo content model. */
-function ProductContent({ product, locale }: { product: CatalogProductModel; locale: Locale }) {
+function ProductContent({ product, locale, onDiscussionChanged }: { product: CatalogProductModel; locale: Locale; onDiscussionChanged: () => void }) {
   const t = getCatalogCopy(locale);
-  const [activeTab, setActiveTab] = useState<"description" | "specifications" | "reviews">("specifications");
+  const [activeTab, setActiveTab] = useState<"description" | "specifications" | "reviews" | "questions">("specifications");
   const separator = locale === "fa" ? "، " : ", ";
   const rows = [[t.productCode, product.sku], [t.categories, product.category], [t.brands, product.brand], [t.colors, product.colorNames.join(separator) || "—"], [t.availability, product.stock > 0 ? t.available : t.unavailable], [locale === "fa" ? "تعداد موجود" : "Stock count", formatNumber(product.stock, locale)],
     ...product.attributes.map(attribute => [attribute.name, attribute.values.join(separator)])];
-  const tabs = [{ key: "specifications" as const, label: t.specifications }, { key: "description" as const, label: t.description }, { key: "reviews" as const, label: t.reviews }];
+  const tabs = [{ key: "specifications" as const, label: t.specifications }, { key: "description" as const, label: t.description }, { key: "reviews" as const, label: t.reviews }, { key: "questions" as const, label: discussionCopy(locale).questions }];
   return (
     <section className="mt-10 md:mt-14 lg:mt-16">
       <div className="flex gap-2 overflow-x-auto border-b border-vd-line">{tabs.map((tab) => <button key={tab.key} type="button" onClick={() => setActiveTab(tab.key)} className={`vd-focus h-12 shrink-0 border-b-2 px-4 text-sm font-extrabold ${activeTab === tab.key ? "border-jade text-jade" : "border-transparent text-vd-muted"}`}>{tab.label}</button>)}</div>
-      <div className="py-6 md:py-8">{activeTab === "specifications" ? <dl className="overflow-hidden rounded-[18px] border border-vd-line">{rows.map(([label, value], index) => <div key={`${index}-${label}`} className={`grid min-h-14 grid-cols-[42%_58%] items-center ${index > 0 ? "border-t border-vd-line" : ""}`}><dt className="h-full min-w-0 bg-surface-soft px-4 py-4 text-xs font-bold break-words text-vd-muted md:px-6 md:text-sm">{label}</dt><dd className="m-0 min-w-0 px-4 py-4 text-xs font-semibold break-words text-ink md:px-6 md:text-sm">{value}</dd></div>)}</dl> : null}{<div hidden={activeTab !== "description"} className="max-w-4xl"><h2 className="text-xl font-extrabold text-ink">{product.title}</h2><div className="mt-4"><ProductArticle content={product.descriptionHtml || product.description} /></div></div>}{activeTab === "reviews" ? <div className="rounded-[18px] border border-dashed border-vd-line bg-surface-soft p-10 text-center text-sm font-semibold text-vd-muted">{locale === "fa" ? "هنوز دیدگاهی برای این محصول ثبت نشده است." : "No reviews have been submitted yet."}</div> : null}</div>
+      <div className="py-6 md:py-8">
+        {activeTab === "specifications" ? <dl className="overflow-hidden rounded-[18px] border border-vd-line">{rows.map(([label, value], index) => <div key={`${index}-${label}`} className={`grid min-h-14 grid-cols-[42%_58%] items-center ${index > 0 ? "border-t border-vd-line" : ""}`}><dt className="h-full min-w-0 bg-surface-soft px-4 py-4 text-xs font-bold break-words text-vd-muted md:px-6 md:text-sm">{label}</dt><dd className="m-0 min-w-0 px-4 py-4 text-xs font-semibold break-words text-ink md:px-6 md:text-sm">{value}</dd></div>)}</dl> : null}
+        <div hidden={activeTab !== "description"} className="max-w-4xl"><h2 className="text-xl font-extrabold text-ink">{product.title}</h2><div className="mt-4"><ProductArticle content={product.descriptionHtml || product.description} /></div></div>
+        {activeTab === "reviews" && <ProductDiscussion productId={product.id} locale={locale} kind="review" onChanged={onDiscussionChanged} />}
+        {activeTab === "questions" && <ProductDiscussion productId={product.id} locale={locale} kind="question" onChanged={onDiscussionChanged} />}
+      </div>
     </section>
   );
 }

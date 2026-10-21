@@ -11,6 +11,7 @@ import { AdminCategoriesPage } from '../../features/admin/pages/AdminCategoriesP
 import { AdminColorsPage } from '../../features/admin/pages/AdminColorsPage';
 import { AdminAttributesPage } from '../../features/admin/pages/AdminAttributesPage';
 import { AdminSeoPage } from '../../features/admin/pages/AdminSeoPage';
+import { AdminDiscussionsPage } from '../../features/admin/pages/AdminDiscussionsPage';
 import { AdminCouponsPage } from '../../features/admin/pages/AdminCouponsPage';
 import { AdminDashboardPage } from '../../features/admin/pages/AdminDashboardPage';
 import { AdminNewsletterPage } from '../../features/admin/pages/AdminNewsletterPage';
@@ -69,6 +70,7 @@ function App() {
               <Route path="colors" element={<AdminColorsPage />} />
               <Route path="attributes" element={<AdminAttributesPage />} />
               <Route path="seo" element={<AdminSeoPage />} />
+              <Route path="discussions" element={<AdminDiscussionsPage />} />
               <Route path="coupon" element={<AdminCouponsPage />} />
               <Route path="profile" element={<AdminProfilePage />} />
               <Route path="newsletter-subscriptions" element={<AdminNewsletterPage />} />

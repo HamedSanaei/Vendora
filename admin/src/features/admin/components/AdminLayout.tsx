@@ -35,6 +35,7 @@ const menuSections: AdminMenuSection[] = [
         ],
       },
       { titleKey: 'orders', path: (locale) => adminPath(locale, 'orders'), icon: 'orders' },
+      { titleKey: 'discussions', path: (locale) => adminPath(locale, 'discussions'), icon: 'newsletter' },
     ],
   },
   {
@@ -77,6 +78,7 @@ function resolvePageTitle(locale: AdminLocale, pathname: string): string {
     ['/colors', 'colors'],
     ['/attributes', 'attributes'],
     ['/seo', 'seo'],
+    ['/discussions', 'discussions'],
     ['/coupon', 'coupons'],
     ['/profile', 'profile'],
     ['/newsletter-subscriptions', 'subscribers'],

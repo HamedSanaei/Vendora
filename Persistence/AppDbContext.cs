@@ -21,6 +21,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <summary>Gets the products.</summary>
     public DbSet<Product> Products => Set<Product>();
 
+    /// <summary>Gets persisted product discussions and customer ratings.</summary>
+    public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
+    public DbSet<ProductQuestion> ProductQuestions => Set<ProductQuestion>();
+    public DbSet<ProductAnswer> ProductAnswers => Set<ProductAnswer>();
+
     /// <summary>Gets the durable internal USDT/Toman rate and refresh schedule.</summary>
     public DbSet<UsdtExchangeRate> UsdtExchangeRates => Set<UsdtExchangeRate>();
 
@@ -92,6 +97,30 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<ProductReview>(b =>
+        {
+            b.Property(x => x.Content).HasMaxLength(3000).IsRequired();
+            b.HasIndex(x => new { x.ProductId, x.UserId }).IsUnique();
+            b.HasIndex(x => new { x.ProductId, x.IsHidden, x.CreatedAtUtc });
+            b.ToTable("ProductReviews", table => table.HasCheckConstraint("CK_ProductReviews_Rating", "Rating IS NULL OR (Rating >= 1 AND Rating <= 5)"));
+            b.HasOne<Product>().WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<ProductQuestion>(b =>
+        {
+            b.Property(x => x.Content).HasMaxLength(2000).IsRequired();
+            b.HasIndex(x => new { x.ProductId, x.IsHidden, x.CreatedAtUtc });
+            b.HasOne<Product>().WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<ProductAnswer>(b =>
+        {
+            b.Property(x => x.Content).HasMaxLength(3000).IsRequired();
+            b.HasIndex(x => new { x.QuestionId, x.IsHidden, x.CreatedAtUtc });
+            b.HasOne<ProductQuestion>().WithMany().HasForeignKey(x => x.QuestionId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+        });
 
         modelBuilder.Entity<AppUser>(builder =>
         {

@@ -42,6 +42,7 @@ export interface StoreProduct {
   attributes?: ProductSpecification[];
   tags?: string[];
   rating?: number;
+  ratingCount?: number;
   reviewCount?: number;
 }
 
@@ -68,6 +69,7 @@ export interface CatalogProductModel {
   attributes: ProductSpecification[];
   tags: string[];
   rating: number;
+  ratingCount: number;
   reviewCount: number;
   source: StoreProduct;
 }
@@ -102,6 +104,7 @@ export function toCatalogProduct(product: StoreProduct): CatalogProductModel {
     attributes: (attributes ?? []).filter(row => row.isVisible).sort((a, b) => a.sortOrder - b.sortOrder),
     tags: product.tags ?? [],
     rating: Math.min(5, Math.max(0, Number(product.rating) || 0)),
+    ratingCount: Math.max(0, Math.trunc(Number(product.ratingCount) || 0)),
     reviewCount: Math.max(0, Math.trunc(Number(product.reviewCount) || 0)),
     source,
   };

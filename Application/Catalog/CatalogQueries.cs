@@ -36,7 +36,8 @@ public static class CatalogQueries
         ProductPriceFreshnessDto? PriceFreshness = null,
         IReadOnlyList<ProductAttributeDto>? Attributes = null,
         SeoDto? Seo = null,
-        IReadOnlyList<CatalogSearch.CategoryLink>? Breadcrumbs = null);
+        IReadOnlyList<CatalogSearch.CategoryLink>? Breadcrumbs = null,
+        double Rating = 0, int RatingCount = 0, int ReviewCount = 0);
 
     /// <summary>Represents a recursive category node.</summary>
     public sealed record CatalogCategoryDto(Guid Id, string Name, string Slug, Guid? ParentCategoryId, IReadOnlyList<CatalogCategoryDto> Children);
@@ -98,6 +99,7 @@ public static class CatalogQueries
                 var now = _time.GetUtcNow().UtcDateTime;
                 var categoryGraph = request.Identifier is null ? [] : await _dbContext.Categories.AsNoTracking().ToListAsync(cancellationToken);
                 var hierarchy = new CategoryHierarchy(categoryGraph);
+                var discussions = await Application.Discussions.DiscussionQueries.Summaries(_dbContext, products.Select(p => p.Id).ToList(), cancellationToken);
 
                 return products.Select(product =>
                 {
@@ -140,7 +142,10 @@ public static class CatalogQueries
                         request.Identifier is null ? null : Application.Products.ProductAttributeWriter.Map(product.Attributes, publicOnly: true),
                         SeoMapping.Map(product.Seo),
                         request.Identifier is null ? null : hierarchy.Path(product.CategoryId ?? product.Categories.FirstOrDefault()?.CategoryId ?? Guid.Empty)
-                            .Where(x => hierarchy.IsPublic(x.Id)).Select(x => new CatalogSearch.CategoryLink(x.Id, x.Name, x.Slug)).ToList());
+                            .Where(x => hierarchy.IsPublic(x.Id)).Select(x => new CatalogSearch.CategoryLink(x.Id, x.Name, x.Slug)).ToList(),
+                        discussions.GetValueOrDefault(product.Id)?.Rating ?? 0,
+                        discussions.GetValueOrDefault(product.Id)?.RatingCount ?? 0,
+                        discussions.GetValueOrDefault(product.Id)?.ReviewCount ?? 0);
                 }).ToList();
             }
 
