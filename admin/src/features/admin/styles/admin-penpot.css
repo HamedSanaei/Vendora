@@ -456,7 +456,8 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-header-breadcrumb a {
   overflow: hidden;
   color: var(--va-muted);
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 500;
   text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -470,7 +471,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-header-breadcrumb strong {
   grid-column: 1 / -1;
   color: var(--va-ink);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
 }
 
@@ -490,6 +491,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 
 .admin-shell[data-admin-theme="penpot"] .admin-search {
   display: none;
+  min-width: 0;
   height: 44px;
   align-items: center;
   gap: 9px;
@@ -508,16 +510,18 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   outline: 0;
   background: transparent;
   color: var(--va-ink);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-profile {
   display: flex;
   min-width: 44px;
+  min-height: 48px;
   align-items: center;
   gap: 10px;
   color: var(--va-ink);
   text-decoration: none;
+  border-radius: 12px;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-profile-avatar {
@@ -531,7 +535,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   background: var(--va-brass-soft);
   color: var(--va-brass-dark);
   font-family: Arial, sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -1096,25 +1100,79 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   gap: 16px;
 }
 
-/* Keep the larger Persian dashboard type within the shared responsive panels. */
+/* Dashboard hierarchy stays readable without increasing type across unrelated admin forms. */
+.admin-stat-card .admin-stat-value {
+  color: inherit;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-eyebrow {
+  font-size: 13px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-page-heading h1 {
+  font-size: clamp(28px, 3vw, 36px);
+  font-weight: 700;
+}
+
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-page-heading p {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
+  line-height: 1.9;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-stat-label {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-stat-card {
+  min-width: 0;
+  min-height: 148px;
+  padding: 20px 16px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-stat-card strong {
+  font-size: clamp(24px, 2.4vw, 32px);
+  font-weight: 700;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-stat-card:has(.admin-stat-unit) strong {
+  font-size: clamp(20px, 2.2vw, 30px);
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-stat-unit {
+  display: block;
+  margin-top: 4px;
+  color: var(--va-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-stats-grid {
+  gap: 16px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-dashboard-grid {
+  gap: 20px;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-surface-header h2 {
-  font-size: 18px;
+  font-size: 20px;
+  font-weight: 700;
   line-height: 1.7;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-surface-header p,
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-empty-state p {
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 500;
   line-height: 1.9;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-list-row {
   flex-wrap: wrap;
+  gap: 14px;
+  padding-block: 16px;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-list-row > div {
@@ -1123,19 +1181,29 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-list-row strong {
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 700;
   line-height: 1.8;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-list-row small {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.8;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-list-end {
   margin-inline-start: auto;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-badge {
   font-size: 13px;
-  font-weight: 500;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-empty-state h3 {
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-chart-canvas {
@@ -2137,7 +2205,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 
 @media (min-width: 768px) {
   .admin-shell[data-admin-theme="penpot"] .admin-header {
-    grid-template-columns: minmax(210px, auto) minmax(260px, 520px) auto;
+    grid-template-columns: minmax(140px, 1fr) minmax(160px, 1.5fr) minmax(0, 220px);
     padding-inline: 24px;
   }
 
@@ -2163,8 +2231,8 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
     white-space: nowrap;
   }
 
-  .admin-shell[data-admin-theme="penpot"] .admin-profile strong { font-size: 11px; }
-  .admin-shell[data-admin-theme="penpot"] .admin-profile small { margin-top: 2px; color: var(--va-muted); font-size: 9px; }
+  .admin-shell[data-admin-theme="penpot"] .admin-profile strong { font-size: 15px; font-weight: 700; line-height: 1.7; }
+  .admin-shell[data-admin-theme="penpot"] .admin-profile small { margin-top: 2px; color: var(--va-graphite); font-size: 13px; font-weight: 600; line-height: 1.7; }
 
   .admin-shell[data-admin-theme="penpot"] .admin-invoice-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

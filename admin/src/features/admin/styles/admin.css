@@ -1044,6 +1044,14 @@ textarea {
 @font-face {
   font-family: "Vazirmatn";
   font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/vazirmatn/Vazirmatn-SemiBold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Vazirmatn";
+  font-style: normal;
   font-weight: 700;
   font-display: swap;
   src: url("/fonts/vazirmatn/Vazirmatn-Bold.ttf") format("truetype");

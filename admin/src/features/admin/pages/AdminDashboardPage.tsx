@@ -48,7 +48,7 @@ export const AdminDashboardPage = observer(function AdminDashboardPage() {
   if (!stats) return null;
 
   const monthFormatter = new Intl.DateTimeFormat(isFa ? 'fa-IR' : 'en-US', { month: 'short' });
-  const chartFont = { family: isFa ? 'Vazirmatn, Tahoma, sans-serif' : 'Roboto, sans-serif', size: isFa ? 12 : 10, weight: isFa ? 700 : 400 };
+  const chartFont = { family: isFa ? 'Vazirmatn, Tahoma, sans-serif' : 'Roboto, sans-serif', size: isFa ? 14 : 12, weight: isFa ? 700 : 500 };
   const chartData = {
     labels: stats.monthlySales.map((item) => monthFormatter.format(new Date(Date.UTC(item.year, item.month - 1, 1)))),
     datasets: [
@@ -76,7 +76,7 @@ export const AdminDashboardPage = observer(function AdminDashboardPage() {
       />
 
       <div className="admin-stats-grid">
-        <StatCard title={isFa ? 'فروش تأییدشده' : 'Verified sales'} value={formatMoney(stats.totalSales, locale)} tone="blue" />
+        <StatCard title={isFa ? 'فروش تأییدشده' : 'Verified sales'} value={stats.totalSales.toLocaleString(isFa ? 'fa-IR' : 'en-US', { maximumFractionDigits: 0 })} unit={isFa ? 'تومان' : 'Toman'} tone="blue" />
         <StatCard title={isFa ? 'کل سفارش‌ها' : 'Orders'} value={stats.totalOrders.toLocaleString(isFa ? 'fa-IR' : 'en-US')} tone="green" />
         <StatCard title={isFa ? 'محصولات' : 'Products'} value={stats.totalProducts.toLocaleString(isFa ? 'fa-IR' : 'en-US')} tone="purple" />
         <StatCard title={isFa ? 'مشتریان' : 'Customers'} value={stats.totalCustomers.toLocaleString(isFa ? 'fa-IR' : 'en-US')} tone="rose" />

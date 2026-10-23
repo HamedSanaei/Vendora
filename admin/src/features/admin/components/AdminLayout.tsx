@@ -279,7 +279,7 @@ export const AdminLayout = observer(function AdminLayout() {
             <input aria-label={adminText(locale, 'globalSearch')} onChange={(event) => setGlobalSearch(event.target.value)} placeholder={adminText(locale, 'globalSearch')} type="search" value={globalSearch} />
           </form>
 
-          <Link className="admin-profile" to={adminPath(locale, 'profile')}>
+          <Link className="admin-profile" to={adminPath(locale, 'profile')} aria-label={`${adminText(locale, 'account')}: ${store.auth.profile?.fullName ?? 'Vendora Admin'}`}>
             <span className="admin-profile-avatar">{initials}</span>
             <div><strong>{store.auth.profile?.fullName ?? 'Vendora Admin'}</strong><small>{adminText(locale, 'account')}</small></div>
             <AdminIcon className="admin-profile-chevron" name="chevron" size={16} />
