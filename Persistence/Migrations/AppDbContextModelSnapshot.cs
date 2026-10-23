@@ -700,6 +700,9 @@ namespace Persistence.Migrations
                         .HasPrecision(18, 6)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("ProductCode")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(280)
@@ -728,6 +731,9 @@ namespace Persistence.Migrations
                     b.HasIndex("BrandId");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("ProductCode")
+                        .IsUnique();
 
                     b.HasIndex("Slug")
                         .IsUnique();
@@ -849,6 +855,26 @@ namespace Persistence.Migrations
                     b.HasIndex("CategoryId", "ProductId");
 
                     b.ToTable("ProductCategories", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.ProductCodeSequence", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("NextValue")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ProductCodeSequences");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            NextValue = 100
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.ProductColor", b =>

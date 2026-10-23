@@ -49,7 +49,8 @@ public static class List
                 product.Images
                     .OrderBy(image => image.SortOrder)
                     .Select(image => image.ImageUrl)
-                    .FirstOrDefault());
+                    .FirstOrDefault(),
+                product.ProductCode);
         }
     }
 }

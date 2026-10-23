@@ -12,7 +12,7 @@ namespace Persistence;
 /// <summary>
 /// Primary EF Core context for Vendora.
 /// </summary>
-public class AppDbContext(DbContextOptions<AppDbContext> options)
+public partial class AppDbContext(DbContextOptions<AppDbContext> options)
     : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>(options), IUnitOfWork
 {
     /// <summary>Gets the product categories.</summary>
@@ -20,6 +20,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
     /// <summary>Gets the products.</summary>
     public DbSet<Product> Products => Set<Product>();
+
+    /// <summary>Gets the transactionally allocated public product code counter.</summary>
+    public DbSet<ProductCodeSequence> ProductCodeSequences => Set<ProductCodeSequence>();
 
     /// <summary>Gets persisted product discussions and customer ratings.</summary>
     public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
@@ -98,6 +101,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<ProductCodeSequence>(builder =>
+        {
+            builder.HasKey(x => x.Id);
+            builder.Property(x => x.Id).ValueGeneratedNever();
+            builder.HasData(new ProductCodeSequence());
+        });
+
         modelBuilder.Entity<ProductReview>(b =>
         {
             b.Property(x => x.Content).HasMaxLength(3000).IsRequired();
@@ -163,6 +173,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             builder.Property(x => x.InventoryStatus).HasConversion<int>();
             builder.HasIndex(x => x.Slug).IsUnique();
             builder.HasIndex(x => x.Status);
+            builder.HasIndex(x => x.ProductCode).IsUnique();
+            builder.Property(x => x.ProductCode).ValueGeneratedNever();
             builder.HasOne(x => x.Category)
                 .WithMany(x => x.Products)
                 .HasForeignKey(x => x.CategoryId)
@@ -501,20 +513,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The number of affected rows.</returns>
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        ApplyAuditTimestamps();
-        return base.SaveChangesAsync(cancellationToken);
-    }
+        => SaveChangesAsync(true, cancellationToken);
 
     /// <summary>
     /// Applies audit timestamps before saving changes.
     /// </summary>
     /// <returns>The number of affected rows.</returns>
-    public override int SaveChanges()
-    {
-        ApplyAuditTimestamps();
-        return base.SaveChanges();
-    }
+    public override int SaveChanges() => SaveChanges(true);
 
     /// <summary>Uses the same bounded optional metadata shape for products and categories.</summary>
     private static void ConfigureSeo<T>(Microsoft.EntityFrameworkCore.Metadata.Builders.OwnedNavigationBuilder<T, SeoMetadata> seo) where T : class

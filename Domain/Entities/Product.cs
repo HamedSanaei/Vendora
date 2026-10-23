@@ -8,6 +8,9 @@ namespace Domain.Entities;
 /// </summary>
 public class Product : AuditableEntity
 {
+    /// <summary>Stable, server-assigned public catalog number, independent of the ID and URL slug.</summary>
+    public int ProductCode { get; private set; }
+
     /// <summary>Maximum persisted article length, including formatting markup.</summary>
     public const int MaxDescriptionLength = 200_000;
 

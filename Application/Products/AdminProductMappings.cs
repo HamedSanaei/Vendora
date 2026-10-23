@@ -53,7 +53,8 @@ internal static class AdminProductMappings
             product.UsdPrice,
             product.PriceExchangeRate,
             ProductAttributeWriter.Map(product.Attributes),
-            Application.Seo.SeoMapping.Map(product.Seo));
+            Application.Seo.SeoMapping.Map(product.Seo),
+            product.ProductCode);
     }
 
     private static Guid? ResolvePrimaryCategoryId(Product product)

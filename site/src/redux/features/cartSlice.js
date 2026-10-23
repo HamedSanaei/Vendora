@@ -98,13 +98,19 @@ export const cartSlice = createSlice({
       state.cart_products = [];
       setLocalStorage("cart_products", state.cart_products);
     },
-    // Refreshes price fields only; quantities and line positions remain owned by the cart.
+    // Refreshes catalog prices and public codes; quantities, identifiers and line positions stay unchanged.
     sync_cart_prices: (state, { payload }) => {
       const prices = new Map((payload ?? []).map((product) => [product._id, product]));
       let changed = false;
       for (const item of state.cart_products) {
         const current = prices.get(item._id);
         if (!current || !Number.isFinite(Number(current.originalPrice)) || Number(current.originalPrice) <= 0) continue;
+        if (Number.isInteger(current.productCode) && current.productCode >= 100
+          && (item.productCode !== current.productCode || item.sku !== String(current.productCode))) {
+          item.productCode = current.productCode;
+          item.sku = String(current.productCode);
+          changed = true;
+        }
         if (item.originalPrice !== current.originalPrice || item.price !== current.price || item.discount !== current.discount) {
           item.originalPrice = current.originalPrice;
           item.price = current.price;

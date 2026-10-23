@@ -161,7 +161,11 @@ public sealed class ProductAttributeTests
         await using var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options);
         await db.GetService<IMigrator>().MigrateAsync("20261020120034_ExpandProductDescriptionForRichText");
         var product = new Product { Title = "Existing bag", Slug = "existing-bag", Price = 150000, Description = "<p>Existing article</p>" };
-        db.Products.Add(product); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+        // Insert through the legacy schema, not the current model which now requires a public code.
+        await db.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO "Products" ("Id", "Title", "Slug", "Price", "Description", "StockQuantity", "Status", "InventoryStatus", "CreatedAtUtc")
+            VALUES ({product.Id}, {product.Title}, {product.Slug}, {product.Price}, {product.Description}, {0}, {0}, {0}, {DateTime.UtcNow})
+            """);
         await db.Database.MigrateAsync();
         var loaded = await db.Products.Include(x => x.Attributes).SingleAsync();
         Assert.Equal(product.Description, loaded.Description); Assert.Equal(product.Price, loaded.Price); Assert.Empty(loaded.Attributes);

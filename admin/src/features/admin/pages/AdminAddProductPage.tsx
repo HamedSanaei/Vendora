@@ -41,6 +41,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
   const isEdit = mode === 'edit' && Boolean(productId);
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
+  const [productCode, setProductCode] = useState<number | null>(null);
   const [description, setDescription] = useState('');
   const [articleUploading, setArticleUploading] = useState(false);
   const [attributes, setAttributes] = useState<AttributeDraft[]>([]);
@@ -81,6 +82,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       }
 
       setTitle(product.title);
+      setProductCode(product.productCode);
       setPreviewUrl(product.status === 'Active' ? productStorefrontUrl(locale, product.slug) : undefined);
       setSlug(product.slug);
       setDescription(product.description ?? '');
@@ -281,6 +283,10 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       <form className="admin-product-form" onSubmit={handleSubmit}>
         <article className="admin-panel">
           <div className="admin-form-grid">
+            <label>
+              {isFa ? 'کد محصول' : 'Product code'}
+              <input readOnly value={productCode ?? ''} dir="ltr" placeholder={isFa ? 'پس از ثبت، خودکار اختصاص می‌یابد' : 'Assigned automatically after saving'} />
+            </label>
             <label>
               {isFa ? 'عنوان محصول' : 'Product title'}
               <input name="title" required value={title} onChange={(event) => handleTitleChange(event.target.value)} placeholder={isFa ? 'کیف اداری لپ‌تاپ' : 'Laptop Briefcase'} />

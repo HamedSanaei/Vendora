@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { AdminProduct } from '../types';
+import { normalizeDigits } from '../utils/formatters';
 
 interface AdminProductQueryResult {
   category: string;
@@ -25,13 +26,13 @@ export function useAdminProductQuery(products: AdminProduct[], pageSize: number)
   const requestedPage = Number(searchParams.get('page') ?? '1');
 
   const filtered = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase();
+    const normalizedQuery = normalizeDigits(query.trim()).toLocaleLowerCase();
     return products.filter((product) => {
-      const matchesQuery = !normalizedQuery || `${product.title} ${product.slug} ${product.brandName ?? ''}`.toLocaleLowerCase().includes(normalizedQuery);
+      const matchesQuery = !normalizedQuery || String(product.productCode) === normalizedQuery || normalizeDigits(`${product.title} ${product.slug} ${product.brandName ?? ''}`).toLocaleLowerCase().includes(normalizedQuery);
       const matchesCategory = category === 'all' || product.categoryIds.includes(category) || product.categoryId === category;
       const matchesStatus = status === 'all' || product.status === status || product.inventoryStatus === status;
       return matchesQuery && matchesCategory && matchesStatus;
-    });
+    }).sort((a, b) => Number(String(b.productCode) === normalizedQuery) - Number(String(a.productCode) === normalizedQuery));
   }, [category, products, query, status]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));

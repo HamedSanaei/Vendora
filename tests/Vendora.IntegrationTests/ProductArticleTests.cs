@@ -195,6 +195,7 @@ public sealed class ProductArticleTests
             builder.WebHost.ConfigureKestrel(options => options.Listen(IPAddress.Loopback, 0));
             builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connection));
             builder.Services.AddScoped<IProductAdminRepository, ProductAdminRepository>();
+            builder.Services.AddScoped<IProductReadRepository, ProductReadRepository>();
             builder.Services.AddScoped<Persistence.Admin.IAdminRepository, Persistence.Admin.AdminRepository>();
             builder.Services.AddSingleton<Application.Seo.SeoAiRateGate>();
             builder.Services.AddSingleton<ISeoAiGateway, UnconfiguredSeoGateway>();

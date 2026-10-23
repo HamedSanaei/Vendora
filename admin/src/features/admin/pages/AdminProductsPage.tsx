@@ -57,7 +57,7 @@ export const AdminProductsPage = observer(function AdminProductsPage() {
       {products.error ? <AdminFeedback tone="error">{products.error}</AdminFeedback> : null}
 
       <AdminPanel>
-        <AdminFilterBar searchLabel={isFa ? 'جستجو بر اساس نام، اسلاگ یا برند…' : 'Search title, slug, or brand…'} searchValue={list.query} onSearchChange={list.setQuery}>
+        <AdminFilterBar searchLabel={isFa ? 'جستجو بر اساس کد، نام، اسلاگ یا برند…' : 'Search code, title, slug, or brand…'} searchValue={list.query} onSearchChange={list.setQuery}>
           <select aria-label={isFa ? 'فیلتر دسته‌بندی' : 'Category filter'} className="admin-filter-select" onChange={(event) => list.setCategory(event.target.value)} value={list.category}>
             <option value="all">{isFa ? 'همه دسته‌بندی‌ها' : 'All categories'}</option>
             {products.categoryOptions.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
@@ -94,7 +94,7 @@ export const AdminProductsPage = observer(function AdminProductsPage() {
                 {list.pageItems.map((product) => (
                   <tr key={product.id}>
                     <td className="admin-selection-cell" data-label={isFa ? 'انتخاب' : 'Select'}><AdminCheckbox aria-label={`${isFa ? 'انتخاب' : 'Select'} ${product.title}`} checked={selectedIds.includes(product.id)} label={<span className="sr-only">{product.title}</span>} onChange={() => toggleProduct(product.id)} /></td>
-                    <td data-label={isFa ? 'محصول' : 'Product'}><div className="admin-product-cell"><img src={product.imageUrl} alt="" /><div><strong>{product.title}</strong><small>{product.slug}</small><small>{product.brandName ?? (isFa ? 'بدون برند' : 'No brand')}</small>{isFa && <small>امتیاز سئو: {product.seo?.score != null ? `${product.seo.score.toLocaleString('fa-IR')} از ۱۰۰` : 'ارزیابی نشده'}</small>}</div></div></td>
+                    <td data-label={isFa ? 'محصول' : 'Product'}><div className="admin-product-cell"><img src={product.imageUrl} alt="" /><div><strong>{product.title}</strong><small>{isFa ? 'کد محصول' : 'Product code'}: <bdi>{product.productCode}</bdi></small><small>{product.brandName ?? (isFa ? 'بدون برند' : 'No brand')}</small>{isFa && <small>امتیاز سئو: {product.seo?.score != null ? `${product.seo.score.toLocaleString('fa-IR')} از ۱۰۰` : 'ارزیابی نشده'}</small>}</div></div></td>
                     <td data-label={isFa ? 'دسته‌بندی' : 'Category'}>{product.categoryName}</td>
                     <td data-label={isFa ? 'قیمت' : 'Price'}>{formatMoney(product.price, locale)}</td>
                     <td data-label={isFa ? 'موجودی' : 'Stock'}><span>{product.stockQuantity.toLocaleString(isFa ? 'fa-IR' : 'en-US')}</span><StatusBadge locale={locale} value={product.inventoryStatus} /></td>

@@ -10,4 +10,5 @@ public sealed record ProductListItemDto(
     decimal Price,
     int StockQuantity,
     string? CategoryName,
-    string? PrimaryImageUrl);
+    string? PrimaryImageUrl,
+    int ProductCode = 0);

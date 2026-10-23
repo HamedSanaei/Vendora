@@ -37,7 +37,7 @@ public static class CatalogQueries
         IReadOnlyList<ProductAttributeDto>? Attributes = null,
         SeoDto? Seo = null,
         IReadOnlyList<CatalogSearch.CategoryLink>? Breadcrumbs = null,
-        double Rating = 0, int RatingCount = 0, int ReviewCount = 0);
+        double Rating = 0, int RatingCount = 0, int ReviewCount = 0, int ProductCode = 0);
 
     /// <summary>Represents a recursive category node.</summary>
     public sealed record CatalogCategoryDto(Guid Id, string Name, string Slug, Guid? ParentCategoryId, IReadOnlyList<CatalogCategoryDto> Children);
@@ -145,7 +145,8 @@ public static class CatalogQueries
                             .Where(x => hierarchy.IsPublic(x.Id)).Select(x => new CatalogSearch.CategoryLink(x.Id, x.Name, x.Slug)).ToList(),
                         discussions.GetValueOrDefault(product.Id)?.Rating ?? 0,
                         discussions.GetValueOrDefault(product.Id)?.RatingCount ?? 0,
-                        discussions.GetValueOrDefault(product.Id)?.ReviewCount ?? 0);
+                        discussions.GetValueOrDefault(product.Id)?.ReviewCount ?? 0,
+                        product.ProductCode);
                 }).ToList();
             }
 

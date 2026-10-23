@@ -177,7 +177,7 @@ function ProductInformation({ product, locale }: { product: CatalogProductModel;
     <section className="vd-product-hero__information min-w-0 rounded-[18px] border border-vd-line bg-white" aria-labelledby="product-information-title">
       <p className="vd-product-information__eyebrow" dir="ltr">{t.originalEyebrow}</p>
       <h1 id="product-information-title" className="vd-product-hero__title vd-product-information__title">{product.title}</h1>
-      <p className="vd-product-information__subtitle" dir="ltr">{product.category}</p>
+      <p className="vd-product-information__subtitle">{t.productCode}: <bdi>{product.sku}</bdi> · {product.category}</p>
       <hr className="vd-product-information__divider border-vd-line" />
       <ProductRating locale={locale} rating={product.rating} ratingCount={product.ratingCount} reviewCount={product.reviewCount} />
 

@@ -11,7 +11,8 @@ export function mapCatalogProduct(product: CatalogProductDto) {
   const categoryName = category?.name || product.categoryName || 'Vendora';
   const categorySlug = category?.slug || product.categorySlug || '';
   return {
-    _id: product.id, id: product.id, slug: product.slug, sku: product.slug, title: product.title,
+    _id: product.id, id: product.id, slug: product.slug, productCode: product.productCode,
+    sku: product.productCode >= 100 ? String(product.productCode) : '', title: product.title,
     rating: product.rating ?? 0, ratingCount: product.ratingCount ?? 0, reviewCount: product.reviewCount ?? 0,
     parent: categoryName, children: categorySlug, categorySlugs: categories.map(item => item.slug),
     tags: [categoryName, product.brandName, ...categories.map(item => item.name), ...(product.colors ?? []).map(color => color.name)].filter((value): value is string => Boolean(value)),

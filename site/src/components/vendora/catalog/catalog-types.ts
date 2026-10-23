@@ -15,6 +15,7 @@ export interface ProductSpecification {
 
 /** Product shape returned by the current storefront API. */
 export interface StoreProduct {
+  productCode?: number;
   slug?: string;
   galleryAlts?: string[];
   breadcrumbs?: Array<{id:string;name:string;slug:string}>;
@@ -96,7 +97,7 @@ export function toCatalogProduct(product: StoreProduct): CatalogProductModel {
     price: discount > 0 ? Math.round(price * (1 - discount / 100)) : price,
     oldPrice: discount > 0 ? price : undefined,
     stock: product.quantity ?? 0,
-    sku: product.sku ?? product._id,
+    sku: product.productCode && product.productCode >= 100 ? String(product.productCode) : (product.sku ?? "—"),
     category: product.category?.name ?? product.parent ?? product.tags?.[0] ?? "Vendora",
     brand: product.brand?.name ?? "Vendora Studio",
     colors: product.colors ?? [],

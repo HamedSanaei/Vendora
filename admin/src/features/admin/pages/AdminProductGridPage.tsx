@@ -60,6 +60,7 @@ export const AdminProductGridPage = observer(function AdminProductGridPage() {
               <img src={product.imageUrl} alt={product.title} />
               <div className="admin-product-card-body">
                 <div><h2>{product.title}</h2><p>{product.categoryName} · {product.brandName ?? (isFa ? 'بدون برند' : 'No brand')}</p></div>
+                <small>{isFa ? 'کد محصول' : 'Product code'}: <bdi>{product.productCode}</bdi></small>
                 <strong>{formatMoney(product.price, locale)}</strong>
                 {isFa && <small>امتیاز سئو: {product.seo?.score == null ? 'بررسی نشده' : `${product.seo.score.toLocaleString('fa-IR')} از ۱۰۰`}</small>}
                 <div className="admin-card-footer">

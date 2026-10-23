@@ -57,7 +57,8 @@ public static class Details
                         image.AltText,
                         image.IsPrimary,
                         image.SortOrder))
-                    .ToList());
+                    .ToList(),
+                product.ProductCode);
         }
     }
 }

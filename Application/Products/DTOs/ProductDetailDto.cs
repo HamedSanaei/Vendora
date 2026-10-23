@@ -11,4 +11,5 @@ public sealed record ProductDetailDto(
     decimal Price,
     int StockQuantity,
     string? CategoryName,
-    IReadOnlyList<ProductImageDto> Images);
+    IReadOnlyList<ProductImageDto> Images,
+    int ProductCode = 0);

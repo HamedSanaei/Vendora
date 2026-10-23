@@ -3,6 +3,7 @@ using Application.Products.DTOs;
 using Application.Seo;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.Common;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
@@ -24,11 +25,13 @@ public static class CatalogSearch
             var categories = await db.Categories.AsNoTracking().ToListAsync(ct);
             var tree = new CategoryHierarchy(categories);
             var query = db.Products.AsNoTracking().Where(x => x.Status == ProductStatus.Active);
+            int? productCode = null;
             if (!string.IsNullOrWhiteSpace(request.Search))
             {
                 string text = request.Search.Trim().ToLowerInvariant();
                 if (text.Length > 200) return new([], 0, 1, Math.Clamp(request.PageSize, 1, 48));
-                query = query.Where(x => x.Title.ToLower().Contains(text) || x.Slug.ToLower().Contains(text));
+                productCode = ProductCodeSearch.Parse(text);
+                query = query.Where(x => x.ProductCode == productCode || x.Title.ToLower().Contains(text) || x.Slug.ToLower().Contains(text));
             }
             HashSet<Guid> Resolve(IEnumerable<string> slugs) => tree.Descendants(categories.Where(x => slugs.Contains(x.Slug)).Select(x => x.Id), true);
             if (!string.IsNullOrWhiteSpace(request.BaseCategory))
@@ -53,15 +56,17 @@ public static class CatalogSearch
             if (request.Sort is "priceAsc" or "priceDesc")
             {
                 // SQLite cannot ORDER BY decimal. Keep exact decimal money, projecting only IDs/prices rather than casting to floating point.
-                var prices = await query.Select(x => new { x.Id, x.Price }).ToListAsync(ct);
-                var orderedPrices = request.Sort == "priceAsc" ? prices.OrderBy(x => x.Price).ThenBy(x => x.Id)
-                    : prices.OrderByDescending(x => x.Price).ThenBy(x => x.Id);
+                var prices = await query.Select(x => new { x.Id, x.Price, x.ProductCode }).ToListAsync(ct);
+                var ranked = prices.OrderByDescending(x => x.ProductCode == productCode);
+                var orderedPrices = request.Sort == "priceAsc" ? ranked.ThenBy(x => x.Price).ThenBy(x => x.Id)
+                    : ranked.ThenByDescending(x => x.Price).ThenBy(x => x.Id);
                 productIds = orderedPrices.Skip((page - 1) * size).Take(size).Select(x => x.Id).ToList();
             }
             else
             {
-                var ordered = request.Sort == "oldest" ? query.OrderBy(x => x.CreatedAtUtc).ThenBy(x => x.Id)
-                    : query.OrderByDescending(x => x.CreatedAtUtc).ThenBy(x => x.Id);
+                var ranked = query.OrderByDescending(x => x.ProductCode == productCode);
+                var ordered = request.Sort == "oldest" ? ranked.ThenBy(x => x.CreatedAtUtc).ThenBy(x => x.Id)
+                    : ranked.ThenByDescending(x => x.CreatedAtUtc).ThenBy(x => x.Id);
                 productIds = await ordered.Skip((page - 1) * size).Take(size).Select(x => x.Id).ToListAsync(ct);
             }
             if (productIds.Count == 0) return new([], total, page, size);

@@ -28,6 +28,7 @@ export type AdminOrderStatus =
 export type AdminPaymentStatus = 'Pending' | 'Redirected' | 'Verified' | 'Failed' | 'Cancelled';
 
 export interface PublicProductDto {
+  productCode: number;
   id: string;
   title: string;
   slug: string;
@@ -40,6 +41,7 @@ export interface PublicProductDto {
 import type { SeoDto, SeoInput } from './seo/types';
 
 export interface AdminProductDto {
+  productCode: number;
   seo?: SeoDto | null;
   attributes?: ProductAttribute[];
   id: string;
@@ -78,6 +80,7 @@ export interface AdminProductImageDto {
 }
 
 export interface AdminProduct {
+  productCode: number;
   seo?: SeoDto | null;
   attributes: ProductAttribute[];
   id: string;
