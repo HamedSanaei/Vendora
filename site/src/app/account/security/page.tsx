@@ -4,6 +4,7 @@ import { getDict } from "@/lib/vendora/i18n";
 import { withLocalePath } from "@/lib/locale-path";
 import { AccountScreen } from "@/components/vendora/account/account-screen";
 import { PasswordForm } from "@/components/vendora/account/account-forms";
+import { GoogleAccountLink } from "@/components/vendora/account/google-account-link";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getServerLocale();
@@ -25,6 +26,7 @@ export default async function AccountSecurityPage() {
       subtitle={t.account.security.subtitle}
     >
       <PasswordForm locale={locale} />
+      <GoogleAccountLink locale={locale} />
     </AccountScreen>
   );
 }

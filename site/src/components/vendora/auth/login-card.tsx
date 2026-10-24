@@ -9,9 +9,12 @@ import { useLoginUserMutation } from "@/redux/features/auth/authApi";
 import { userLoggedIn } from "@/redux/features/auth/authSlice";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
 import type { Locale } from "@/lib/vendora/types";
-import { unavailableAuthAdapter, type AuthAccount, type GoogleAuthAdapter, type PhoneAuthAdapter } from "@/lib/auth/auth-adapter";
+import { unavailableAuthAdapter, type AuthAccount, type PhoneAuthAdapter } from "@/lib/auth/auth-adapter";
 import { notifySuccess } from "@/utils/toast";
-import { CheckoutContextNotice, GoogleButton, LoginModeTabs, OtpInput, PhoneField, type LoginMode } from "./login-components";
+import { CheckoutContextNotice, LoginModeTabs, OtpInput, PhoneField, type LoginMode } from "./login-components";
+import { GoogleIdentityButton } from "./google-identity-button";
+import { http } from "@/lib/http";
+import axios from "axios";
 import { storePresentation, useStoreSettings } from '../layout/store-settings-provider';
 import { resolveApiImageUrl } from '@/lib/http';
 
@@ -21,11 +24,11 @@ interface LoginCardProps {
   locale: Locale;
   returnTo?: string;
   phoneAdapter?: PhoneAuthAdapter;
-  googleAdapter?: GoogleAuthAdapter;
+
 }
 
 /** Penpot-aligned responsive login card with email, phone OTP and Google modes. */
-export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdapter, googleAdapter = unavailableAuthAdapter }: LoginCardProps) {
+export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdapter }: LoginCardProps) {
   const isFa = locale === "fa";
   const storeProfile = useStoreSettings();
   const brand = storePresentation(storeProfile, locale);
@@ -48,7 +51,7 @@ export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdap
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const destination = safeReturnTo(returnTo, locale);
   const phoneAvailable = phoneAdapter !== unavailableAuthAdapter;
-  const googleAvailable = googleAdapter !== unavailableAuthAdapter;
+  const googleAvailable = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim());
 
   useEffect(() => {
     if (phoneStep !== "otp" || secondsLeft <= 0) return undefined;
@@ -127,18 +130,23 @@ export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdap
     router.push(destination);
   };
 
-  const handleGoogle = async () => {
+  const handleGoogle = async (credential: string) => {
     setError("");
     setGoogleLoading(true);
-    const result = await googleAdapter.signIn();
-    setGoogleLoading(false);
-    if (!result.ok || !result.account) {
-      setError(adapterMessage(result.message, isFa ? "ورود با Google انجام نشد." : "Google sign-in failed.", isFa ? "ورود با Google هنوز به سرویس OAuth متصل نشده است." : "Google sign-in is not connected to an OAuth service yet."));
-      return;
+    try {
+      const { data } = await http.post("/account/google", { credential });
+      if (!data?.token || !data?.id) throw new Error("Invalid authentication response");
+      persistGoogleAccount(data, dispatch);
+      notifySuccess(isFa ? "با حساب Google وارد شدید." : "Signed in with Google.");
+      router.replace(destination);
+    } catch (failure) {
+      const message = axios.isAxiosError(failure) ? failure.response?.data?.message : "";
+      setError(message === "GOOGLE_ACCOUNT_LINK_REQUIRED"
+        ? (isFa ? "این ایمیل قبلاً ثبت شده است. ابتدا با رمز عبور وارد شوید، سپس Google را در امنیت حساب متصل کنید." : "This email is already registered. Sign in with your password, then connect Google in account security.")
+        : (isFa ? "ورود با Google انجام نشد. دوباره تلاش کنید." : "Google sign-in failed. Please try again."));
+    } finally {
+      setGoogleLoading(false);
     }
-    persistAdapterAccount(result.account, dispatch);
-    notifySuccess(isFa ? "با حساب Google وارد شدید." : "Signed in with Google.");
-    router.push(destination);
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -173,7 +181,7 @@ export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdap
           {mode === "phone" && phoneStep === "otp" ? <form onSubmit={verifyCode} className="mt-6"><p className="text-sm font-semibold text-vd-muted">{isFa ? "کد ارسال‌شده به" : "Code sent to"} <bdi dir="ltr" className="font-extrabold text-ink">{phone}</bdi></p><OtpInput locale={locale} digits={otp} invalid={Boolean(error)} setInputRef={(index, element) => { otpRefs.current[index] = element; }} onChange={handleOtpChange} onKeyDown={handleOtpKeyDown} onPaste={handleOtpPaste} /><button type="submit" disabled={phoneLoading} className="vd-focus mt-5 flex h-12 w-full items-center justify-center rounded-control bg-jade text-sm font-extrabold text-white hover:bg-jade-dark disabled:opacity-60">{phoneLoading ? (isFa ? "در حال بررسی…" : "Verifying…") : (isFa ? "تأیید و ورود" : "Verify and sign in")}</button><div className="mt-4 flex items-center justify-between gap-3 text-xs"><button type="button" onClick={() => { setPhoneStep("identifier"); setError(""); }} className="vd-focus rounded-sm font-bold text-jade">{isFa ? "ویرایش شماره" : "Edit number"}</button>{secondsLeft > 0 ? <span className="text-vd-muted">{isFa ? `${secondsLeft} ثانیه تا ارسال مجدد` : `Resend in ${secondsLeft}s`}</span> : <button type="button" onClick={() => void requestCode()} className="vd-focus rounded-sm font-bold text-jade">{isFa ? "ارسال مجدد" : "Resend code"}</button>}</div></form> : null}
           {mode === "email" ? <form onSubmit={handleEmailSubmit} className="mt-6 space-y-4"><div><FieldLabel htmlFor="login-email" label={isFa ? "ایمیل" : "Email"} /><input id="login-email" value={email} onChange={(event) => setEmail(event.target.value)} type="email" dir="ltr" placeholder="name@example.com" className={`vd-focus h-[52px] w-full rounded-control border bg-white px-4 text-sm text-ink outline-none ${error ? "border-vd-danger" : "border-vd-line"}`} /></div><div><div className="flex items-center justify-between gap-3"><FieldLabel htmlFor="login-password" label={isFa ? "رمز عبور" : "Password"} /><Link href={withLocalePath("/forgot", locale)} className="vd-focus text-xs font-bold text-jade">{isFa ? "فراموشی رمز؟" : "Forgot password?"}</Link></div><div className="relative"><input id="login-password" value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? "text" : "password"} dir="ltr" className={`vd-focus h-[52px] w-full rounded-control border bg-white px-4 pe-12 text-sm text-ink outline-none ${error ? "border-vd-danger" : "border-vd-line"}`} /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? (isFa ? "مخفی کردن رمز" : "Hide password") : (isFa ? "نمایش رمز" : "Show password")} className="vd-focus absolute inset-y-0 end-2 my-auto flex h-10 w-10 items-center justify-center rounded-full text-vd-muted">{showPassword ? "◉" : "○"}</button></div></div><button type="submit" disabled={emailLoading} className="vd-focus flex h-12 w-full items-center justify-center rounded-control bg-jade text-sm font-extrabold text-white hover:bg-jade-dark disabled:opacity-60">{emailLoading ? (isFa ? "در حال ورود…" : "Signing in…") : (isFa ? "ورود به حساب" : "Sign in")}</button><p className="text-center text-xs text-vd-muted">{isFa ? "حساب ندارید؟" : "Don't have an account?"} <Link href={withLocalePath("/register", locale)} className="vd-focus font-bold text-jade">{isFa ? "ثبت‌نام کنید" : "Create one"}</Link></p></form> : null}
 
-          {googleAvailable ? <><div className="my-6 flex items-center gap-3 text-xs text-vd-muted"><span className="h-px flex-1 bg-vd-line" />{isFa ? "یا" : "or"}<span className="h-px flex-1 bg-vd-line" /></div><GoogleButton locale={locale} loading={googleLoading} onClick={() => void handleGoogle()} /></> : null}
+          {googleAvailable ? <><div className="my-6 flex items-center gap-3 text-xs text-vd-muted"><span className="h-px flex-1 bg-vd-line" />{isFa ? "یا" : "or"}<span className="h-px flex-1 bg-vd-line" /></div><GoogleIdentityButton locale={locale} onCredential={handleGoogle} />{googleLoading ? <p role="status" className="mt-2 text-center text-xs text-vd-muted">{isFa ? "در حال ورود…" : "Signing in…"}</p> : null}</> : null}
           {info ? <p role="status" className="mt-4 rounded-control bg-jade-tint p-3 text-center text-xs font-semibold leading-6 text-jade">{info}</p> : null}{error ? <p role="alert" className="mt-4 rounded-control bg-vd-danger-tint p-3 text-center text-xs font-semibold leading-6 text-vd-danger">{error}</p> : null}
         </div>
       </div>
@@ -199,4 +207,11 @@ function persistAdapterAccount(account: AuthAccount, dispatch: (action: ReturnTy
   const user = { _id: account.user.id, id: account.user.id, name: account.user.name, email: account.user.email, phone: account.user.phone };
   localStorage.setItem("auth", JSON.stringify({ accessToken: account.accessToken, user }));
   dispatch(userLoggedIn({ accessToken: account.accessToken, user }));
+}
+
+function persistGoogleAccount(account: { id: string; fullName: string; email: string; role?: string; phoneNumber?: string; token: string },
+  dispatch: (action: ReturnType<typeof userLoggedIn>) => void) {
+  const user = { _id: account.id, id: account.id, name: account.fullName, email: account.email, phone: account.phoneNumber, role: account.role };
+  localStorage.setItem("auth", JSON.stringify({ accessToken: account.token, user }));
+  dispatch(userLoggedIn({ accessToken: account.token, user }));
 }

@@ -803,6 +803,12 @@ public static class Account
         return roles.FirstOrDefault() ?? UserRole.Customer.ToString();
     }
 
+    internal static Task<string> CreateAccountTokenAsync(
+        UserManager<AppUser> userManager,
+        IConfiguration configuration,
+        AppUser user,
+        string role) => CreateTokenAsync(userManager, configuration, user, role);
+
     private static async Task<string> CreateTokenAsync(
         UserManager<AppUser> userManager,
         IConfiguration configuration,

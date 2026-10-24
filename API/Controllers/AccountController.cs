@@ -56,6 +56,25 @@ public sealed class AccountController : ControllerBase
         return ToAccountResponse(result);
     }
 
+    /// <summary>Exchanges a verified Google Identity Services ID token for a Vendora session.</summary>
+    [HttpPost("account/google")]
+    public async Task<ActionResult> GoogleLogin(GoogleCredentialRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GoogleAccount.LoginCommand(request.Credential), cancellationToken);
+        return ToAccountResponse(result);
+    }
+
+    /// <summary>Explicitly links Google to the currently authenticated user (never by email alone).</summary>
+    [Authorize]
+    [HttpPost("account/google/link")]
+    public async Task<ActionResult> LinkGoogle(GoogleCredentialRequest request, CancellationToken cancellationToken)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized(new { message = "User token is invalid." });
+        var result = await _mediator.Send(new GoogleAccount.LinkCommand(userId, request.Credential), cancellationToken);
+        return ToAccountResponse(result);
+    }
+
     /// <summary>Changes the current authenticated user's password.</summary>
     [Authorize]
     [HttpPost("account/change-password")]
@@ -246,6 +265,9 @@ public sealed record AdminRegisterRequest(string FullName, string Email, string 
 
 /// <summary>Represents a login request.</summary>
 public sealed record LoginRequest(string Email, string Password);
+
+/// <summary>Google Identity Services ID credential from the browser.</summary>
+public sealed record GoogleCredentialRequest(string Credential);
 
 /// <summary>Represents a request to change the current user's password.</summary>
 public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
