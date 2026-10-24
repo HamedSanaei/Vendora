@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { userLoggedOut } from "@/redux/features/auth/authSlice";
 import {
   accountNavItems,
   isAccountItemActive,
@@ -51,6 +53,13 @@ export function AccountPageFrame({ crumbs, children, initialLocale }: { crumbs: 
   const pathname = usePathname();
   const locale: Locale = getLocaleFromPathname(pathname, initialLocale);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const handleLogout = () => {
+    dispatch(userLoggedOut());
+    setDrawerOpen(false);
+    router.replace(withLocalePath("/account", locale));
+  };
   const t = getDict(locale);
   const activeItem = accountNavItems.find((item) => isAccountItemActive(item.href, pathname));
   const activeLabel = activeItem ? t.account.menu[activeItem.key as keyof typeof t.account.menu] : "";
@@ -86,7 +95,7 @@ export function AccountPageFrame({ crumbs, children, initialLocale }: { crumbs: 
           <div className="order-2 min-w-0 flex-1 lg:order-1">{children}</div>
           {/* Sidebar column */}
           <aside className="order-1 hidden w-[300px] shrink-0 lg:order-2 lg:block" aria-label={t.common.account}>
-            <SidebarCard locale={locale} pathname={pathname} />
+            <SidebarCard locale={locale} pathname={pathname} onLogout={handleLogout} />
           </aside>
         </div>
       </div>
@@ -96,6 +105,7 @@ export function AccountPageFrame({ crumbs, children, initialLocale }: { crumbs: 
           locale={locale}
           pathname={pathname}
           onClose={() => setDrawerOpen(false)}
+          onLogout={handleLogout}
         />
       ) : null}
     </div>
@@ -108,7 +118,7 @@ export function AccountPageFrame({ crumbs, children, initialLocale }: { crumbs: 
  * Desktop sidebar card: avatar block, membership meta, nine menu items and
  * the danger logout action at the bottom.
  */
-function SidebarCard({ locale, pathname }: { locale: Locale; pathname: string }) {
+function SidebarCard({ locale, pathname, onLogout }: { locale: Locale; pathname: string; onLogout: () => void }) {
   const t = getDict(locale);
   const showSamples = useSeedDataEnabled();
   return (
@@ -154,6 +164,7 @@ function SidebarCard({ locale, pathname }: { locale: Locale; pathname: string })
       <button
         type="button"
         title={t.account.menu.logout}
+        onClick={onLogout}
         className="vd-focus flex h-[42px] w-full items-center gap-3 rounded-control px-4 text-sm font-semibold text-vd-danger hover:bg-vd-danger-tint"
       >
         <span className="flex h-8 w-8 items-center justify-center">
@@ -170,10 +181,12 @@ function AccountDrawer({
   locale,
   pathname,
   onClose,
+  onLogout,
 }: {
   locale: Locale;
   pathname: string;
   onClose: () => void;
+  onLogout: () => void;
 }) {
   const t = getDict(locale);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -241,6 +254,7 @@ function AccountDrawer({
         <div className="border-t border-vd-line p-4">
           <button
             type="button"
+            onClick={onLogout}
             className="vd-focus flex h-[42px] w-full items-center gap-3 rounded-control px-4 text-sm font-semibold text-vd-danger hover:bg-vd-danger-tint"
           >
             {t.account.menu.logout}

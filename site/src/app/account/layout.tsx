@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { StoreHeader } from "@/components/vendora/layout/store-chrome";
 import { getServerLocale } from "@/lib/vendora/server-locale";
+import { AccountAuthGate } from "@/components/vendora/account/account-auth-gate";
 
 /**
  * Shared shell for every /account screen. The approved account frames end
@@ -11,7 +12,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
   return (
     <>
       <StoreHeader initialLocale={locale} />
-      <main className="min-h-[60vh]">{children}</main>
+      <main className="min-h-[60vh]"><AccountAuthGate locale={locale}>{children}</AccountAuthGate></main>
     </>
   );
 }
