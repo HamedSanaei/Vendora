@@ -1,5 +1,6 @@
 /** Public presentation overrides shared by the two frontends; empty values retain Vendora defaults. */
 export interface StoreProfile {
+  showSeedData?: boolean;
   nameFa?: string | null;
   nameEn?: string | null;
   logoUrl?: string | null;

@@ -14,6 +14,8 @@ public sealed class SeoSettings : EntityBase
     public string? DefaultDescription { get; set; }
     public string? SocialProfiles { get; set; }
     public bool IsIndexingEnabled { get; set; }
+    /// <summary>Hides explicitly identified sample records in presentation queries without deleting business data.</summary>
+    public bool HideSeedData { get; set; }
     /// <summary>Optional store presentation overrides; null retains the original Vendora presentation.</summary>
     public string? StoreProfileJson { get; set; }
 }

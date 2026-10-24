@@ -3,6 +3,8 @@ namespace Application.StoreSettings;
 /// <summary>Public presentation overrides. Empty fields deliberately retain the original storefront copy.</summary>
 public sealed record StoreProfile
 {
+    /// <summary>Server-computed seed presentation policy; changing profile input cannot change this switch.</summary>
+    public bool ShowSeedData { get; init; } = true;
     public string? NameFa { get; init; }
     public string? NameEn { get; init; }
     public string? LogoUrl { get; init; }

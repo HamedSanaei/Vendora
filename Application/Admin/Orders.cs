@@ -92,7 +92,7 @@ public static class Orders
             /// <inheritdoc />
             public async Task<IReadOnlyList<AdminOrderListItemDto>> Handle(Query request, CancellationToken cancellationToken)
             {
-                var orders = await _dbContext.Orders
+                var orders = await _dbContext.Orders.VisibleInUi(_dbContext)
                     .AsNoTracking()
                     .Include(order => order.Items)
                     .OrderByDescending(order => order.CreatedAtUtc)
@@ -142,7 +142,7 @@ public static class Orders
             /// <inheritdoc />
             public async Task<AdminOrderDetailsDto?> Handle(Query request, CancellationToken cancellationToken)
             {
-                var order = await _dbContext.Orders
+                var order = await _dbContext.Orders.VisibleInUi(_dbContext)
                     .AsNoTracking()
                     .Include(item => item.Items)
                     .SingleOrDefaultAsync(order => order.Id == request.Id, cancellationToken);
@@ -160,7 +160,7 @@ public static class Orders
                         .SingleOrDefaultAsync(account => account.Id == order.UserId.Value, cancellationToken);
                 }
 
-                var payments = await _dbContext.PaymentTransactions
+                var payments = await _dbContext.PaymentTransactions.VisibleInUi(_dbContext)
                     .AsNoTracking()
                     .Where(payment => payment.OrderId == order.Id)
                     .OrderBy(payment => payment.CreatedAtUtc)
@@ -221,7 +221,7 @@ public static class Orders
     public static class ChangeStatus
     {
         /// <summary>Represents a guarded order status mutation.</summary>
-        public sealed record Command(Guid Id, Domain.Enums.OrderStatus Status) : IRequest<Result>;
+        public sealed record Command(Guid Id, Domain.Enums.OrderStatus Status, Guid Actor = default) : IRequest<Result>;
 
         /// <summary>Identifies why an order status mutation failed.</summary>
         public enum Failure
@@ -253,6 +253,9 @@ public static class Orders
             /// <inheritdoc />
             public async Task<Result> Handle(Command request, CancellationToken cancellationToken)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                var work = new Accounting.AccountingUnitOfWork(_dbContext, TimeProvider.System);
+                await work.AcquireGateAsync(cancellationToken);
                 var order = await _dbContext.Orders
                     .SingleOrDefaultAsync(item => item.Id == request.Id, cancellationToken);
 
@@ -279,7 +282,25 @@ public static class Orders
                         $"Order status cannot change from {order.Status} to {request.Status}.");
                 }
 
+                if (request.Status == Domain.Enums.OrderStatus.Cancelled && await _dbContext.AccountingStates.AsNoTracking().AnyAsync(x => x.Id == 1 && x.Activated, cancellationToken))
+                {
+                    var inventory = new Accounting.InventoryPosting(_dbContext, TimeProvider.System);
+                    var reservations = new Accounting.OrderReservations(_dbContext, inventory, TimeProvider.System);
+                    var posting = new Accounting.DocumentPosting(_dbContext, inventory, TimeProvider.System);
+                    try
+                    {
+                        await new Accounting.OrderCancellation(_dbContext, work, reservations, posting, TimeProvider.System)
+                            .CancelAsync(order, request.Actor == Guid.Empty ? Accounting.CommercePosting.SystemActor : request.Actor, cancellationToken);
+                    }
+                    catch (Accounting.AccountingException e)
+                    {
+                        await transaction.RollbackAsync(cancellationToken); _dbContext.ChangeTracker.Clear();
+                        return Fail(Failure.InvalidTransition, e.Code);
+                    }
+                }
+
                 await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 return new Result(
                     true,
                     Failure.None,

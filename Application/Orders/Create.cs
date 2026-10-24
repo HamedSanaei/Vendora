@@ -9,6 +9,7 @@ using Persistence.Common;
 using Persistence.Orders;
 using Persistence.Products;
 using Application.Pricing;
+using Application.Accounting;
 
 namespace Application.Orders;
 
@@ -49,7 +50,8 @@ public static class Create
         decimal DiscountAmount,
         Guid? ShippingAddressId,
         AddressInput? NewAddress,
-        IReadOnlyList<ItemInput> Items) : IRequest<OrderDto>;
+        IReadOnlyList<ItemInput> Items,
+        string? ShippingMethod = null, string? CouponCode = null, string? IdempotencyKey = null) : IRequest<OrderDto>;
 
     /// <summary>
     /// Handles create-order commands.
@@ -82,7 +84,21 @@ public static class Create
         /// <inheritdoc />
         public async Task<OrderDto> Handle(Command request, CancellationToken cancellationToken)
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            if (request.NewAddress is { } address)
+            {
+                string? error = AddressCoordinates.Validate(address.Latitude, address.Longitude);
+                if (error is not null) throw new InvalidOperationException(error);
+            }
+            var work = new AccountingUnitOfWork(_dbContext, TimeProvider.System);
+            Guid id = await work.ExecuteAsync(request.UserId, request.IdempotencyKey ?? Guid.NewGuid().ToString(),
+                "order-create", request, token => CreateOrderAsync(request, token), cancellationToken);
+            var saved = await _dbContext.Orders.Include(x => x.Items).SingleAsync(x => x.Id == id, cancellationToken);
+            return OrderMappings.Map(saved);
+        }
+
+        /// <summary>Creates one order under the shared database write gate; stock is reserved after explicit accounting cutover.</summary>
+        private async Task<Guid> CreateOrderAsync(Command request, CancellationToken cancellationToken)
+        {
             var checkoutItems = await ResolveCheckoutItemsAsync(request, cancellationToken);
 
             var order = new Order
@@ -95,6 +111,21 @@ public static class Create
 
             var address = await ResolveShippingAddressAsync(request, cancellationToken);
             ApplyShippingSnapshot(order, address);
+
+            string shippingMethod = request.ShippingMethod ?? (request.ShippingCost switch
+            {
+                60000 => "post", 20000 => "tipax", 0 => "freight",
+                _ => throw new AccountingException("SHIPPING_METHOD_REQUIRED", 400)
+            });
+            if (request.DiscountAmount != 0 && string.IsNullOrWhiteSpace(request.CouponCode))
+                throw new AccountingException("COUPON_CODE_REQUIRED", 400);
+            var quote = await new CartQuotation(_dbContext, TimeProvider.System).QuoteAsync(checkoutItems
+                .Select(x => new CartQuoteItem(x.ProductId, x.Quantity, x.ExpectedUnitPrice)).ToList(), shippingMethod, request.CouponCode, cancellationToken);
+            order.ShippingCost = quote.Freight;
+            order.ShippingMethodId = shippingMethod;
+            order.DiscountAmount = quote.Discount;
+            bool accountingActive = await _dbContext.AccountingStates.AsNoTracking().AnyAsync(x => x.Id == 1 && x.Activated, cancellationToken);
+            var reservations = new OrderReservations(_dbContext, new InventoryPosting(_dbContext, TimeProvider.System), TimeProvider.System);
 
             foreach (var cartItem in checkoutItems)
             {
@@ -110,9 +141,7 @@ public static class Create
                 if (product.UsdPrice.HasValue && cartItem.ExpectedUnitPrice != product.Price)
                     throw new PriceChangedException(product.Id, product.Price);
 
-                product.StockQuantity -= cartItem.Quantity;
-
-                order.Items.Add(new OrderItem
+                var line = new OrderItem
                 {
                     ProductId = product.Id,
                     ProductTitle = product.Title,
@@ -120,7 +149,10 @@ public static class Create
                     UsdUnitPrice = product.UsdPrice,
                     PriceExchangeRate = product.PriceExchangeRate,
                     Quantity = cartItem.Quantity
-                });
+                };
+                order.Items.Add(line);
+                if (accountingActive) await reservations.ReserveAsync(order, line, request.UserId, cancellationToken);
+                else product.StockQuantity -= cartItem.Quantity;
             }
 
             order.RecalculateTotals();
@@ -134,13 +166,13 @@ public static class Create
             }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-
-            return OrderMappings.Map(order);
+            return order.Id;
         }
 
         private async Task<IReadOnlyList<ItemInput>> ResolveCheckoutItemsAsync(Command request, CancellationToken cancellationToken)
         {
+            if (request.Items.Count > 300 || request.Items.Any(x => x is null || x.ProductId == Guid.Empty || x.Quantity is < 1 or > 100000))
+                throw new InvalidOperationException("Cart items contain an invalid product or quantity.");
             if (request.Items.Count > 0)
             {
                 var validItems = request.Items

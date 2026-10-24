@@ -22,7 +22,7 @@ public sealed class AdminRepository : IAdminRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<Category>> GetCategoriesAsync(bool includeInactive, CancellationToken cancellationToken = default)
     {
-        var query = _dbContext.Categories
+        var query = _dbContext.Categories.VisibleInUi(_dbContext)
             .AsNoTracking()
             .Include(category => category.ParentCategory)
             .Include(category => category.Products)
@@ -88,7 +88,7 @@ public sealed class AdminRepository : IAdminRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<Brand>> GetBrandsAsync(bool includeInactive, CancellationToken cancellationToken = default)
     {
-        var query = _dbContext.Brands.AsNoTracking().AsQueryable();
+        var query = _dbContext.Brands.VisibleInUi(_dbContext).AsNoTracking().AsQueryable();
         if (!includeInactive)
         {
             query = query.Where(brand => brand.IsActive);
@@ -126,7 +126,7 @@ public sealed class AdminRepository : IAdminRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<CatalogColor>> GetColorsAsync(bool includeInactive, CancellationToken cancellationToken = default)
     {
-        var query = _dbContext.CatalogColors.AsNoTracking().AsQueryable();
+        var query = _dbContext.CatalogColors.VisibleInUi(_dbContext).AsNoTracking().AsQueryable();
         if (!includeInactive)
         {
             query = query.Where(color => color.IsActive);
@@ -164,7 +164,7 @@ public sealed class AdminRepository : IAdminRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<Coupon>> GetCouponsAsync(bool includeInactive, CancellationToken cancellationToken = default)
     {
-        var query = _dbContext.Coupons
+        var query = _dbContext.Coupons.VisibleInUi(_dbContext)
             .AsNoTracking()
             .Include(coupon => coupon.Categories)
             .ThenInclude(couponCategory => couponCategory.Category)
@@ -233,7 +233,7 @@ public sealed class AdminRepository : IAdminRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<UserAccount>> GetUsersAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.UserAccounts
+        return await _dbContext.UserAccounts.VisibleInUi(_dbContext)
             .AsNoTracking()
             .OrderBy(user => user.FullName)
             .ToListAsync(cancellationToken);

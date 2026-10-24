@@ -118,13 +118,13 @@ public static class SeoQueries
         {
             Guid.TryParse(identifier, out Guid id);
             var alias = await db.SlugHistories.AsNoTracking().Where(x => x.Kind == "product" && x.Slug == identifier).Select(x => (Guid?)x.EntityId).SingleOrDefaultAsync(ct);
-            string? slug = await db.Products.AsNoTracking().Where(x => x.Status == Domain.Enums.ProductStatus.Active && (x.Slug == identifier || x.Id == id || x.Id == alias)).Select(x => x.Slug).SingleOrDefaultAsync(ct);
+            string? slug = await db.Products.VisibleInUi(db).AsNoTracking().Where(x => x.Status == Domain.Enums.ProductStatus.Active && (x.Slug == identifier || x.Id == id || x.Id == alias)).Select(x => x.Slug).SingleOrDefaultAsync(ct);
             return slug is null ? null : "/fa/product/" + slug;
         }
         if (parts[1] == "category")
         {
             var alias = await db.SlugHistories.AsNoTracking().Where(x => x.Kind == "category" && x.Slug == identifier).Select(x => (Guid?)x.EntityId).SingleOrDefaultAsync(ct);
-            var categories = await db.Categories.AsNoTracking().ToListAsync(ct);
+            var categories = await db.DisplayCategoriesAsync(ct);
             var value = categories.SingleOrDefault(x => x.Slug == identifier || x.Id == alias);
             return value is null || !new Application.Catalog.CategoryHierarchy(categories).IsPublic(value.Id) ? null : "/fa/category/" + value.Slug;
         }

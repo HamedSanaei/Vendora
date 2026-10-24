@@ -44,7 +44,7 @@ public static class Dashboard
             DateTime currentMonth = new(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
             DateTime firstMonth = currentMonth.AddMonths(-(months - 1));
 
-            var verifiedSales = await _dbContext.Orders
+            var verifiedSales = await _dbContext.Orders.VisibleInUi(_dbContext)
                 .AsNoTracking()
                 .Where(order => order.PaymentStatus == PaymentStatus.Verified)
                 .Select(order => new { order.CreatedAtUtc, order.TotalAmount })
@@ -60,7 +60,7 @@ public static class Dashboard
                         .Sum(order => order.TotalAmount)))
                 .ToList();
 
-            var recentOrders = await _dbContext.Orders
+            var recentOrders = await _dbContext.Orders.VisibleInUi(_dbContext)
                 .AsNoTracking()
                 .Include(order => order.Items)
                 .OrderByDescending(order => order.CreatedAtUtc)
@@ -72,16 +72,16 @@ public static class Dashboard
                 .Select(order => order.UserId!.Value)
                 .Distinct()
                 .ToList();
-            var users = await _dbContext.UserAccounts
+            var users = await _dbContext.UserAccounts.VisibleInUi(_dbContext)
                 .AsNoTracking()
                 .Where(user => userIds.Contains(user.Id))
                 .ToDictionaryAsync(user => user.Id, cancellationToken);
 
             return new AdminDashboardDto(
                 verifiedSales.Sum(order => order.TotalAmount),
-                await _dbContext.Orders.AsNoTracking().CountAsync(cancellationToken),
-                await _dbContext.Products.AsNoTracking().CountAsync(cancellationToken),
-                await _dbContext.UserAccounts.AsNoTracking()
+                await _dbContext.Orders.VisibleInUi(_dbContext).AsNoTracking().CountAsync(cancellationToken),
+                await _dbContext.Products.VisibleInUi(_dbContext).AsNoTracking().CountAsync(cancellationToken),
+                await _dbContext.UserAccounts.VisibleInUi(_dbContext).AsNoTracking()
                     .CountAsync(user => user.Role == UserRole.Customer, cancellationToken),
                 monthlySales,
                 recentOrders.Select(order => MapRecentOrder(order, users)).ToList());

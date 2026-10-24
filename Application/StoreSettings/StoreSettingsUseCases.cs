@@ -27,7 +27,7 @@ public static class StoreSettingsUseCases
             : JsonSerializer.Deserialize<StoreProfile>(settings.StoreProfileJson) ?? new StoreProfile();
         var social = (settings.SocialProfiles ?? "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Where(url => Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "https" or "http" && uri.UserInfo.Length == 0);
-        return profile with { NameFa = settings.SiteName == "وندورا" ? null : settings.SiteName,
+        return profile with { ShowSeedData = !settings.HideSeedData, NameFa = settings.SiteName == "وندورا" ? null : settings.SiteName,
             LogoUrl = settings.LogoUrl, SocialProfiles = string.IsNullOrWhiteSpace(settings.SocialProfiles) ? null : string.Join('\n', social) };
     }
 

@@ -4,6 +4,7 @@ export const defaultAdminLocale: AdminLocale = 'fa';
 
 export const adminMessages = {
   fa: {
+    accounting: 'حسابداری',
     dashboard: 'داشبورد',
     products: 'محصولات',
     catalog: 'کاتالوگ',
@@ -51,6 +52,7 @@ export const adminMessages = {
     toman: 'تومان',
   },
   en: {
+    accounting: 'Accounting',
     dashboard: 'Dashboard',
     products: 'Products',
     catalog: 'Catalog',

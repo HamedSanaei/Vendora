@@ -47,4 +47,22 @@ public class PaymentTransaction : AuditableEntity
     /// Gets or sets an optional failure reason.
     /// </summary>
     public string? FailureReason { get; set; }
+
+    /// <summary>Server verification timestamp; null on legacy/demo rows whose provenance is not established.</summary>
+    public DateTime? VerifiedAtUtc { get; private set; }
+
+    /// <summary>SHA-256 audit digest of genuine server-side verification evidence, never supplied by a browser.</summary>
+    public string? VerificationEvidenceDigest { get; private set; }
+
+    /// <summary>Records a verifier's successful evidence. This method does not contact or simulate a payment gateway.</summary>
+    public void RecordServerVerification(string referenceId, DateTime verifiedAtUtc, string evidenceDigest)
+    {
+        if (Provider == PaymentProvider.Unknown || string.IsNullOrWhiteSpace(Authority) || string.IsNullOrWhiteSpace(referenceId)
+            || verifiedAtUtc.Kind != DateTimeKind.Utc || evidenceDigest.Length != 64 || !evidenceDigest.All(Uri.IsHexDigit))
+            throw new ArgumentException("Verified gateway evidence is required.");
+        if (VerifiedAtUtc.HasValue && (ReferenceId != referenceId || VerificationEvidenceDigest != evidenceDigest))
+            throw new InvalidOperationException("Payment verification evidence cannot be replaced.");
+        ReferenceId = referenceId; VerifiedAtUtc ??= verifiedAtUtc; VerificationEvidenceDigest = evidenceDigest;
+        Status = PaymentStatus.Verified;
+    }
 }

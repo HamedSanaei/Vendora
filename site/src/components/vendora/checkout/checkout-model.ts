@@ -12,6 +12,7 @@ export interface PersistedPaymentInfo {
 }
 
 export interface CheckoutCoupon {
+  couponCode?: string;
   discountPercentage?: number | string;
   minimumAmount?: number | string;
   productType?: string;

@@ -1,5 +1,7 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useStoreSettings } from "@components/vendora/layout/store-settings-provider";
+import { apiSlice } from "@/redux/api/apiSlice";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { Provider, useDispatch } from "react-redux";
@@ -21,6 +23,14 @@ const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
 /** Hydrates persisted storefront state once and mounts shared cart feedback. */
 function StorefrontRuntime({ children }) {
   const dispatch = useDispatch();
+  const showSeeds = useStoreSettings().showSeedData;
+  const previousSeedPolicy = useRef(showSeeds);
+  useEffect(() => {
+    if (previousSeedPolicy.current !== showSeeds) {
+      previousSeedPolicy.current = showSeeds;
+      dispatch(apiSlice.util.invalidateTags(['Products', 'Category', 'Colors', 'Product', 'RelatedProducts', 'Discount', 'Coupon']));
+    }
+  }, [showSeeds, dispatch]);
 
   useEffect(() => {
     dispatch(get_cart_products());

@@ -22,7 +22,7 @@ public sealed class ProductAdminRepository : IProductAdminRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<Product>> GetProductsAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Products
+        return await _dbContext.Products.VisibleInUi(_dbContext)
             .AsNoTracking()
             .Include(product => product.Category)
             .Include(product => product.Categories)
@@ -62,7 +62,7 @@ public sealed class ProductAdminRepository : IProductAdminRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<Category>> GetCategoriesAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Categories
+        return await _dbContext.Categories.VisibleInUi(_dbContext)
             .AsNoTracking()
             .OrderBy(category => category.Name)
             .ToListAsync(cancellationToken);

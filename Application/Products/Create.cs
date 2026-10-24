@@ -9,6 +9,7 @@ using Persistence.Products;
 using Persistence;
 using Application.Pricing;
 using Application.Seo;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Products;
 
@@ -172,6 +173,9 @@ public static class Create
             }
 
             await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            await _db.AcquireAccountingWriteGateAsync(cancellationToken);
+            if (request.StockQuantity != 0 && await _db.AccountingStates.AsNoTracking().AnyAsync(x => x.Id == 1 && x.Activated, cancellationToken))
+                return Invalid("Inventory adjustment is required: create the product with zero stock, then record a costed receipt.");
             var attributes = await ProductAttributeWriter.ResolveAsync(_db, request.Attributes, null, cancellationToken);
             if (attributes.Error is not null) return Invalid(attributes.Error);
             var product = new Product

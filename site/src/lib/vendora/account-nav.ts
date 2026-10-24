@@ -14,6 +14,7 @@ export const accountNavItems: { key: string; href: string }[] = [
   { key: "transactions", href: "/account/transactions" },
   { key: "wishlist", href: "/account/wishlist" },
   { key: "quickPay", href: "/account/quick-pay" },
+  { key: "proformas", href: "/account/proformas" },
 ];
 
 /**

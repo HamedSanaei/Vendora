@@ -15,9 +15,9 @@ public sealed class SitemapHandler(AppDbContext db) : IRequestHandler<SitemapQue
     {
         var settings = await db.SeoSettings.AsNoTracking().SingleOrDefaultAsync(ct);
         if (settings?.IsIndexingEnabled != true) return [];
-        var products = await db.Products.AsNoTracking().Where(x => x.Status == ProductStatus.Active && (x.Seo == null || x.Seo.Index))
+        var products = await db.Products.VisibleInUi(db).AsNoTracking().Where(x => x.Status == ProductStatus.Active && (x.Seo == null || x.Seo.Index))
             .Select(x => new { x.Slug, Date = x.UpdatedAtUtc ?? x.CreatedAtUtc }).ToListAsync(ct);
-        var categories = await db.Categories.AsNoTracking().ToListAsync(ct);
+        var categories = await db.DisplayCategoriesAsync(ct);
         var tree = new CategoryHierarchy(categories);
         return products.Select(x => new SitemapEntry("/fa/product/" + Uri.EscapeDataString(x.Slug), x.Date))
             .Concat(categories.Where(x => tree.IsPublic(x.Id) && x.Seo?.Index != false).Select(x => new SitemapEntry("/fa/category/" + Uri.EscapeDataString(x.Slug), x.UpdatedAtUtc ?? x.CreatedAtUtc)))

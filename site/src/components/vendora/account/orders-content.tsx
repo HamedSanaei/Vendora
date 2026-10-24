@@ -1,5 +1,7 @@
 "use client";
 
+import { useSeedDataEnabled } from "../layout/store-settings-provider";
+
 import { useState } from "react";
 import Link from "next/link";
 import { mockOrderDetail, mockOrders } from "@/lib/vendora/account-data";
@@ -30,7 +32,7 @@ export function OrdersListContent({ locale }: { locale: Locale }) {
   const [filter, setFilter] = useState<StatusFilter>("all");
 
   const customerName = locale === "fa" ? "کاربر وندورا" : "Vendora user";
-  const filtered = mockOrders
+  const filtered = (useSeedDataEnabled() ? mockOrders : [])
     .filter((order) => (filter === "all" ? true : order.status === filter))
     .filter((order) =>
       query.trim() ? localizeDigits(order.code, locale).includes(localizeDigits(query.trim(), locale)) : true,
@@ -172,9 +174,11 @@ const artworkCycle: ArtworkColor[] = ["jade", "clay", "steel"];
 export function OrderDetailContent({ orderId, locale }: { orderId: string; locale: Locale }) {
   const t = getDict(locale);
   const d = t.account.orders.detail;
+  const showSamples = useSeedDataEnabled();
   const order = mockOrderDetail;
   const steps = d.steps;
   void orderId;
+  if (!showSamples) return <EmptyState icon={<OrdersIcon size={44} />} title={t.account.orders.emptyFiltered} body="" />;
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,7 @@
 "use client";
 
+import { useSeedDataEnabled } from "../layout/store-settings-provider";
+
 import { useState } from "react";
 import Link from "next/link";
 import { mockReturns, returnNewDefaults } from "@/lib/vendora/account-data";
@@ -25,7 +27,7 @@ export function ReturnsListContent({ locale }: { locale: Locale }) {
   const [tab, setTab] = useState<ReturnTab>("all");
   const [query, setQuery] = useState("");
 
-  const filtered = mockReturns
+  const filtered = (useSeedDataEnabled() ? mockReturns : [])
     .filter((request) => (tab === "all" ? true : request.status === tab))
     .filter((request) => (query.trim() ? `${request.code} ${request.orderCode}`.toLowerCase().includes(query.trim().toLowerCase()) : true));
 
@@ -138,6 +140,9 @@ export function ReturnNewForm({ locale }: { locale: Locale }) {
   const [reason, setReason] = useState("2");
   const [opened, setOpened] = useState("no");
   const [submitted, setSubmitted] = useState(false);
+
+  const showSamples = useSeedDataEnabled();
+  if (!showSamples) return <EmptyState icon={<ReturnIcon size={44} />} title={root.account.returns.emptyFiltered} body="" />;
 
   if (submitted) {
     return (

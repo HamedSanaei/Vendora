@@ -103,11 +103,14 @@ public static class Edit
             if (description?.Length > Product.MaxDescriptionLength)
                 return Invalid($"Product description must be {Product.MaxDescriptionLength} characters or fewer.");
             await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            await _db.AcquireAccountingWriteGateAsync(cancellationToken);
             var product = await _repository.GetProductAsync(request.Id, trackChanges: true, cancellationToken);
             if (product is null)
             {
                 return new Result(EditFailure.NotFound, "Product was not found.", null);
             }
+            if (request.StockQuantity != product.StockQuantity && await _db.AccountingStates.AsNoTracking().AnyAsync(x => x.Id == 1 && x.Activated, cancellationToken))
+                return Invalid("Inventory adjustment is required: stock cannot be overwritten from the product editor.");
 
             string title = request.Title.Trim();
             if (string.IsNullOrWhiteSpace(title))

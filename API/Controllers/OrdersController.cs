@@ -46,13 +46,18 @@ public class OrdersController : BaseApiController
                         request.NewAddress.IsDefault,
                         request.NewAddress.Latitude,
                         request.NewAddress.Longitude),
-                    (request.Items ?? []).Select(item => new Create.ItemInput(item.ProductId, item.Quantity, item.ExpectedUnitPrice)).ToList()),
+                    (request.Items ?? []).Select(item => new Create.ItemInput(item.ProductId, item.Quantity, item.ExpectedUnitPrice)).ToList(),
+                    request.ShippingMethod, request.CouponCode, Request.Headers["Idempotency-Key"].FirstOrDefault()),
                 cancellationToken);
         }
         catch (Application.Pricing.PriceChangedException exception)
         {
             return Conflict(new { code = "PRICE_CHANGED", message = exception.Message,
                 productId = exception.ProductId, currentPrice = exception.CurrentPrice });
+        }
+        catch (Application.Accounting.AccountingException exception)
+        {
+            return StatusCode(exception.Status, new { code = exception.Code, message = exception.Code });
         }
         catch (InvalidOperationException exception)
         {
@@ -109,7 +114,8 @@ public sealed record CreateOrderRequest(
     decimal DiscountAmount,
     Guid? ShippingAddressId,
     CreateOrderAddressRequest? NewAddress,
-    IReadOnlyList<CreateOrderItemRequest> Items);
+    IReadOnlyList<CreateOrderItemRequest> Items,
+    string? ShippingMethod = null, string? CouponCode = null);
 
 /// <summary>Represents an order item request body.</summary>
 public sealed record CreateOrderItemRequest(Guid ProductId, int Quantity, decimal? ExpectedUnitPrice = null);

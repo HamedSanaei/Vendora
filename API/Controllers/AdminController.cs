@@ -442,7 +442,8 @@ public sealed class AdminController : ControllerBase
             return BadRequest(new { message = "Order status is not recognized." });
         }
 
-        var result = await _mediator.Send(new Orders.ChangeStatus.Command(id, status), cancellationToken);
+        Guid.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var actor);
+        var result = await _mediator.Send(new Orders.ChangeStatus.Command(id, status, actor), cancellationToken);
         if (result.Succeeded)
         {
             return Ok(result.Order);

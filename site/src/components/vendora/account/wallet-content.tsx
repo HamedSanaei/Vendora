@@ -1,5 +1,7 @@
 "use client";
 
+import { useSeedDataEnabled } from "../layout/store-settings-provider";
+
 import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { mockTransactions, accountBalance, wishlistRecommendations } from "@/lib/vendora/account-data";
@@ -165,7 +167,9 @@ function Recommendations({
   onAdd: (product: ProductSummary) => void;
 }) {
   const t = getDict(locale);
-  const products = useMemo(() => wishlistRecommendations.slice(0, 3).map((summary) => ({ summary, product: toCatalogProduct(summaryToStoreProduct(summary, locale)) })), [locale]);
+  const showSamples = useSeedDataEnabled();
+  const products = useMemo(() => (showSamples ? wishlistRecommendations : []).slice(0, 3).map((summary) => ({ summary, product: toCatalogProduct(summaryToStoreProduct(summary, locale)) })), [locale, showSamples]);
+  if (!showSamples) return null;
   return (
     <section aria-label={title ?? t.account.wishlist.recommendations}>
       <h2 className="vd-text-section-title text-ink">{title ?? t.account.wishlist.recommendations}</h2>
@@ -196,7 +200,8 @@ export function TransactionsContent({ locale }: { locale: Locale }) {
   const t = getDict(locale);
   const [tab, setTab] = useState<TxTab>("all");
 
-  const filtered = mockTransactions.filter((tx) => (tab === "all" ? true : tx.direction === tab));
+  const showSamples = useSeedDataEnabled();
+  const filtered = (showSamples ? mockTransactions : []).filter((tx) => (tab === "all" ? true : tx.direction === tab));
 
   return (
     <div className="space-y-6">
@@ -204,7 +209,7 @@ export function TransactionsContent({ locale }: { locale: Locale }) {
       <section className="flex flex-col gap-6 rounded-card bg-vd-success-tint p-6 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-sm font-semibold text-jade">{t.account.transactions.balanceLabel}</p>
-          <p className="mt-1 text-[1.875rem] font-bold leading-[54px] text-ink">{formatPrice(accountBalance, locale)}</p>
+          <p className="mt-1 text-[1.875rem] font-bold leading-[54px] text-ink">{showSamples ? formatPrice(accountBalance, locale) : "—"}</p>
           <p className="vd-text-caption mt-2 text-vd-muted">{t.account.transactions.balanceHint}</p>
         </div>
         <VendoraButton href={withLocalePath("/account/quick-pay", locale)} size="lg" className="shrink-0">

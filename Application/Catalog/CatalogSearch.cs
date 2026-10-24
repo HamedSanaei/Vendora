@@ -22,9 +22,9 @@ public static class CatalogSearch
     {
         public async Task<PageResult> Handle(Query request, CancellationToken ct)
         {
-            var categories = await db.Categories.AsNoTracking().ToListAsync(ct);
+            var categories = await db.DisplayCategoriesAsync(ct);
             var tree = new CategoryHierarchy(categories);
-            var query = db.Products.AsNoTracking().Where(x => x.Status == ProductStatus.Active);
+            var query = db.Products.VisibleInUi(db).AsNoTracking().Where(x => x.Status == ProductStatus.Active);
             int? productCode = null;
             if (!string.IsNullOrWhiteSpace(request.Search))
             {
@@ -83,7 +83,7 @@ public static class CatalogSearch
     {
         public async Task<CategoryDetail?> Handle(CategoryQuery request, CancellationToken ct)
         {
-            var categories = await db.Categories.AsNoTracking().ToListAsync(ct);
+            var categories = await db.DisplayCategoriesAsync(ct);
             var category = categories.SingleOrDefault(x => x.Slug == request.Slug);
             if (category is null)
             {

@@ -142,6 +142,13 @@ const hybridBaseQuery = async (args) => {
     return { error: { status: error.response?.status ?? "FETCH_ERROR", data: { message: "Catalog prices are temporarily unavailable." } } };
   }
 
+  // Unsupported legacy demo endpoints must not reintroduce synthetic rows when the global switch is off.
+  try {
+    const policy = await catalogFetch('/api/store-settings/seed-visibility');
+    if (!policy.showSeedData) return { error: { status: 501, data: { message: 'Sample data is hidden; this legacy demo endpoint is unavailable.' } } };
+  } catch {
+    return { error: { status: 'FETCH_ERROR', data: { message: 'Store settings are temporarily unavailable.' } } };
+  }
   return mockBaseQuery(args);
 };
 

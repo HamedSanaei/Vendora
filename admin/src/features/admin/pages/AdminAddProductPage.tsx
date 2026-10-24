@@ -17,6 +17,7 @@ import { SeoPanel } from '../components/SeoPanel';
 import { emptySeo, type SeoInput } from '../seo/types';
 import { ProductAttributesEditor } from '../components/attributes/ProductAttributesEditor';
 import { attributeDrafts, serializeAttributes, type AttributeDraft } from '../components/attributes/attribute-drafts';
+import { useAccountingData } from '../accounting/hooks';
 
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -52,6 +53,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
   const [priceMode, setPriceMode] = useState<'toman' | 'usd'>('toman');
   const [usdPrice, setUsdPrice] = useState('');
   const [stockQuantity, setStockQuantity] = useState('0');
+  const accounting = useAccountingData<{ activated: boolean }>('/status', isFa);
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [primaryCategoryId, setPrimaryCategoryId] = useState('');
   const [seo, setSeo] = useState<SeoInput>(emptySeo);
@@ -303,6 +305,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
               <input
                 inputMode="numeric"
                 name="stockQuantity"
+                readOnly={accounting.data?.activated}
                 value={stockQuantity}
                 onChange={(event) => {
                   clearErrors();
@@ -311,6 +314,8 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
                 placeholder="0"
               />
             </label>
+            {mode === 'edit' && productId && <AdminButton variant="secondary" to={adminPath(locale, `accounting/movements?product=${productId}`)}>{isFa ? 'ثبت حرکت یا تعدیل موجودی' : 'Stock movements / adjustment'}</AdminButton>}
+            {accounting.data?.activated && <p>{isFa ? 'موجودی قابل فروش از دفتر گردش کالا خوانده می‌شود؛ تغییر آن از مسیر حرکت یا تعدیل انجام می‌شود.' : 'Available stock is projected from movements; use an authorized adjustment.'}</p>}
             <AdminSelect label={isFa ? 'برند' : 'Brand'} value={brandId} onChange={(event) => { clearErrors(); setBrandId(event.target.value); }}>
                 <option value="">{isFa ? 'بدون برند' : 'No brand'}</option>
                 {brands.brands.filter((brand) => brand.isActive).map((brand) => (

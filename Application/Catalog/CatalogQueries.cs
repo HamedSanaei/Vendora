@@ -69,7 +69,7 @@ public static class CatalogQueries
             /// <inheritdoc />
             public async Task<IReadOnlyList<CatalogProductDto>> Handle(Query request, CancellationToken cancellationToken)
             {
-                var query = _dbContext.Products
+                var query = _dbContext.Products.VisibleInUi(_dbContext)
                     .AsNoTracking()
                     .Include(product => product.Category)
                     .Include(product => product.Categories)
@@ -97,7 +97,7 @@ public static class CatalogQueries
                 // One local database read for the entire result; never one exchange request per product or user.
                 var rate = await _dbContext.UsdtExchangeRates.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
                 var now = _time.GetUtcNow().UtcDateTime;
-                var categoryGraph = request.Identifier is null ? [] : await _dbContext.Categories.AsNoTracking().ToListAsync(cancellationToken);
+                var categoryGraph = request.Identifier is null ? [] : await _dbContext.DisplayCategoriesAsync(cancellationToken);
                 var hierarchy = new CategoryHierarchy(categoryGraph);
                 var discussions = await Application.Discussions.DiscussionQueries.Summaries(_dbContext, products.Select(p => p.Id).ToList(), cancellationToken);
 
@@ -187,10 +187,7 @@ public static class CatalogQueries
             /// <inheritdoc />
             public async Task<IReadOnlyList<CatalogCategoryDto>> Handle(Query request, CancellationToken cancellationToken)
             {
-                var categories = await _dbContext.Categories
-                    .AsNoTracking()
-                    .OrderBy(category => category.Name)
-                    .ToListAsync(cancellationToken);
+                var categories = await _dbContext.DisplayCategoriesAsync(cancellationToken);
                 var hierarchy = new CategoryHierarchy(categories);
                 return BuildTree(categories.Where(x => hierarchy.IsPublic(x.Id)).ToList(), null);
             }
@@ -231,7 +228,7 @@ public static class CatalogQueries
             /// <inheritdoc />
             public async Task<IReadOnlyList<CatalogBrandDto>> Handle(Query request, CancellationToken cancellationToken)
             {
-                return await _dbContext.Brands
+                return await _dbContext.Brands.VisibleInUi(_dbContext)
                     .AsNoTracking()
                     .Where(brand => brand.IsActive)
                     .OrderBy(brand => brand.Name)
@@ -261,7 +258,7 @@ public static class CatalogQueries
             /// <inheritdoc />
             public async Task<IReadOnlyList<CatalogColorDto>> Handle(Query request, CancellationToken cancellationToken)
             {
-                return await _dbContext.CatalogColors
+                return await _dbContext.CatalogColors.VisibleInUi(_dbContext)
                     .AsNoTracking()
                     .Where(color => color.IsActive)
                     .OrderBy(color => color.Name)

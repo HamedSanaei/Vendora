@@ -21,6 +21,7 @@ COPY Application/ Application/
 COPY Domain/ Domain/
 COPY Persistence/ Persistence/
 COPY Infrastructure/ Infrastructure/
+COPY admin/public/fonts/vazirmatn/ admin/public/fonts/vazirmatn/
 RUN dotnet publish API/API.csproj -c Release -o /app/publish --no-restore
 
 # ---------------------------------------------------------------------------

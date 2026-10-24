@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { CartProformaAction } from "./cart-proforma-action";
 import { BagArtwork } from "@/components/vendora/product/bag-artwork";
 import { isVendoraProductImage } from "@/components/vendora/catalog/catalog-types";
 import { CheckIcon, CreditCardIcon, QualityIcon, SupportIcon, TrashIcon, TruckIcon } from "@/components/vendora/icons";
@@ -117,13 +118,14 @@ export function CartSummary({ locale, subtotal }: CartSummaryProps) {
       <hr className="my-5 border-vd-line" />
       <dl className="space-y-4 text-sm">
         <SummaryLine label={t.subtotal} value={formatPrice(subtotal, locale)} />
-        <SummaryLine label={t.shipping} value={t.free} accent />
+        <SummaryLine label={t.shipping} value={t.shippingPending} accent />
         <SummaryLine label={t.discount} value={formatPrice(0, locale)} />
       </dl>
       <hr className="my-5 border-vd-line" />
       <div className="flex items-center justify-between gap-3"><span className="font-extrabold text-ink">{t.payable}</span><strong className="text-[17px] font-extrabold text-jade-dark">{formatPrice(subtotal, locale)}</strong></div>
       <Link href={withLocalePath("/shipping", locale)} className="vd-focus mt-6 flex h-14 items-center justify-center rounded-control bg-jade px-4 text-sm font-extrabold text-white hover:bg-jade-dark">{t.checkout}</Link>
       <p className="mt-3 text-center text-xs text-vd-muted">{t.secureNote}</p>
+      <CartProformaAction locale={locale} />
     </aside>
   );
 }

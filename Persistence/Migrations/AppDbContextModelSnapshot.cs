@@ -17,6 +17,545 @@ namespace Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
 
+            modelBuilder.Entity("Domain.Accounting.AccountingOperation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PostedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ResultId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("AccountingOperations");
+                });
+
+            modelBuilder.Entity("Domain.Accounting.AccountingState", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Activated")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ActivatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AccountingStates");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Activated = false,
+                            Version = 0L
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Accounting.Counterparty", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsLegalEntity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(3000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RegistrationNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Counterparties");
+                });
+
+            modelBuilder.Entity("Domain.Accounting.DocumentNumberSequence", b =>
+                {
+                    b.Property<int>("Kind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("NextValue")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Kind");
+
+                    b.ToTable("DocumentNumberSequences");
+
+                    b.HasData(
+                        new
+                        {
+                            Kind = 0,
+                            NextValue = 1L
+                        },
+                        new
+                        {
+                            Kind = 1,
+                            NextValue = 1L
+                        },
+                        new
+                        {
+                            Kind = 2,
+                            NextValue = 1L
+                        },
+                        new
+                        {
+                            Kind = 3,
+                            NextValue = 1L
+                        },
+                        new
+                        {
+                            Kind = 4,
+                            NextValue = 1L
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Accounting.FinancialDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BuyerSnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CounterpartyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Currency")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("CustomerUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("ExchangeRate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Freight")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("IssuedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OriginalDocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PostedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("PurchaseTaxRecoverable")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SellerSnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ShippingUndetermined")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CounterpartyId");
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("OriginalDocumentId");
+
+                    b.HasIndex("CustomerUserId", "IssuedAtUtc");
+
+                    b.HasIndex("OrderId", "Kind")
+                        .IsUnique();
+
+                    b.HasIndex("Kind", "Status", "IssuedAtUtc");
+
+                    b.ToTable("FinancialDocuments");
+                });
+
+            modelBuilder.Entity("Domain.Accounting.FinancialDocumentLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("CostToman")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OriginalLineId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProductCode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Tax")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("ValuationDifferenceToman")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("OriginalLineId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("FinancialDocumentLines", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_FinancialDocumentLines_Quantity", "Quantity > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Accounting.InventoryBalance", b =>
+                {
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("OnHand")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Reserved")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Value")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ProductId");
+
+                    b.ToTable("InventoryBalances", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_InventoryBalances_Quantities", "OnHand >= 0 AND Reserved >= 0 AND Reserved <= OnHand");
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Accounting.PartyLedgerEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("AmountToman")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CounterpartyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PostedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SettlementId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceKey")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("SettlementId");
+
+                    b.HasIndex("SourceKey")
+                        .IsUnique();
+
+                    b.HasIndex("CounterpartyId", "PostedAtUtc");
+
+                    b.ToTable("PartyLedgerEntries");
+                });
+
+            modelBuilder.Entity("Domain.Accounting.PaymentAllocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("AmountToman")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PostedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SettlementId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("SettlementId", "DocumentId");
+
+                    b.ToTable("PaymentAllocations");
+                });
+
+            modelBuilder.Entity("Domain.Accounting.Settlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("AmountToman")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CounterpartyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Direction")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PaymentTransactionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PostedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("RequiresReview")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CounterpartyId");
+
+                    b.HasIndex("PaymentTransactionId")
+                        .IsUnique();
+
+                    b.ToTable("Settlements");
+                });
+
+            modelBuilder.Entity("Domain.Accounting.StockMovement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("PostedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("QuantityDelta")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ReservedDelta")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ReversesMovementId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourceKey")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("ValueDelta")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReversesMovementId");
+
+                    b.HasIndex("SourceKey")
+                        .IsUnique();
+
+                    b.HasIndex("ProductId", "PostedAtUtc");
+
+                    b.ToTable("StockMovements");
+                });
+
+            modelBuilder.Entity("Domain.Accounting.StockReservation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrderItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("OrderItemId")
+                        .IsUnique();
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("Status", "ExpiresAtUtc");
+
+                    b.ToTable("StockReservations");
+                });
+
             modelBuilder.Entity("Domain.Entities.Brand", b =>
                 {
                     b.Property<Guid>("Id")
@@ -521,6 +1060,10 @@ namespace Persistence.Migrations
                     b.Property<double?>("ShippingLongitude")
                         .HasColumnType("REAL");
 
+                    b.Property<string>("ShippingMethodId")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ShippingPhoneNumber")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -660,12 +1203,18 @@ namespace Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("VerificationEvidenceDigest")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("VerifiedAtUtc")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Authority");
 
-                    b.HasIndex("OrderId")
-                        .IsUnique();
+                    b.HasIndex("OrderId");
 
                     b.ToTable("PaymentTransactions", (string)null);
                 });
@@ -1010,6 +1559,20 @@ namespace Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Entities.SeedRecord", b =>
+                {
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("EntityType", "EntityId");
+
+                    b.ToTable("SeedRecords");
+                });
+
             modelBuilder.Entity("Domain.Entities.SeoRedirect", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1049,6 +1612,9 @@ namespace Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("HideSeedData")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsIndexingEnabled")
                         .HasColumnType("INTEGER");
 
@@ -1087,6 +1653,7 @@ namespace Persistence.Migrations
                         new
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000002"),
+                            HideSeedData = false,
                             IsIndexingEnabled = false,
                             SiteName = "وندورا",
                             SiteUrl = "",
@@ -1435,6 +2002,150 @@ namespace Persistence.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Accounting.Counterparty", b =>
+                {
+                    b.HasOne("Persistence.Identity.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Domain.Accounting.FinancialDocument", b =>
+                {
+                    b.HasOne("Domain.Accounting.Counterparty", null)
+                        .WithMany()
+                        .HasForeignKey("CounterpartyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Persistence.Identity.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Order", null)
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Accounting.FinancialDocument", null)
+                        .WithMany()
+                        .HasForeignKey("OriginalDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Domain.Accounting.FinancialDocumentLine", b =>
+                {
+                    b.HasOne("Domain.Accounting.FinancialDocument", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Accounting.FinancialDocumentLine", null)
+                        .WithMany()
+                        .HasForeignKey("OriginalLineId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Accounting.InventoryBalance", b =>
+                {
+                    b.HasOne("Domain.Entities.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Accounting.PartyLedgerEntry", b =>
+                {
+                    b.HasOne("Domain.Accounting.Counterparty", null)
+                        .WithMany()
+                        .HasForeignKey("CounterpartyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Accounting.FinancialDocument", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Accounting.Settlement", null)
+                        .WithMany()
+                        .HasForeignKey("SettlementId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Domain.Accounting.PaymentAllocation", b =>
+                {
+                    b.HasOne("Domain.Accounting.FinancialDocument", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Accounting.Settlement", null)
+                        .WithMany()
+                        .HasForeignKey("SettlementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Accounting.Settlement", b =>
+                {
+                    b.HasOne("Domain.Accounting.Counterparty", null)
+                        .WithMany()
+                        .HasForeignKey("CounterpartyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.PaymentTransaction", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentTransactionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Domain.Accounting.StockMovement", b =>
+                {
+                    b.HasOne("Domain.Entities.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Accounting.StockMovement", null)
+                        .WithMany()
+                        .HasForeignKey("ReversesMovementId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Domain.Accounting.StockReservation", b =>
+                {
+                    b.HasOne("Domain.Entities.Order", null)
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.OrderItem", null)
+                        .WithMany()
+                        .HasForeignKey("OrderItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Domain.Entities.CartItem", b =>
                 {
                     b.HasOne("Domain.Entities.Cart", "Cart")
@@ -1560,8 +2271,8 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Entities.PaymentTransaction", b =>
                 {
                     b.HasOne("Domain.Entities.Order", "Order")
-                        .WithOne()
-                        .HasForeignKey("Domain.Entities.PaymentTransaction", "OrderId")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1824,6 +2535,11 @@ namespace Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Accounting.FinancialDocument", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Domain.Entities.Cart", b =>

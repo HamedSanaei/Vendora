@@ -41,6 +41,12 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<Seo.SeoAiRateGate>();
         services.AddHostedService<Pricing.ExchangeRateRefreshService>();
+        services.AddScoped<Accounting.AccountingUnitOfWork>();
+        services.AddScoped<Accounting.InventoryPosting>();
+        services.AddScoped<Accounting.DocumentPosting>();
+        services.AddScoped<Accounting.CartQuotation>();
+        services.AddScoped<Accounting.OrderReservations>();
+        services.AddHostedService<Accounting.AccountingWorker>();
 
         return services;
     }

@@ -3,12 +3,13 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { mockProfile } from "@/lib/vendora/account-data";
+import { useSeedDataEnabled } from "../layout/store-settings-provider";
 import { getDict } from "@/lib/vendora/i18n";
 import type { Locale } from "@/lib/vendora/types";
 import { localizeDigits } from "@/lib/vendora/format";
 import { withLocalePath } from "@/lib/locale-path";
 import { VendoraButton } from "@/components/vendora/ui/button";
-import { ResultState } from "@/components/vendora/ui/empty-state";
+import { EmptyState, ResultState } from "@/components/vendora/ui/empty-state";
 import { TextareaField, TextField } from "@/components/vendora/ui/form-field";
 import {
   CheckIcon,
@@ -30,6 +31,9 @@ export function QuickPayForm({ locale }: { locale: Locale }) {
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("online");
   const [error, setError] = useState<string | null>(null);
+  const showSamples = useSeedDataEnabled();
+
+  if (!showSamples) return <EmptyState icon={<QuickPayIcon size={44} />} title={t.account.quickPay.demoHiddenTitle} body={t.account.quickPay.demoHiddenBody} />;
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -174,9 +178,13 @@ export function QuickPayForm({ locale }: { locale: Locale }) {
  * Reads `?status=` and renders the matching state with a masked tracking code.
  */
 export function QuickPayResult({ locale }: { locale: Locale }) {
-  const t = getDict(locale).account.quickPay.resultPage;
+  const copy = getDict(locale).account.quickPay;
+  const t = copy.resultPage;
   const params = useSearchParams();
+  const showSamples = useSeedDataEnabled();
   const status = params.get("status") ?? "success";
+
+  if (!showSamples) return <EmptyState icon={<QuickPayIcon size={44} />} title={copy.demoHiddenTitle} body={copy.demoHiddenBody} />;
 
   if (status === "failed") {
     return (

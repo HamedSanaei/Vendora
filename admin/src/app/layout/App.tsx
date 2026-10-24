@@ -22,6 +22,15 @@ import { AdminProductGridPage } from '../../features/admin/pages/AdminProductGri
 import { AdminProductsPage } from '../../features/admin/pages/AdminProductsPage';
 import { AdminProfilePage } from '../../features/admin/pages/AdminProfilePage';
 import { AdminStaffPage } from '../../features/admin/pages/AdminStaffPage';
+import { AccountingPage } from '../../features/admin/accounting/AccountingPage';
+import { AccountingOverview } from '../../features/admin/accounting/OverviewPage';
+import { DocumentList } from '../../features/admin/accounting/DocumentList';
+import { InvoiceEditor } from '../../features/admin/accounting/InvoiceEditor';
+import { CounterpartiesPage, CounterpartyLedger } from '../../features/admin/accounting/CounterpartiesPage';
+import { PaymentsPage } from '../../features/admin/accounting/PaymentsPage';
+import { InventoryPage, ProductPriceReport } from '../../features/admin/accounting/InventoryPage';
+import { SetupPage } from '../../features/admin/accounting/SetupPage';
+import { ProfitReport } from '../../features/admin/accounting/ProfitReport';
 import { adminPath, normalizeAdminLocale } from '../../features/admin/i18n';
 
 function LocaleAdminNavigate({ to }: { to?: string }) {
@@ -58,6 +67,21 @@ function App() {
             <Route element={<AdminLayout />}>
               <Route index element={<LocaleAdminNavigate to="dashboard" />} />
               <Route path="dashboard" element={<AdminDashboardPage />} />
+              <Route path="accounting" element={<AccountingPage />}>
+                <Route index element={<AccountingOverview />} />
+                <Route path="purchases" element={<DocumentList kind={0} />} />
+                <Route path="sales" element={<DocumentList kind={1} />} />
+                <Route path="quotes" element={<DocumentList kind={2} />} />
+                <Route path="counterparties" element={<CounterpartiesPage />} />
+                <Route path="counterparties/:id" element={<CounterpartyLedger />} />
+                <Route path="payments" element={<PaymentsPage />} />
+                <Route path="movements" element={<InventoryPage />} />
+                <Route path="reports" element={<><AccountingOverview reports /><ProfitReport /><ProductPriceReport /></>} />
+                <Route path="documents/new" element={<InvoiceEditor />} />
+                <Route path="documents/:id" element={<InvoiceEditor />} />
+                <Route path="returns" element={<InvoiceEditor returning />} />
+                <Route path="setup" element={<SetupPage />} />
+              </Route>
               <Route path="products" element={<LocaleAdminNavigate to="product-list" />} />
               <Route path="product-list" element={<AdminProductsPage />} />
               <Route path="product-grid" element={<AdminProductGridPage />} />

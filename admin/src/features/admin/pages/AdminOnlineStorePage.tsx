@@ -3,6 +3,7 @@ import { AdminButton, AdminFeedback, AdminPageHeader } from '../components/Admin
 import { AdminIcon } from '../components/AdminIcon';
 import { AdminSlideshowManager } from '../components/AdminSlideshowManager';
 import { AdminStoreSettingsForm } from '../components/AdminStoreSettingsForm';
+import { AdminSeedVisibility } from '../components/AdminSeedVisibility';
 import { normalizeAdminLocale } from '../i18n';
 import { slideshowCopy } from '../slideshowCopy';
 
@@ -21,6 +22,7 @@ export function AdminOnlineStorePage() {
   return (
     <section className="admin-page">
       <AdminPageHeader eyebrow={isFa ? 'پیش‌نمایش Storefront' : 'Storefront preview'} title={isFa ? 'فروشگاه آنلاین' : 'Online store'} description={copy.pageDescription} />
+      <AdminSeedVisibility locale={locale} />
       <AdminSlideshowManager key={locale} locale={locale} />
       <AdminStoreSettingsForm key={`settings-${locale}`} locale={locale} />
       <AdminFeedback tone="info"><span dir="ltr">VITE_STOREFRONT_URL = {storefrontBaseUrl}</span></AdminFeedback>

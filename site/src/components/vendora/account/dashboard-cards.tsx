@@ -1,5 +1,7 @@
 "use client";
 
+import { useSeedDataEnabled } from "../layout/store-settings-provider";
+
 import Link from "next/link";
 import { mockOrders, mockProfile } from "@/lib/vendora/account-data";
 import { getDict } from "@/lib/vendora/i18n";
@@ -24,6 +26,7 @@ const quickHrefs = ["/account/orders", "/account/addresses", "/account/wishlist"
 /** Greeting card with avatar, intro copy, member badge and profile link. */
 export function ProfileSummaryCard({ locale }: { locale: Locale }) {
   const t = getDict(locale);
+  const showSamples = useSeedDataEnabled();
   return (
     <section className="relative min-h-[220px] rounded-panel border border-vd-line bg-white p-[20px] lg:h-[214px] lg:min-h-0 lg:border-0 lg:p-[32px] lg:shadow-card">
       <div className="flex items-start gap-4 lg:items-center lg:gap-5">
@@ -36,14 +39,14 @@ export function ProfileSummaryCard({ locale }: { locale: Locale }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="whitespace-nowrap text-[18px] font-bold leading-8 text-ink lg:text-[1.375rem] lg:leading-10">{t.account.dashboard.greeting}</h2>
-            <span className="hidden rounded-full bg-vd-success-tint px-2 py-0.5 text-xs font-semibold text-vd-success lg:inline-flex">
+            {showSamples && <span className="hidden rounded-full bg-vd-success-tint px-2 py-0.5 text-xs font-semibold text-vd-success lg:inline-flex">
               {locale === "fa" ? mockProfile.memberBadge : mockProfile.memberBadgeEn}
-            </span>
+            </span>}
           </div>
           <p className="mt-1 text-sm leading-7 text-vd-muted lg:hidden">{locale === "fa" ? "مدیریت سفارش‌ها و اطلاعات حساب" : "Manage orders and account details"}</p>
-          <span className="absolute start-[28px] top-[126px] inline-flex h-7 w-[140px] items-center justify-center rounded-full bg-vd-success-tint text-xs font-semibold text-vd-success lg:hidden">
+          {showSamples && <span className="absolute start-[28px] top-[126px] inline-flex h-7 w-[140px] items-center justify-center rounded-full bg-vd-success-tint text-xs font-semibold text-vd-success lg:hidden">
             {formatNumber(mockProfile.clubPoints, locale)} {t.account.dashboard.clubPointsSuffix}
-          </span>
+          </span>}
           <p className="mt-1 hidden max-w-lg text-sm leading-7 text-vd-muted lg:block">{t.account.dashboard.intro}</p>
           <Link
             href={withLocalePath("/account/profile", locale)}
@@ -60,7 +63,9 @@ export function ProfileSummaryCard({ locale }: { locale: Locale }) {
 /** Dark jade loyalty card with points and progress bar. */
 export function ClubCard({ locale }: { locale: Locale }) {
   const t = getDict(locale);
+  const showSamples = useSeedDataEnabled();
   const progress = Math.round((mockProfile.clubPoints / (mockProfile.clubPoints + mockProfile.clubPointsToNext)) * 100);
+  if (!showSamples) return null;
   return (
     <section aria-label={t.account.dashboard.clubTitle} className="relative hidden h-[214px] overflow-hidden rounded-card bg-jade-dark p-[24px] lg:block">
       <StarIcon size={34} className="absolute end-6 top-6 text-jade-glow" />
@@ -84,6 +89,7 @@ export function QuickActionsSection({ locale }: { locale: Locale }) {
   return (
     <section aria-label={t.account.dashboard.quickTitle} className="!mt-[36px] lg:!mt-[48px]">
       <h2 className="vd-text-section-title text-ink">{t.account.dashboard.quickTitle}</h2>
+      <Link href={withLocalePath("/account/proformas", locale)} className="vd-focus mt-4 flex min-h-12 items-center justify-between rounded-control border border-vd-line px-5 font-bold text-jade">{t.account.menu.proformas}<OrdersIcon size={20} /></Link>
       <div className="mt-[16px] grid grid-cols-2 gap-x-[12px] gap-y-[20px] lg:grid-cols-[repeat(3,minmax(0,1fr))] lg:gap-[20px]">
         {t.account.dashboard.quickCards.map((card, index) => {
           const Icon = quickIcons[index];
@@ -112,7 +118,7 @@ export function QuickActionsSection({ locale }: { locale: Locale }) {
 /** Latest orders list card used on the account overview. */
 export function RecentOrdersCard({ locale }: { locale: Locale }) {
   const t = getDict(locale);
-  const recent = mockOrders.slice(0, 3);
+  const recent = (useSeedDataEnabled() ? mockOrders : []).slice(0, 3);
   return (
     <section aria-label={t.account.dashboard.recentOrders} className="!mt-[60px] lg:!mt-[48px]">
       <div className="flex items-center justify-between gap-4">

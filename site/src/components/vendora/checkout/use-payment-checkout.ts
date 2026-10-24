@@ -103,7 +103,9 @@ export function usePaymentCheckout() {
     setErrorMessage("");
     dispatch(set_payment({ provider, notes }));
 
-    const result = await addOrder({
+    const payload = {
+      shippingMethod: shippingMethod.id,
+      couponCode: coupon?.couponCode,
       shippingCost: totals.shippingCost,
       discountAmount: totals.discount,
       shippingAddressId: shippingInfo.shippingAddressId,
@@ -113,7 +115,14 @@ export function usePaymentCheckout() {
         quantity: item.orderQuantity || 1,
         expectedUnitPrice: getCartUnitPrice(item),
       })),
-    }) as AddOrderResult;
+    };
+    // Retain the key across network failures and refresh; changed checkout input creates a new operation.
+    const fingerprint = JSON.stringify({ payload, user: user?.id ?? user?._id });
+    let attempt: { fingerprint: string; key: string } | null = null;
+    try { attempt = JSON.parse(sessionStorage.getItem("vendora-order-attempt") ?? "null"); } catch { /* Invalid local metadata is not trusted. */ }
+    const key = attempt?.fingerprint === fingerprint ? attempt.key : crypto.randomUUID();
+    sessionStorage.setItem("vendora-order-attempt", JSON.stringify({ fingerprint, key }));
+    const result = await addOrder({ ...payload, idempotencyKey: key }) as AddOrderResult;
 
     if (result.error || !result.data?.orderNumber) {
       if (result.error?.data?.code === "PRICE_CHANGED") {
@@ -130,6 +139,7 @@ export function usePaymentCheckout() {
     }
 
     const orderNumber = result.data.orderNumber;
+    sessionStorage.removeItem("vendora-order-attempt");
     setPhase("redirecting");
     dispatch(clear_cart());
     dispatch(clear_coupon());
@@ -137,7 +147,7 @@ export function usePaymentCheckout() {
     redirectTimer.current = window.setTimeout(() => {
       router.push(withLocalePath(`/order/${orderNumber}`, locale));
     }, 900);
-  }, [addOrder, dispatch, items, locale, notes, phase, provider, router, shippingCompleted, shippingInfo.shippingAddressId, totals.discount, totals.shippingCost, user]);
+  }, [addOrder, dispatch, items, locale, notes, phase, provider, router, shippingCompleted, shippingInfo.shippingAddressId, shippingMethod.id, coupon?.couponCode, totals.discount, totals.shippingCost, user]);
 
   return {
     locale,

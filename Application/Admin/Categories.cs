@@ -41,8 +41,9 @@ public static class Categories
             {
                 var categories = await _repository.GetCategoriesAsync(request.IncludeInactive, cancellationToken);
                 var graph = new CategoryHierarchy(categories);
-                var links = await _db.ProductCategories.AsNoTracking().Select(x => new { x.ProductId, x.CategoryId }).ToListAsync(cancellationToken);
-                var legacy = await _db.Products.AsNoTracking().Where(x => x.CategoryId.HasValue).Select(x => new { ProductId = x.Id, CategoryId = x.CategoryId!.Value }).ToListAsync(cancellationToken);
+                var visibleProducts = _db.Products.VisibleInUi(_db).Select(x => x.Id);
+                var links = await _db.ProductCategories.AsNoTracking().Where(x => visibleProducts.Contains(x.ProductId)).Select(x => new { x.ProductId, x.CategoryId }).ToListAsync(cancellationToken);
+                var legacy = await _db.Products.VisibleInUi(_db).AsNoTracking().Where(x => x.CategoryId.HasValue).Select(x => new { ProductId = x.Id, CategoryId = x.CategoryId!.Value }).ToListAsync(cancellationToken);
                 var allLinks = links.Concat(legacy).Distinct().ToList();
                 return categories.Select(category =>
                 {

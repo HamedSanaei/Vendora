@@ -9,11 +9,14 @@ public partial class AppDbContext
     /// <summary>Allocates a batch of public codes and persists products atomically, including seed/import inserts.</summary>
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
+        await using var stockBoundary = await StockWriteBoundaryAsync(cancellationToken);
         var added = ProductsNeedingCodes();
         if (added.Count == 0)
         {
             ApplyAuditTimestamps();
-            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+            int saved = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+            if (stockBoundary is not null) await stockBoundary.CommitAsync(cancellationToken);
+            return saved;
         }
 
         await using var transaction = Database.CurrentTransaction is null
@@ -29,6 +32,7 @@ public partial class AppDbContext
             ApplyAuditTimestamps();
             int result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
             if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+            if (stockBoundary is not null) await stockBoundary.CommitAsync(cancellationToken);
             return result;
         }
         catch
@@ -41,11 +45,14 @@ public partial class AppDbContext
     /// <summary>Provides the same atomic numbering for synchronous seed and persistence callers.</summary>
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
+        using var stockBoundary = StockWriteBoundary();
         var added = ProductsNeedingCodes();
         if (added.Count == 0)
         {
             ApplyAuditTimestamps();
-            return base.SaveChanges(acceptAllChangesOnSuccess);
+            int saved = base.SaveChanges(acceptAllChangesOnSuccess);
+            stockBoundary?.Commit();
+            return saved;
         }
 
         using var transaction = Database.CurrentTransaction is null ? Database.BeginTransaction() : null;
@@ -59,6 +66,7 @@ public partial class AppDbContext
             ApplyAuditTimestamps();
             int result = base.SaveChanges(acceptAllChangesOnSuccess);
             transaction?.Commit();
+            stockBoundary?.Commit();
             return result;
         }
         catch

@@ -19,6 +19,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
         services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
+        services.AddScoped<ICommercialDocumentRenderer, Documents.QuestCommercialDocumentRenderer>();
         services.AddScoped<IProductDescriptionService, Infrastructure.Content.ProductDescriptionService>();
         services.AddScoped<IEnamadCodeParser, Infrastructure.Content.EnamadCodeParser>();
         services.AddScoped<ISeoAiGateway, Seo.NineRouterSeoGateway>();

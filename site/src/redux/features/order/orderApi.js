@@ -3,10 +3,10 @@ import { set_client_secret } from "./orderSlice";
 import axios from "axios";
 import { http } from "@/lib/http";
 
-async function orderRequest(path, body, token, method = "POST") {
+async function orderRequest(path, body, token, method = "POST", idempotencyKey) {
   try {
     const response = await http.request({ url: path.replace(/^\/api\//, "/"), method, data: body,
-      headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}) } });
     return { data: response.data };
   } catch (error) {
     return { error: { status: axios.isAxiosError(error) ? error.response?.status ?? "FETCH_ERROR" : "FETCH_ERROR",
@@ -31,7 +31,8 @@ export const orderApi = apiSlice.injectEndpoints({
     addOrder: builder.mutation({
       async queryFn(data) {
         const localAuth = JSON.parse(localStorage.getItem("auth") || "{}");
-        const result = await orderRequest("/api/Orders", data, localAuth?.accessToken);
+        const { idempotencyKey, ...payload } = data;
+        const result = await orderRequest("/api/Orders", payload, localAuth?.accessToken, "POST", idempotencyKey);
         if (result.data) {
           localStorage.removeItem("couponInfo");
           localStorage.removeItem("cart_products");

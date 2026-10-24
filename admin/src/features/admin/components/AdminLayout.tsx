@@ -35,6 +35,7 @@ const menuSections: AdminMenuSection[] = [
         ],
       },
       { titleKey: 'orders', path: (locale) => adminPath(locale, 'orders'), icon: 'orders' },
+      { titleKey: 'accounting', path: (locale) => adminPath(locale, 'accounting'), icon: 'orders' },
       { titleKey: 'discussions', path: (locale) => adminPath(locale, 'discussions'), icon: 'newsletter' },
     ],
   },
@@ -67,6 +68,7 @@ const menuSections: AdminMenuSection[] = [
 
 function resolvePageTitle(locale: AdminLocale, pathname: string): string {
   const entries: Array<[string, AdminMessageKey]> = [
+    ['/accounting', 'accounting'],
     ['/products/', 'editProduct'],
     ['/add-product', 'addProduct'],
     ['/product-grid', 'productGrid'],
@@ -96,6 +98,7 @@ export const AdminLayout = observer(function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const locale = normalizeAdminLocale(params.locale);
+  const isAccountingRoute = location.pathname.startsWith(adminPath(locale, 'accounting'));
   const { profile: storeProfile } = useAdminStoreSettings();
   const storeBrand = storePresentation(storeProfile, locale);
   const [isReady, setIsReady] = useState(false);
@@ -129,7 +132,7 @@ export const AdminLayout = observer(function AdminLayout() {
   }, [store.ui]);
 
   useEffect(() => {
-    if (!store.ui.isSidebarOpen || window.matchMedia('(min-width: 1024px)').matches) {
+    if (!store.ui.isSidebarOpen || window.matchMedia(`(min-width: ${isAccountingRoute ? 1280 : 1024}px)`).matches) {
       return undefined;
     }
 
@@ -162,7 +165,7 @@ export const AdminLayout = observer(function AdminLayout() {
       sidebar.removeEventListener('keydown', trapDrawerFocus);
       menuButton?.focus();
     };
-  }, [store.ui.isSidebarOpen]);
+  }, [store.ui.isSidebarOpen, isAccountingRoute]);
 
   if (params.locale !== locale) {
     return <Navigate to={adminPath(locale)} replace />;
@@ -197,7 +200,7 @@ export const AdminLayout = observer(function AdminLayout() {
     .toUpperCase();
 
   return (
-    <div className="admin-shell" data-admin-theme={locale === 'fa' ? 'penpot' : 'legacy'} lang={locale} dir={locale === 'fa' ? 'rtl' : 'ltr'}>
+    <div className="admin-shell" data-admin-area={isAccountingRoute ? 'accounting' : undefined} data-admin-theme={locale === 'fa' ? 'penpot' : 'legacy'} lang={locale} dir={locale === 'fa' ? 'rtl' : 'ltr'}>
       <aside aria-modal={store.ui.isSidebarOpen ? 'true' : undefined} className={`admin-sidebar ${store.ui.isSidebarOpen ? 'admin-sidebar-open' : ''}`} id="admin-navigation" ref={sidebarRef} role={store.ui.isSidebarOpen ? 'dialog' : undefined}>
         <div className="admin-brand">
           <span className="admin-brand-mark">{storeProfile.logoUrl ? <img className="admin-store-brand-image" src={storeImageUrl(storeProfile.logoUrl)} alt={storeBrand.name} /> : <AdminIcon name="brand" size={22} />}</span>

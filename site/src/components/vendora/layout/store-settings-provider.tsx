@@ -1,6 +1,8 @@
 'use client';
 
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { http } from '@/lib/http';
 import { getDict } from '@/lib/vendora/i18n';
 import { brandText, storePresentation, type StoreProfile } from '@/lib/store-settings';
 export { brandText, storePresentation } from '@/lib/store-settings';
@@ -10,11 +12,34 @@ const StoreSettingsContext = createContext<StoreProfile>({});
 
 /** Hydrates server-read settings for all storefront components without per-component requests. */
 export function StoreSettingsProvider({ profile, children }: { profile: StoreProfile; children: ReactNode }) {
-  return <StoreSettingsContext.Provider value={profile}>{children}</StoreSettingsContext.Provider>;
+  const router = useRouter();
+  const [remote, setRemote] = useState<{ base: boolean | undefined; show: boolean } | null>(null);
+  const show = remote?.base === profile.showSeedData ? remote?.show : profile.showSeedData;
+  useEffect(() => {
+    const controller = new AbortController(); let pending = false;
+    /** Rechecks only on returning to the tab; no polling and no per-card API requests. */
+    async function check() {
+      if (pending || document.visibilityState !== 'visible') return;
+      pending = true;
+      try {
+        const { data } = await http.get<{ showSeedData: boolean }>('/store-settings/seed-visibility', { signal: controller.signal });
+        if (!controller.signal.aborted && typeof data.showSeedData === 'boolean' && data.showSeedData !== show) {
+          setRemote({ base: profile.showSeedData, show: data.showSeedData }); router.refresh();
+        }
+      } catch { /* Preserve the last confirmed policy on temporary network failures. */ }
+      finally { pending = false; }
+    }
+    window.addEventListener('focus', check);
+    return () => { controller.abort(); window.removeEventListener('focus', check); };
+  }, [profile.showSeedData, show, router]);
+  return <StoreSettingsContext.Provider value={{ ...profile, showSeedData: show }}>{children}</StoreSettingsContext.Provider>;
 }
 
 /** Returns the saved overrides for the current server-rendered page. */
 export function useStoreSettings() { return useContext(StoreSettingsContext); }
+
+/** Demo-only account sections fail closed when policy is unavailable; real account data is unaffected. */
+export function useSeedDataEnabled() { return useStoreSettings().showSeedData === true; }
 
 /** Localizes the existing dictionary's brand mentions while preserving all original default copy. */
 export function useBrandCopy(locale: 'fa' | 'en') {

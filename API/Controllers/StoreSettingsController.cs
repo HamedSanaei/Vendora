@@ -13,6 +13,22 @@ namespace API.Controllers;
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class StoreSettingsController(ISender mediator) : ControllerBase
 {
+    /// <summary>Exposes only the current public sample-data switch; never provenance IDs or administrative metadata.</summary>
+    [HttpGet("seed-visibility"), AllowAnonymous]
+    public async Task<ActionResult<SeedDisplayUseCases.State>> SeedVisibility(CancellationToken ct)
+        => Ok(await mediator.Send(new SeedDisplayUseCases.Query(), ct));
+
+    /// <summary>Allows administrators to change visibility globally without changing any underlying record.</summary>
+    [HttpPut("~/api/admin/store-settings/seed-visibility"), Authorize(Policy = "AdminOnly")]
+    public async Task<ActionResult<SeedDisplayUseCases.State>> SetSeedVisibility(SeedVisibilityInput input, CancellationToken ct)
+        => Ok(await mediator.Send(new SeedDisplayUseCases.Set(input.ShowSeedData!.Value), ct));
+
+    /// <summary>An explicit Boolean is required so an empty request cannot inadvertently hide data.</summary>
+    public sealed class SeedVisibilityInput
+    {
+        [Required] public bool? ShowSeedData { get; init; }
+    }
+
     /// <summary>Returns only public presentation overrides; null fields use the existing Vendora defaults.</summary>
     [HttpGet, AllowAnonymous]
     public async Task<ActionResult<StoreProfile>> Get(CancellationToken cancellationToken)

@@ -54,6 +54,8 @@ public partial class AppDbContext(DbContextOptions<AppDbContext> options)
 
     /// <summary>Public SEO configuration and stable URL history.</summary>
     public DbSet<SeoSettings> SeoSettings => Set<SeoSettings>();
+    /// <summary>Gets explicit sample-data provenance, independent of mutable product codes and names.</summary>
+    public DbSet<SeedRecord> SeedRecords => Set<SeedRecord>();
     public DbSet<SlugHistory> SlugHistories => Set<SlugHistory>();
     public DbSet<SeoRedirect> SeoRedirects => Set<SeoRedirect>();
 
@@ -100,6 +102,12 @@ public partial class AppDbContext(DbContextOptions<AppDbContext> options)
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        ConfigureAccounting(modelBuilder);
+        modelBuilder.Entity<SeedRecord>(builder =>
+        {
+            builder.HasKey(x => new { x.EntityType, x.EntityId });
+            builder.Property(x => x.EntityType).HasMaxLength(80);
+        });
 
         modelBuilder.Entity<ProductCodeSequence>(builder =>
         {
@@ -350,6 +358,7 @@ public partial class AppDbContext(DbContextOptions<AppDbContext> options)
             builder.Property(x => x.ShippingPlaque).HasMaxLength(50);
             builder.Property(x => x.ShippingUnit).HasMaxLength(50);
             builder.Property(x => x.ShippingPostalCode).HasMaxLength(10);
+            builder.Property(x => x.ShippingMethodId).HasMaxLength(16);
             builder.Property(x => x.Subtotal).HasPrecision(18, 2);
             builder.Property(x => x.ShippingCost).HasPrecision(18, 2);
             builder.Property(x => x.DiscountAmount).HasPrecision(18, 2);
@@ -386,11 +395,12 @@ public partial class AppDbContext(DbContextOptions<AppDbContext> options)
             builder.Property(x => x.Amount).HasPrecision(18, 2);
             builder.Property(x => x.Status).HasConversion<int>();
             builder.Property(x => x.FailureReason).HasMaxLength(500);
-            builder.HasIndex(x => x.OrderId).IsUnique();
+            // Multiple gateway attempts/real payments must retain independent evidence for one order.
+            builder.HasIndex(x => x.OrderId);
             builder.HasIndex(x => x.Authority);
             builder.HasOne(x => x.Order)
-                .WithOne()
-                .HasForeignKey<PaymentTransaction>(x => x.OrderId)
+                .WithMany()
+                .HasForeignKey(x => x.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -537,6 +547,7 @@ public partial class AppDbContext(DbContextOptions<AppDbContext> options)
 
     private void ApplyAuditTimestamps()
     {
+        ValidateAccountingChanges();
         var now = DateTime.UtcNow;
 
         foreach (var entry in ChangeTracker.Entries<AuditableEntity>())

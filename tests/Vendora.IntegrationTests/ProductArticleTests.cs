@@ -183,7 +183,7 @@ public sealed class ProductArticleTests
         public Guid CategoryId => categoryId;
 
         /// <summary>Creates and migrates an empty test-only database.</summary>
-        public static async Task<ArticleHost> CreateAsync()
+        public static async Task<ArticleHost> CreateAsync(Action<IServiceCollection>? configure = null)
         {
             string root = Path.Combine(Path.GetTempPath(), "vendora-article-tests", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(Path.Combine(root, "wwwroot"));
@@ -209,6 +209,7 @@ public sealed class ProductArticleTests
             builder.Services.AddAuthentication("Test").AddScheme<AuthenticationSchemeOptions, ArticleAuth>("Test", _ => { });
             builder.Services.AddAuthorization(options => options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin")));
             API.DiscussionRateLimiting.AddDiscussionRateLimiting(builder.Services);
+            configure?.Invoke(builder.Services);
             var app = builder.Build();
             app.UseAuthentication(); app.UseAuthorization(); app.UseRateLimiter(); app.MapControllers();
             var category = new Category { Name = "Test bags", Slug = "test-bags", IsActive = true };

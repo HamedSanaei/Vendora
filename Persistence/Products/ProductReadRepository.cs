@@ -24,7 +24,7 @@ public sealed class ProductReadRepository : IProductReadRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<Product>> GetActiveProductsAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Products
+        return await _dbContext.Products.VisibleInUi(_dbContext)
             .AsNoTracking()
             .Include(product => product.Category)
             .Include(product => product.Images)
@@ -38,7 +38,7 @@ public sealed class ProductReadRepository : IProductReadRepository
     {
         string normalizedSlug = SlugHelper.ToSlug(slug);
 
-        return await _dbContext.Products
+        return await _dbContext.Products.VisibleInUi(_dbContext)
             .AsNoTracking()
             .Include(product => product.Category)
             .Include(product => product.Images)
@@ -50,7 +50,7 @@ public sealed class ProductReadRepository : IProductReadRepository
     /// <inheritdoc />
     public async Task<Product?> GetActiveProductByIdAsync(Guid productId, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Products
+        return await _dbContext.Products.VisibleInUi(_dbContext)
             .Include(product => product.Category)
             .Include(product => product.Images)
             .FirstOrDefaultAsync(

@@ -49,6 +49,11 @@ builder.Services.AddDiscussionRateLimiting();
 
 var app = builder.Build();
 
+// License activation is local and requires no registration/key. Invalid configuration disables PDF only.
+string? pdfConfigurationError = Infrastructure.Documents.CommercialPdfConfiguration.Initialize(builder.Configuration, builder.Environment);
+if (pdfConfigurationError is not null)
+    app.Logger.LogWarning("Commercial PDF generation is unavailable: {ConfigurationError}", pdfConfigurationError);
+
 // One-shot database migration mode used by the deployment pipeline. It applies
 // pending EF Core migrations (after the deployment script has taken a backup)
 // and exits, so the web server never starts.

@@ -27,7 +27,7 @@ public sealed class OrderRepository : IOrderRepository
     /// <inheritdoc />
     public async Task<IReadOnlyList<Order>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Orders
+        return await _dbContext.Orders.VisibleInUi(_dbContext)
             .AsNoTracking()
             .Include(order => order.Items)
             .Where(order => order.UserId == userId)
@@ -38,7 +38,7 @@ public sealed class OrderRepository : IOrderRepository
     /// <inheritdoc />
     public async Task<Order?> GetByOrderNumberAsync(string orderNumber, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Orders
+        return await _dbContext.Orders.VisibleInUi(_dbContext)
             .AsNoTracking()
             .Include(order => order.Items)
             .FirstOrDefaultAsync(order => order.OrderNumber == orderNumber, cancellationToken);

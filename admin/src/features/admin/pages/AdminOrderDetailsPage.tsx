@@ -7,6 +7,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { adminPath, normalizeAdminLocale } from '../i18n';
 import { useAdminStore } from '../stores/AdminStoreContext';
 import { formatDate, formatMoney } from '../utils/formatters';
+import { OrderAccountingContext } from '../accounting/OrderAccountingContext';
 
 /** Renders the responsive order, customer, item, and payment snapshot from the order API. */
 export const AdminOrderDetailsPage = observer(function AdminOrderDetailsPage() {
@@ -69,6 +70,7 @@ export const AdminOrderDetailsPage = observer(function AdminOrderDetailsPage() {
         </AdminPanel>
       </div>
 
+      <OrderAccountingContext id={order.id} locale={locale} />
       <AdminPanel title={isFa ? 'اقلام سفارش' : 'Purchased items'} description={isFa ? 'قیمت‌ها و عنوان‌ها همان snapshot زمان خرید هستند.' : 'Titles and prices are the immutable checkout snapshot.'}>
         <div className="admin-table-wrap"><table className="admin-table">
           <thead><tr><th>{isFa ? 'محصول' : 'Product'}</th><th>{isFa ? 'قیمت واحد' : 'Unit price'}</th><th>{isFa ? 'تعداد' : 'Quantity'}</th><th>{isFa ? 'جمع' : 'Line total'}</th></tr></thead>

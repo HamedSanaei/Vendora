@@ -9,6 +9,7 @@ import {
 } from "@/lib/vendora/account-nav";
 import { getDict } from "@/lib/vendora/i18n";
 import { mockProfile } from "@/lib/vendora/account-data";
+import { useSeedDataEnabled } from "../layout/store-settings-provider";
 import type { Locale } from "@/lib/vendora/types";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
 import { Breadcrumb, type Crumb } from "@/components/vendora/ui/page-header";
@@ -38,6 +39,7 @@ const menuIcons: Record<string, (props: VendoraIconProps) => ReactNode> = {
   transactions: WalletIcon,
   wishlist: HeartIcon,
   quickPay: QuickPayIcon,
+  proformas: OrdersIcon,
 };
 
 /**
@@ -108,6 +110,7 @@ export function AccountPageFrame({ crumbs, children, initialLocale }: { crumbs: 
  */
 function SidebarCard({ locale, pathname }: { locale: Locale; pathname: string }) {
   const t = getDict(locale);
+  const showSamples = useSeedDataEnabled();
   return (
     <div className="h-[700px] overflow-hidden rounded-panel border border-vd-line bg-white p-[24px]">
       <div className="flex flex-col items-center">
@@ -120,7 +123,7 @@ function SidebarCard({ locale, pathname }: { locale: Locale; pathname: string })
         <p className="mt-3 text-lg font-bold leading-8 text-ink">
           {locale === "fa" ? mockProfile.fullName : mockProfile.fullNameEn}
         </p>
-        <p className="vd-text-caption text-vd-muted">{t.account.memberSince}</p>
+        {showSamples && <p className="vd-text-caption text-vd-muted">{t.account.memberSince}</p>}
       </div>
       <hr className="my-[20px] border-vd-line" />
       <nav aria-label={t.common.account}>

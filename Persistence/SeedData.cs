@@ -16,6 +16,12 @@ public static class SeedData
     /// <param name="cancellationToken">The cancellation token.</param>
     public static async Task SeedAsync(AppDbContext dbContext, CancellationToken cancellationToken = default)
     {
+        if (await dbContext.AccountingStates.AsNoTracking().AnyAsync(x => x.Id == 1 && x.Activated, cancellationToken))
+        {
+            // Never introduce demonstration orders/payments or positive sample stock after operational cutover.
+            await SeedAdminTablesAsync(dbContext, cancellationToken);
+            return;
+        }
         if (await dbContext.Products.AsNoTracking().AnyAsync(cancellationToken))
         {
             await SeedAdminTablesAsync(dbContext, cancellationToken);
@@ -434,7 +440,7 @@ public static class SeedData
         await dbContext.PaymentTransactions.AddRangeAsync([paymentTransaction, processingPayment, pendingPayment], cancellationToken);
 
         await AddAdminTablesAsync(dbContext, taxonomy.Values.ToList(), cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await SeedVisibility.SaveSeedChangesAsync(dbContext, cancellationToken);
     }
 
     /// <summary>
@@ -457,7 +463,7 @@ public static class SeedData
         await EnsureCatalogColorsAsync(dbContext, cancellationToken);
         await EnsureCuratedProductsAsync(dbContext, cancellationToken);
         await EnsureBagShowcaseProductsAsync(dbContext, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await SeedVisibility.SaveSeedChangesAsync(dbContext, cancellationToken);
     }
 
     private static async Task EnsureCatalogBrandsAsync(AppDbContext dbContext, CancellationToken cancellationToken)
@@ -661,7 +667,7 @@ public static class SeedData
         var categories = await dbContext.Categories.AsNoTracking().ToListAsync(cancellationToken);
         await AddAdminTablesAsync(dbContext, categories, cancellationToken);
         await EnsureBagShowcaseProductsAsync(dbContext, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await SeedVisibility.SaveSeedChangesAsync(dbContext, cancellationToken);
     }
 
     private static Dictionary<string, Category> CreateBagTaxonomy()
@@ -719,6 +725,8 @@ public static class SeedData
             .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
 
         var products = CreateBagShowcaseProducts(categories, brands, colors, existingProductSlugs);
+        if (await dbContext.AccountingStates.AsNoTracking().AnyAsync(x => x.Id == 1 && x.Activated, cancellationToken))
+            foreach (var product in products) { product.StockQuantity = 0; product.InventoryStatus = InventoryStatus.OutOfStock; }
         await SyncBagShowcaseProductImagesAsync(dbContext, cancellationToken);
         if (products.Count == 0)
         {
