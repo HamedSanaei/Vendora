@@ -22,7 +22,7 @@ const api = http.createServer(async (req, res) => {
     const chunks = []; for await (const chunk of req) chunks.push(chunk);
     assert.equal(JSON.parse(Buffer.concat(chunks).toString()).credential, "fixture-google-id-token");
     exchangeCount++;
-    result = { token: "fixture-vendora-session", id: "fixture-user", fullName: "Google Fixture", email: "fixture@gmail.com", role: "Customer" };
+    result = { token: "fixture-vendora-session", id: "fixture-user", fullName: "Google Fixture", email: "fixture@gmail.com", role: "Customer", completion: { isComplete: true } };
   } else if (url.pathname === "/api/account/google/link") {
     assert.equal(req.headers.authorization, "Bearer fixture-vendora-session");
     const chunks = []; for await (const chunk of req) chunks.push(chunk);
@@ -44,7 +44,7 @@ async function ready(url) {
 }
 const fakeGoogle = `window.google={accounts:{id:{
  initialize:function(opts){window.__gisCallback=opts.callback},
- renderButton:function(node){ const btn=document.createElement('button');btn.textContent='Fixture Google'; btn.addEventListener('click',()=>window.__gisCallback({credential:'fixture-google-id-token'}));node.appendChild(btn);},
+ renderButton:function(node,opts){ const btn=document.createElement('button');btn.textContent='Fixture Google';btn.style.width=opts.width+'px';btn.style.height='40px'; btn.addEventListener('click',()=>window.__gisCallback({credential:'fixture-google-id-token'}));node.appendChild(btn);},
  disableAutoSelect:function(){}
 }}};`;
 async function main() {
@@ -65,6 +65,23 @@ async function main() {
         const page = await context.newPage();
         await page.goto(origin + "/" + locale + "/login");
         await page.getByText("Fixture Google").waitFor({ timeout: 15000 });
+        for (const width of [320, 390, 768, 1024, 1440]) {
+          await page.setViewportSize({ width, height: 900 });
+          const signup = page.locator(`a[href="/${locale}/register"]`);
+          assert.equal(await signup.evaluate(node => getComputedStyle(node).fontSize), "16px");
+          assert.match(await signup.evaluate(node => getComputedStyle(node).fontFamily), /Vazirmatn/);
+          assert.equal(await signup.evaluate(node => getComputedStyle(node).fontWeight), "700");
+          assert.ok((await signup.boundingBox()).height >= 44);
+          await page.waitForFunction(() => {
+            const holder = document.querySelector('.vd-google-identity-button');
+            const button = holder?.querySelector('button');
+            if (!button) return false;
+            const bounds = button.getBoundingClientRect();
+            const container = holder.parentElement.getBoundingClientRect();
+            return bounds.width <= container.width + 1 && bounds.height >= 49;
+          });
+          assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+        }
         await page.getByText("Fixture Google").click();
         await page.locator(".vd-account-page").waitFor({ timeout: 15000 });
         const auth = await page.evaluate(() => JSON.parse(localStorage.getItem("auth")));
@@ -77,7 +94,7 @@ async function main() {
       }
       assert.equal(exchangeCount, 2);
       assert.equal(linkCount, 2);
-      console.log("PASS: GIS popup callback, Vendora token exchange, account linking, fa/en UI.");
+      console.log("PASS: login typography and Google sizing at 320/390/768/1024/1440, GIS popup callback, Vendora token exchange, account linking, fa/en UI (isolated fixtures).");
     } finally { await browser.close(); }
   } finally {
     app.kill();

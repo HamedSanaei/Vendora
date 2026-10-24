@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, EffectFade, Navigation } from "swiper";
+import { Autoplay, EffectFade, Navigation } from "swiper/modules";
 // internal
 import slider_img_1 from "@assets/img/slider/13/slider-5.png";
 import slider_img_2 from "@assets/img/slider/13/slider-6-clean.png";

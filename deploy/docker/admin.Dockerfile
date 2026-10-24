@@ -26,7 +26,7 @@ RUN npm run build
 # ---------------------------------------------------------------------------
 # Runtime stage: nginx serving the generated static SPA.
 # ---------------------------------------------------------------------------
-FROM nginx:1.27-alpine AS final
+FROM nginx:stable-alpine AS final
 
 COPY <<"EOF" /etc/nginx/conf.d/default.conf
 server {

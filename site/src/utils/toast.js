@@ -68,7 +68,6 @@ const notifyCart = ({ locale, tone, message, actionLabel, onAction, toastId, aut
       role: tone === "warning" ? "alert" : "status",
       toastId,
       className: `vd-cart-toast vd-cart-toast--${tone}`,
-      bodyClassName: "vd-cart-toast__body",
       progressClassName: `vd-cart-toast__progress vd-cart-toast__progress--${tone}`,
     }
   );

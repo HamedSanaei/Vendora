@@ -115,6 +115,16 @@
   text-decoration: none;
 }
 
+/* Google's cross-origin iframe owns its typography. Enlarge its entire
+   official button proportionally so personalized account text stays legible.
+   The reciprocal width keeps the zoomed button inside narrow login cards. */
+.vd-google-identity-button {
+  width: 80%;
+  max-width: 400px;
+  min-height: 40px;
+  zoom: 1.25;
+}
+
 /* Account lists are navigation controls, including when legacy list styles load. */
 .vd-account-navigation > ul,
 .vd-account-navigation > ul > li {
@@ -621,11 +631,6 @@ html:has(.vd-home)::-webkit-scrollbar {
 .vd-cart-toast--warning.Toastify__toast {
   border-color: #e9c988;
   background: var(--color-vd-warning-tint);
-}
-.vd-cart-toast__body.Toastify__toast-body {
-  width: 100%;
-  margin: 0;
-  padding: 0;
 }
 .vd-cart-toast__content {
   display: flex;
