@@ -84,6 +84,7 @@ public static class Create
         /// <inheritdoc />
         public async Task<OrderDto> Handle(Command request, CancellationToken cancellationToken)
         {
+            await CustomerProfile.RequireAsync(_dbContext, request.UserId, cancellationToken);
             if (request.NewAddress is { } address)
             {
                 string? error = AddressCoordinates.Validate(address.Latitude, address.Longitude);

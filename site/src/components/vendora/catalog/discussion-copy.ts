@@ -1,4 +1,5 @@
 const fa = {
+  completeProfile: 'پیش از ثبت محتوا، اطلاعات حساب و تأیید شماره همراه را تکمیل کنید.',
   questions: 'پرسش‌وپاسخ', answers: 'پاسخ‌ها', reviews: 'دیدگاه‌ها', review: 'دیدگاه شما', question: 'سؤال شما', answer: 'پاسخ شما',
   login: 'برای ثبت دیدگاه، سؤال یا پاسخ وارد حساب خود شوید.', loginButton: 'ورود به حساب',
   send: 'ثبت', save: 'ذخیره تغییرات', sending: 'در حال ثبت…', saved: 'با موفقیت ثبت شد.',
@@ -13,6 +14,7 @@ const fa = {
   outOf: 'از ۵', ratingCount: 'امتیاز', reviewCount: 'دیدگاه',
 };
 const en: typeof fa = {
+  completeProfile: 'Complete your account details and verify your mobile number before posting.',
   questions: 'Questions & answers', answers: 'Answers', reviews: 'Reviews', review: 'Your review', question: 'Your question', answer: 'Your answer',
   login: 'Sign in to post a review, question or answer.', loginButton: 'Sign in', send: 'Submit', save: 'Save changes', sending: 'Submitting…', saved: 'Saved successfully.',
   buyer: 'Verified buyer', official: 'Store response', stars: 'Your rating', noRating: 'No rating',

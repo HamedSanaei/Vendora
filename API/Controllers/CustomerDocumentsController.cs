@@ -48,6 +48,7 @@ public sealed class CustomerDocumentsController(ISender sender) : ControllerBase
     {
         if (!TryActor(out var actor)) return Unauthorized();
         try { return Ok(new { id = await sender.Send(new ProformaCommands.Issue(actor, key, input.Items, input.ShippingMethod, input.CouponCode), ct) }); }
+        catch (Application.Auth.CustomerProfileRequiredException) { return StatusCode(403, new { code = "PROFILE_INCOMPLETE" }); }
         catch (AccountingException e) { return StatusCode(e.Status, new { code = e.Code }); }
         catch (Application.Pricing.PriceChangedException e) { return Conflict(new { code = "PRICE_CHANGED", productId = e.ProductId, currentPrice = e.CurrentPrice }); }
         catch (ArgumentException) { return BadRequest(new { code = "INVALID_INPUT" }); }

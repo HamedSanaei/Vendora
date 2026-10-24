@@ -1,19 +1,10 @@
 import { apiSlice } from "../api/apiSlice";
-
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5020";
+import axios from 'axios';
+import { http } from '@/lib/http';
 
 async function orderRequest(path, token) {
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    return { error: { status: response.status, data: data ?? { message: "Request failed." } } };
-  }
-
-  return { data };
+  try { return { data: (await http.get(path.replace(/^\/api(?=\/)/, ''), { headers: token ? { Authorization: `Bearer ${token}` } : undefined })).data }; }
+  catch (error) { return { error: { status: axios.isAxiosError(error) ? error.response?.status ?? 'NETWORK_ERROR' : 'NETWORK_ERROR', data: axios.isAxiosError(error) ? error.response?.data ?? { message: 'Request failed.' } : { message: 'Request failed.' } } }; }
 }
 
 function mapOrder(order) {

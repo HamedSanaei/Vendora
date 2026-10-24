@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { apiSlice } from '@/redux/api/apiSlice';
 import { userLoggedOut } from "@/redux/features/auth/authSlice";
 import {
   accountNavItems,
@@ -53,12 +54,20 @@ export function AccountPageFrame({ crumbs, children, initialLocale }: { crumbs: 
   const pathname = usePathname();
   const locale: Locale = getLocaleFromPathname(pathname, initialLocale);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    /** Releases the mobile drawer/body lock when resizing into the desktop sidebar layout. */
+    const closeOnDesktop = () => { if (desktop.matches) setDrawerOpen(false); };
+    desktop.addEventListener('change', closeOnDesktop);
+    return () => desktop.removeEventListener('change', closeOnDesktop);
+  }, []);
   const dispatch = useDispatch();
   const router = useRouter();
   const handleLogout = () => {
     dispatch(userLoggedOut());
+    dispatch(apiSlice.util.resetApiState());
     setDrawerOpen(false);
-    router.replace(withLocalePath("/account", locale));
+    router.replace(withLocalePath("/login", locale));
   };
   const t = getDict(locale);
   const activeItem = accountNavItems.find((item) => isAccountItemActive(item.href, pathname));
@@ -121,8 +130,9 @@ export function AccountPageFrame({ crumbs, children, initialLocale }: { crumbs: 
 function SidebarCard({ locale, pathname, onLogout }: { locale: Locale; pathname: string; onLogout: () => void }) {
   const t = getDict(locale);
   const showSamples = useSeedDataEnabled();
+  const displayName = useSelector((state: { auth: { user?: { name?: string } } }) => state.auth.user?.name);
   return (
-    <div className="h-[700px] overflow-hidden rounded-panel border border-vd-line bg-white p-[24px]">
+    <div className="vd-account-sidebar min-h-[700px] rounded-panel border border-vd-line bg-white p-[24px]">
       <div className="flex flex-col items-center">
         <span
           aria-hidden
@@ -131,12 +141,12 @@ function SidebarCard({ locale, pathname, onLogout }: { locale: Locale; pathname:
           V
         </span>
         <p className="mt-3 text-lg font-bold leading-8 text-ink">
-          {locale === "fa" ? mockProfile.fullName : mockProfile.fullNameEn}
+          {displayName || (locale === "fa" ? mockProfile.fullName : mockProfile.fullNameEn)}
         </p>
         {showSamples && <p className="vd-text-caption text-vd-muted">{t.account.memberSince}</p>}
       </div>
       <hr className="my-[20px] border-vd-line" />
-      <nav aria-label={t.common.account}>
+      <nav aria-label={t.common.account} className="vd-account-navigation">
         <ul className="space-y-1">
           {accountNavItems.map((item) => {
             const Icon = menuIcons[item.key];
@@ -146,7 +156,7 @@ function SidebarCard({ locale, pathname, onLogout }: { locale: Locale; pathname:
                 <Link
                   href={withLocalePath(item.href, locale)}
                   aria-current={active ? "page" : undefined}
-                  className={`vd-focus flex h-[42px] items-center gap-3 rounded-control px-4 text-sm transition-colors ${
+                  className={`vd-focus flex min-h-[44px] items-center gap-3 rounded-control px-4 py-2 text-sm transition-colors ${
                     active ? "bg-jade-tint font-bold text-jade" : "text-ink hover:bg-surface-soft hover:text-jade"
                   }`}
                 >
@@ -165,7 +175,7 @@ function SidebarCard({ locale, pathname, onLogout }: { locale: Locale; pathname:
         type="button"
         title={t.account.menu.logout}
         onClick={onLogout}
-        className="vd-focus flex h-[42px] w-full items-center gap-3 rounded-control px-4 text-sm font-semibold text-vd-danger hover:bg-vd-danger-tint"
+        className="vd-focus flex min-h-[44px] w-full items-center gap-3 rounded-control px-4 py-2 text-sm font-semibold text-vd-danger hover:bg-vd-danger-tint"
       >
         <span className="flex h-8 w-8 items-center justify-center">
           <ReturnIcon size={18} className="rtl:-scale-x-100" />
@@ -226,7 +236,7 @@ function AccountDrawer({
           </button>
         </div>
         <hr className="mx-4 mt-2 border-vd-line" />
-        <nav aria-label={t.common.account} className="flex-1 overflow-y-auto p-3">
+        <nav aria-label={t.common.account} className="vd-account-navigation min-h-0 flex-1 overflow-y-auto p-3">
           <ul className="space-y-1">
             {accountNavItems.map((item) => {
               const Icon = menuIcons[item.key];
@@ -255,7 +265,7 @@ function AccountDrawer({
           <button
             type="button"
             onClick={onLogout}
-            className="vd-focus flex h-[42px] w-full items-center gap-3 rounded-control px-4 text-sm font-semibold text-vd-danger hover:bg-vd-danger-tint"
+            className="vd-focus flex min-h-[44px] w-full items-center gap-3 rounded-control px-4 py-2 text-sm font-semibold text-vd-danger hover:bg-vd-danger-tint"
           >
             {t.account.menu.logout}
           </button>

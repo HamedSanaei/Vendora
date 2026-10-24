@@ -3,6 +3,7 @@ using Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
+using Application.Auth;
 
 namespace Application.Discussions;
 
@@ -35,6 +36,7 @@ public static class DiscussionCommands
         public async Task<Result> Handle(SaveReview request, CancellationToken ct)
         {
             if (!Valid(request.Content, 3000) || request.Rating is < 1 or > 5) return new(400, "INVALID_CONTENT");
+            if (!await CustomerProfile.IsCompleteAsync(db, request.UserId, ct)) return new(403, "PROFILE_INCOMPLETE");
             if (!await Exists(db, request.ProductId, request.UserId, ct)) return new(404, "NOT_FOUND");
             if (request.Rating.HasValue && !await DiscussionQueries.DeliveredPurchases(db).AnyAsync(o => o.UserId == request.UserId && o.Items.Any(i => i.ProductId == request.ProductId), ct)) return new(403, "BUYER_REQUIRED");
             var review = await db.ProductReviews.SingleOrDefaultAsync(r => r.ProductId == request.ProductId && r.UserId == request.UserId, ct);
@@ -54,6 +56,7 @@ public static class DiscussionCommands
         public async Task<Result> Handle(Ask request, CancellationToken ct)
         {
             if (!Valid(request.Content, 2000)) return new(400, "INVALID_CONTENT");
+            if (!await CustomerProfile.IsCompleteAsync(db, request.UserId, ct)) return new(403, "PROFILE_INCOMPLETE");
             if (!await Exists(db, request.ProductId, request.UserId, ct)) return new(404, "NOT_FOUND");
             var question = new ProductQuestion { ProductId = request.ProductId, UserId = request.UserId, Content = request.Content.Trim() };
             db.ProductQuestions.Add(question);
@@ -69,6 +72,7 @@ public static class DiscussionCommands
         public async Task<Result> Handle(Answer request, CancellationToken ct)
         {
             if (!Valid(request.Content, 3000)) return new(400, "INVALID_CONTENT");
+            if (!request.Official && !await CustomerProfile.IsCompleteAsync(db, request.UserId, ct)) return new(403, "PROFILE_INCOMPLETE");
             if (!await Exists(db, request.ProductId, request.UserId, ct) || !await db.ProductQuestions.AnyAsync(q => q.Id == request.QuestionId && q.ProductId == request.ProductId && !q.IsHidden, ct)) return new(404, "NOT_FOUND");
             var answer = new ProductAnswer { QuestionId = request.QuestionId, UserId = request.UserId, Content = request.Content.Trim(), IsOfficial = request.Official };
             db.ProductAnswers.Add(answer);

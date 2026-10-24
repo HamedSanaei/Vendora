@@ -5,6 +5,7 @@ import axios from "axios";
 import { GoogleIdentityButton } from "@/components/vendora/auth/google-identity-button";
 import { http } from "@/lib/http";
 import type { Locale } from "@/lib/vendora/types";
+import { googleErrorMessage } from '@/lib/auth/google-errors';
 
 /** Existing password accounts can link Google only after authenticating normally. */
 export function GoogleAccountLink({ locale }: { locale: Locale }) {
@@ -28,7 +29,7 @@ export function GoogleAccountLink({ locale }: { locale: Locale }) {
       const message = axios.isAxiosError(failure) ? failure.response?.data?.message : "";
       setError(message === "The Google email must match your account email."
         ? (locale === "fa" ? "ایمیل حساب Google باید با ایمیل حساب شما یکسان باشد." : "Google email must match your account email.")
-        : (locale === "fa" ? "اتصال Google انجام نشد. دوباره تلاش کنید." : "Google could not be linked. Please retry."));
+        : googleErrorMessage(message ?? '', axios.isAxiosError(failure) ? failure.response?.status : 500, locale));
     } finally {
       setBusy(false);
     }

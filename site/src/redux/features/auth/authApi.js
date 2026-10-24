@@ -31,6 +31,7 @@ function toTemplateUser(account) {
     role: account.role,
     phone: account.phoneNumber,
     bio: account.bio,
+    completion: account.completion,
   };
 }
 
@@ -149,6 +150,8 @@ export const authApi = apiSlice.injectEndpoints({
             email: data.email,
             phoneNumber: data.phone,
             bio: data.bio,
+            firstName: data.firstName,
+            lastName: data.lastName,
           },
           localAuth?.accessToken,
           "PUT"

@@ -19,10 +19,16 @@ namespace Application.Auth;
 public static class Account
 {
     /// <summary>Represents the authenticated account payload returned to clients.</summary>
-    public sealed record AccountDto(Guid Id, string FullName, string Email, string Role, string Token, string? PhoneNumber, string? Bio);
+    public sealed record AccountDto(Guid Id, string FullName, string Email, string Role, string Token, string? PhoneNumber, string? Bio)
+    {
+        public CustomerProfile.Completion? Completion { get; init; }
+    }
 
     /// <summary>Represents the current account payload.</summary>
-    public sealed record CurrentAccountDto(Guid Id, string FullName, string Email, string Role, string? PhoneNumber, string? Bio);
+    public sealed record CurrentAccountDto(Guid Id, string FullName, string Email, string Role, string? PhoneNumber, string? Bio)
+    {
+        public CustomerProfile.Completion? Completion { get; init; }
+    }
 
     /// <summary>Represents a customer shipping address payload.</summary>
     public sealed record AddressDto(
@@ -184,7 +190,7 @@ public static class Account
 
                 string role = await ResolveRoleAsync(_userManager, user);
                 string token = await CreateTokenAsync(_userManager, _configuration, user, role);
-                return new Result(true, null, new AccountDto(user.Id, user.FullName, user.Email ?? string.Empty, role, token, user.PhoneNumber, user.Bio));
+                return new Result(true, null, new AccountDto(user.Id, user.FullName, user.Email ?? string.Empty, role, token, user.PhoneNumber, user.Bio) { Completion = CustomerProfile.Describe(user) });
             }
         }
     }
@@ -266,7 +272,7 @@ public static class Account
                 }
 
                 string role = await ResolveRoleAsync(_userManager, user);
-                return new CurrentAccountDto(user.Id, user.FullName, user.Email ?? string.Empty, role, user.PhoneNumber, user.Bio);
+                return new CurrentAccountDto(user.Id, user.FullName, user.Email ?? string.Empty, role, user.PhoneNumber, user.Bio) { Completion = CustomerProfile.Describe(user) };
             }
         }
     }
@@ -275,7 +281,7 @@ public static class Account
     public static class UpdateProfile
     {
         /// <summary>Represents a profile update command.</summary>
-        public sealed record Command(Guid UserId, string FullName, string Email, string? PhoneNumber, string? Bio) : IRequest<Result>;
+        public sealed record Command(Guid UserId, string FullName, string Email, string? PhoneNumber, string? Bio, string? FirstName = null, string? LastName = null) : IRequest<Result>;
 
         /// <summary>Handles profile update commands.</summary>
         public sealed class Handler : IRequestHandler<Command, Result>
@@ -297,16 +303,22 @@ public static class Account
                     return Result.Fail("User was not found.");
                 }
 
-                string fullName = request.FullName.Trim();
-                string email = request.Email.Trim();
-                string? phoneNumber = NormalizeDigits(request.PhoneNumber)?.Trim();
+                string fullName = request.FullName?.Trim() ?? "";
+                string email = request.Email?.Trim() ?? "";
+                string? phoneNumber = CustomerProfile.NormalizePhone(request.PhoneNumber);
+                if (request.FirstName is not null || request.LastName is not null)
+                {
+                    if (!CustomerProfile.ValidName(request.FirstName) || !CustomerProfile.ValidName(request.LastName))
+                        return Result.Fail("PROFILE_NAME_REQUIRED");
+                    fullName = $"{request.FirstName!.Trim()} {request.LastName!.Trim()}";
+                }
 
                 if (string.IsNullOrWhiteSpace(fullName))
                 {
                     return Result.Fail("Full name is required.");
                 }
 
-                if (string.IsNullOrWhiteSpace(email))
+                if (!System.Net.Mail.MailAddress.TryCreate(email, out var parsedEmail) || parsedEmail.Address != email || email.Length > 256)
                 {
                     return Result.Fail("Email is required.");
                 }
@@ -338,6 +350,10 @@ public static class Account
                 }
 
                 user.FullName = fullName;
+                if (request.FirstName is not null) user.FirstName = request.FirstName.Trim();
+                if (request.LastName is not null) user.LastName = request.LastName.Trim();
+                if (!string.Equals(user.PhoneNumber, string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber, StringComparison.Ordinal))
+                    user.PhoneNumberConfirmed = false;
                 user.PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber;
                 user.Bio = string.IsNullOrWhiteSpace(request.Bio) ? null : request.Bio.Trim();
 
@@ -349,7 +365,7 @@ public static class Account
 
                 string role = await ResolveRoleAsync(_userManager, user);
                 string token = string.Empty;
-                return new Result(true, null, new AccountDto(user.Id, user.FullName, user.Email ?? string.Empty, role, token, user.PhoneNumber, user.Bio));
+                return new Result(true, null, new AccountDto(user.Id, user.FullName, user.Email ?? string.Empty, role, token, user.PhoneNumber, user.Bio) { Completion = CustomerProfile.Describe(user) });
             }
         }
     }
@@ -689,7 +705,7 @@ public static class Account
         }
 
         string token = await CreateTokenAsync(userManager, configuration, user, role);
-        return new Result(true, null, new AccountDto(user.Id, user.FullName, user.Email ?? string.Empty, role, token, user.PhoneNumber, user.Bio));
+        return new Result(true, null, new AccountDto(user.Id, user.FullName, user.Email ?? string.Empty, role, token, user.PhoneNumber, user.Bio) { Completion = CustomerProfile.Describe(user) });
     }
 
     private static string? ApplyAddress(CustomerAddress address, AddressInput input)

@@ -115,6 +115,20 @@
   text-decoration: none;
 }
 
+/* Account lists are navigation controls, including when legacy list styles load. */
+.vd-account-navigation > ul,
+.vd-account-navigation > ul > li {
+  list-style: none !important;
+  margin: 0;
+  padding: 0;
+}
+
+.vd-account-navigation > ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 /* Keep the viewport width identical to Penpot frames during account-page
    scrolling; the approved frames do not reserve a scrollbar gutter. */
 html:has(.vd-account-page),

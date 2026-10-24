@@ -18,9 +18,18 @@ import {
   PaymentSummary,
 } from "./payment-components";
 import { usePaymentCheckout } from "./use-payment-checkout";
+import { usePathname } from 'next/navigation';
+import { getLocaleFromPathname } from '@/lib/locale-path';
+import { CustomerServiceGate } from '@/components/vendora/account/customer-service-gate';
 
 /** Penpot-aligned payment step that consumes the existing order API. */
 export function PaymentCheckoutPage() {
+  const locale = getLocaleFromPathname(usePathname());
+  return <CustomerServiceGate locale={locale} returnTo={withLocalePath('/checkout', locale)}><PaymentCheckoutContent /></CustomerServiceGate>;
+}
+
+/** Preserves the existing payment orchestration and shared stepper after checking current account eligibility. */
+function PaymentCheckoutContent() {
   const authChecked = useAuthCheck();
   const router = useRouter();
   const checkout = usePaymentCheckout();

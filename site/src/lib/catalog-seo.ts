@@ -15,7 +15,7 @@ export function pageMetadata(name: string, description: string, path: string, se
   const summary = fields?.description?.trim() || defaultSummary(description) || site.defaultDescription || '';
   const canonical = fields?.canonicalUrl || publicUrl(path,site);
   const imageSource = fields?.socialImageUrl || imageUrl || site.logoUrl;
-  const image = imageSource ? imageSource.startsWith('/') ? resolveApiImageUrl(imageSource) : imageSource : undefined;
+  const image = imageSource ? publicUrl(resolveApiImageUrl(imageSource), site) : undefined;
   return { title:{absolute:title},description:summary,alternates:{canonical},
     robots:{index:locale === 'fa' && site.isIndexingEnabled && Boolean(site.siteUrl) && fields?.index !== false && !faceted,follow:fields?.follow !== false},
     openGraph:{type:'website',title:fields?.socialTitle || title,description:fields?.socialDescription || summary,url:canonical,siteName:site.siteName,locale:locale === 'fa' ? 'fa_IR' : 'en_US',...(image ? {images:[image]} : {})},
@@ -46,7 +46,7 @@ export function productSchema(product: CatalogProductDto, site: SiteSeoSettings,
     ...(product.breadcrumbs ?? []).map(item => ({name:item.name,item:publicUrl(categoryPath(item.slug,locale),site)})),{name:product.title,item:url}];
   return {'@context':'https://schema.org','@graph':[organizationSchema(site),
     {'@type':'Product','@id':`${url}#product`,name:product.title,url,description:product.description || product.title,
-      image:(product.images || []).map(image => resolveApiImageUrl(image.imageUrl)),
+      image:(product.images || []).map(image => publicUrl(resolveApiImageUrl(image.imageUrl), site)),
       ...(product.productCode >= 100 ? {sku:String(product.productCode)} : {}),
       ...(product.brandName ? {brand:{'@type':'Brand',name:product.brandName}} : {}),
       ...((product.ratingCount ?? 0) > 0 ? {aggregateRating:{'@type':'AggregateRating',ratingValue:product.rating,ratingCount:product.ratingCount,bestRating:5,worstRating:1}} : {}),

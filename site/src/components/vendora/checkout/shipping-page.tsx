@@ -18,6 +18,7 @@ import { AddressOption, CheckoutSectionHeading, CheckoutSkeletonCard, NewAddress
 import { CheckoutFlowLayout, CheckoutStageHeader, CheckoutStickyAction } from "./checkout-shell";
 import { PinIcon, TruckIcon } from "@/components/vendora/icons";
 import { getCartTotals, type CartLine } from "@/components/vendora/cart/cart-model";
+import { CustomerServiceGate } from '@/components/vendora/account/customer-service-gate';
 
 interface ShippingRootState {
   auth: { user?: { name?: string; email?: string; phone?: string } };
@@ -27,6 +28,12 @@ interface ShippingRootState {
 
 /** Full responsive Shipping step connected to the existing account/address APIs. */
 export function ShippingPage() {
+  const locale = getLocaleFromPathname(usePathname());
+  return <CustomerServiceGate locale={locale} returnTo={withLocalePath('/shipping', locale)}><ShippingContent /></CustomerServiceGate>;
+}
+
+/** Retains the existing shipping component and all saved address/cart behavior after completion is checked. */
+function ShippingContent() {
   const pathname = usePathname();
   const locale: Locale = getLocaleFromPathname(pathname);
   const isFa = locale === "fa";

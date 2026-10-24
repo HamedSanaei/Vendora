@@ -8,6 +8,9 @@ import { Email, EyeCut, Lock, UserTwo } from "@svg/index";
 import ErrorMessage from "@components/error-message/error";
 import { useRegisterUserMutation } from "src/redux/features/auth/authApi";
 import { notifyError, notifySuccess } from "@utils/toast";
+import { usePathname, useRouter } from 'next/navigation';
+import { getLocaleFromPathname } from '@/lib/locale-path';
+import { completeProfileHref } from '@/lib/auth/customer-profile';
 
 
 const schema = Yup.object().shape({
@@ -20,6 +23,7 @@ const schema = Yup.object().shape({
 
 
 const RegisterForm = () => {
+  const router = useRouter(), locale = getLocaleFromPathname(usePathname());
   const [showPass, setShowPass] = useState(false);
   const [showConPass, setShowConPass] = useState(false);
   const [registerUser, {}] = useRegisterUserMutation();
@@ -40,6 +44,7 @@ const RegisterForm = () => {
       }
       else {
         notifySuccess(result?.data?.message);
+        router.push(completeProfileHref(locale));
       }
     })
     reset();

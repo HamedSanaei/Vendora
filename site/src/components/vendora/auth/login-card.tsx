@@ -17,6 +17,8 @@ import { http } from "@/lib/http";
 import axios from "axios";
 import { storePresentation, useStoreSettings } from '../layout/store-settings-provider';
 import { resolveApiImageUrl } from '@/lib/http';
+import { completeProfileHref, type ProfileCompletion } from '@/lib/auth/customer-profile';
+import { googleErrorMessage } from '@/lib/auth/google-errors';
 
 type PhoneStep = "identifier" | "otp";
 
@@ -77,14 +79,14 @@ export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdap
       setError(isFa ? "رمز عبور باید حداقل ۶ کاراکتر باشد." : "Password must contain at least 6 characters.");
       return;
     }
-    const result = await loginUser({ email: email.trim(), password }) as { error?: { data?: { message?: string; error?: string } } };
+    const result = await loginUser({ email: email.trim(), password }) as { data?: { completion?: ProfileCompletion }; error?: { data?: { message?: string; error?: string } } };
     if (result?.error) {
       setError(result.error?.data?.message ?? result.error?.data?.error ?? (isFa ? "ورود ناموفق بود." : "Login failed."));
       return;
     }
 
     notifySuccess(isFa ? "با موفقیت وارد شدید." : "You are signed in.");
-    router.push(destination);
+    router.push(result.data?.completion?.isComplete ? destination : completeProfileHref(locale, destination));
   };
 
   const requestCode = async (event?: FormEvent<HTMLFormElement>) => {
@@ -138,12 +140,10 @@ export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdap
       if (!data?.token || !data?.id) throw new Error("Invalid authentication response");
       persistGoogleAccount(data, dispatch);
       notifySuccess(isFa ? "با حساب Google وارد شدید." : "Signed in with Google.");
-      router.replace(destination);
+      router.replace(data.completion?.isComplete ? destination : completeProfileHref(locale, destination));
     } catch (failure) {
       const message = axios.isAxiosError(failure) ? failure.response?.data?.message : "";
-      setError(message === "GOOGLE_ACCOUNT_LINK_REQUIRED"
-        ? (isFa ? "این ایمیل قبلاً ثبت شده است. ابتدا با رمز عبور وارد شوید، سپس Google را در امنیت حساب متصل کنید." : "This email is already registered. Sign in with your password, then connect Google in account security.")
-        : (isFa ? "ورود با Google انجام نشد. دوباره تلاش کنید." : "Google sign-in failed. Please try again."));
+      setError(googleErrorMessage(message ?? '', axios.isAxiosError(failure) ? failure.response?.status : 500, locale));
     } finally {
       setGoogleLoading(false);
     }
@@ -209,9 +209,9 @@ function persistAdapterAccount(account: AuthAccount, dispatch: (action: ReturnTy
   dispatch(userLoggedIn({ accessToken: account.accessToken, user }));
 }
 
-function persistGoogleAccount(account: { id: string; fullName: string; email: string; role?: string; phoneNumber?: string; token: string },
+function persistGoogleAccount(account: { id: string; fullName: string; email: string; role?: string; phoneNumber?: string; token: string; completion?: ProfileCompletion },
   dispatch: (action: ReturnType<typeof userLoggedIn>) => void) {
-  const user = { _id: account.id, id: account.id, name: account.fullName, email: account.email, phone: account.phoneNumber, role: account.role };
+  const user = { _id: account.id, id: account.id, name: account.fullName, email: account.email, phone: account.phoneNumber, role: account.role, completion: account.completion };
   localStorage.setItem("auth", JSON.stringify({ accessToken: account.token, user }));
   dispatch(userLoggedIn({ accessToken: account.token, user }));
 }

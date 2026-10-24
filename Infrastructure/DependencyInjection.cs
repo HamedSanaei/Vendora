@@ -18,6 +18,8 @@ public static class DependencyInjection
     /// <returns>The same service collection.</returns>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
+        services.AddHttpClient<IPhoneCodeSender, Infrastructure.Auth.ParsGreenPhoneCodeSender>(client => client.Timeout = TimeSpan.FromSeconds(15))
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
         services.AddScoped<ICommercialDocumentRenderer, Documents.QuestCommercialDocumentRenderer>();
         services.AddScoped<IProductDescriptionService, Infrastructure.Content.ProductDescriptionService>();

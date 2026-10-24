@@ -21,7 +21,7 @@ public sealed class ProductDiscussionTests
     {
         using var scope = host.App.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var user = new AppUser { Id = Guid.NewGuid(), FullName = role + " Test", UserName = Guid.NewGuid().ToString(), Email = "test@example.invalid" };
+        var user = new AppUser { Id = Guid.NewGuid(), FirstName = role, LastName = "Test", PhoneNumber = "09121111111", PhoneNumberConfirmed = true, FullName = role + " Test", UserName = Guid.NewGuid().ToString(), Email = "test@example.invalid" };
         var product = new Product { Title = "Test bag", Slug = Guid.NewGuid().ToString(), Status = ProductStatus.Active, Price = 100, StockQuantity = 10 };
         db.Users.Add(user); db.Products.Add(product); await db.SaveChangesAsync();
         var client = host.Client(role); client.DefaultRequestHeaders.Add("Test-User", user.Id.ToString());

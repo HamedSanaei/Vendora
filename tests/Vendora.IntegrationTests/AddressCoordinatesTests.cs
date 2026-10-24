@@ -320,6 +320,8 @@ public sealed class AddressCoordinatesTests
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 await db.Database.EnsureCreatedAsync();
                 db.Products.Add(product);
+                db.Users.AddRange(new Persistence.Identity.AppUser { Id = Owner, UserName = "owner", FirstName = "Test", LastName = "Owner", FullName = "Test Owner", Email = "owner@example.invalid", PhoneNumber = "09121111111", PhoneNumberConfirmed = true },
+                    new Persistence.Identity.AppUser { Id = Other, UserName = "other", FirstName = "Test", LastName = "Other", FullName = "Test Other", Email = "other@example.invalid", PhoneNumber = "09122222222", PhoneNumberConfirmed = true });
                 await db.SaveChangesAsync();
             }
             await app.StartAsync();

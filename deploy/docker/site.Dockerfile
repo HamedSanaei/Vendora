@@ -12,7 +12,7 @@ RUN npm ci
 COPY . .
 
 # Build-time values are inlined into the client bundle by Next.js.
-ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:5020
+ARG NEXT_PUBLIC_API_BASE_URL=/api
 ARG NEXT_PUBLIC_STRIPE_KEY=
 ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL \

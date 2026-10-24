@@ -156,7 +156,7 @@ jobs:
           file: deploy/docker/site.Dockerfile
           push: true
           build-args: |
-            NEXT_PUBLIC_API_BASE_URL=${{ env.PUBLIC_ORIGIN }}
+            NEXT_PUBLIC_API_BASE_URL=/api
             NEXT_PUBLIC_STRIPE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_KEY }}
             NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ vars.VENDORA_GOOGLE_CLIENT_ID }}
           tags: |

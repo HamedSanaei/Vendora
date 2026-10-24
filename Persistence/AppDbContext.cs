@@ -56,6 +56,8 @@ public partial class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<SeoSettings> SeoSettings => Set<SeoSettings>();
     /// <summary>Gets explicit sample-data provenance, independent of mutable product codes and names.</summary>
     public DbSet<SeedRecord> SeedRecords => Set<SeedRecord>();
+    /// <summary>Gets short-lived, single-use phone verification challenges.</summary>
+    public DbSet<PhoneVerification> PhoneVerifications => Set<PhoneVerification>();
     public DbSet<SlugHistory> SlugHistories => Set<SlugHistory>();
     public DbSet<SeoRedirect> SeoRedirects => Set<SeoRedirect>();
 
@@ -103,6 +105,17 @@ public partial class AppDbContext(DbContextOptions<AppDbContext> options)
     {
         base.OnModelCreating(modelBuilder);
         ConfigureAccounting(modelBuilder);
+        modelBuilder.Entity<AppUser>().Property(x => x.FirstName).HasMaxLength(100);
+        modelBuilder.Entity<AppUser>().Property(x => x.LastName).HasMaxLength(100);
+        modelBuilder.Entity<PhoneVerification>(b =>
+        {
+            b.HasKey(x => x.UserId);
+            b.HasOne<AppUser>().WithOne().HasForeignKey<PhoneVerification>(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            b.Property(x => x.PhoneNumber).HasMaxLength(20);
+            b.Property(x => x.CodeHash).HasMaxLength(500);
+            b.Property(x => x.ProfileStamp).HasMaxLength(100);
+            b.Property(x => x.Version).IsConcurrencyToken();
+        });
         modelBuilder.Entity<SeedRecord>(builder =>
         {
             builder.HasKey(x => new { x.EntityType, x.EntityId });

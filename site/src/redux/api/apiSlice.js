@@ -1,9 +1,8 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { getProductById, getRelatedProducts, mockStoreData } from "src/data/mock-store-data";
-import { http } from "@/lib/http";
+import { http, resolveApiImageUrl } from "@/lib/http";
 import { mapCatalogProduct } from "@/lib/catalog-product-mapping";
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5020";
 const fallbackProductImage = "/assets/img/product/product-1.jpg";
 const fallbackCategoryImage = "/assets/img/banner/banner-1.jpg";
 
@@ -20,7 +19,7 @@ function resolveImageUrl(imageUrl) {
     return imageUrl;
   }
 
-  return `${apiBaseUrl}${imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`}`;
+  return resolveApiImageUrl(imageUrl);
 }
 
 function flattenCategories(categories, parentName = null) {

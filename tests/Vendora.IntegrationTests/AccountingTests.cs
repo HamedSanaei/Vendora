@@ -284,7 +284,7 @@ public sealed class AccountingTests
     {
         await using var f = await Fixture.Create();
         await f.Post(await f.Draft(DocumentKind.Purchase, 3, 100));
-        var user = new AppUser { FullName = "Quote buyer", UserName = "quote-buyer" }; f.Db.Users.Add(user); await f.Db.SaveChangesAsync();
+        var user = new AppUser { FirstName = "Quote", LastName = "Buyer", Email = "quote@example.invalid", PhoneNumber = "09121111111", PhoneNumberConfirmed = true, FullName = "Quote buyer", UserName = "quote-buyer" }; f.Db.Users.Add(user); await f.Db.SaveChangesAsync();
         var handler = new ProformaCommands.IssueHandler(f.Db, f.Work, new CartQuotation(f.Db, TimeProvider.System), TimeProvider.System);
         var command = new ProformaCommands.Issue(user.Id, "quote-1", [new(f.Product.Id, 2, 300)], null, null);
         var id = await handler.Handle(command, default); Assert.Equal(id, await handler.Handle(command, default));
@@ -305,7 +305,7 @@ public sealed class AccountingTests
     {
         await using var f = await Fixture.Create();
         await f.Post(await f.Draft(DocumentKind.Purchase, 1, 100));
-        var user = new AppUser { FullName = "Checkout buyer", UserName = "checkout-buyer" }; f.Db.Users.Add(user); await f.Db.SaveChangesAsync();
+        var user = new AppUser { FirstName = "Checkout", LastName = "Buyer", Email = "checkout@example.invalid", PhoneNumber = "09121111111", PhoneNumberConfirmed = true, FullName = "Checkout buyer", UserName = "checkout-buyer" }; f.Db.Users.Add(user); await f.Db.SaveChangesAsync();
         var handler = new Application.Orders.Create.Handler(new Persistence.Carts.CartRepository(f.Db),
             new Persistence.Orders.OrderRepository(f.Db), new Persistence.Products.ProductReadRepository(f.Db), f.Db, f.Db);
         var address = new Application.Orders.Create.AddressInput("Home", "Buyer", "09123456789", "Province", "City", "Street", null, null,

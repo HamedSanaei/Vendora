@@ -10,6 +10,7 @@ import { withLocalePath } from '@/lib/locale-path';
 import { formatNumber } from '@/lib/vendora/format';
 import type { Locale } from '@/lib/vendora/types';
 import { discussionCopy } from './discussion-copy';
+import { completeProfileHref } from '@/lib/auth/customer-profile';
 
 /** Reuses one authenticated composer and pagination surface for reviews, questions and direct answers. */
 export function ProductDiscussion({ productId, locale, kind, onChanged, questionId }: {
@@ -96,7 +97,8 @@ function DiscussionComposer({ productId, locale, kind, token, questionId, mine, 
       setSuccess(true); onSaved();
     } catch (cause) {
       const status = axios.isAxiosError(cause) ? cause.response?.status : undefined;
-      setError(status === 429 ? t.limited : status === 401 ? t.unauthorized : status === 403 ? t.forbidden : t.failed);
+      const incomplete = axios.isAxiosError(cause) && cause.response?.data?.code === 'PROFILE_INCOMPLETE';
+      setError(incomplete ? t.completeProfile : status === 429 ? t.limited : status === 401 ? t.unauthorized : status === 403 ? t.forbidden : t.failed);
     } finally { setBusy(false); }
   }
   return <form className="vd-discussion__form" onSubmit={submit}>
@@ -108,6 +110,6 @@ function DiscussionComposer({ productId, locale, kind, token, questionId, mine, 
         {!mine?.canRate && <p className="vd-discussion__help">{t.buyerOnly}</p>}{mine?.review?.isHidden && <p role="status">{t.hidden}</p>}</>}
       <button className="vd-focus vd-discussion__button vd-discussion__button--primary" type="submit">{busy ? t.sending : mine?.review && kind === 'review' ? t.save : t.send}</button>
     </fieldset>
-    {error && <p role="alert">{error}</p>}{success && <p role="status">{t.saved}</p>}
+    {error && <p role="alert">{error}</p>}{error === t.completeProfile && <Link className="vd-focus vd-discussion__button" href={completeProfileHref(locale, `/${locale}/product-details/${productId}`)}>{t.completeProfile}</Link>}{success && <p role="status">{t.saved}</p>}
   </form>;
 }

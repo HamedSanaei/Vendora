@@ -3,6 +3,7 @@ using Application.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace API.Controllers;
 
@@ -11,6 +12,7 @@ namespace API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api")]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class AccountController : ControllerBase
 {
     private readonly ISender _mediator;
@@ -107,6 +109,36 @@ public sealed class AccountController : ControllerBase
         return result is null ? Unauthorized(new { message = "User was not found." }) : Ok(result);
     }
 
+    /// <summary>Sends a bounded code to the authenticated account's saved mobile; no OTP is returned to the browser.</summary>
+    [Authorize, EnableRateLimiting("phone-confirmation"), HttpPost("account/phone/send")]
+    public async Task<ActionResult> SendPhoneCode(CancellationToken ct)
+    {
+        if (!TryGetCurrentUserId(out var id)) return Unauthorized();
+        return PhoneResult(await _mediator.Send(new PhoneConfirmation.Send(id), ct));
+    }
+
+    /// <summary>Confirms ownership of the saved phone without accepting a buyer ID or confirmation Boolean.</summary>
+    [Authorize, EnableRateLimiting("phone-confirmation"), HttpPost("account/phone/confirm")]
+    public async Task<ActionResult> ConfirmPhoneCode(PhoneCodeInput input, CancellationToken ct)
+    {
+        if (!TryGetCurrentUserId(out var id)) return Unauthorized();
+        return PhoneResult(await _mediator.Send(new PhoneConfirmation.Confirm(id, input.Code), ct));
+    }
+
+    /// <summary>Maps safe application codes and retry timing, excluding provider responses and secrets.</summary>
+    private ActionResult PhoneResult(PhoneConfirmation.Outcome result)
+    {
+        Response.Headers.CacheControl = "no-store";
+        if (result.RetryAfter > 0) Response.Headers.RetryAfter = result.RetryAfter.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        return StatusCode(result.Status, new { code = result.Code, retryAfter = result.RetryAfter });
+    }
+
+    public sealed class PhoneCodeInput
+    {
+        [System.ComponentModel.DataAnnotations.Required, System.ComponentModel.DataAnnotations.StringLength(8, MinimumLength = 4)]
+        public string Code { get; init; } = "";
+    }
+
     /// <summary>Updates the current authenticated user's profile.</summary>
     [Authorize]
     [HttpPut("account/profile")]
@@ -118,7 +150,7 @@ public sealed class AccountController : ControllerBase
         }
 
         var result = await _mediator.Send(
-            new Account.UpdateProfile.Command(userId, request.FullName, request.Email, request.PhoneNumber, request.Bio),
+            new Account.UpdateProfile.Command(userId, request.FullName, request.Email, request.PhoneNumber, request.Bio, request.FirstName, request.LastName),
             cancellationToken);
         return result.Succeeded ? Ok(result.Account) : BadRequest(new { message = result.Error });
     }
@@ -279,7 +311,7 @@ public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Email, string Token, string NewPassword);
 
 /// <summary>Represents a profile update request.</summary>
-public sealed record UpdateProfileRequest(string FullName, string Email, string? PhoneNumber, string? Bio);
+public sealed record UpdateProfileRequest(string FullName, string Email, string? PhoneNumber, string? Bio, string? FirstName = null, string? LastName = null);
 
 /// <summary>Represents a shipping address request.</summary>
 public sealed record AddressRequest(

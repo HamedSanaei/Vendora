@@ -22,6 +22,7 @@ import {
   type PersistedPaymentInfo,
 } from "./checkout-model";
 import type { ShippingAddressView } from "./checkout-components";
+import { completeProfileHref } from '@/lib/auth/customer-profile';
 
 interface PaymentRootState {
   auth: { user?: { _id?: string; id?: string } };
@@ -125,6 +126,9 @@ export function usePaymentCheckout() {
     const result = await addOrder({ ...payload, idempotencyKey: key }) as AddOrderResult;
 
     if (result.error || !result.data?.orderNumber) {
+      if (result.error?.data?.code === 'PROFILE_INCOMPLETE') {
+        setPhase('idle'); router.push(completeProfileHref(locale, withLocalePath('/checkout', locale))); return;
+      }
       if (result.error?.data?.code === "PRICE_CHANGED") {
         const { productId, currentPrice } = result.error.data;
         if (productId && currentPrice) dispatch(sync_cart_prices([{ _id: productId, originalPrice: currentPrice, price: currentPrice, discount: 0 }]));

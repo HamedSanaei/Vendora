@@ -3,6 +3,7 @@ using Domain.Accounting;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
+using Application.Auth;
 
 namespace Application.Accounting;
 
@@ -17,6 +18,7 @@ public static class ProformaCommands
         public Task<Guid> Handle(Issue request, CancellationToken ct) => work.ExecuteAsync(request.UserId, request.Key, "cart-proforma", request,
             async token =>
             {
+                await CustomerProfile.RequireAsync(db, request.UserId, token);
                 var user = await db.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == request.UserId, token)
                     ?? throw new AccountingException("USER_NOT_FOUND", 401);
                 var quote = await pricing.QuoteAsync(request.Items, request.ShippingMethod, request.CouponCode, token);

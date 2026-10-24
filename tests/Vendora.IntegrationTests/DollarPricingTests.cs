@@ -194,6 +194,7 @@ public sealed class DollarPricingTests
         var address = new CustomerAddress { UserId = Guid.NewGuid(), Title = "Home", RecipientName = "Customer",
             PhoneNumber = "09121111111", Province = "Tehran", City = "Tehran", StreetAddress = "Street", PostalCode = "1234567890" };
         fixture.Db.AddRange(product, address);
+        fixture.Db.Users.Add(new Persistence.Identity.AppUser { Id = address.UserId, UserName = "pricing-buyer", FirstName = "Pricing", LastName = "Buyer", FullName = "Pricing Buyer", Email = "pricing@example.invalid", PhoneNumber = "09121111111", PhoneNumberConfirmed = true });
         await fixture.Db.SaveChangesAsync();
         var handler = new Application.Orders.Create.Handler(new CartRepository(fixture.Db), new OrderRepository(fixture.Db),
             new ProductReadRepository(fixture.Db), fixture.Db, fixture.Db);

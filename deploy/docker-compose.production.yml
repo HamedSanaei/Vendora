@@ -101,6 +101,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      API_INTERNAL_BASE_URL: http://vendora-api:8080
       HOSTNAME: 0.0.0.0
       PORT: 3000
       NESHAN_WEB_API_KEY: ${NESHAN_WEB_API_KEY:-}

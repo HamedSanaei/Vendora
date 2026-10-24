@@ -50,6 +50,8 @@ public class OrdersController : BaseApiController
                     request.ShippingMethod, request.CouponCode, Request.Headers["Idempotency-Key"].FirstOrDefault()),
                 cancellationToken);
         }
+        catch (Application.Auth.CustomerProfileRequiredException)
+        { return StatusCode(403, new { code = "PROFILE_INCOMPLETE", message = "PROFILE_INCOMPLETE" }); }
         catch (Application.Pricing.PriceChangedException exception)
         {
             return Conflict(new { code = "PRICE_CHANGED", message = exception.Message,

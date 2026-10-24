@@ -31,7 +31,7 @@ public sealed class AccountingHttpTests
                 new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?> { ["Accounting:Pdf:License"] = "Community" }).Build(),
                 sp.GetRequiredService<IHostEnvironment>(), NullLogger<QuestCommercialDocumentRenderer>.Instance));
         });
-        var user = new AppUser { FullName = "خریدار آزمایشی", UserName = Guid.NewGuid().ToString() };
+        var user = new AppUser { FirstName = "خریدار", LastName = "آزمایشی", Email = "buyer@example.invalid", PhoneNumber = "09121111111", PhoneNumberConfirmed = true, FullName = "خریدار آزمایشی", UserName = Guid.NewGuid().ToString() };
         var product = new Product { Title = "کیف آزمایشی", Slug = Guid.NewGuid().ToString(), Price = 1250000, StockQuantity = 3, Status = ProductStatus.Active };
         using (var scope = host.App.Services.CreateScope())
         {
