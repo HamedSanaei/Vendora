@@ -18,7 +18,7 @@ Google Identity Services (GIS) supplies a short-lived ID token in popup mode. Th
 
    Do not put private keys, service account credentials, or a Google client secret in `NEXT_PUBLIC_*` variables. The Client ID is public.
 
-6. Rebuild and redeploy the **site** to embed the `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, and restart/redeploy the **API** to load `Google__ClientId`. Test via the actual public HTTPS origin; changing an already built Next.js container's environment is insufficient.
+6. Production: set repository Actions variable `VENDORA_GOOGLE_CLIENT_ID`, which the image-build workflow passes as `NEXT_PUBLIC_GOOGLE_CLIENT_ID`. Keep `Google__ClientId` in `/opt/vendora/deploy/env/production.env` with root-only permissions (`0600`) for the API runtime. Local development: set `NEXT_PUBLIC_GOOGLE_CLIENT_ID` in `site/.env.local` and set `Google:ClientId` with .NET user-secrets for the API. Rebuild and redeploy the **site** to embed the `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, and restart/redeploy the **API** to load `Google__ClientId`. Test via the actual public HTTPS origin; changing an already built Next.js container's environment is insufficient.
 7. Verify `POST /api/account/google` rejects random credentials, that a first-time Google login creates only a Customer, and that subsequent logins resolve to the same account.
 
 ## Existing password accounts
