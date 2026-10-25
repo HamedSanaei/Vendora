@@ -13,6 +13,8 @@ interface MobileBottomNavigationProps {
   locale: Locale;
   pathname: string;
   cartQuantity: number;
+  onAccountOpen?: (element: HTMLAnchorElement) => void;
+  accountExpanded?: boolean;
 }
 
 const hiddenRoutes = new Set(["checkout", "shipping", "login", "register", "forgot"]);
@@ -34,7 +36,7 @@ function resolveDestination(pathname: string): MobileNavigationDestination | nul
  * It owns route highlighting and the live persisted cart badge so pages only
  * consume one reusable navigation family.
  */
-export function MobileBottomNavigation({ locale, pathname, cartQuantity }: MobileBottomNavigationProps) {
+export function MobileBottomNavigation({ locale, pathname, cartQuantity, onAccountOpen, accountExpanded }: MobileBottomNavigationProps) {
   const activeDestination = resolveDestination(pathname);
   if (!activeDestination) return null;
 
@@ -59,6 +61,10 @@ export function MobileBottomNavigation({ locale, pathname, cartQuantity }: Mobil
             <li key={id} className="min-w-0 md:flex md:items-center md:justify-center">
               <Link
                 href={withLocalePath(href, locale)}
+                onClick={id === "account" && onAccountOpen ? event => { event.preventDefault(); onAccountOpen(event.currentTarget); } : undefined}
+                aria-haspopup={id === "account" && onAccountOpen ? "dialog" : undefined}
+                aria-expanded={id === "account" && onAccountOpen ? accountExpanded : undefined}
+                aria-controls={id === "account" && onAccountOpen ? "vd-header-account-mobile" : undefined}
                 aria-current={active ? "page" : undefined}
                 className={`vd-focus relative flex h-full min-h-11 flex-col items-center justify-center gap-1 rounded-control px-1 text-center transition-colors md:h-[72px] md:w-[clamp(120px,15.625vw,160px)] ${active ? "font-extrabold text-jade md:bg-jade-tint" : "font-semibold text-vd-muted hover:text-jade md:hover:bg-surface-soft"}`}
               >

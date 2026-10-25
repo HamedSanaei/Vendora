@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type Ref } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useDispatch, useSelector } from "react-redux";
-import { apiSlice } from '@/redux/api/apiSlice';
-import { userLoggedOut } from "@/redux/features/auth/authSlice";
+import { usePathname } from "next/navigation";
+import { useSelector } from "react-redux";
+import { useAccountLogout } from "@/lib/auth/use-account-logout";
 import {
   accountNavItems,
   isAccountItemActive,
@@ -32,7 +31,8 @@ import {
   type VendoraIconProps,
 } from "@/components/vendora/icons";
 
-const menuIcons: Record<string, (props: VendoraIconProps) => ReactNode> = {
+/** Existing account icons shared by the sidebar, drawer and header summary. */
+export const accountMenuIcons: Record<string, (props: VendoraIconProps) => ReactNode> = {
   overview: HomeIcon,
   profile: IdCardIcon,
   security: LockIcon,
@@ -61,13 +61,10 @@ export function AccountPageFrame({ crumbs, children, initialLocale }: { crumbs: 
     desktop.addEventListener('change', closeOnDesktop);
     return () => desktop.removeEventListener('change', closeOnDesktop);
   }, []);
-  const dispatch = useDispatch();
-  const router = useRouter();
+  const logout = useAccountLogout(locale);
   const handleLogout = () => {
-    dispatch(userLoggedOut());
-    dispatch(apiSlice.util.resetApiState());
     setDrawerOpen(false);
-    router.replace(withLocalePath("/login", locale));
+    logout();
   };
   const t = getDict(locale);
   const activeItem = accountNavItems.find((item) => isAccountItemActive(item.href, pathname));
@@ -149,7 +146,7 @@ function SidebarCard({ locale, pathname, onLogout }: { locale: Locale; pathname:
       <nav aria-label={t.common.account} className="vd-account-navigation">
         <ul className="space-y-1">
           {accountNavItems.map((item) => {
-            const Icon = menuIcons[item.key];
+            const Icon = accountMenuIcons[item.key];
             const active = isAccountItemActive(item.href, pathname);
             return (
               <li key={item.key}>
@@ -187,16 +184,20 @@ function SidebarCard({ locale, pathname, onLogout }: { locale: Locale; pathname:
 }
 
 /** Mobile account drawer mirroring the Penpot "Account Drawer / Mobile". */
-function AccountDrawer({
+export function AccountDrawer({
   locale,
   pathname,
   onClose,
   onLogout,
+  headerNavigation = false,
+  panelRef,
 }: {
   locale: Locale;
   pathname: string;
   onClose: () => void;
   onLogout: () => void;
+  headerNavigation?: boolean;
+  panelRef?: Ref<HTMLDivElement>;
 }) {
   const t = getDict(locale);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -207,17 +208,21 @@ function AccountDrawer({
       if (event.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKeyDown);
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
     };
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden">
+    <div className={`fixed inset-0 z-50 ${headerNavigation ? "xl:hidden" : "lg:hidden"}`}>
       <div className="absolute inset-0 bg-ink/[0.72]" aria-hidden onClick={onClose} />
       <div
+        ref={panelRef}
+        id={headerNavigation ? "vd-header-account-mobile" : undefined}
+        data-header-dropdown={headerNavigation ? "account" : undefined}
         role="dialog"
         aria-modal="true"
         aria-label={t.common.account}
@@ -239,7 +244,7 @@ function AccountDrawer({
         <nav aria-label={t.common.account} className="vd-account-navigation min-h-0 flex-1 overflow-y-auto p-3">
           <ul className="space-y-1">
             {accountNavItems.map((item) => {
-              const Icon = menuIcons[item.key];
+              const Icon = accountMenuIcons[item.key];
               const active = isAccountItemActive(item.href, pathname);
               return (
                 <li key={item.key}>

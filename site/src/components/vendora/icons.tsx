@@ -8,6 +8,21 @@ import type { SVGProps } from "react";
  */
 export type VendoraIconProps = SVGProps<SVGSVGElement> & { size?: number };
 
+/** Folded document paths from the approved Penpot header dropdown assets. */
+export function DocumentIcon({ size, ...props }: VendoraIconProps) {
+  return <svg {...base(size, props)}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6M8 13h8M8 17h8" /></svg>;
+}
+
+/** Shield/check paths from the approved Penpot account-security dropdown row. */
+export function ShieldCheckIcon({ size, ...props }: VendoraIconProps) {
+  return <svg {...base(size, props)}><path d="m12 2 8 4v6c0 5-3 8-8 10-5-2-8-5-8-10V6Z" /><path d="m9 12 2 2 4-4" /></svg>;
+}
+
+/** Exit-door paths from the approved Penpot header account action. */
+export function LogoutIcon({ size, ...props }: VendoraIconProps) {
+  return <svg {...base(size, props)}><path d="M9 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" /><path d="m14 16 4-4-4-4m4 4H8" /></svg>;
+}
+
 function base(size: number | undefined, props: SVGProps<SVGSVGElement>) {
   return {
     width: size ?? 20,

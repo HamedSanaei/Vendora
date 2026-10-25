@@ -126,6 +126,49 @@
 }
 
 /* Account lists are navigation controls, including when legacy list styles load. */
+.vd-header-popover {
+  --vd-header-tint: #e3f4ec;
+  --vd-header-soft: #f4f8f6;
+  position: fixed;
+  z-index: 50;
+  max-width: calc(100vw - 32px);
+  overflow-y: auto;
+  border: 1px solid var(--color-vd-line);
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 10px 22px rgb(11 11 11 / 0.12);
+  font-family: var(--font-sans);
+}
+.vd-header-popover .vd-header-text-link {
+  color: var(--color-ink);
+}
+.vd-header-popover .vd-header-text-link:hover,
+.vd-header-popover .vd-header-text-link[aria-current="page"] {
+  color: var(--color-jade);
+}
+.vd-header-account-row {
+  min-height: 57px;
+}
+.vd-header-account-row:last-child {
+  min-height: 49px;
+}
+.vd-header-account-row:not(:last-child)::after {
+  display: block;
+  height: 1px;
+  margin-inline: 11px;
+  margin-top: 3px;
+  background: var(--color-vd-line);
+  content: "";
+}
+.vd-header-wishlist-media > div {
+  height: 94px;
+  border-radius: 12px;
+}
+.vd-header-wishlist-media svg {
+  height: 32px;
+  width: auto;
+}
+
 .vd-account-navigation > ul,
 .vd-account-navigation > ul > li {
   list-style: none !important;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type Ref, type PointerEventHandler, type FocusEventHandler } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CloseIcon, TrashIcon } from "@/components/vendora/icons";
 import { clear_cart, quantityDecrement, quantityIncrement, remove_product } from "@/redux/features/cartSlice";
@@ -16,6 +16,11 @@ interface MiniCartProps {
   open: boolean;
   locale: Locale;
   onClose: () => void;
+  desktopPanelRef?: Ref<HTMLElement>;
+  mobilePanelRef?: Ref<HTMLElement>;
+  onDesktopPointerEnter?: PointerEventHandler<HTMLElement>;
+  onDesktopPointerLeave?: PointerEventHandler<HTMLElement>;
+  onDesktopBlur?: FocusEventHandler<HTMLElement>;
 }
 
 interface MiniCartRootState {
@@ -23,7 +28,7 @@ interface MiniCartRootState {
 }
 
 /** Responsive desktop popover and mobile bottom sheet connected to the Redux cart. */
-export function MiniCart({ open, locale, onClose }: MiniCartProps) {
+export function MiniCart({ open, locale, onClose, desktopPanelRef, mobilePanelRef, onDesktopPointerEnter, onDesktopPointerLeave, onDesktopBlur }: MiniCartProps) {
   const t = getDict(locale).cart;
   const items = useSelector((state: MiniCartRootState) => state.cart.cart_products);
   const dispatch = useDispatch();
@@ -36,7 +41,8 @@ export function MiniCart({ open, locale, onClose }: MiniCartProps) {
     const isMobile = window.matchMedia("(max-width: 1279px)").matches;
     const previousOverflow = document.body.style.overflow;
     if (isMobile) document.body.style.overflow = "hidden";
-    (isMobile ? mobileCloseRef.current : desktopCloseRef.current)?.focus();
+    // Desktop hover must not steal focus; the shared trigger handles keyboard entry.
+    if (isMobile) mobileCloseRef.current?.focus();
 
     /** Closes the active cart overlay with the standard Escape interaction. */
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -61,8 +67,7 @@ export function MiniCart({ open, locale, onClose }: MiniCartProps) {
   return (
     <>
       <div className="hidden xl:block">
-        <button type="button" tabIndex={-1} aria-label={t.mini.close} onClick={onClose} className="fixed inset-0 z-40 cursor-default bg-transparent" />
-        <section role="dialog" aria-modal="true" aria-label={t.mini.title} className="absolute left-7 top-[70px] z-50 w-[408px] overflow-hidden rounded-tile border border-vd-line bg-white shadow-pop">
+        <section id="vd-header-cart-desktop" ref={desktopPanelRef} role="dialog" aria-label={t.mini.title} data-header-dropdown="cart" onPointerEnter={onDesktopPointerEnter} onPointerLeave={onDesktopPointerLeave} onBlur={onDesktopBlur} className="fixed left-7 top-[70px] z-50 w-[408px] max-w-[calc(100vw-32px)] overflow-y-auto rounded-tile border border-vd-line bg-white shadow-pop">
           <span aria-hidden className="absolute left-7 top-[-7px] h-[18px] w-[18px] rotate-45 border-l border-t border-vd-line bg-white" />
           <header className="relative px-6 pb-4 pt-5">
             <h2 className="text-[19px] font-extrabold text-ink">{t.mini.title}</h2>
@@ -78,7 +83,7 @@ export function MiniCart({ open, locale, onClose }: MiniCartProps) {
 
       <div className="fixed inset-0 z-50 xl:hidden">
         <button type="button" tabIndex={-1} aria-label={t.mini.close} onClick={onClose} className="absolute inset-0 bg-ink/[0.52]" />
-        <section role="dialog" aria-modal="true" aria-label={t.mini.title} className="absolute inset-x-0 bottom-0 flex max-h-[calc(100dvh-116px)] min-h-[420px] flex-col overflow-hidden rounded-t-[24px] bg-white">
+        <section id="vd-header-cart-mobile" ref={mobilePanelRef} role="dialog" aria-modal="true" aria-label={t.mini.title} data-header-dropdown="cart" className="absolute inset-x-0 bottom-0 flex max-h-[calc(100dvh-116px)] min-h-[420px] flex-col overflow-hidden rounded-t-[24px] bg-white pb-[env(safe-area-inset-bottom)]">
           <span aria-hidden className="mx-auto mt-2.5 h-1.5 w-14 shrink-0 rounded-full bg-[#c9d4d0]" />
           <header className="relative shrink-0 px-4 pb-4 pt-3">
             <h2 className="text-xl font-extrabold text-ink">{t.mini.title}</h2>

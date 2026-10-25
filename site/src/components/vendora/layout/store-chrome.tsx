@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode, type ComponentPropsWithRef } from "react";
 import { useSelector } from "react-redux";
 import { megaMenuCategories } from "@/lib/vendora/catalog";
 import { useBrandCopy, useStoreSettings, storePresentation } from './store-settings-provider';
@@ -14,6 +14,11 @@ import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
 import { CartIcon, ChevronIcon, CloseIcon, HeartIcon, MenuIcon, SearchIcon, UserIcon } from "@/components/vendora/icons";
 import { MiniCart } from "@/components/vendora/cart/mini-cart";
 import { MobileBottomNavigation } from "@/components/vendora/layout/mobile-bottom-navigation";
+import { AccountDrawer } from "@/components/vendora/account/account-chrome";
+import { HeaderAccountDropdown, HeaderWishlistDropdown } from "./header-dropdowns";
+import { useHeaderDropdowns, type HeaderDropdownId } from "./use-header-dropdowns";
+import useAuthCheck from "@/hooks/use-auth-check";
+import { useAccountLogout } from "@/lib/auth/use-account-logout";
 
 const desktopLinks = [
   { key: "bestSellers", href: "/shop" },
@@ -32,14 +37,23 @@ export function StoreHeader({ initialLocale = "fa" }: { initialLocale?: Locale }
   const [query, setQuery] = useState("");
   const [megaOpen, setMegaOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [miniCartOpen, setMiniCartOpen] = useState(false);
+  const dropdowns = useHeaderDropdowns(pathname);
+  const authReady = useAuthCheck();
+  const auth = useSelector((state: { auth: { accessToken?: string; user?: { name?: string } } }) => state.auth);
+  const authenticated = Boolean(auth.accessToken && auth.user);
+  const logout = useAccountLogout(locale);
+  const profile = useStoreSettings();
+  const wishlistQuantity = useSelector((state: { wishlist: { wishlist: unknown[] } }) => state.wishlist.wishlist.length);
   const [activeKey, setActiveKey] = useState(megaMenuCategories[0]?.key ?? "");
   const cartQuantity = useSelector((state: { cart: { cart_products: Array<{ orderQuantity?: number }> } }) => state.cart.cart_products.reduce((total, item) => total + (Number(item.orderQuantity) || 0), 0));
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelClose = useCallback(() => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
-  const openMega = useCallback(() => { cancelClose(); setMiniCartOpen(false); setMegaOpen(true); }, [cancelClose]);
+  const closeDropdown = dropdowns.close;
+  const openMega = useCallback(() => { cancelClose(); closeDropdown(); setMegaOpen(true); }, [cancelClose, closeDropdown]);
   const closeMegaSoon = useCallback(() => { cancelClose(); closeTimer.current = setTimeout(() => setMegaOpen(false), 220); }, [cancelClose]);
-  const openMiniCart = useCallback(() => { cancelClose(); setMegaOpen(false); setDrawerOpen(false); setMiniCartOpen(true); }, [cancelClose]);
+  const closeOverlay = useCallback(() => closeDropdown(true), [closeDropdown]);
+  const onNavigate = useCallback(() => closeDropdown(), [closeDropdown]);
+  const handleLogout = () => { closeDropdown(); logout(); };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") setMegaOpen(false); };
@@ -48,8 +62,8 @@ export function StoreHeader({ initialLocale = "fa" }: { initialLocale?: Locale }
   }, [cancelClose]);
 
   useEffect(() => {
-    setMiniCartOpen(false);
-  }, [pathname]);
+    if (dropdowns.active) { cancelClose(); setMegaOpen(false); setDrawerOpen(false); }
+  }, [dropdowns.active, cancelClose]);
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -61,12 +75,18 @@ export function StoreHeader({ initialLocale = "fa" }: { initialLocale?: Locale }
   const activeCategory = megaMenuCategories.find((category) => category.key === activeKey) ?? megaMenuCategories[0];
   return (
     <header className="relative z-40 bg-white">
-      <DesktopHeader locale={locale} query={query} setQuery={setQuery} submitSearch={submitSearch} megaOpen={megaOpen} openMega={openMega} closeMegaSoon={closeMegaSoon} cartQuantity={cartQuantity} openCart={openMiniCart} />
-      <MobileHeader locale={locale} query={query} setQuery={setQuery} submitSearch={submitSearch} openDrawer={() => { setMiniCartOpen(false); setDrawerOpen(true); }} expanded={drawerOpen} cartQuantity={cartQuantity} openCart={openMiniCart} />
+      <DesktopHeader locale={locale} query={query} setQuery={setQuery} submitSearch={submitSearch} megaOpen={megaOpen} openMega={openMega} closeMegaSoon={closeMegaSoon} cartQuantity={cartQuantity} wishlistQuantity={wishlistQuantity} dropdowns={dropdowns} />
+      <MobileHeader locale={locale} query={query} setQuery={setQuery} submitSearch={submitSearch} openDrawer={() => { closeDropdown(); setDrawerOpen(true); }} expanded={drawerOpen} cartQuantity={cartQuantity} dropdowns={dropdowns} />
       {megaOpen && activeCategory ? <DesktopMegaMenu locale={locale} activeCategory={activeCategory} setActiveKey={setActiveKey} keepOpen={openMega} closeSoon={closeMegaSoon} close={() => setMegaOpen(false)} /> : null}
       {drawerOpen ? <MobileCategoryDrawer locale={locale} close={() => setDrawerOpen(false)} /> : null}
-      <MiniCart open={miniCartOpen} locale={locale} onClose={() => setMiniCartOpen(false)} />
-      <MobileBottomNavigation locale={locale} pathname={pathname} cartQuantity={cartQuantity} />
+      {dropdowns.desktop && dropdowns.active === "account" ? <HeaderAccountDropdown locale={locale} pathname={pathname} authenticated={authenticated} authReady={authReady} userName={auth.user?.name} brandName={storePresentation(profile, locale).name}
+        panelRef={node => { dropdowns.registerPanel("account", node); }} onPointerEnter={dropdowns.cancelClose} onPointerLeave={dropdowns.leave} onBlur={event => dropdowns.blur("account", event)} onNavigate={onNavigate} onLogout={handleLogout} /> : null}
+      {dropdowns.desktop && dropdowns.active === "wishlist" ? <HeaderWishlistDropdown locale={locale} panelRef={node => { dropdowns.registerPanel("wishlist", node); }} onPointerEnter={dropdowns.cancelClose} onPointerLeave={dropdowns.leave} onBlur={event => dropdowns.blur("wishlist", event)} onNavigate={onNavigate} /> : null}
+      {!dropdowns.desktop && authenticated && dropdowns.active === "account" ? <AccountDrawer locale={locale} pathname={pathname} onClose={closeOverlay} onLogout={handleLogout} headerNavigation panelRef={node => { dropdowns.registerPanel("account", node); }} /> : null}
+      <MiniCart open={dropdowns.active === "cart"} locale={locale} onClose={closeOverlay}
+        desktopPanelRef={node => { dropdowns.registerPanel("cart", node, "desktop"); }} mobilePanelRef={node => { dropdowns.registerPanel("cart", node, "mobile"); }}
+        onDesktopPointerEnter={dropdowns.cancelClose} onDesktopPointerLeave={dropdowns.leave} onDesktopBlur={event => dropdowns.blur("cart", event)} />
+      <MobileBottomNavigation locale={locale} pathname={pathname} cartQuantity={cartQuantity} accountExpanded={!dropdowns.desktop && dropdowns.active === "account"} onAccountOpen={authenticated ? element => dropdowns.open("account", element) : undefined} />
     </header>
   );
 }
@@ -74,8 +94,20 @@ export function StoreHeader({ initialLocale = "fa" }: { initialLocale?: Locale }
 interface SearchProps { locale: Locale; query: string; setQuery: (value: string) => void; submitSearch: (event: FormEvent<HTMLFormElement>) => void; }
 
 /** Exact 1408×132 desktop header component from Penpot. */
-function DesktopHeader({ locale, query, setQuery, submitSearch, megaOpen, openMega, closeMegaSoon, cartQuantity, openCart }: SearchProps & { megaOpen: boolean; openMega: () => void; closeMegaSoon: () => void; cartQuantity: number; openCart: () => void; }) {
+function DesktopHeader({ locale, query, setQuery, submitSearch, megaOpen, openMega, closeMegaSoon, cartQuantity, wishlistQuantity, dropdowns }: SearchProps & { megaOpen: boolean; openMega: () => void; closeMegaSoon: () => void; cartQuantity: number; wishlistQuantity: number; dropdowns: ReturnType<typeof useHeaderDropdowns>; }) {
   const t = useBrandCopy(locale);
+  /** Adds only interaction semantics to the original 44px header controls. */
+  const triggerProps = (id: HeaderDropdownId) => ({
+    ref: (node: HTMLButtonElement | null) => { dropdowns.registerTrigger(id, node); },
+    "aria-expanded": dropdowns.active === id,
+    "aria-controls": id === "cart" ? "vd-header-cart-desktop" : `vd-header-${id}`,
+    onPointerEnter: (event: React.PointerEvent<HTMLButtonElement>) => dropdowns.enter(id, event),
+    onPointerLeave: dropdowns.leave,
+    onFocus: (event: React.FocusEvent<HTMLButtonElement>) => dropdowns.focus(id, event),
+    onBlur: (event: React.FocusEvent<HTMLButtonElement>) => dropdowns.blur(id, event),
+    onKeyDown: (event: React.KeyboardEvent<HTMLButtonElement>) => dropdowns.keyDown(id, event),
+    onClick: (event: React.MouseEvent<HTMLButtonElement>) => dropdowns.toggle(id, event.currentTarget),
+  });
   return (
     <div className="vd-desktop-header-frame hidden h-[132px] xl:block">
       <div className="relative h-[76px] border-b border-vd-line">
@@ -88,9 +120,9 @@ function DesktopHeader({ locale, query, setQuery, submitSearch, megaOpen, openMe
           </div>
         </form>
         <div dir="ltr" className="absolute left-7 top-[18px] flex gap-3">
-          <CartTrigger locale={locale} quantity={cartQuantity} onClick={openCart} />
-          <HeaderIconLink href={withLocalePath("/account", locale)} label={t.common.account}><UserIcon size={18} /></HeaderIconLink>
-          <HeaderIconLink href={withLocalePath("/account/wishlist", locale)} label={t.common.wishlist}><HeartIcon size={18} /></HeaderIconLink>
+          <HeaderIconTrigger label={t.common.cart} quantity={cartQuantity} locale={locale} data-header-trigger="cart" {...triggerProps("cart")}><CartIcon size={18} /></HeaderIconTrigger>
+          <HeaderIconTrigger label={t.common.account} locale={locale} data-header-trigger="account" {...triggerProps("account")}><UserIcon size={18} /></HeaderIconTrigger>
+          <HeaderIconTrigger label={t.common.wishlist} quantity={wishlistQuantity} locale={locale} data-header-trigger="wishlist" {...triggerProps("wishlist")}><HeartIcon size={18} /></HeaderIconTrigger>
         </div>
       </div>
       <nav aria-label="primary" className="relative h-14">
@@ -104,14 +136,14 @@ function DesktopHeader({ locale, query, setQuery, submitSearch, megaOpen, openMe
 }
 
 /** Exact 390×116 mobile header component from Penpot. */
-function MobileHeader({ locale, query, setQuery, submitSearch, openDrawer, expanded, cartQuantity, openCart }: SearchProps & { openDrawer: () => void; expanded: boolean; cartQuantity: number; openCart: () => void; }) {
+function MobileHeader({ locale, query, setQuery, submitSearch, openDrawer, expanded, cartQuantity, dropdowns }: SearchProps & { openDrawer: () => void; expanded: boolean; cartQuantity: number; dropdowns: ReturnType<typeof useHeaderDropdowns>; }) {
   const t = useBrandCopy(locale);
   return (
     <div className="vd-container h-[116px] xl:hidden">
       <div className="relative h-[68px]">
         <button type="button" onClick={openDrawer} aria-label={t.common.menu} aria-expanded={expanded} className="vd-focus absolute right-3 top-[14px] flex h-10 w-10 items-center justify-center text-ink"><MenuIcon size={20} /></button>
         <BrandLogo locale={locale} className="absolute left-1/2 top-[10px] -translate-x-1/2 items-center" />
-        <CartTrigger locale={locale} quantity={cartQuantity} onClick={openCart} className="absolute left-0 top-3" />
+        <HeaderIconTrigger label={t.common.cart} locale={locale} quantity={cartQuantity} onClick={event => dropdowns.toggle("cart", event.currentTarget)} aria-expanded={dropdowns.active === "cart"} aria-controls="vd-header-cart-mobile" className="absolute left-0 top-3"><CartIcon size={18} /></HeaderIconTrigger>
       </div>
       <form onSubmit={submitSearch} role="search" className="h-[38px]">
         <label htmlFor="vd-mobile-search" className="vd-sr-only">{t.common.searchLabel}</label>
@@ -177,10 +209,7 @@ function BrandLogo({ locale, className = "" }: { locale: Locale; className?: str
     {profile.logoUrl ? <Image unoptimized width={150} height={30} src={resolveApiImageUrl(profile.logoUrl)} alt={brand.name} className="h-[30px] max-w-[150px] object-contain" /> : <span className="max-w-[180px] truncate text-[26px] font-extrabold tracking-tight text-ink">{brand.wordmark}</span>}
     <span className="mt-1 max-w-[180px] truncate text-xs font-semibold text-jade">{brand.tagline}</span></Link>;
 }
-function HeaderIconLink({ href, label, className = "", children }: { href: string; label: string; className?: string; children: ReactNode }) { return <Link href={href} aria-label={label} className={`vd-focus flex h-11 w-11 items-center justify-center rounded-full border border-vd-line bg-white text-ink hover:border-jade hover:text-jade ${className}`}>{children}</Link>; }
-
-/** Cart icon button with the live persisted quantity badge. */
-function CartTrigger({ locale, quantity, onClick, className = "" }: { locale: Locale; quantity: number; onClick: () => void; className?: string }) {
-  const label = useBrandCopy(locale).common.cart;
-  return <button type="button" onClick={onClick} aria-label={label} aria-haspopup="dialog" className={`vd-focus relative flex h-11 w-11 items-center justify-center rounded-full border border-vd-line bg-white text-ink hover:border-jade hover:text-jade ${className}`}><CartIcon size={18} />{quantity > 0 ? <span className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-jade px-1 text-[11px] font-extrabold text-white">{formatNumber(quantity, locale)}</span> : null}</button>;
+/** Original header icon appearance shared by the controls and their live quantity badges. */
+function HeaderIconTrigger({ locale, label, quantity = 0, className = "", children, ...props }: ComponentPropsWithRef<"button"> & { locale: Locale; label: string; quantity?: number; children: ReactNode }) {
+  return <button type="button" aria-label={label} aria-haspopup="dialog" className={`vd-focus relative flex h-11 w-11 items-center justify-center rounded-full border border-vd-line bg-white text-ink hover:border-jade hover:text-jade ${className}`} {...props}>{children}{quantity > 0 ? <span className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-jade px-1 text-[11px] font-extrabold text-white">{formatNumber(quantity, locale)}</span> : null}</button>;
 }
