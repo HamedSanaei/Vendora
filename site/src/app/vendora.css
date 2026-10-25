@@ -437,40 +437,39 @@ html:has(.vd-home)::-webkit-scrollbar {
   }
 }
 
-/* Cart-aware catalog cards switch their commerce row based on actual card
-   width, not viewport width. This keeps the 768/1024 transitions stable. */
-.vd-product-card {
-  container-type: inline-size;
+/* One horizontal purchase row at every card/container width (Penpot Code Aligned V3). */
+.vd-product-card { container-type: inline-size; container-name: vd-product-card; }
+.vd-product-card__commerce { display: flex; flex-flow: row nowrap; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; min-height: 56px; margin-block-start: auto; padding-block-start: 12px; }
+.vd-product-card__price { flex: 1 1 0; min-width: 0; text-align: start; container-type: inline-size; --vd-price-unit-space: 0px; }
+.vd-product-card__action { display: flex; flex: 0 0 44px; align-items: center; justify-content: center; width: 44px; }
+.vd-card-price { display: flex; align-items: baseline; flex-wrap: nowrap; gap: 4px; min-width: 0; margin: 0; color: var(--color-ink); font-weight: 800; line-height: 24px; font-size: min(13px, calc((100cqw - var(--vd-price-unit-space)) / var(--vd-price-chars, 9) * 1.5)); }
+.vd-card-price__number { display: block; min-width: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.vd-card-price__unit { display: none; white-space: nowrap; }
+.vd-card-price--previous { color: var(--color-vd-muted); font-weight: 400; line-height: 18px; font-size: min(11px, calc((100cqw - var(--vd-price-unit-space)) / var(--vd-price-chars, 9) * 1.5)); text-decoration: line-through; }
+.vd-card-purchase__button { position: relative; display: flex; flex: 0 0 44px; width: 44px; height: 44px; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; border: 0; padding: 0; border-radius: 12px; background: transparent; cursor: pointer; }
+.vd-card-purchase__visual { display: flex; width: 40px; height: 40px; flex: none; align-items: center; justify-content: center; border-radius: 11px; background: var(--color-jade); color: white; transition: background-color .15s, transform .15s; }
+.vd-card-purchase__visual svg { display: block; width: 28px; height: 28px; flex: none; }
+.vd-card-purchase__button:hover .vd-card-purchase__visual { background: var(--color-jade-dark); }
+.vd-card-purchase__button:active .vd-card-purchase__visual { transform: scale(.96); }
+.vd-card-purchase__button:disabled { cursor: not-allowed; }
+.vd-card-purchase__button:disabled .vd-card-purchase__visual { background: var(--color-vd-line); color: var(--color-vd-muted); transform: none; }
+.vd-card-purchase__quantity { position: absolute; inset-inline-end: -3px; top: -3px; display: flex; min-width: 18px; height: 18px; align-items: center; justify-content: center; padding-inline: 3px; border: 1px solid var(--color-jade); border-radius: 10px; background: white; color: var(--color-jade); font-size: 10px; line-height: 1; font-weight: 800; }
+@media (min-width: 768px) {
+  .vd-card-price:not(.vd-card-price--previous) { font-size: min(15px, calc((100cqw - var(--vd-price-unit-space)) / var(--vd-price-chars, 9) * 1.5)); }
 }
-.vd-product-card__commerce {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.75rem;
+@container vd-product-card (min-width: 200px) {
+  .vd-product-card__commerce { gap: 12px; }
+  .vd-product-card__price { --vd-price-unit-space: 40px; }
+  .vd-card-price__unit { display: inline; }
+  .vd-card-purchase__visual { width: 44px; height: 44px; }
+  .vd-card-purchase__visual svg { width: 24px; height: 24px; }
 }
-.vd-product-card__price {
-  min-height: 2.75rem;
-}
-.vd-product-card__action {
-  display: flex;
-  min-height: 2.75rem;
-  align-items: center;
-  justify-content: center;
-}
-@container (min-width: 230px) {
-  .vd-product-card__commerce {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-  }
-  .vd-product-card__price {
-    min-height: 0;
-  }
-  .vd-product-card__action {
-    width: auto;
-    justify-content: flex-end;
-  }
-}
+.vd-card-quantity-popover { position: fixed; z-index: 60; width: 220px; max-width: calc(100vw - 16px); border: 1px solid var(--color-vd-line); border-radius: 16px; padding: 12px; background: white; color: var(--color-ink); font-family: var(--font-sans); box-shadow: 0 10px 22px rgb(11 11 11 / .12); }
+.vd-card-quantity-popover__header { display: flex; align-items: center; justify-content: space-between; }
+.vd-card-quantity-popover__header strong { font: 700 14px var(--font-sans); }
+.vd-card-quantity-popover__header > button { display: flex; height: 44px; width: 44px; align-items: center; justify-content: center; border: 0; border-radius: 12px; background: transparent; color: var(--color-vd-muted); }
+.vd-card-quantity-popover > p { margin: 0 0 12px; overflow-wrap: anywhere; color: var(--color-vd-muted); font-size: 12px; line-height: 22px; }
+.vd-card-quantity-popover > div:last-child { margin-inline: auto; }
 
 /* Product detail hero --------------------------------------------------
    The Penpot desktop reference keeps the gallery and information columns

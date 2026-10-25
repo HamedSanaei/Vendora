@@ -167,6 +167,8 @@ function Recommendations({
   onAdd: (product: ProductSummary) => void;
 }) {
   const t = getDict(locale);
+  const dispatch = useDispatch();
+  const cart = useSelector((state: WishlistReduxState) => state.cart.cart_products);
   const showSamples = useSeedDataEnabled();
   const products = useMemo(() => (showSamples ? wishlistRecommendations : []).slice(0, 3).map((summary) => ({ summary, product: toCatalogProduct(summaryToStoreProduct(summary, locale)) })), [locale, showSamples]);
   if (!showSamples) return null;
@@ -181,7 +183,9 @@ function Recommendations({
               locale={locale}
               compact
               artworkColor={index % 3 === 0 ? "jade" : index % 3 === 1 ? "clay" : "steel"}
-              onIncreaseCart={() => onAdd(summary)}
+              cartQuantity={cart.find(item => item._id === product.id)?.orderQuantity ?? 0}
+              onIncreaseCart={() => { if (cart.some(item => item._id === product.id)) dispatch(quantityIncrement(product.source)); else onAdd(summary); }}
+              onDecreaseCart={() => dispatch(quantityDecrement(product.source))}
             />
           </div>
         ))}

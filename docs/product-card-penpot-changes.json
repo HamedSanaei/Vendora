@@ -1,0 +1,4310 @@
+{
+  "file": "502b4555-3f5f-807a-8008-89e387e2c649",
+  "cards": [
+    {
+      "page": "9362b142-eccc-80db-8008-8855021e207c",
+      "pageName": "Vendora · 02 Components",
+      "id": "9362b142-eccc-80db-8008-88563d4c2805",
+      "name": "Vendora / Product Card / Desktop / Default",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88563be8ad60",
+          "name": "Page / Components"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88563d46faf7",
+          "name": "Section / Commerce"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88563d4c2805",
+        "9362b142-eccc-80db-8008-88563db5961c",
+        "9362b142-eccc-80db-8008-88563dbe44ef"
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-88563db5961c",
+      "buttonId": "9362b142-eccc-80db-8008-88563dbe44ef",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855021e207c",
+      "pageName": "Vendora · 02 Components",
+      "id": "9362b142-eccc-80db-8008-88563dc3e9dd",
+      "name": "Product Card / Hover",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88563be8ad60",
+          "name": "Page / Components"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88563d46faf7",
+          "name": "Section / Commerce"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88563dc9e16f",
+          "name": "Vendora / Product Card / Desktop / Hover"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88563dc3e9dd",
+        "9362b142-eccc-80db-8008-88563dc46306",
+        "9362b142-eccc-80db-8008-88563dc46307"
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-88563dc46306",
+      "buttonId": "9362b142-eccc-80db-8008-88563dc46307",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855021e207c",
+      "pageName": "Vendora · 02 Components",
+      "id": "9362b142-eccc-80db-8008-88563dcb8ad6",
+      "name": "Vendora / Product Card / Mobile / Default",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88563be8ad60",
+          "name": "Page / Components"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88563d46faf7",
+          "name": "Section / Commerce"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88563dcb8ad6",
+        "9362b142-eccc-80db-8008-88563df43588",
+        "9362b142-eccc-80db-8008-88563dfb269c",
+        "9362b142-eccc-80db-8008-88563e007b1e"
+      ],
+      "w": 166,
+      "h": 286,
+      "priceId": "9362b142-eccc-80db-8008-88563df43588",
+      "buttonId": "9362b142-eccc-80db-8008-88563dfb269c",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855021e207c",
+      "pageName": "Vendora · 02 Components",
+      "id": "9362b142-eccc-80db-8008-8856ae9c92e9",
+      "name": "Vendora / Product Card / Tablet / Default",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88563be8ad60",
+          "name": "Page / Components"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88563d46faf7",
+          "name": "Section / Commerce"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-8856ae9c92e9",
+        "9362b142-eccc-80db-8008-8856af5d6eec",
+        "9362b142-eccc-80db-8008-8856af68e6c6"
+      ],
+      "w": 216,
+      "h": 340,
+      "priceId": "9362b142-eccc-80db-8008-8856af5d6eec",
+      "buttonId": "9362b142-eccc-80db-8008-8856af68e6c6",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885710904b67",
+      "name": "Instance / کوله‌پشتی آرتین",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857108929e2",
+          "name": "Layout / Product Row / کوله‌پشتی آرتین"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885710904b67",
+        "9362b142-eccc-80db-8008-885710904b74",
+        "9362b142-eccc-80db-8008-885710904b75"
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-885710904b74",
+      "buttonId": "9362b142-eccc-80db-8008-885710904b75",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885710a082d0",
+      "name": "Instance / کیف دستی مهتاب",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857108929e2",
+          "name": "Layout / Product Row / کوله‌پشتی آرتین"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885710a082d0",
+        "9362b142-eccc-80db-8008-885710a082dd",
+        "9362b142-eccc-80db-8008-885710a082de"
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-885710a082dd",
+      "buttonId": "9362b142-eccc-80db-8008-885710a082de",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885710b09a43",
+      "name": "Instance / کیف دوشی نوا",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857108929e2",
+          "name": "Layout / Product Row / کوله‌پشتی آرتین"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885710b09a43",
+        "9362b142-eccc-80db-8008-885710b09a50",
+        "9362b142-eccc-80db-8008-885710b09a51"
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-885710b09a50",
+      "buttonId": "9362b142-eccc-80db-8008-885710b09a51",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885710c0e345",
+      "name": "Instance / کوله دانشجویی رها",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857108929e2",
+          "name": "Layout / Product Row / کوله‌پشتی آرتین"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885710c0e345",
+        "9362b142-eccc-80db-8008-885710c0e352",
+        "9362b142-eccc-80db-8008-885710c0e353"
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-885710c0e352",
+      "buttonId": "9362b142-eccc-80db-8008-885710c0e353",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885710d0d77b",
+      "name": "Instance / کیف لپ‌تاپ پارسا",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857108929e2",
+          "name": "Layout / Product Row / کوله‌پشتی آرتین"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885710d0d77b",
+        "9362b142-eccc-80db-8008-885710d139c2",
+        "9362b142-eccc-80db-8008-885710d139c3"
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-885710d139c2",
+      "buttonId": "9362b142-eccc-80db-8008-885710d139c3",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88571178ff6d",
+      "name": "Instance / کیف کمری روژان",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857116d73c2",
+          "name": "Layout / Product Row / کیف کمری روژان"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88571178ff6d",
+        "9362b142-eccc-80db-8008-88571178ff7a",
+        "9362b142-eccc-80db-8008-88571178ff7b"
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-88571178ff7a",
+      "buttonId": "9362b142-eccc-80db-8008-88571178ff7b",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-8857118c0567",
+      "name": "Instance / کوله مینی باران",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857116d73c2",
+          "name": "Layout / Product Row / کیف کمری روژان"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-8857118c0567",
+        "9362b142-eccc-80db-8008-8857118c0574",
+        "9362b142-eccc-80db-8008-8857118c0575"
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-8857118c0574",
+      "buttonId": "9362b142-eccc-80db-8008-8857118c0575",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885711a1f03c",
+      "name": "Instance / کیف خرید ترمه",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857116d73c2",
+          "name": "Layout / Product Row / کیف کمری روژان"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885711a1f03c",
+        "9362b142-eccc-80db-8008-885711a21543",
+        "9362b142-eccc-80db-8008-885711a21544"
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-885711a21543",
+      "buttonId": "9362b142-eccc-80db-8008-885711a21544",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885711bfdac0",
+      "name": "Instance / کیف ورزشی پرواز",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857116d73c2",
+          "name": "Layout / Product Row / کیف کمری روژان"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885711bfdac0",
+        "9362b142-eccc-80db-8008-885711bfdacd",
+        "9362b142-eccc-80db-8008-885711bfdace"
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-885711bfdacd",
+      "buttonId": "9362b142-eccc-80db-8008-885711bfdace",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885711cf44d4",
+      "name": "Instance / کیف کودک رنگین",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857116d73c2",
+          "name": "Layout / Product Row / کیف کمری روژان"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885711cf44d4",
+        "9362b142-eccc-80db-8008-885711cf9a7e",
+        "9362b142-eccc-80db-8008-885711cf9a7f"
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-885711cf9a7e",
+      "buttonId": "9362b142-eccc-80db-8008-885711cf9a7f",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88575482750c",
+      "name": "Instance / کوله آرتین",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885751eeebc7",
+          "name": "Frame / Home / Tablet / 768"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857547525a2",
+          "name": "Layout / Product Row / کوله آرتین"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88575482750c",
+        "9362b142-eccc-80db-8008-885754827517",
+        "9362b142-eccc-80db-8008-885754827518"
+      ],
+      "w": 216,
+      "h": 340,
+      "priceId": "9362b142-eccc-80db-8008-885754827517",
+      "buttonId": "9362b142-eccc-80db-8008-885754827518",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88575493d577",
+      "name": "Instance / کیف مهتاب",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885751eeebc7",
+          "name": "Frame / Home / Tablet / 768"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857547525a2",
+          "name": "Layout / Product Row / کوله آرتین"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88575493d577",
+        "9362b142-eccc-80db-8008-88575493d582",
+        "9362b142-eccc-80db-8008-88575493d583"
+      ],
+      "w": 216,
+      "h": 340,
+      "priceId": "9362b142-eccc-80db-8008-88575493d582",
+      "buttonId": "9362b142-eccc-80db-8008-88575493d583",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885754a4f989",
+      "name": "Instance / دوشی نوا",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885751eeebc7",
+          "name": "Frame / Home / Tablet / 768"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857547525a2",
+          "name": "Layout / Product Row / کوله آرتین"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885754a4f989",
+        "9362b142-eccc-80db-8008-885754a5185c",
+        "9362b142-eccc-80db-8008-885754a5185d"
+      ],
+      "w": 216,
+      "h": 340,
+      "priceId": "9362b142-eccc-80db-8008-885754a5185c",
+      "buttonId": "9362b142-eccc-80db-8008-885754a5185d",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885755eb6867",
+      "name": "Instance / کمری روژان",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885751eeebc7",
+          "name": "Frame / Home / Tablet / 768"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885755d869ff",
+          "name": "Layout / Product Row / کمری روژان"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885755eb6867",
+        "9362b142-eccc-80db-8008-885755ebbea7",
+        "9362b142-eccc-80db-8008-885755ebbea8"
+      ],
+      "w": 216,
+      "h": 340,
+      "priceId": "9362b142-eccc-80db-8008-885755ebbea7",
+      "buttonId": "9362b142-eccc-80db-8008-885755ebbea8",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88575604b06a",
+      "name": "Instance / مینی باران",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885751eeebc7",
+          "name": "Frame / Home / Tablet / 768"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885755d869ff",
+          "name": "Layout / Product Row / کمری روژان"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88575604b06a",
+        "9362b142-eccc-80db-8008-88575604b075",
+        "9362b142-eccc-80db-8008-88575604b076"
+      ],
+      "w": 216,
+      "h": 340,
+      "priceId": "9362b142-eccc-80db-8008-88575604b075",
+      "buttonId": "9362b142-eccc-80db-8008-88575604b076",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-8857561a8c73",
+      "name": "Instance / ورزشی پرواز",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885751eeebc7",
+          "name": "Frame / Home / Tablet / 768"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885755d869ff",
+          "name": "Layout / Product Row / کمری روژان"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-8857561a8c73",
+        "9362b142-eccc-80db-8008-8857561a8c7e",
+        "9362b142-eccc-80db-8008-8857561a8c7f"
+      ],
+      "w": 216,
+      "h": 340,
+      "priceId": "9362b142-eccc-80db-8008-8857561a8c7e",
+      "buttonId": "9362b142-eccc-80db-8008-8857561a8c7f",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578b4d29bd",
+      "name": "Instance / کوله آرتین",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578b3f68d1",
+          "name": "Layout / Product Grid / کوله آرتین"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88578b4d29bd",
+        "9362b142-eccc-80db-8008-88578b4d5a91",
+        "9362b142-eccc-80db-8008-88578b4d5a92",
+        "9362b142-eccc-80db-8008-88578b4d5a93"
+      ],
+      "w": 166,
+      "h": 286,
+      "priceId": "9362b142-eccc-80db-8008-88578b4d5a91",
+      "buttonId": "9362b142-eccc-80db-8008-88578b4d5a92",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578b5b1f93",
+      "name": "Instance / کیف مهتاب",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578b3f68d1",
+          "name": "Layout / Product Grid / کوله آرتین"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88578b5b1f93",
+        "9362b142-eccc-80db-8008-88578b5b49c2",
+        "9362b142-eccc-80db-8008-88578b5b49c3",
+        "9362b142-eccc-80db-8008-88578b5b49c4"
+      ],
+      "w": 166,
+      "h": 286,
+      "priceId": "9362b142-eccc-80db-8008-88578b5b49c2",
+      "buttonId": "9362b142-eccc-80db-8008-88578b5b49c3",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578b6a6878",
+      "name": "Instance / دوشی نوا",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578b3f68d1",
+          "name": "Layout / Product Grid / کوله آرتین"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88578b6a6878",
+        "9362b142-eccc-80db-8008-88578b6abce1",
+        "9362b142-eccc-80db-8008-88578b6abce2",
+        "9362b142-eccc-80db-8008-88578b6abce3"
+      ],
+      "w": 166,
+      "h": 286,
+      "priceId": "9362b142-eccc-80db-8008-88578b6abce1",
+      "buttonId": "9362b142-eccc-80db-8008-88578b6abce2",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578b76bf51",
+      "name": "Instance / کیف پارسا",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578b3f68d1",
+          "name": "Layout / Product Grid / کوله آرتین"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88578b76bf51",
+        "9362b142-eccc-80db-8008-88578b76bf59",
+        "9362b142-eccc-80db-8008-88578b76bf5a",
+        "9362b142-eccc-80db-8008-88578b76bf5b"
+      ],
+      "w": 166,
+      "h": 286,
+      "priceId": "9362b142-eccc-80db-8008-88578b76bf59",
+      "buttonId": "9362b142-eccc-80db-8008-88578b76bf5a",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578c89e21b",
+      "name": "Instance / کمری روژان",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578c7ac6b6",
+          "name": "Layout / Product Grid / کمری روژان"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88578c89e21b",
+        "9362b142-eccc-80db-8008-88578c89e223",
+        "9362b142-eccc-80db-8008-88578c89e224",
+        "9362b142-eccc-80db-8008-88578c89e225"
+      ],
+      "w": 166,
+      "h": 286,
+      "priceId": "9362b142-eccc-80db-8008-88578c89e223",
+      "buttonId": "9362b142-eccc-80db-8008-88578c89e224",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578c982844",
+      "name": "Instance / مینی باران",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578c7ac6b6",
+          "name": "Layout / Product Grid / کمری روژان"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88578c982844",
+        "9362b142-eccc-80db-8008-88578c98284c",
+        "9362b142-eccc-80db-8008-88578c98284d",
+        "9362b142-eccc-80db-8008-88578c98284e"
+      ],
+      "w": 166,
+      "h": 286,
+      "priceId": "9362b142-eccc-80db-8008-88578c98284c",
+      "buttonId": "9362b142-eccc-80db-8008-88578c98284d",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578ca7bb95",
+      "name": "Instance / خرید ترمه",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578c7ac6b6",
+          "name": "Layout / Product Grid / کمری روژان"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88578ca7bb95",
+        "9362b142-eccc-80db-8008-88578ca7bb9d",
+        "9362b142-eccc-80db-8008-88578ca7bb9e",
+        "9362b142-eccc-80db-8008-88578ca7bb9f"
+      ],
+      "w": 166,
+      "h": 286,
+      "priceId": "9362b142-eccc-80db-8008-88578ca7bb9d",
+      "buttonId": "9362b142-eccc-80db-8008-88578ca7bb9e",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578cba58f5",
+      "name": "Instance / ورزشی پرواز",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578c7ac6b6",
+          "name": "Layout / Product Grid / کمری روژان"
+        }
+      ],
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-88578cba58f5",
+        "9362b142-eccc-80db-8008-88578cba8813",
+        "9362b142-eccc-80db-8008-88578cba8814",
+        "9362b142-eccc-80db-8008-88578cba8815"
+      ],
+      "w": 166,
+      "h": 286,
+      "priceId": "9362b142-eccc-80db-8008-88578cba8813",
+      "buttonId": "9362b142-eccc-80db-8008-88578cba8814",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "name": "Vendora / Catalog / Product Card / Code Aligned / Desktop",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c49363b539",
+          "name": "Components / Commerce Inventory / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+        "fa1f2b51-26b4-8045-8008-88c4967634f7",
+        "fa1f2b51-26b4-8045-8008-88c496a910fb",
+        "965ddbf9-473b-8030-8008-d8152b70626f",
+        "fa1f2b51-26b4-8045-8008-88c496417c64",
+        "fa1f2b51-26b4-8045-8008-88c496cc244f"
+      ],
+      "w": 318,
+      "h": 409.9999999999999,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c4967634f7",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c496a910fb",
+      "glyphId": "965ddbf9-473b-8030-8008-d8152b70626f",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "name": "Vendora / Catalog / Product Card / Code Aligned / Mobile",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c49363b539",
+          "name": "Components / Commerce Inventory / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c4971510e0",
+        "fa1f2b51-26b4-8045-8008-88c49adb1f4d",
+        "fa1f2b51-26b4-8045-8008-88c49b16989d",
+        "965ddbf9-473b-8030-8008-d8158ecb72ac",
+        "fa1f2b51-26b4-8045-8008-88c49aa2ed09",
+        "fa1f2b51-26b4-8045-8008-88c49b305f45"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c49adb1f4d",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c49b16989d",
+      "glyphId": "965ddbf9-473b-8030-8008-d8158ecb72ac",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ea994bbf",
+      "name": "Product Card / 1",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c5ea994bbf",
+        "fa1f2b51-26b4-8045-8008-88c5ea99e777",
+        "fa1f2b51-26b4-8045-8008-88c5ea99e778",
+        "965ddbf9-473b-8030-8008-d8152ba63668",
+        "fa1f2b51-26b4-8045-8008-88c5ea99e776",
+        "fa1f2b51-26b4-8045-8008-88c5ea99e779"
+      ],
+      "w": 318,
+      "h": 409.9999999999999,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c5ea99e777",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c5ea99e778",
+      "glyphId": "965ddbf9-473b-8030-8008-d8152ba63668",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5eaee5d05",
+      "name": "Product Card / 2",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c5eaee5d05",
+        "fa1f2b51-26b4-8045-8008-88c5eaef1046",
+        "fa1f2b51-26b4-8045-8008-88c5eaef53ba",
+        "965ddbf9-473b-8030-8008-d8152ba7cdd0",
+        "fa1f2b51-26b4-8045-8008-88c5eaef1045",
+        "fa1f2b51-26b4-8045-8008-88c5eaef53bb"
+      ],
+      "w": 318,
+      "h": 409.9999999999999,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c5eaef1046",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c5eaef53ba",
+      "glyphId": "965ddbf9-473b-8030-8008-d8152ba7cdd0",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5eb6b75e9",
+      "name": "Product Card / 3",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c5eb6b75e9",
+        "fa1f2b51-26b4-8045-8008-88c5eb6b8f8e",
+        "fa1f2b51-26b4-8045-8008-88c5eb6b8f8f",
+        "965ddbf9-473b-8030-8008-d8152bb3b9e2",
+        "fa1f2b51-26b4-8045-8008-88c5eb6b8f8d",
+        "fa1f2b51-26b4-8045-8008-88c5eb6b8f90"
+      ],
+      "w": 318,
+      "h": 409.9999999999999,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c5eb6b8f8e",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c5eb6b8f8f",
+      "glyphId": "965ddbf9-473b-8030-8008-d8152bb3b9e2",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ebe4da28",
+      "name": "Product Card / 4",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c5ebe4da28",
+        "fa1f2b51-26b4-8045-8008-88c5ebe53f21",
+        "fa1f2b51-26b4-8045-8008-88c5ebe53f22",
+        "965ddbf9-473b-8030-8008-d8152ba95b91",
+        "fa1f2b51-26b4-8045-8008-88c5ebe53f20",
+        "fa1f2b51-26b4-8045-8008-88c5ebe53f23"
+      ],
+      "w": 318,
+      "h": 410,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c5ebe53f21",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c5ebe53f22",
+      "glyphId": "965ddbf9-473b-8030-8008-d8152ba95b91",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ec5b2adb",
+      "name": "Product Card / 5",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c5ec5b2adb",
+        "fa1f2b51-26b4-8045-8008-88c5ec5b7860",
+        "fa1f2b51-26b4-8045-8008-88c5ec5b7861",
+        "965ddbf9-473b-8030-8008-d8152ba42234",
+        "fa1f2b51-26b4-8045-8008-88c5ec5b785f",
+        "fa1f2b51-26b4-8045-8008-88c5ec5b7862"
+      ],
+      "w": 318,
+      "h": 410,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c5ec5b7860",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c5ec5b7861",
+      "glyphId": "965ddbf9-473b-8030-8008-d8152ba42234",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ecd08f5d",
+      "name": "Product Card / 6",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c5ecd08f5d",
+        "fa1f2b51-26b4-8045-8008-88c5ecd10356",
+        "fa1f2b51-26b4-8045-8008-88c5ecd10357",
+        "965ddbf9-473b-8030-8008-d8152bacdc68",
+        "fa1f2b51-26b4-8045-8008-88c5ecd10355",
+        "fa1f2b51-26b4-8045-8008-88c5ecd10358"
+      ],
+      "w": 318,
+      "h": 410,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c5ecd10356",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c5ecd10357",
+      "glyphId": "965ddbf9-473b-8030-8008-d8152bacdc68",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ed49418c",
+      "name": "Product Card / 7",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c5ed49418c",
+        "fa1f2b51-26b4-8045-8008-88c5ed49be75",
+        "fa1f2b51-26b4-8045-8008-88c5ed49cc58",
+        "965ddbf9-473b-8030-8008-d8152bb4f696",
+        "fa1f2b51-26b4-8045-8008-88c5ed49be74",
+        "fa1f2b51-26b4-8045-8008-88c5ed49cc59"
+      ],
+      "w": 318,
+      "h": 410,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c5ed49be75",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c5ed49cc58",
+      "glyphId": "965ddbf9-473b-8030-8008-d8152bb4f696",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5edbca2f6",
+      "name": "Product Card / 8",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c5edbca2f6",
+        "fa1f2b51-26b4-8045-8008-88c5edbcffa3",
+        "fa1f2b51-26b4-8045-8008-88c5edbd0969",
+        "965ddbf9-473b-8030-8008-d8152bb0e6e1",
+        "fa1f2b51-26b4-8045-8008-88c5edbcffa2",
+        "fa1f2b51-26b4-8045-8008-88c5edbd096a"
+      ],
+      "w": 318,
+      "h": 410,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c5edbcffa3",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c5edbd0969",
+      "glyphId": "965ddbf9-473b-8030-8008-d8152bb0e6e1",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ee5a1fb1",
+      "name": "Product Card / 9",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c5ee5a1fb1",
+        "fa1f2b51-26b4-8045-8008-88c5ee5a482d",
+        "fa1f2b51-26b4-8045-8008-88c5ee5a482e",
+        "965ddbf9-473b-8030-8008-d8152bae2b1a",
+        "fa1f2b51-26b4-8045-8008-88c5ee5a482c",
+        "fa1f2b51-26b4-8045-8008-88c5ee5a482f"
+      ],
+      "w": 318,
+      "h": 410,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c5ee5a482d",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c5ee5a482e",
+      "glyphId": "965ddbf9-473b-8030-8008-d8152bae2b1a",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5eea9f021",
+      "name": "Product Card / 10",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c5eea9f021",
+        "fa1f2b51-26b4-8045-8008-88c5eeaa36a9",
+        "fa1f2b51-26b4-8045-8008-88c5eeaa36aa",
+        "965ddbf9-473b-8030-8008-d8152bb24ad4",
+        "fa1f2b51-26b4-8045-8008-88c5eeaa36a8",
+        "fa1f2b51-26b4-8045-8008-88c5eeaa36ab"
+      ],
+      "w": 318,
+      "h": 410,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c5eeaa36a9",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c5eeaa36aa",
+      "glyphId": "965ddbf9-473b-8030-8008-d8152bb24ad4",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5eef510a6",
+      "name": "Product Card / 11",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c5eef510a6",
+        "fa1f2b51-26b4-8045-8008-88c5eef5563e",
+        "fa1f2b51-26b4-8045-8008-88c5eef5563f",
+        "965ddbf9-473b-8030-8008-d8152bafab41",
+        "fa1f2b51-26b4-8045-8008-88c5eef5563d",
+        "fa1f2b51-26b4-8045-8008-88c5eef55640"
+      ],
+      "w": 318,
+      "h": 410,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c5eef5563e",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c5eef5563f",
+      "glyphId": "965ddbf9-473b-8030-8008-d8152bafab41",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ef3a88ec",
+      "name": "Product Card / 12",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c5ef3a88ec",
+        "fa1f2b51-26b4-8045-8008-88c5ef3ac072",
+        "fa1f2b51-26b4-8045-8008-88c5ef3ac073",
+        "965ddbf9-473b-8030-8008-d8152bab5be6",
+        "fa1f2b51-26b4-8045-8008-88c5ef3ac071",
+        "fa1f2b51-26b4-8045-8008-88c5ef3ac074"
+      ],
+      "w": 318,
+      "h": 410,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c5ef3ac072",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c5ef3ac073",
+      "glyphId": "965ddbf9-473b-8030-8008-d8152bab5be6",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c668791a0f",
+      "name": "Product Card / 1",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c668791a0f",
+        "fa1f2b51-26b4-8045-8008-88c668799897",
+        "fa1f2b51-26b4-8045-8008-88c668799898",
+        "965ddbf9-473b-8030-8008-d8159a18ab94",
+        "fa1f2b51-26b4-8045-8008-88c668799896",
+        "fa1f2b51-26b4-8045-8008-88c668799899"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c668799897",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c668799898",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a18ab94",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c668bbd0a4",
+      "name": "Product Card / 2",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c668bbd0a4",
+        "fa1f2b51-26b4-8045-8008-88c668bc0e55",
+        "fa1f2b51-26b4-8045-8008-88c668bc0e56",
+        "965ddbf9-473b-8030-8008-d8159a110e34",
+        "fa1f2b51-26b4-8045-8008-88c668bc0e54",
+        "fa1f2b51-26b4-8045-8008-88c668bc0e57"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c668bc0e55",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c668bc0e56",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a110e34",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66907f605",
+      "name": "Product Card / 3",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c66907f605",
+        "fa1f2b51-26b4-8045-8008-88c669083222",
+        "fa1f2b51-26b4-8045-8008-88c669083223",
+        "965ddbf9-473b-8030-8008-d8159a1d6e10",
+        "fa1f2b51-26b4-8045-8008-88c669083221",
+        "fa1f2b51-26b4-8045-8008-88c669083224"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c669083222",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c669083223",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a1d6e10",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66956ecf4",
+      "name": "Product Card / 4",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c66956ecf4",
+        "fa1f2b51-26b4-8045-8008-88c669572e5d",
+        "fa1f2b51-26b4-8045-8008-88c669572e5e",
+        "965ddbf9-473b-8030-8008-d8159a22e580",
+        "fa1f2b51-26b4-8045-8008-88c669572e5c",
+        "fa1f2b51-26b4-8045-8008-88c669572e5f"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c669572e5d",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c669572e5e",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a22e580",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c669ac1411",
+      "name": "Product Card / 5",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c669ac1411",
+        "fa1f2b51-26b4-8045-8008-88c669ac5d27",
+        "fa1f2b51-26b4-8045-8008-88c669ac5d28",
+        "965ddbf9-473b-8030-8008-d8159a0fce2a",
+        "fa1f2b51-26b4-8045-8008-88c669ac5d26",
+        "fa1f2b51-26b4-8045-8008-88c669ac5d29"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c669ac5d27",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c669ac5d28",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a0fce2a",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c669f359e4",
+      "name": "Product Card / 6",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c669f359e4",
+        "fa1f2b51-26b4-8045-8008-88c669f3c804",
+        "fa1f2b51-26b4-8045-8008-88c669f3c805",
+        "965ddbf9-473b-8030-8008-d8159a219222",
+        "fa1f2b51-26b4-8045-8008-88c669f3c803",
+        "fa1f2b51-26b4-8045-8008-88c669f3c806"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c669f3c804",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c669f3c805",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a219222",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66a476e3d",
+      "name": "Product Card / 7",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c66a476e3d",
+        "fa1f2b51-26b4-8045-8008-88c66a47b531",
+        "fa1f2b51-26b4-8045-8008-88c66a47b532",
+        "965ddbf9-473b-8030-8008-d8159a14cad0",
+        "fa1f2b51-26b4-8045-8008-88c66a47b530",
+        "fa1f2b51-26b4-8045-8008-88c66a47b533"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c66a47b531",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c66a47b532",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a14cad0",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66ae9a435",
+      "name": "Product Card / 8",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c66ae9a435",
+        "fa1f2b51-26b4-8045-8008-88c66ae9c129",
+        "fa1f2b51-26b4-8045-8008-88c66ae9c12a",
+        "965ddbf9-473b-8030-8008-d8159a126370",
+        "fa1f2b51-26b4-8045-8008-88c66ae9c128",
+        "fa1f2b51-26b4-8045-8008-88c66ae9c12b"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c66ae9c129",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c66ae9c12a",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a126370",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66b6e47ae",
+      "name": "Product Card / 9",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c66b6e47ae",
+        "fa1f2b51-26b4-8045-8008-88c66b6efe82",
+        "fa1f2b51-26b4-8045-8008-88c66b6efe83",
+        "965ddbf9-473b-8030-8008-d8159a163e5d",
+        "fa1f2b51-26b4-8045-8008-88c66b6efe81",
+        "fa1f2b51-26b4-8045-8008-88c66b6efe84"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c66b6efe82",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c66b6efe83",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a163e5d",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66bf4888b",
+      "name": "Product Card / 10",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c66bf4888b",
+        "fa1f2b51-26b4-8045-8008-88c66bf523f0",
+        "fa1f2b51-26b4-8045-8008-88c66bf523f1",
+        "965ddbf9-473b-8030-8008-d8159a1e8695",
+        "fa1f2b51-26b4-8045-8008-88c66bf523ef",
+        "fa1f2b51-26b4-8045-8008-88c66bf523f2"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c66bf523f0",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c66bf523f1",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a1e8695",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66c819a57",
+      "name": "Product Card / 11",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c66c819a57",
+        "fa1f2b51-26b4-8045-8008-88c66c8211af",
+        "fa1f2b51-26b4-8045-8008-88c66c8211b0",
+        "965ddbf9-473b-8030-8008-d8159a1c2fe0",
+        "fa1f2b51-26b4-8045-8008-88c66c8211ae",
+        "fa1f2b51-26b4-8045-8008-88c66c8211b1"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c66c8211af",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c66c8211b0",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a1c2fe0",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66d186c08",
+      "name": "Product Card / 12",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c66d186c08",
+        "fa1f2b51-26b4-8045-8008-88c66d1883cd",
+        "fa1f2b51-26b4-8045-8008-88c66d1883ce",
+        "965ddbf9-473b-8030-8008-d8159a13d0d8",
+        "fa1f2b51-26b4-8045-8008-88c66d1883cc",
+        "fa1f2b51-26b4-8045-8008-88c66d1883cf"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c66d1883cd",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c66d1883ce",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a13d0d8",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c73eaf009e",
+      "name": "Related Card / 1",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c72136eea0",
+          "name": "Product Detail / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c73eaf009e",
+        "fa1f2b51-26b4-8045-8008-88c73eaf6a12",
+        "fa1f2b51-26b4-8045-8008-88c73eaf6a13",
+        "965ddbf9-473b-8030-8008-d8159a1ff76f",
+        "fa1f2b51-26b4-8045-8008-88c73eaf6a11",
+        "fa1f2b51-26b4-8045-8008-88c73eaf6a14"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c73eaf6a12",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c73eaf6a13",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a1ff76f",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c73f0cf3fc",
+      "name": "Related Card / 2",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c72136eea0",
+          "name": "Product Detail / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c73f0cf3fc",
+        "fa1f2b51-26b4-8045-8008-88c73f0d497f",
+        "fa1f2b51-26b4-8045-8008-88c73f0d4980",
+        "965ddbf9-473b-8030-8008-d8159a199d6d",
+        "fa1f2b51-26b4-8045-8008-88c73f0d497e",
+        "fa1f2b51-26b4-8045-8008-88c73f0d4981"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c73f0d497f",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c73f0d4980",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a199d6d",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c73f64e85a",
+      "name": "Related Card / 3",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c72136eea0",
+          "name": "Product Detail / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c73f64e85a",
+        "fa1f2b51-26b4-8045-8008-88c73f654754",
+        "fa1f2b51-26b4-8045-8008-88c73f654755",
+        "965ddbf9-473b-8030-8008-d8159a1b3704",
+        "fa1f2b51-26b4-8045-8008-88c73f654753",
+        "fa1f2b51-26b4-8045-8008-88c73f654756"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c73f654754",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c73f654755",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a1b3704",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c73fc82254",
+      "name": "Related Card / 4",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c72136eea0",
+          "name": "Product Detail / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c73fc82254",
+        "fa1f2b51-26b4-8045-8008-88c73fc87c52",
+        "fa1f2b51-26b4-8045-8008-88c73fc87c53",
+        "965ddbf9-473b-8030-8008-d8159a175d51",
+        "fa1f2b51-26b4-8045-8008-88c73fc87c51",
+        "fa1f2b51-26b4-8045-8008-88c73fc87c54"
+      ],
+      "w": 166,
+      "h": 324,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c73fc87c52",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c73fc87c53",
+      "glyphId": "965ddbf9-473b-8030-8008-d8159a175d51",
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9e3979fa",
+      "name": "Instance / Wishlist Product 1",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9d4ea98f",
+          "name": "Frame / Wishlist / Desktop"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9de9ff6c",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-885e9e398ac9",
+      "buttonId": "9362b142-eccc-80db-8008-885e9e398aca",
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885e9e3979fa",
+        "9362b142-eccc-80db-8008-885e9e398ac9",
+        "9362b142-eccc-80db-8008-885e9e398aca"
+      ],
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9e463146",
+      "name": "Instance / Wishlist Product 2",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9d4ea98f",
+          "name": "Frame / Wishlist / Desktop"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9de9ff6c",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-885e9e463153",
+      "buttonId": "9362b142-eccc-80db-8008-885e9e463154",
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885e9e463146",
+        "9362b142-eccc-80db-8008-885e9e463153",
+        "9362b142-eccc-80db-8008-885e9e463154"
+      ],
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9e51d5fc",
+      "name": "Instance / Wishlist Product 3",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9d4ea98f",
+          "name": "Frame / Wishlist / Desktop"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9de9ff6c",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-885e9e51d609",
+      "buttonId": "9362b142-eccc-80db-8008-885e9e51d60a",
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885e9e51d5fc",
+        "9362b142-eccc-80db-8008-885e9e51d609",
+        "9362b142-eccc-80db-8008-885e9e51d60a"
+      ],
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9e5c6a1e",
+      "name": "Instance / Wishlist Product 4",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9d4ea98f",
+          "name": "Frame / Wishlist / Desktop"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9de9ff6c",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "priceId": "9362b142-eccc-80db-8008-885e9e5cb3f3",
+      "buttonId": "9362b142-eccc-80db-8008-885e9e5cb3f4",
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885e9e5c6a1e",
+        "9362b142-eccc-80db-8008-885e9e5cb3f3",
+        "9362b142-eccc-80db-8008-885e9e5cb3f4"
+      ],
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9eb58f66",
+      "name": "Instance / M Wishlist 1",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9e9c002d",
+          "name": "Frame / Wishlist / Mobile"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9ea9ddef",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "priceId": "9362b142-eccc-80db-8008-885e9eb5ee4c",
+      "buttonId": "9362b142-eccc-80db-8008-885e9eb5ee4d",
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885e9eb58f66",
+        "9362b142-eccc-80db-8008-885e9eb5ee4c",
+        "9362b142-eccc-80db-8008-885e9eb5ee4d",
+        "9362b142-eccc-80db-8008-885e9eb5ee4e"
+      ],
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9ebf685b",
+      "name": "Instance / M Wishlist 2",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9e9c002d",
+          "name": "Frame / Wishlist / Mobile"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9ea9ddef",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "priceId": "9362b142-eccc-80db-8008-885e9ebf6863",
+      "buttonId": "9362b142-eccc-80db-8008-885e9ebf6864",
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885e9ebf685b",
+        "9362b142-eccc-80db-8008-885e9ebf6863",
+        "9362b142-eccc-80db-8008-885e9ebf6864",
+        "9362b142-eccc-80db-8008-885e9ebf6865"
+      ],
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9ec91b7c",
+      "name": "Instance / M Wishlist 3",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9e9c002d",
+          "name": "Frame / Wishlist / Mobile"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9ea9ddef",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "priceId": "9362b142-eccc-80db-8008-885e9ec91b84",
+      "buttonId": "9362b142-eccc-80db-8008-885e9ec91b85",
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885e9ec91b7c",
+        "9362b142-eccc-80db-8008-885e9ec91b84",
+        "9362b142-eccc-80db-8008-885e9ec91b85",
+        "9362b142-eccc-80db-8008-885e9ec91b86"
+      ],
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9ed75f73",
+      "name": "Instance / M Wishlist 4",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9e9c002d",
+          "name": "Frame / Wishlist / Mobile"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9ea9ddef",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "priceId": "9362b142-eccc-80db-8008-885e9ed7a160",
+      "buttonId": "9362b142-eccc-80db-8008-885e9ed7a161",
+      "changedShapeIds": [
+        "9362b142-eccc-80db-8008-885e9ed75f73",
+        "9362b142-eccc-80db-8008-885e9ed7a160",
+        "9362b142-eccc-80db-8008-885e9ed7a161",
+        "9362b142-eccc-80db-8008-885e9ed7a162"
+      ],
+      "description": "Right price / left square; centered existing glyph; anchored horizontal/bottom constraints; original card dimensions retained."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c6dc2be00d",
+      "name": "Related Product 0",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6bd6c1fc5",
+          "name": "Product Detail / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 306,
+      "h": 340,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c6ded591bc",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c6df629a41",
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c6dc2be00d",
+        "fa1f2b51-26b4-8045-8008-88c6ded591bc",
+        "fa1f2b51-26b4-8045-8008-88c6df629a41",
+        "fa1f2b51-26b4-8045-8008-88c6dfa2f4fe"
+      ],
+      "description": "Corrected reversed desktop related-card row to right price / left 44px square, with centered existing glyph and responsive anchors."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c6e05d02e6",
+      "name": "Related Product 1",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6bd6c1fc5",
+          "name": "Product Detail / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 306,
+      "h": 340,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c6e2085037",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c6e24f7e14",
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c6e05d02e6",
+        "fa1f2b51-26b4-8045-8008-88c6e2085037",
+        "fa1f2b51-26b4-8045-8008-88c6e24f7e14",
+        "fa1f2b51-26b4-8045-8008-88c6e26b99ee"
+      ],
+      "description": "Corrected reversed desktop related-card row to right price / left 44px square, with centered existing glyph and responsive anchors."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c6e2beaf5f",
+      "name": "Related Product 2",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6bd6c1fc5",
+          "name": "Product Detail / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 306,
+      "h": 340,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c6e4603812",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c6e4ad5859",
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c6e2beaf5f",
+        "fa1f2b51-26b4-8045-8008-88c6e4603812",
+        "fa1f2b51-26b4-8045-8008-88c6e4ad5859",
+        "fa1f2b51-26b4-8045-8008-88c6e4d066a8"
+      ],
+      "description": "Corrected reversed desktop related-card row to right price / left 44px square, with centered existing glyph and responsive anchors."
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c6e52451e0",
+      "name": "Related Product 3",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6bd6c1fc5",
+          "name": "Product Detail / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 306,
+      "h": 340,
+      "priceId": "fa1f2b51-26b4-8045-8008-88c6e69f1b5e",
+      "buttonId": "fa1f2b51-26b4-8045-8008-88c6e6e9c79b",
+      "changedShapeIds": [
+        "fa1f2b51-26b4-8045-8008-88c6e52451e0",
+        "fa1f2b51-26b4-8045-8008-88c6e69f1b5e",
+        "fa1f2b51-26b4-8045-8008-88c6e6e9c79b",
+        "fa1f2b51-26b4-8045-8008-88c6e71f2e2c"
+      ],
+      "description": "Corrected reversed desktop related-card row to right price / left 44px square, with centered existing glyph and responsive anchors."
+    }
+  ],
+  "before": [
+    {
+      "page": "9362b142-eccc-80db-8008-8855021e207c",
+      "pageName": "Vendora · 02 Components",
+      "id": "9362b142-eccc-80db-8008-88563d4c2805",
+      "name": "Vendora / Product Card / Desktop / Default",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88563be8ad60",
+          "name": "Page / Components"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88563d46faf7",
+          "name": "Section / Commerce"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "copy": false,
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88563db5961c",
+        "x": 72,
+        "y": 320,
+        "w": 152,
+        "h": 30,
+        "text": "۱٬۸۹۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88563dbe44ef",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855021e207c",
+      "pageName": "Vendora · 02 Components",
+      "id": "9362b142-eccc-80db-8008-88563dc3e9dd",
+      "name": "Product Card / Hover",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88563be8ad60",
+          "name": "Page / Components"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88563d46faf7",
+          "name": "Section / Commerce"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88563dc9e16f",
+          "name": "Vendora / Product Card / Desktop / Hover"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "copy": true,
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88563dc46306",
+        "x": 72,
+        "y": 320,
+        "w": 152,
+        "h": 30,
+        "text": "۱٬۸۹۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88563dc46307",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855021e207c",
+      "pageName": "Vendora · 02 Components",
+      "id": "9362b142-eccc-80db-8008-88563dcb8ad6",
+      "name": "Vendora / Product Card / Mobile / Default",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88563be8ad60",
+          "name": "Page / Components"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88563d46faf7",
+          "name": "Section / Commerce"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "copy": false,
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88563df43588",
+        "x": 64,
+        "y": 229,
+        "w": 90,
+        "h": 28,
+        "text": "۹۸۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88563dfb269c",
+        "x": 12,
+        "y": 226,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855021e207c",
+      "pageName": "Vendora · 02 Components",
+      "id": "9362b142-eccc-80db-8008-8856ae9c92e9",
+      "name": "Vendora / Product Card / Tablet / Default",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88563be8ad60",
+          "name": "Page / Components"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88563d46faf7",
+          "name": "Section / Commerce"
+        }
+      ],
+      "w": 216,
+      "h": 340,
+      "copy": false,
+      "price": {
+        "id": "9362b142-eccc-80db-8008-8856af5d6eec",
+        "x": 64,
+        "y": 284,
+        "w": 138,
+        "h": 30,
+        "text": "۱٬۲۹۰٬۰۰۰ تومان",
+        "font": "15"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-8856af68e6c6",
+        "x": 14,
+        "y": 282,
+        "w": 40,
+        "h": 40,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885710904b67",
+      "name": "Instance / کوله‌پشتی آرتین",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857108929e2",
+          "name": "Layout / Product Row / کوله‌پشتی آرتین"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563d4c2805",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885710904b74",
+        "x": 72,
+        "y": 320,
+        "w": 152,
+        "h": 30,
+        "text": "۱٬۸۹۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885710904b75",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885710a082d0",
+      "name": "Instance / کیف دستی مهتاب",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857108929e2",
+          "name": "Layout / Product Row / کوله‌پشتی آرتین"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563d4c2805",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885710a082dd",
+        "x": 72,
+        "y": 320,
+        "w": 152,
+        "h": 30,
+        "text": "۱٬۲۹۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885710a082de",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885710b09a43",
+      "name": "Instance / کیف دوشی نوا",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857108929e2",
+          "name": "Layout / Product Row / کوله‌پشتی آرتین"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563d4c2805",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885710b09a50",
+        "x": 72,
+        "y": 320,
+        "w": 152,
+        "h": 30,
+        "text": "۹۸۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885710b09a51",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885710c0e345",
+      "name": "Instance / کوله دانشجویی رها",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857108929e2",
+          "name": "Layout / Product Row / کوله‌پشتی آرتین"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563d4c2805",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885710c0e352",
+        "x": 72,
+        "y": 320,
+        "w": 152,
+        "h": 30,
+        "text": "۱٬۴۹۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885710c0e353",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885710d0d77b",
+      "name": "Instance / کیف لپ‌تاپ پارسا",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857108929e2",
+          "name": "Layout / Product Row / کوله‌پشتی آرتین"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563d4c2805",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885710d139c2",
+        "x": 72,
+        "y": 320,
+        "w": 152,
+        "h": 30,
+        "text": "ناموجود",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885710d139c3",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88571178ff6d",
+      "name": "Instance / کیف کمری روژان",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857116d73c2",
+          "name": "Layout / Product Row / کیف کمری روژان"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563d4c2805",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88571178ff7a",
+        "x": 72,
+        "y": 320,
+        "w": 152,
+        "h": 30,
+        "text": "۷۹۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88571178ff7b",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-8857118c0567",
+      "name": "Instance / کوله مینی باران",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857116d73c2",
+          "name": "Layout / Product Row / کیف کمری روژان"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563d4c2805",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-8857118c0574",
+        "x": 72,
+        "y": 320,
+        "w": 152,
+        "h": 30,
+        "text": "۱٬۱۲۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-8857118c0575",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885711a1f03c",
+      "name": "Instance / کیف خرید ترمه",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857116d73c2",
+          "name": "Layout / Product Row / کیف کمری روژان"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563d4c2805",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885711a21543",
+        "x": 72,
+        "y": 320,
+        "w": 152,
+        "h": 30,
+        "text": "۴۹۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885711a21544",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885711bfdac0",
+      "name": "Instance / کیف ورزشی پرواز",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857116d73c2",
+          "name": "Layout / Product Row / کیف کمری روژان"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563d4c2805",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885711bfdacd",
+        "x": 72,
+        "y": 320,
+        "w": 152,
+        "h": 30,
+        "text": "۱٬۶۸۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885711bfdace",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885711cf44d4",
+      "name": "Instance / کیف کودک رنگین",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88570f659f3c",
+          "name": "Frame / Home / Desktop / 1440"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857116d73c2",
+          "name": "Layout / Product Row / کیف کمری روژان"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563d4c2805",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885711cf9a7e",
+        "x": 72,
+        "y": 320,
+        "w": 152,
+        "h": 30,
+        "text": "۸۹۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885711cf9a7f",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88575482750c",
+      "name": "Instance / کوله آرتین",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885751eeebc7",
+          "name": "Frame / Home / Tablet / 768"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857547525a2",
+          "name": "Layout / Product Row / کوله آرتین"
+        }
+      ],
+      "w": 216,
+      "h": 340,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-8856ae9c92e9",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885754827517",
+        "x": 64,
+        "y": 284,
+        "w": 138,
+        "h": 30,
+        "text": "۱٬۸۹۰٬۰۰۰ تومان",
+        "font": "15"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885754827518",
+        "x": 14,
+        "y": 282,
+        "w": 40,
+        "h": 40,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88575493d577",
+      "name": "Instance / کیف مهتاب",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885751eeebc7",
+          "name": "Frame / Home / Tablet / 768"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857547525a2",
+          "name": "Layout / Product Row / کوله آرتین"
+        }
+      ],
+      "w": 216,
+      "h": 340,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-8856ae9c92e9",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88575493d582",
+        "x": 64,
+        "y": 284,
+        "w": 138,
+        "h": 30,
+        "text": "۱٬۲۹۰٬۰۰۰ تومان",
+        "font": "15"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88575493d583",
+        "x": 14,
+        "y": 282,
+        "w": 40,
+        "h": 40,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885754a4f989",
+      "name": "Instance / دوشی نوا",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885751eeebc7",
+          "name": "Frame / Home / Tablet / 768"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-8857547525a2",
+          "name": "Layout / Product Row / کوله آرتین"
+        }
+      ],
+      "w": 216,
+      "h": 340,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-8856ae9c92e9",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885754a5185c",
+        "x": 64,
+        "y": 284,
+        "w": 138,
+        "h": 30,
+        "text": "۹۸۰٬۰۰۰ تومان",
+        "font": "15"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885754a5185d",
+        "x": 14,
+        "y": 282,
+        "w": 40,
+        "h": 40,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-885755eb6867",
+      "name": "Instance / کمری روژان",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885751eeebc7",
+          "name": "Frame / Home / Tablet / 768"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885755d869ff",
+          "name": "Layout / Product Row / کمری روژان"
+        }
+      ],
+      "w": 216,
+      "h": 340,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-8856ae9c92e9",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885755ebbea7",
+        "x": 64,
+        "y": 284,
+        "w": 138,
+        "h": 30,
+        "text": "۷۹۰٬۰۰۰ تومان",
+        "font": "15"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885755ebbea8",
+        "x": 14,
+        "y": 282,
+        "w": 40,
+        "h": 40,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88575604b06a",
+      "name": "Instance / مینی باران",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885751eeebc7",
+          "name": "Frame / Home / Tablet / 768"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885755d869ff",
+          "name": "Layout / Product Row / کمری روژان"
+        }
+      ],
+      "w": 216,
+      "h": 340,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-8856ae9c92e9",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88575604b075",
+        "x": 64,
+        "y": 284,
+        "w": 138,
+        "h": 30,
+        "text": "۱٬۱۲۰٬۰۰۰ تومان",
+        "font": "15"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88575604b076",
+        "x": 14,
+        "y": 282,
+        "w": 40,
+        "h": 40,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-8857561a8c73",
+      "name": "Instance / ورزشی پرواز",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885751eeebc7",
+          "name": "Frame / Home / Tablet / 768"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885755d869ff",
+          "name": "Layout / Product Row / کمری روژان"
+        }
+      ],
+      "w": 216,
+      "h": 340,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-8856ae9c92e9",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-8857561a8c7e",
+        "x": 64,
+        "y": 284,
+        "w": 138,
+        "h": 30,
+        "text": "۱٬۶۸۰٬۰۰۰ تومان",
+        "font": "15"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-8857561a8c7f",
+        "x": 14,
+        "y": 282,
+        "w": 40,
+        "h": 40,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578b4d29bd",
+      "name": "Instance / کوله آرتین",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578b3f68d1",
+          "name": "Layout / Product Grid / کوله آرتین"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563dcb8ad6",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88578b4d5a91",
+        "x": 64,
+        "y": 229,
+        "w": 90,
+        "h": 28,
+        "text": "۱٬۸۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88578b4d5a92",
+        "x": 12,
+        "y": 226,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578b5b1f93",
+      "name": "Instance / کیف مهتاب",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578b3f68d1",
+          "name": "Layout / Product Grid / کوله آرتین"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563dcb8ad6",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88578b5b49c2",
+        "x": 64,
+        "y": 229,
+        "w": 90,
+        "h": 28,
+        "text": "۱٬۲۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88578b5b49c3",
+        "x": 12,
+        "y": 226,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578b6a6878",
+      "name": "Instance / دوشی نوا",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578b3f68d1",
+          "name": "Layout / Product Grid / کوله آرتین"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563dcb8ad6",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88578b6abce1",
+        "x": 64,
+        "y": 229,
+        "w": 90,
+        "h": 28,
+        "text": "۹۸۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88578b6abce2",
+        "x": 12,
+        "y": 226,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578b76bf51",
+      "name": "Instance / کیف پارسا",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578b3f68d1",
+          "name": "Layout / Product Grid / کوله آرتین"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563dcb8ad6",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88578b76bf59",
+        "x": 64,
+        "y": 229,
+        "w": 90,
+        "h": 28,
+        "text": "ناموجود",
+        "font": "14"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88578b76bf5a",
+        "x": 12,
+        "y": 226,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578c89e21b",
+      "name": "Instance / کمری روژان",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578c7ac6b6",
+          "name": "Layout / Product Grid / کمری روژان"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563dcb8ad6",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88578c89e223",
+        "x": 64,
+        "y": 229,
+        "w": 90,
+        "h": 28,
+        "text": "۷۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88578c89e224",
+        "x": 12,
+        "y": 226,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578c982844",
+      "name": "Instance / مینی باران",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578c7ac6b6",
+          "name": "Layout / Product Grid / کمری روژان"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563dcb8ad6",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88578c98284c",
+        "x": 64,
+        "y": 229,
+        "w": 90,
+        "h": 28,
+        "text": "۱٬۱۲۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88578c98284d",
+        "x": 12,
+        "y": 226,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578ca7bb95",
+      "name": "Instance / خرید ترمه",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578c7ac6b6",
+          "name": "Layout / Product Grid / کمری روژان"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563dcb8ad6",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88578ca7bb9d",
+        "x": 64,
+        "y": 229,
+        "w": 90,
+        "h": 28,
+        "text": "۴۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88578ca7bb9e",
+        "x": 12,
+        "y": 226,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-8855022a12f8",
+      "pageName": "Vendora · 03 Home Responsive",
+      "id": "9362b142-eccc-80db-8008-88578cba58f5",
+      "name": "Instance / ورزشی پرواز",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-88578963497f",
+          "name": "Frame / Home / Mobile / 390"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-88578c7ac6b6",
+          "name": "Layout / Product Grid / کمری روژان"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "copy": true,
+      "ref": "9362b142-eccc-80db-8008-88563dcb8ad6",
+      "price": {
+        "id": "9362b142-eccc-80db-8008-88578cba8813",
+        "x": 64,
+        "y": 229,
+        "w": 90,
+        "h": 28,
+        "text": "۱٬۶۸۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-88578cba8814",
+        "x": 12,
+        "y": 226,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      }
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "name": "Vendora / Catalog / Product Card / Code Aligned / Desktop",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c49363b539",
+          "name": "Components / Commerce Inventory / Code Aligned V3"
+        }
+      ],
+      "w": 318,
+      "h": 409.9999999999999,
+      "copy": false,
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c4967634f7",
+        "x": 126,
+        "y": 360,
+        "w": 176,
+        "h": 32,
+        "text": "۱٬۵۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c496a910fb",
+        "x": 16,
+        "y": 350,
+        "w": 44,
+        "h": 44,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c496417c64"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "name": "Vendora / Catalog / Product Card / Code Aligned / Mobile",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c49363b539",
+          "name": "Components / Commerce Inventory / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": false,
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c49adb1f4d",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۱٬۵۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c49b16989d",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c49aa2ed09"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ea994bbf",
+      "name": "Product Card / 1",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 318,
+      "h": 409.9999999999999,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ea99e777",
+        "x": 126,
+        "y": 360,
+        "w": 176,
+        "h": 32,
+        "text": "۱٬۵۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ea99e778",
+        "x": 16,
+        "y": 350,
+        "w": 44,
+        "h": 44,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c5ea99e776"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5eaee5d05",
+      "name": "Product Card / 2",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 318,
+      "h": 409.9999999999999,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5eaef1046",
+        "x": 126,
+        "y": 360,
+        "w": 176,
+        "h": 32,
+        "text": "۹۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5eaef53ba",
+        "x": 16,
+        "y": 350,
+        "w": 44,
+        "h": 44,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c5eaef1045"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5eb6b75e9",
+      "name": "Product Card / 3",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 318,
+      "h": 409.9999999999999,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5eb6b8f8e",
+        "x": 126,
+        "y": 360,
+        "w": 176,
+        "h": 32,
+        "text": "۱٬۳۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5eb6b8f8f",
+        "x": 16,
+        "y": 350,
+        "w": 44,
+        "h": 44,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c5eb6b8f8d"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ebe4da28",
+      "name": "Product Card / 4",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 318,
+      "h": 410,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ebe53f21",
+        "x": 126,
+        "y": 360,
+        "w": 176,
+        "h": 32,
+        "text": "۱٬۸۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ebe53f22",
+        "x": 16,
+        "y": 350,
+        "w": 44,
+        "h": 44,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c5ebe53f20"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ec5b2adb",
+      "name": "Product Card / 5",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 318,
+      "h": 410,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ec5b7860",
+        "x": 126,
+        "y": 360,
+        "w": 176,
+        "h": 32,
+        "text": "۲٬۳۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ec5b7861",
+        "x": 16,
+        "y": 350,
+        "w": 44,
+        "h": 44,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c5ec5b785f"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ecd08f5d",
+      "name": "Product Card / 6",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 318,
+      "h": 410,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ecd10356",
+        "x": 126,
+        "y": 360,
+        "w": 176,
+        "h": 32,
+        "text": "۱٬۰۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ecd10357",
+        "x": 16,
+        "y": 350,
+        "w": 44,
+        "h": 44,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c5ecd10355"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ed49418c",
+      "name": "Product Card / 7",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 318,
+      "h": 410,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ed49be75",
+        "x": 126,
+        "y": 360,
+        "w": 176,
+        "h": 32,
+        "text": "۱٬۲۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ed49cc58",
+        "x": 16,
+        "y": 350,
+        "w": 44,
+        "h": 44,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c5ed49be74"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5edbca2f6",
+      "name": "Product Card / 8",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 318,
+      "h": 410,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5edbcffa3",
+        "x": 126,
+        "y": 360,
+        "w": 176,
+        "h": 32,
+        "text": "۲٬۰۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5edbd0969",
+        "x": 16,
+        "y": 350,
+        "w": 44,
+        "h": 44,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c5edbcffa2"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ee5a1fb1",
+      "name": "Product Card / 9",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 318,
+      "h": 410,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ee5a482d",
+        "x": 126,
+        "y": 360,
+        "w": 176,
+        "h": 32,
+        "text": "۱٬۴۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ee5a482e",
+        "x": 16,
+        "y": 350,
+        "w": 44,
+        "h": 44,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c5ee5a482c"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5eea9f021",
+      "name": "Product Card / 10",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 318,
+      "h": 410,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5eeaa36a9",
+        "x": 126,
+        "y": 360,
+        "w": 176,
+        "h": 32,
+        "text": "۱٬۱۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5eeaa36aa",
+        "x": 16,
+        "y": 350,
+        "w": 44,
+        "h": 44,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c5eeaa36a8"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5eef510a6",
+      "name": "Product Card / 11",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 318,
+      "h": 410,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5eef5563e",
+        "x": 126,
+        "y": 360,
+        "w": 176,
+        "h": 32,
+        "text": "۱٬۷۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5eef5563f",
+        "x": 16,
+        "y": 350,
+        "w": 44,
+        "h": 44,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c5eef5563d"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c5ef3a88ec",
+      "name": "Product Card / 12",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c5e4db0807",
+          "name": "Shop / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 318,
+      "h": 410,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4940c5bb3",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ef3ac072",
+        "x": 126,
+        "y": 360,
+        "w": 176,
+        "h": 32,
+        "text": "۲٬۲۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c5ef3ac073",
+        "x": 16,
+        "y": 350,
+        "w": 44,
+        "h": 44,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c5ef3ac071"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c668791a0f",
+      "name": "Product Card / 1",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c668799897",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۱٬۵۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c668799898",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c668799896"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c668bbd0a4",
+      "name": "Product Card / 2",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c668bc0e55",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۹۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c668bc0e56",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c668bc0e54"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66907f605",
+      "name": "Product Card / 3",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c669083222",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۱٬۳۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c669083223",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c669083221"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66956ecf4",
+      "name": "Product Card / 4",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c669572e5d",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۱٬۸۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c669572e5e",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c669572e5c"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c669ac1411",
+      "name": "Product Card / 5",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c669ac5d27",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۲٬۳۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c669ac5d28",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c669ac5d26"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c669f359e4",
+      "name": "Product Card / 6",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c669f3c804",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۱٬۰۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c669f3c805",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c669f3c803"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66a476e3d",
+      "name": "Product Card / 7",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c66a47b531",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۱٬۲۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c66a47b532",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c66a47b530"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66ae9a435",
+      "name": "Product Card / 8",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c66ae9c129",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۲٬۰۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c66ae9c12a",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c66ae9c128"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66b6e47ae",
+      "name": "Product Card / 9",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c66b6efe82",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۱٬۴۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c66b6efe83",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c66b6efe81"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66bf4888b",
+      "name": "Product Card / 10",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c66bf523f0",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۱٬۱۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c66bf523f1",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c66bf523ef"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66c819a57",
+      "name": "Product Card / 11",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c66c8211af",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۱٬۷۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c66c8211b0",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c66c8211ae"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c66d186c08",
+      "name": "Product Card / 12",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6627ba992",
+          "name": "Shop / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c66d1883cd",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۲٬۲۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c66d1883ce",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c66d1883cc"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c73eaf009e",
+      "name": "Related Card / 1",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c72136eea0",
+          "name": "Product Detail / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c73eaf6a12",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۹۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c73eaf6a13",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c73eaf6a11"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c73f0cf3fc",
+      "name": "Related Card / 2",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c72136eea0",
+          "name": "Product Detail / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c73f0d497f",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۱٬۳۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c73f0d4980",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c73f0d497e"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c73f64e85a",
+      "name": "Related Card / 3",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c72136eea0",
+          "name": "Product Detail / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c73f654754",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۱٬۸۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c73f654755",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c73f654753"
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c73fc82254",
+      "name": "Related Card / 4",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c72136eea0",
+          "name": "Product Detail / Mobile / 390 / Code Aligned V3"
+        }
+      ],
+      "w": 166,
+      "h": 324,
+      "copy": true,
+      "ref": "fa1f2b51-26b4-8045-8008-88c4971510e0",
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c73fc87c52",
+        "x": 64,
+        "y": 276,
+        "w": 92,
+        "h": 28,
+        "text": "۲٬۳۹۰٬۰۰۰",
+        "font": "11"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c73fc87c53",
+        "x": 10,
+        "y": 270,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      },
+      "old": "fa1f2b51-26b4-8045-8008-88c73fc87c51"
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9e3979fa",
+      "name": "Instance / Wishlist Product 1",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9d4ea98f",
+          "name": "Frame / Wishlist / Desktop"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9de9ff6c",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885e9e398ac9",
+        "x": 72,
+        "y": 325,
+        "w": 152,
+        "h": 30,
+        "text": "۱٬۸۹۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885e9e398aca",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9e463146",
+      "name": "Instance / Wishlist Product 2",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9d4ea98f",
+          "name": "Frame / Wishlist / Desktop"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9de9ff6c",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885e9e463153",
+        "x": 72,
+        "y": 325,
+        "w": 152,
+        "h": 30,
+        "text": "۹۸۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885e9e463154",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9e51d5fc",
+      "name": "Instance / Wishlist Product 3",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9d4ea98f",
+          "name": "Frame / Wishlist / Desktop"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9de9ff6c",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885e9e51d609",
+        "x": 72,
+        "y": 325,
+        "w": 152,
+        "h": 30,
+        "text": "۲٬۴۵۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885e9e51d60a",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9e5c6a1e",
+      "name": "Instance / Wishlist Product 4",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9d4ea98f",
+          "name": "Frame / Wishlist / Desktop"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9de9ff6c",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 240,
+      "h": 386,
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885e9e5cb3f3",
+        "x": 72,
+        "y": 325,
+        "w": 152,
+        "h": 30,
+        "text": "۲٬۱۸۰٬۰۰۰ تومان",
+        "font": "16"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885e9e5cb3f4",
+        "x": 16,
+        "y": 318,
+        "w": 44,
+        "h": 44,
+        "type": "rectangle"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9eb58f66",
+      "name": "Instance / M Wishlist 1",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9e9c002d",
+          "name": "Frame / Wishlist / Mobile"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9ea9ddef",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885e9eb5ee4c",
+        "x": 64,
+        "y": 229,
+        "w": 90,
+        "h": 28,
+        "text": "۱٬۸۹۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885e9eb5ee4d",
+        "x": 12,
+        "y": 226,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9ebf685b",
+      "name": "Instance / M Wishlist 2",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9e9c002d",
+          "name": "Frame / Wishlist / Mobile"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9ea9ddef",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885e9ebf6863",
+        "x": 64,
+        "y": 229,
+        "w": 90,
+        "h": 28,
+        "text": "۹۸۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885e9ebf6864",
+        "x": 12,
+        "y": 226,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9ec91b7c",
+      "name": "Instance / M Wishlist 3",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9e9c002d",
+          "name": "Frame / Wishlist / Mobile"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9ea9ddef",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885e9ec91b84",
+        "x": 64,
+        "y": 229,
+        "w": 90,
+        "h": 28,
+        "text": "۲٬۴۵۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885e9ec91b85",
+        "x": 12,
+        "y": 226,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      }
+    },
+    {
+      "page": "9362b142-eccc-80db-8008-885a18a86f53",
+      "pageName": "Vendora · 09 Wishlist & Transactions",
+      "id": "9362b142-eccc-80db-8008-885e9ed75f73",
+      "name": "Instance / M Wishlist 4",
+      "anc": [
+        {
+          "id": "9362b142-eccc-80db-8008-885e9e9c002d",
+          "name": "Frame / Wishlist / Mobile"
+        },
+        {
+          "id": "9362b142-eccc-80db-8008-885e9ea9ddef",
+          "name": "Layout / Account Content"
+        }
+      ],
+      "w": 166,
+      "h": 286,
+      "price": {
+        "id": "9362b142-eccc-80db-8008-885e9ed7a160",
+        "x": 64,
+        "y": 229,
+        "w": 90,
+        "h": 28,
+        "text": "۲٬۱۸۰٬۰۰۰ تومان",
+        "font": "14"
+      },
+      "add": {
+        "id": "9362b142-eccc-80db-8008-885e9ed7a161",
+        "x": 12,
+        "y": 226,
+        "w": 40,
+        "h": 40,
+        "type": "board"
+      }
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c6dc2be00d",
+      "name": "Related Product 0",
+      "anc": [
+        {
+          "id": "fa1f2b51-26b4-8045-8008-88c6bd6c1fc5",
+          "name": "Product Detail / Desktop / 1440 / Code Aligned V3"
+        }
+      ],
+      "w": 306,
+      "h": 340,
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c6ded591bc",
+        "x": 14,
+        "y": 278,
+        "w": 220,
+        "h": 34,
+        "text": "۹۹۰٬۰۰۰ تومان",
+        "font": "13"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c6df629a41",
+        "x": 250,
+        "y": 276,
+        "w": 42,
+        "h": 42,
+        "type": "board"
+      }
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c6e05d02e6",
+      "name": "Related Product 1",
+      "w": 306,
+      "h": 340,
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c6e2085037",
+        "x": 14,
+        "y": 278,
+        "w": 220,
+        "h": 34,
+        "text": "۱٬۳۹۰٬۰۰۰ تومان"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c6e24f7e14",
+        "x": 250,
+        "y": 276,
+        "w": 42,
+        "h": 42
+      }
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c6e2beaf5f",
+      "name": "Related Product 2",
+      "w": 306,
+      "h": 340,
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c6e4603812",
+        "x": 14,
+        "y": 278,
+        "w": 220,
+        "h": 34,
+        "text": "۱٬۸۹۰٬۰۰۰ تومان"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c6e4ad5859",
+        "x": 250,
+        "y": 276,
+        "w": 42,
+        "h": 42
+      }
+    },
+    {
+      "page": "086d9f39-42be-80a2-8008-88b39aa8436a",
+      "pageName": "Vendora · 11 Shop & Product",
+      "id": "fa1f2b51-26b4-8045-8008-88c6e52451e0",
+      "name": "Related Product 3",
+      "w": 306,
+      "h": 340,
+      "price": {
+        "id": "fa1f2b51-26b4-8045-8008-88c6e69f1b5e",
+        "x": 14,
+        "y": 278,
+        "w": 220,
+        "h": 34,
+        "text": "۲٬۳۹۰٬۰۰۰ تومان"
+      },
+      "add": {
+        "id": "fa1f2b51-26b4-8045-8008-88c6e6e9c79b",
+        "x": 250,
+        "y": 276,
+        "w": 42,
+        "h": 42
+      }
+    }
+  ],
+  "behaviorContract": {
+    "page": "033beef8-1062-80b8-8008-8adbf44d396d",
+    "id": "033beef8-1062-80b8-8008-8adbf4993ee9",
+    "changedShapeIds": [
+      "033beef8-1062-80b8-8008-8adbf50ab51b",
+      "033beef8-1062-80b8-8008-8adbf53fd21f"
+    ],
+    "description": "Quantity badge on the square; click opens the existing stepper."
+  },
+  "validation": {
+    "count": 70,
+    "violations": [],
+    "archives": [
+      {
+        "id": "086d9f39-42be-80a2-8008-88b3d50a58e2",
+        "unchanged": true
+      },
+      {
+        "id": "086d9f39-42be-80a2-8008-88b3fc96fa9b",
+        "unchanged": true
+      },
+      {
+        "id": "086d9f39-42be-80a2-8008-88b42655d802",
+        "unchanged": true
+      },
+      {
+        "id": "086d9f39-42be-80a2-8008-88b444cdbd36",
+        "unchanged": true
+      },
+      {
+        "id": "086d9f39-42be-80a2-8008-88b45687df26",
+        "unchanged": true
+      }
+    ]
+  },
+  "discardedImports": {
+    "page": "9362b142-eccc-80db-8008-8855021e207c",
+    "container": "728167c1-1e92-8047-8008-c0addb0a0238",
+    "ids": [
+      "d7d165ce-1e78-801b-8008-d81da7f170b4",
+      "d7d165ce-1e78-801b-8008-d81d4c1af7e7"
+    ],
+    "hidden": true
+  }
+}
