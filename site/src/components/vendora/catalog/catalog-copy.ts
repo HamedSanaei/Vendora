@@ -48,6 +48,13 @@ const fa = {
   related: "محصولات مشابه",
   viewAll: "مشاهده همه",
   productNotFound: "محصول موردنظر پیدا نشد.",
+  gallery: "گالری تصاویر محصول",
+  openGallery: "نمایش بزرگ تصاویر",
+  closeGallery: "بستن گالری",
+  nextImage: "تصویر بعدی",
+  previousImage: "تصویر قبلی",
+  imageUnavailable: "این تصویر بارگذاری نشد؛ تصویر دیگری را انتخاب کنید.",
+  imageLoading: "در حال بارگذاری تصویر…",
 };
 
 const en: typeof fa = {
@@ -98,6 +105,13 @@ const en: typeof fa = {
   related: "Related products",
   viewAll: "View all",
   productNotFound: "The requested product was not found.",
+  gallery: "Product image gallery",
+  openGallery: "Enlarge product images",
+  closeGallery: "Close gallery",
+  nextImage: "Next image",
+  previousImage: "Previous image",
+  imageUnavailable: "This image could not load. Please select another image.",
+  imageLoading: "Loading image…",
 };
 
 /** Returns localized copy shared by catalog and product-detail screens. */

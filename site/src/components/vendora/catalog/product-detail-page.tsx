@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import Header from "@/layout/header";
 import Footer from "@/layout/footer";
-import { BagArtwork } from "@/components/vendora/product/bag-artwork";
 import { CartIcon, CheckIcon, ChevronIcon, HeartIcon, QualityIcon, ReturnIcon, SupportIcon, TruckIcon } from "@/components/vendora/icons";
 import { QuantityStepper } from "@/components/vendora/cart/cart-components";
 import { formatNumber, formatPrice } from "@/lib/vendora/format";
@@ -24,7 +22,8 @@ import { ProductDiscussion } from "./product-discussion";
 import { discussionCopy } from "./discussion-copy";
 import { getCatalogCopy } from "./catalog-copy";
 import type { CatalogProductModel, StoreProduct } from "./catalog-types";
-import { isVendoraProductImage, toCatalogProduct } from "./catalog-types";
+import { toCatalogProduct } from "./catalog-types";
+import { ProductGallery } from "./product-gallery";
 
 /** Full product page with reusable gallery, information, purchase and specification sections. */
 export function ProductDetailPage({ id, initialProduct }: { id: string; initialProduct?: StoreProduct }) {
@@ -51,7 +50,7 @@ export function ProductDetailPage({ id, initialProduct }: { id: string; initialP
       <main className="vd-container pb-4 pt-5 md:pt-8 lg:pt-10">
         <ProductBreadcrumb locale={locale} title={product.title} categories={product.breadcrumbs} />
         <section className="vd-product-hero mt-5 grid gap-5 lg:mt-7 lg:grid-cols-[minmax(0,1.12fr)_minmax(300px,.86fr)_320px] lg:items-start xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,.9fr)_340px] xl:gap-7">
-          <ProductGallery product={product} locale={locale} favorited={favorited} onFavorite={() => dispatch(add_to_wishlist(product.source))} />
+          <ProductGallery key={product.id} product={product} locale={locale} favorited={favorited} onFavorite={() => dispatch(add_to_wishlist(product.source))} />
           <ProductInformation product={product} locale={locale} />
           <PurchasePanel product={product} locale={locale} quantity={productCartItem?.orderQuantity ?? 0} onIncrement={() => dispatch(productCartItem ? quantityIncrement(product.source) : add_cart_product(product.source))} onDecrement={() => dispatch(quantityDecrement(product.source))} onAdd={() => dispatch(add_cart_product(product.source))} />
         </section>
@@ -96,26 +95,6 @@ function ProductPageShell({ children }: { children: React.ReactNode }) {
 function ProductBreadcrumb({ locale, title, categories }: { locale: Locale; title: string; categories: CatalogProductModel["breadcrumbs"] }) {
   const t = getCatalogCopy(locale);
   return <nav aria-label="breadcrumb" className="flex min-w-0 items-center gap-2 overflow-hidden text-xs text-vd-muted"><Link href={withLocalePath("/", locale)} className="vd-focus shrink-0 rounded-sm hover:text-jade">{t.home}</Link><ChevronIcon size={14} /><Link href={withLocalePath("/shop", locale)} className="vd-focus shrink-0 rounded-sm hover:text-jade">{t.products}</Link><ChevronIcon size={14} />{categories.map(category => <span key={category.id} className="contents"><Link href={withLocalePath(`/category/${encodeURIComponent(category.slug)}`, locale)} className="vd-focus shrink-0 rounded-sm hover:text-jade">{category.name}</Link><ChevronIcon size={14} /></span>)}<span className="truncate font-semibold text-ink">{title}</span></nav>;
-}
-
-/** Responsive media gallery with selectable thumbnails and the preserved wishlist action. */
-function ProductGallery({ product, locale, favorited, onFavorite }: { product: CatalogProductModel; locale: Locale; favorited: boolean; onFavorite: () => void }) {
-  const t = getCatalogCopy(locale);
-  const gallery = useMemo(() => {
-    const approvedImages = product.gallery.filter(isVendoraProductImage);
-    return approvedImages.length > 0 ? approvedImages : [""];
-  }, [product.gallery]);
-  const [activeImage, setActiveImage] = useState(gallery[0]);
-  useEffect(() => setActiveImage(gallery[0]), [gallery]);
-  return (
-    <div className="vd-product-hero__gallery min-w-0">
-      <div className="vd-product-hero__media relative aspect-[1.08/1] overflow-hidden rounded-[22px] border border-vd-line bg-surface-soft md:aspect-[1.18/1] lg:aspect-square">
-        <button type="button" onClick={onFavorite} aria-label={favorited ? t.removeFromWishlist : t.addToWishlist} aria-pressed={favorited} className={`vd-focus absolute start-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-vd-line shadow-sm ${favorited ? "bg-vd-danger-tint text-vd-danger" : "bg-white/95 text-ink hover:text-vd-danger"}`}><HeartIcon size={20} filled={favorited} /></button>
-        {activeImage ? <Image src={activeImage} alt={product.galleryAlts[product.gallery.indexOf(activeImage)] ?? product.title} fill priority unoptimized={activeImage.includes("/uploads/")} sizes="(max-width: 1023px) 92vw, 42vw" className="object-contain" /> : <div className="flex h-full items-center justify-center"><BagArtwork color="jade" className="h-[58%] w-auto" /></div>}
-      </div>
-      {gallery.length > 1 ? <div className="mt-3 flex gap-2 overflow-x-auto pb-1">{gallery.map((image, index) => <button key={image} type="button" onClick={() => setActiveImage(image)} aria-label={`${product.title} ${index + 1}`} className={`vd-focus relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-control border bg-surface-soft ${activeImage === image ? "border-jade ring-1 ring-jade" : "border-vd-line"}`}><Image src={image} alt="" fill unoptimized={image.includes("/uploads/")} sizes="72px" className="object-contain" /></button>)}</div> : null}
-    </div>
-  );
 }
 
 type ProductColorOption = { value: string; label: string; hex: string };
