@@ -42,18 +42,20 @@ export function useHeaderDropdowns(pathname: string) {
     anchor.current = element ?? triggers.current[id] ?? null;
     setActive(id);
   }, [cancelClose]);
+  /** Moves between mobile summaries while preserving the original bottom-navigation focus anchor. */
+  const switchSurface = useCallback((id: HeaderDropdownId) => { cancelClose(); setActive(id); }, [cancelClose]);
   /** Preserves click-to-toggle even when a keyboard focus event opened the surface first. */
   const toggle = useCallback((id: HeaderDropdownId, element: HTMLElement) => {
     if (active === id) close(); else open(id, element);
   }, [active, close, open]);
   /** Pointer-only delayed dismissal; focused content remains available to keyboard users. */
   const leave = useCallback((event?: ReactPointerEvent<HTMLElement>) => {
-    if (event && event.pointerType !== "mouse") return;
+    if (!desktop || (event && event.pointerType !== "mouse")) return;
     cancelClose();
     timer.current = setTimeout(() => {
       if (!active || !panels.current[active]?.contains(document.activeElement)) setActive(null);
     }, 220);
-  }, [active, cancelClose]);
+  }, [active, cancelClose, desktop]);
   /** Ignores emulated touch hover so mobile retains explicit tap behavior. */
   const enter = useCallback((id: HeaderDropdownId, event: ReactPointerEvent<HTMLElement>) => {
     if (event.pointerType === "mouse" && window.matchMedia("(min-width: 1280px)").matches) open(id);
@@ -95,7 +97,7 @@ export function useHeaderDropdowns(pathname: string) {
     /** Escape is shared by all three surfaces; an outside pointer may activate its own target. */
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") { event.preventDefault(); close(true); return; }
-      if (event.key === "Tab" && !desktop && panel) {
+      if (event.key === "Tab" && !desktop && panel?.getAttribute("aria-modal") === "true") {
         const actions = Array.from(panel.querySelectorAll<HTMLElement>(focusable)).filter(node => node.getClientRects().length > 0);
         const next = event.shiftKey && document.activeElement === actions[0] ? actions.at(-1)
           : !event.shiftKey && document.activeElement === actions.at(-1) ? actions[0] : undefined;
@@ -142,5 +144,5 @@ export function useHeaderDropdowns(pathname: string) {
       window.removeEventListener("scroll", anchorScrolledAway);
     };
   }, [active, close, desktop]);
-  return { active, desktop, registerTrigger, registerPanel, open, close, toggle, enter, leave, focus, blur, keyDown, cancelClose };
+  return { active, desktop, registerTrigger, registerPanel, open, switchSurface, close, toggle, enter, leave, focus, blur, keyDown, cancelClose };
 }

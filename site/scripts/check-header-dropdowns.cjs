@@ -10,6 +10,8 @@ const output = path.resolve(root, '../artifacts/header-dropdowns');
 const origin = 'http://127.0.0.1:3029';
 let rejectCatalog = false;
 let catalogDelay = 0;
+let rejectOrders = false;
+let orderRequests = 0;
 const logs = [];
 const products = [
   { id: 'header-qa-1', slug: 'header-qa-1', title: 'کوله‌پشتی شهری آرتین', productCode: 100, price: 1890000, stockQuantity: 3, categoryName: 'کیف شهری' },
@@ -31,7 +33,11 @@ const api = http.createServer(async (request, response) => {
     if (catalogDelay) await new Promise(resolve => setTimeout(resolve, catalogDelay));
     if (rejectCatalog) return response.writeHead(503).end(JSON.stringify({ message: 'Isolated catalog failure' }));
     result = products;
-  } else if (url.pathname === '/api/account/me') result = { id: 'header-qa-user', fullName: 'کاربر آزمایشی', email: 'header-qa@vendora.invalid' };
+  } else if (url.pathname === '/api/Orders/me') {
+    orderRequests++;
+    if (rejectOrders) return response.writeHead(503).end(JSON.stringify({ message: 'Isolated orders failure' }));
+    result = ['PendingPayment', 'Packed', 'Delivered', 'Delivered', 'Refunded', 'Cancelled'].map((status, i) => ({ id: `qa-order-${i}`, orderNumber: `QA-${i}`, status, items: [] }));
+  } else if (url.pathname === '/api/account/me') result = { id: 'header-qa-user', fullName: 'کاربر آزمایشی', email: 'header-qa@vendora.invalid', phoneNumber: '09150008877' };
   response.end(JSON.stringify(result));
 });
 
@@ -47,7 +53,7 @@ async function ready() {
 
 /** Seeds only an isolated browser context, preserving stale wishlist prices to test live catalog resolution. */
 async function contextFor(browser, width, signedIn = true, touch = false) {
-  const context = await browser.newContext({ viewport: { width, height: 1000 }, hasTouch: touch });
+  const context = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 1000 }, hasTouch: touch });
   await context.addInitScript(({ saved, signedIn }) => {
     localStorage.setItem('wishlist_items', JSON.stringify(saved));
     localStorage.setItem('cart_products', JSON.stringify([{ ...saved[1], orderQuantity: 2 }]));
@@ -94,6 +100,8 @@ async function desktopChecks(browser, locale) {
   assert.ok(await wishlistPanel.locator('article').first().locator('button:disabled').isVisible());
   const remove = () => wishlistPanel.locator('article').first().locator('button[aria-label]');
   await remove().click(); await remove().click();
+  // Removing both rows shrinks/repositions the panel; re-enter the trigger before inspecting the empty state.
+  await wishlist.hover(); await wishlistPanel.hover();
   await wishlistPanel.getByText(locale === 'fa' ? 'هنوز محصولی ذخیره نکرده‌اید' : "You haven't saved any products yet", { exact: true }).waitFor();
   assert.equal((await wishlistPanel.boundingBox()).width, 400);
   await wishlistPanel.screenshot({ path: path.join(output, `wishlist-empty-${locale}-1440.png`) });
@@ -147,6 +155,7 @@ async function mobileChecks(browser, width) {
   const context = await contextFor(browser, width, true, true); const page = await context.newPage();
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto(origin + '/fa');
+  await page.locator('[data-header-trigger="wishlist"] span').waitFor({ state: 'attached' });
   assert.equal(await page.locator('[data-header-trigger="account"]').isVisible(), false);
   await page.locator('.vd-mobile-bottom-nav a[href="/fa/account"][aria-haspopup="dialog"]').waitFor();
   const trigger = page.locator('button[aria-controls="vd-header-cart-mobile"]');
@@ -154,6 +163,7 @@ async function mobileChecks(browser, width) {
   const sheet = page.locator('#vd-header-cart-mobile'); await sheet.waitFor();
   assert.equal(await page.evaluate(() => document.body.style.overflow), 'hidden');
   assert.ok((await sheet.boundingBox()).width <= width);
+  await page.keyboard.press('Shift+Tab'); assert.ok(await sheet.evaluate(node => node.contains(document.activeElement)));
   await page.screenshot({ path: path.join(output, `cart-fa-${width}.png`) });
   await page.touchscreen.tap(width - 12, 150); await sheet.waitFor({ state: 'hidden' });
   assert.ok(await trigger.evaluate(node => node === document.activeElement));
@@ -163,18 +173,121 @@ async function mobileChecks(browser, width) {
   const account = page.locator('.vd-mobile-bottom-nav a[href="/fa/account"]');
   // Tap the visible upper part of the item, away from Next's local-only corner dev indicator.
   await account.tap({ position: { x: 60, y: 16 } }); const drawer = page.locator('#vd-header-account-mobile'); await drawer.waitFor();
-  assert.equal(await drawer.locator('nav a').count(), 10);
-  await page.keyboard.press('Shift+Tab'); assert.ok(await drawer.evaluate(node => node.contains(document.activeElement)));
+  assert.equal(await drawer.locator('nav a').count(), 6);
+  await drawer.locator('.vd-header-mobile-order-tiles a').first().getByText('۲', { exact: true }).waitFor();
+  assert.deepEqual(await drawer.locator('.vd-header-mobile-order-tiles span').allTextContents(), ['۲', '۲', '۱']);
+  await drawer.getByText('۰۹۱۵•••۸۸۷۷', { exact: true }).waitFor();
+  assert.ok(await drawer.evaluate(node => node.contains(document.activeElement)));
+  await page.evaluate(() => document.fonts.ready);
+  assert.ok(await drawer.evaluate(node => getComputedStyle(node).fontFamily.includes('Vazirmatn')));
+  assert.ok(await drawer.locator('h2').first().evaluate(node => getComputedStyle(node).fontFamily.includes('Vazirmatn')));
+  for (const link of await drawer.locator('a').all()) assert.ok((await link.boundingBox()).height >= 44);
+  const bounds = await drawer.boundingBox(); assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= width);
+  assert.equal((await page.locator('.vd-header-mobile-surface').boundingBox()).y, 116);
+  assert.equal(await page.locator('main').first().evaluate(node => node.inert), true);
   await page.screenshot({ path: path.join(output, `account-fa-${width}.png`) });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), width, "Open surfaces must isolate unrelated homepage overflow");
+  fs.writeFileSync(path.join(output, `mobile-surface-${width}.json`), JSON.stringify(await drawer.evaluate(node => ({ bounds: node.getBoundingClientRect().toJSON(), scrollX, docWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth })), null, 2));
+  await drawer.locator('nav a[href="/fa/account/wishlist"]').tap();
+  const wishlist = page.locator('#vd-header-wishlist-mobile'); await wishlist.waitFor();
+  await drawer.waitFor({ state: 'hidden' });
+  await wishlist.getByText('۱٬۸۹۰٬۰۰۰ تومان', { exact: true }).waitFor();
+  const allSaved = wishlist.locator('a[href="/fa/account/wishlist"]');
+  assert.equal(await allSaved.evaluate(node => getComputedStyle(node).color), 'rgb(0, 107, 79)');
+  assert.equal(await wishlist.locator('article').count(), 2);
+  for (const button of await wishlist.locator('article button').all()) { const box = await button.boundingBox(); assert.ok(box.height >= 44 && box.width >= 44); }
+  await page.screenshot({ path: path.join(output, `wishlist-fa-${width}.png`) });
+  if (width === 768) {
+    await allSaved.tap(); await page.waitForURL('**/fa/account/wishlist');
+    await wishlist.waitFor({ state: 'hidden' });
+    assert.equal(await page.locator('main').first().evaluate(node => node.inert), false);
+    await page.goBack(); await page.waitForURL('**/fa');
+    await account.tap({ position: { x: 60, y: 16 } }); await drawer.waitFor();
+    await drawer.locator('nav a[href="/fa/account/wishlist"]').tap(); await wishlist.waitFor();
+  }
+  const add = wishlist.locator('article').first().getByRole('button', { name: 'افزودن به سبد خرید', exact: true });
+  await add.tap();
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem('cart_products')).find(p => p._id === 'header-qa-1').orderQuantity === 1);
+  assert.equal(await page.locator('.vd-mobile-bottom-nav a[href="/fa/cart"] span.rounded-full').innerText(), '۳');
+  await add.tap(); await add.tap();
+  await page.waitForFunction(() => JSON.parse(localStorage.getItem('cart_products')).find(p => p._id === 'header-qa-1').orderQuantity === 3);
+  assert.ok(await wishlist.locator('article').first().locator('button:disabled').isVisible());
+  for (let i = 0; i < 2; i++) await wishlist.locator('article').first().locator('button[aria-label]').tap();
+  await wishlist.getByText('هنوز محصولی ذخیره نکرده‌اید', { exact: true }).waitFor();
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('wishlist_items')).length), 0);
+  await page.screenshot({ path: path.join(output, `wishlist-empty-fa-${width}.png`) });
+  await wishlist.getByRole('button', { name: 'بازگشت', exact: true }).tap(); await drawer.waitFor();
   await page.keyboard.press('Escape'); await drawer.waitFor({ state: 'hidden' });
+  assert.ok(await account.evaluate(node => node === document.activeElement));
+  assert.equal(await page.locator('main').first().evaluate(node => node.inert), false);
+  await account.tap({ position: { x: 60, y: 16 } }); await drawer.waitFor();
+  await account.tap({ position: { x: 60, y: 16 } }); await drawer.waitFor({ state: 'hidden' });
+  assert.equal(await page.evaluate(() => document.body.style.overflow), '');
   assert.equal(await page.locator('.vd-mobile-bottom-nav li').count(), 4);
   const geometry = await page.evaluate(() => ({ viewport: innerWidth, documentWidth: document.documentElement.scrollWidth,
     headerWidth: document.querySelector('header').getBoundingClientRect().width,
     outside: Array.from(document.querySelectorAll('body *')).map(node => ({ tag: node.tagName, classes: node.className, bounds: node.getBoundingClientRect().toJSON() })).filter(item => item.bounds.width > 0 && (item.bounds.right > innerWidth + 1 || item.bounds.left < -1)).slice(0, 18) }));
   fs.writeFileSync(path.join(output, `geometry-${width}.json`), JSON.stringify(geometry, null, 2));
   assert.ok(geometry.headerWidth <= width);
+  if (width === 390) {
+    await page.goto(origin + '/fa/cart');
+    const sticky = page.locator('main > div > div.fixed');
+    await page.locator('main a[href="/fa/shipping"]').first().waitFor();
+    await page.screenshot({ path: path.join(output, 'full-cart-fa-390.png') });
+    assert.equal(await sticky.count(), 1); assert.ok(await sticky.isVisible());
+    const bar = await sticky.boundingBox(), nav = await page.locator('.vd-mobile-bottom-nav').boundingBox();
+    assert.ok(bar.y + bar.height <= nav.y + 1);
+    await sticky.getByText('۱٬۹۶۰٬۰۰۰ تومان', { exact: true }).waitFor();
+  }
   assert.deepEqual(errors, []);
-  await context.close(); console.log(`PASS responsive ${width}: existing navigation, cart sheet, account drawer, Escape, focus and scroll lock.`);
+  await context.close(); console.log(`PASS responsive ${width}: existing navigation/cart sheet, live account counts, wishlist cards/add/stock/removal/empty/back, Escape, focus, body lock and background inert cleanup.`);
+}
+
+/** Guest state, safe return destinations, live query failures and compatibility without production access. */
+async function mobileStateChecks(browser) {
+  const beforeGuest = orderRequests;
+  const context = await contextFor(browser, 390, false, true); const page = await context.newPage();
+  await page.goto(origin + '/fa');
+  await page.locator('[data-header-trigger="wishlist"] span').waitFor({ state: 'attached' });
+  const account = page.locator('.vd-mobile-bottom-nav a[href="/fa/account"]');
+  await account.tap({ position: { x: 60, y: 16 } });
+  const panel = page.locator('#vd-header-account-mobile'); await panel.waitFor();
+  await panel.getByText('به وندورا خوش آمدید', { exact: true }).waitFor();
+  assert.equal(await panel.locator('a[href="/fa/login?returnTo=%2Ffa"]').count(), 1);
+  assert.equal(await panel.locator('a[href="/fa/login?returnTo=%2Ffa%2Faccount%2Forders"]').count(), 1);
+  assert.equal(await panel.locator('a[href="/fa/cart"]').count(), 1);
+  await page.screenshot({ path: path.join(output, 'guest-fa-390.png') });
+  assert.equal(orderRequests, beforeGuest, 'Guest must not request private orders');
+  await panel.locator('a[href="/fa/login?returnTo=%2Ffa"]').tap();
+  await page.waitForURL('**/fa/login?returnTo=%2Ffa'); await panel.waitFor({ state: 'hidden' });
+  assert.equal(await page.evaluate(() => document.body.style.overflow), '');
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('cart_products')).length), 1);
+  await context.close();
+  rejectOrders = true;
+  const failure = await contextFor(browser, 390, true, true); const failurePage = await failure.newPage();
+  await failurePage.goto(origin + '/fa'); await failurePage.locator('[data-header-trigger="wishlist"] span').waitFor({ state: 'attached' });
+  await failurePage.locator('.vd-mobile-bottom-nav a[href="/fa/account"]').tap({ position: { x: 60, y: 16 } });
+  const failed = failurePage.locator('#vd-header-account-mobile');
+  await failed.getByRole('alert').waitFor();
+  assert.deepEqual(await failed.locator('.vd-header-mobile-order-tiles span').allTextContents(), ['—', '—', '—']);
+  rejectOrders = false;
+  await failed.getByRole('button', { name: 'تلاش مجدد', exact: true }).tap();
+  await failed.locator('.vd-header-mobile-order-tiles a').first().getByText('۲', { exact: true }).waitFor();
+  await failed.getByRole('button', { name: 'خروج از حساب کاربری', exact: true }).tap();
+  await failurePage.waitForURL('**/fa/login');
+  assert.equal(await failurePage.evaluate(() => localStorage.getItem('auth')), null);
+  assert.equal(await failurePage.evaluate(() => document.body.style.overflow), '');
+  assert.equal(await failurePage.evaluate(() => JSON.parse(localStorage.getItem('cart_products')).length), 1);
+  await failure.close();
+  const english = await contextFor(browser, 768, true, true); const en = await english.newPage();
+  await en.goto(origin + '/en'); await en.locator('[data-header-trigger="wishlist"] span').waitFor({ state: 'attached' }); await en.locator('.vd-mobile-bottom-nav a[aria-haspopup="dialog"]').waitFor(); await en.locator('.vd-mobile-bottom-nav a[href="/en/account"]').tap({ position: { x: 60, y: 16 } });
+  await en.locator('#vd-header-account-mobile').waitFor();
+  assert.equal(await en.locator('#vd-header-account-mobile').getAttribute('dir'), 'ltr');
+  await en.locator('#vd-header-account-mobile nav a[href="/en/account/wishlist"]').tap();
+  await en.locator('#vd-header-wishlist-mobile').getByText('1,890,000 Toman', { exact: true }).waitFor();
+  await en.screenshot({ path: path.join(output, 'wishlist-en-768.png') });
+  await english.close();
+  console.log('PASS mobile guest/login return, no guest private API calls, order failure/retry and English LTR.');
 }
 
 /** Wide touch screens use tap toggles rather than emulated mouse-hover dismissal. */
@@ -219,10 +332,10 @@ async function main() {
   let browser;
   try {
     await ready(); browser = await chromium.launch({ headless: true });
-    for (const locale of ['fa', 'en']) await desktopChecks(browser, locale);
+    if (!process.env.HEADER_QA_MOBILE_ONLY) for (const locale of ['fa', 'en']) await desktopChecks(browser, locale);
     for (const width of [1024, 768, 390]) await mobileChecks(browser, width);
-    await wideTouchChecks(browser);
-    await failureChecks(browser);
+    await mobileStateChecks(browser);
+    if (!process.env.HEADER_QA_MOBILE_ONLY) { await wideTouchChecks(browser); await failureChecks(browser); }
   } finally { if (browser) await browser.close(); app.kill(); api.closeAllConnections(); api.close(); }
 }
 main().catch(error => { console.error(error, logs.slice(-12).join('')); process.exitCode = 1; });

@@ -15,6 +15,7 @@ interface MobileBottomNavigationProps {
   cartQuantity: number;
   onAccountOpen?: (element: HTMLAnchorElement) => void;
   accountExpanded?: boolean;
+  accountControls?: string;
 }
 
 const hiddenRoutes = new Set(["checkout", "shipping", "login", "register", "forgot"]);
@@ -36,7 +37,7 @@ function resolveDestination(pathname: string): MobileNavigationDestination | nul
  * It owns route highlighting and the live persisted cart badge so pages only
  * consume one reusable navigation family.
  */
-export function MobileBottomNavigation({ locale, pathname, cartQuantity, onAccountOpen, accountExpanded }: MobileBottomNavigationProps) {
+export function MobileBottomNavigation({ locale, pathname, cartQuantity, onAccountOpen, accountExpanded, accountControls = "vd-header-account-mobile" }: MobileBottomNavigationProps) {
   const activeDestination = resolveDestination(pathname);
   if (!activeDestination) return null;
 
@@ -56,7 +57,7 @@ export function MobileBottomNavigation({ locale, pathname, cartQuantity, onAccou
     >
       <ul className="mx-auto grid h-[88px] max-w-[480px] grid-cols-4 items-stretch px-2 md:h-[96px] md:max-w-[1024px] md:items-center md:px-6">
         {items.map(({ id, href, label, Icon }) => {
-          const active = activeDestination === id;
+          const active = accountExpanded ? id === "account" : activeDestination === id;
           return (
             <li key={id} className="min-w-0 md:flex md:items-center md:justify-center">
               <Link
@@ -64,7 +65,7 @@ export function MobileBottomNavigation({ locale, pathname, cartQuantity, onAccou
                 onClick={id === "account" && onAccountOpen ? event => { event.preventDefault(); onAccountOpen(event.currentTarget); } : undefined}
                 aria-haspopup={id === "account" && onAccountOpen ? "dialog" : undefined}
                 aria-expanded={id === "account" && onAccountOpen ? accountExpanded : undefined}
-                aria-controls={id === "account" && onAccountOpen ? "vd-header-account-mobile" : undefined}
+                aria-controls={id === "account" && onAccountOpen ? accountControls : undefined}
                 aria-current={active ? "page" : undefined}
                 className={`vd-focus relative flex h-full min-h-11 flex-col items-center justify-center gap-1 rounded-control px-1 text-center transition-colors md:h-[72px] md:w-[clamp(120px,15.625vw,160px)] ${active ? "font-extrabold text-jade md:bg-jade-tint" : "font-semibold text-vd-muted hover:text-jade md:hover:bg-surface-soft"}`}
               >

@@ -191,6 +191,7 @@ export function AccountDrawer({
   onLogout,
   headerNavigation = false,
   panelRef,
+  children,
 }: {
   locale: Locale;
   pathname: string;
@@ -198,12 +199,16 @@ export function AccountDrawer({
   onLogout: () => void;
   headerNavigation?: boolean;
   panelRef?: Ref<HTMLDivElement>;
+  children?: ReactNode;
 }) {
   const t = getDict(locale);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const hasHeaderContent = headerNavigation && Boolean(children);
 
   useEffect(() => {
-    closeButtonRef.current?.focus();
+    if (hasHeaderContent) contentRef.current?.querySelector<HTMLElement>("[data-mobile-initial-focus]")?.focus({ preventScroll: true });
+    else closeButtonRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
@@ -214,7 +219,24 @@ export function AccountDrawer({
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [onClose]);
+  }, [onClose, hasHeaderContent]);
+
+  useEffect(() => {
+    if (!hasHeaderContent) return;
+    const content = contentRef.current;
+    const header = content?.closest("header");
+    const background = Array.from(document.querySelectorAll<HTMLElement>("main,footer")).filter(node => !header?.contains(node));
+    const previous = background.map(node => node.inert);
+    background.forEach(node => { node.inert = true; });
+    /** Keeps the summary below the existing header, including when opened after scrolling. */
+    const fit = () => content?.style.setProperty("--vd-mobile-panel-top", `${Math.max(0, header?.getBoundingClientRect().bottom ?? 116)}px`);
+    fit(); window.addEventListener("resize", fit); window.addEventListener("scroll", fit);
+    return () => { background.forEach((node, index) => { node.inert = previous[index]; }); window.removeEventListener("resize", fit); window.removeEventListener("scroll", fit); };
+  }, [hasHeaderContent]);
+
+  // The new mobile handoff uses the existing drawer lifecycle in the space
+  // between the original header and bottom navigation, rather than another page.
+  if (headerNavigation && children) return <div ref={contentRef} className="vd-header-mobile-surface xl:hidden">{children}</div>;
 
   return (
     <div className={`fixed inset-0 z-50 ${headerNavigation ? "xl:hidden" : "lg:hidden"}`}>

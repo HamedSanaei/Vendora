@@ -39,7 +39,7 @@ export function StoreHeader({ initialLocale = "fa" }: { initialLocale?: Locale }
   const [drawerOpen, setDrawerOpen] = useState(false);
   const dropdowns = useHeaderDropdowns(pathname);
   const authReady = useAuthCheck();
-  const auth = useSelector((state: { auth: { accessToken?: string; user?: { name?: string } } }) => state.auth);
+  const auth = useSelector((state: { auth: { accessToken?: string; user?: { id?: string; _id?: string; name?: string } } }) => state.auth);
   const authenticated = Boolean(auth.accessToken && auth.user);
   const logout = useAccountLogout(locale);
   const profile = useStoreSettings();
@@ -82,11 +82,15 @@ export function StoreHeader({ initialLocale = "fa" }: { initialLocale?: Locale }
       {dropdowns.desktop && dropdowns.active === "account" ? <HeaderAccountDropdown locale={locale} pathname={pathname} authenticated={authenticated} authReady={authReady} userName={auth.user?.name} brandName={storePresentation(profile, locale).name}
         panelRef={node => { dropdowns.registerPanel("account", node); }} onPointerEnter={dropdowns.cancelClose} onPointerLeave={dropdowns.leave} onBlur={event => dropdowns.blur("account", event)} onNavigate={onNavigate} onLogout={handleLogout} /> : null}
       {dropdowns.desktop && dropdowns.active === "wishlist" ? <HeaderWishlistDropdown locale={locale} panelRef={node => { dropdowns.registerPanel("wishlist", node); }} onPointerEnter={dropdowns.cancelClose} onPointerLeave={dropdowns.leave} onBlur={event => dropdowns.blur("wishlist", event)} onNavigate={onNavigate} /> : null}
-      {!dropdowns.desktop && authenticated && dropdowns.active === "account" ? <AccountDrawer locale={locale} pathname={pathname} onClose={closeOverlay} onLogout={handleLogout} headerNavigation panelRef={node => { dropdowns.registerPanel("account", node); }} /> : null}
+      {!dropdowns.desktop && (dropdowns.active === "account" || dropdowns.active === "wishlist") ? <AccountDrawer key={dropdowns.active} locale={locale} pathname={pathname} onClose={closeOverlay} onLogout={handleLogout} headerNavigation>
+        {dropdowns.active === "account" ? <HeaderAccountDropdown mobile locale={locale} pathname={pathname} authenticated={authenticated} authReady={authReady} userName={auth.user?.name} userId={auth.user?.id || auth.user?._id} brandName={storePresentation(profile, locale).name}
+          panelRef={node => { dropdowns.registerPanel("account", node); }} onPointerEnter={dropdowns.cancelClose} onPointerLeave={dropdowns.leave} onBlur={() => {}} onNavigate={onNavigate} onLogout={handleLogout} onBack={closeOverlay} onOpenWishlist={() => dropdowns.switchSurface("wishlist")} />
+          : <HeaderWishlistDropdown mobile locale={locale} panelRef={node => { dropdowns.registerPanel("wishlist", node); }} onPointerEnter={dropdowns.cancelClose} onPointerLeave={dropdowns.leave} onBlur={() => {}} onNavigate={onNavigate} onBack={() => dropdowns.switchSurface("account")} />}
+      </AccountDrawer> : null}
       <MiniCart open={dropdowns.active === "cart"} locale={locale} onClose={closeOverlay}
         desktopPanelRef={node => { dropdowns.registerPanel("cart", node, "desktop"); }} mobilePanelRef={node => { dropdowns.registerPanel("cart", node, "mobile"); }}
         onDesktopPointerEnter={dropdowns.cancelClose} onDesktopPointerLeave={dropdowns.leave} onDesktopBlur={event => dropdowns.blur("cart", event)} />
-      <MobileBottomNavigation locale={locale} pathname={pathname} cartQuantity={cartQuantity} accountExpanded={!dropdowns.desktop && dropdowns.active === "account"} onAccountOpen={authenticated ? element => dropdowns.open("account", element) : undefined} />
+      <MobileBottomNavigation locale={locale} pathname={pathname} cartQuantity={cartQuantity} accountExpanded={!dropdowns.desktop && (dropdowns.active === "account" || dropdowns.active === "wishlist")} accountControls={dropdowns.active === "wishlist" ? "vd-header-wishlist-mobile" : "vd-header-account-mobile"} onAccountOpen={element => dropdowns.toggle("account", element)} />
     </header>
   );
 }
