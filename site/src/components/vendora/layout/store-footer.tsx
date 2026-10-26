@@ -26,12 +26,13 @@ export function StoreFooter() {
   const t = useBrandCopy(locale);
   const profile = useStoreSettings();
   const brand = storePresentation(profile, locale);
+  const showEnamad = Boolean(profile.enamadEnabled && profile.enamad);
   const expanded = Boolean(profile.logoUrl || profile.nameFa || profile.nameEn || profile.taglineFa || profile.taglineEn || profile.introFa || profile.introEn || profile.phone || profile.email || brand.address || brand.hours || profile.socialProfiles || profile.enamadEnabled || profile.copyrightFa || profile.copyrightEn);
   return (
     <footer className={`mt-[40px] bg-surface-soft md:mt-[50px] lg:mt-[72px] ${expanded ? 'min-h-[120px]' : 'h-[120px] overflow-hidden md:h-[220px] lg:h-[300px]'}`}>
       <div className="vd-container py-[16px] md:py-14">
-        <div className="grid gap-10 md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
-          <div>
+        <div className={`grid gap-10 ${showEnamad ? 'md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))_max-content] md:gap-5 lg:gap-10' : 'md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]'}`}>
+          <div className="min-w-0">
             {profile.logoUrl ? <Image unoptimized width={180} height={48} src={resolveApiImageUrl(profile.logoUrl)} alt={brand.name} className="mx-auto h-12 max-w-[180px] object-contain md:mx-0" /> : <p className="break-words text-center text-[22px] font-extrabold tracking-tight text-ink md:text-start md:text-3xl">{brand.wordmark}</p>}
             <p className={`${expanded ? '' : 'hidden md:block'} mt-2 text-sm font-medium text-vd-muted`}>{brand.intro || t.footer.tagline}</p>
             {expanded && <div className="mt-4 space-y-2 text-sm leading-7 text-vd-muted">
@@ -40,11 +41,6 @@ export function StoreFooter() {
               {brand.address && <address className="whitespace-pre-line not-italic">{brand.address}</address>}
               {brand.hours && <p>{brand.hours}</p>}
               {profile.socialProfiles && <nav aria-label={locale === 'fa' ? 'شبکه‌های اجتماعی' : 'Social profiles'} className="flex flex-wrap gap-3">{profile.socialProfiles.split('\n').filter(Boolean).map(url => <a className="vd-focus break-all text-jade" key={url} href={url} target="_blank" rel="noopener noreferrer" dir="ltr">{socialLabel(url)}</a>)}</nav>}
-              {profile.enamadEnabled && profile.enamad && (
-                profile.enamad.href === officialEnamadHref && profile.enamad.imageUrl === officialEnamadImageUrl
-                  ? <span dangerouslySetInnerHTML={{ __html: officialEnamadHtml }} />
-                  : <a className="vd-focus inline-block" href={profile.enamad.href} target="_blank" rel="noopener" referrerPolicy="origin"><Image unoptimized src={profile.enamad.imageUrl} referrerPolicy="origin" alt={locale === 'fa' ? 'نماد اعتماد الکترونیکی؛ مشاهده اعتبار' : 'eNamad: verify trust seal'} width={100} height={100} className="h-[100px] w-[100px] object-contain" /></a>
-              )}
             </div>}
             <div className="mt-6 hidden gap-2 md:flex" aria-hidden>
               {(["jade", "clay", "steel"] as const).map((color) => (
@@ -71,6 +67,13 @@ export function StoreFooter() {
               </ul>
             </nav>
           ))}
+          {showEnamad && profile.enamad && (
+            <div className="flex justify-center md:justify-end" role="group" aria-label={locale === 'fa' ? 'نماد اعتماد الکترونیکی' : 'eNamad trust seal'}>
+              {profile.enamad.href === officialEnamadHref && profile.enamad.imageUrl === officialEnamadImageUrl
+                ? <span dangerouslySetInnerHTML={{ __html: officialEnamadHtml }} />
+                : <a className="vd-focus inline-block" href={profile.enamad.href} target="_blank" rel="noopener" referrerPolicy="origin"><Image unoptimized src={profile.enamad.imageUrl} referrerPolicy="origin" alt={locale === 'fa' ? 'نماد اعتماد الکترونیکی؛ مشاهده اعتبار' : 'eNamad: verify trust seal'} width={100} height={100} className="h-[100px] w-[100px] object-contain" /></a>}
+            </div>
+          )}
         </div>
         <p className="mt-[2px] text-center text-[12px] text-vd-muted md:hidden">{t.footer.columns.map(c=>c.title).join(" · ")}</p>
         <hr className="mt-[4px] border-vd-line md:mt-10" />
