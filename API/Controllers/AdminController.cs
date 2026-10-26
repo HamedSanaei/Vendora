@@ -145,7 +145,7 @@ public sealed class AdminController : ControllerBase
                 uploads,
                 request.PrimaryNewImageIndex,
                 request.UsdPrice,
-                attributes, seo, request.NewImageAlts),
+                attributes, seo, request.NewImageAlts, request.WeightGrams, request.WeightGramsSpecified),
             cancellationToken);
 
         if (result.Succeeded)
@@ -215,7 +215,7 @@ public sealed class AdminController : ControllerBase
                 uploads,
                 request.PrimaryNewImageIndex,
                 request.UsdPrice,
-                attributes, seo, imageAlts, request.NewImageAlts),
+                attributes, seo, imageAlts, request.NewImageAlts, request.WeightGrams, request.WeightGramsSpecified),
             cancellationToken);
 
         if (result.Succeeded)
@@ -690,6 +690,8 @@ public sealed class CreateAdminProductRequest
 
     /// <summary>Optional dollar base price; omitted for existing fixed-Toman products.</summary>
     public decimal? UsdPrice { get; set; }
+    public int? WeightGrams { get; set; }
+    public bool WeightGramsSpecified { get; set; }
 
     /// <summary>Gets or sets the available stock quantity.</summary>
     public int StockQuantity { get; set; }

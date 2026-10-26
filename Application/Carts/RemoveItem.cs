@@ -21,14 +21,15 @@ public static class RemoveItem
     public sealed class Handler : IRequestHandler<Command, CartDto?>
     {
         private readonly ICartRepository _cartRepository;
+        private readonly Persistence.AppDbContext _db;
         private readonly IUnitOfWork _unitOfWork;
 
         /// <summary>
         /// Creates the handler.
         /// </summary>
-        public Handler(ICartRepository cartRepository, IUnitOfWork unitOfWork)
+        public Handler(ICartRepository cartRepository, IUnitOfWork unitOfWork, Persistence.AppDbContext db)
         {
-            _cartRepository = cartRepository;
+            _cartRepository = cartRepository; _db = db;
             _unitOfWork = unitOfWork;
         }
 
@@ -44,14 +45,14 @@ public static class RemoveItem
             var item = cart.Items.FirstOrDefault(cartItem => cartItem.ProductId == request.ProductId);
             if (item is null)
             {
-                return CartMappings.Map(cart);
+                return await CartMappings.MapAsync(cart, _db, cancellationToken);
             }
 
             cart.Items.Remove(item);
             cart.Touch();
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return CartMappings.Map(cart);
+            return await CartMappings.MapAsync(cart, _db, cancellationToken);
         }
     }
 }

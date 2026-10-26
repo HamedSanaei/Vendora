@@ -6,6 +6,13 @@ interface StatusBadgeProps {
 }
 
 const persianStatusLabels: Record<string, string> = {
+  queued: 'در صف',
+  sending: 'در حال ارسال',
+  accepted: 'پذیرفته‌شده در سامانه',
+  unknown: 'نامشخص',
+  closed: 'بسته',
+  waitingforsupport: 'منتظر پشتیبانی',
+  waitingforcustomer: 'منتظر مشتری',
   active: 'فعال',
   admin: 'مدیر',
   archived: 'آرشیو',
@@ -39,14 +46,16 @@ export function StatusBadge({ locale = 'fa', value }: StatusBadgeProps) {
   return <span className={`admin-badge admin-badge-${tone} admin-badge-${legacyTone(tone)}`}>{label}</span>;
 }
 
+/** Uses exact domain states so inactive/unpaid/unknown values cannot inherit a positive substring match. */
 function resolveTone(value: string): 'blue' | 'gray' | 'green' | 'red' | 'yellow' {
-  if (['active', 'admin', 'delivered', 'instock', 'paid', 'verified'].some((token) => value.includes(token))) return 'green';
-  if (['processing', 'redirected', 'shipped', 'packed'].some((token) => value.includes(token))) return 'blue';
-  if (['pending', 'lowstock', 'draft'].some((token) => value.includes(token))) return 'yellow';
-  if (['cancel', 'failed', 'outofstock', 'refunded'].some((token) => value.includes(token))) return 'red';
+  if (['active', 'admin', 'delivered', 'instock', 'paid', 'verified'].includes(value)) return 'green';
+  if (['processing', 'redirected', 'shipped', 'packed', 'accepted', 'sending', 'waitingforcustomer'].includes(value)) return 'blue';
+  if (['pending', 'pendingpayment', 'lowstock', 'draft', 'queued', 'waitingforsupport'].includes(value)) return 'yellow';
+  if (['cancel', 'cancelled', 'canceled', 'failed', 'outofstock', 'refunded'].includes(value)) return 'red';
   return 'gray';
 }
 
+/** Preserves legacy English badge variants without applying the blue/info variant to neutral states. */
 function legacyTone(tone: 'blue' | 'gray' | 'green' | 'red' | 'yellow'): string {
-  return tone === 'green' ? 'success' : tone === 'yellow' ? 'warning' : tone === 'red' ? 'danger' : 'info';
+  return tone === 'green' ? 'success' : tone === 'yellow' ? 'warning' : tone === 'red' ? 'danger' : tone === 'gray' ? 'neutral' : 'info';
 }

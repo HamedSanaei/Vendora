@@ -60,3 +60,9 @@ export function localizeDigits(text: string, locale: Locale): string {
   const persianDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
   return text.replace(/\d/g, (d) => persianDigits[Number(d)]);
 }
+
+/** Formats a real UTC activity timestamp in the active calendar and Tehran timezone. */
+export function formatDate(value: string, locale: Locale): string {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat(locale === "fa" ? "fa-IR-u-ca-persian" : "en-US", { timeZone: "Asia/Tehran", dateStyle: "medium", timeStyle: "short" }).format(date);
+}

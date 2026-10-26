@@ -4,7 +4,7 @@ import { withLocalePath } from '@/lib/locale-path';
 import type { Locale } from '@/lib/vendora/types';
 
 export interface ProfileCompletion { firstName?: string; lastName?: string; phoneNumberConfirmed: boolean; isComplete: boolean }
-export interface CustomerAccount { id: string; fullName: string; email: string; phoneNumber?: string; bio?: string; role: string; completion?: ProfileCompletion }
+export interface CustomerAccount { token?: string; id: string; fullName: string; email: string; phoneNumber?: string; bio?: string; role: string; completion?: ProfileCompletion }
 export interface ProfileValues { firstName: string; lastName: string; email: string; phone: string }
 
 /** Reads the existing session token without exposing it in URLs or logging it. */
@@ -32,7 +32,7 @@ export async function confirmCustomerPhone(code?: string): Promise<{ retryAfter:
 /** Refreshes existing Redux/localStorage identity fields while preserving the issued Vendora token. */
 export function customerSession(account: CustomerAccount) {
   const user = { id: account.id, _id: account.id, name: account.fullName, email: account.email, phone: account.phoneNumber, bio: account.bio, role: account.role, completion: account.completion };
-  const session = { accessToken: accountToken(), user };
+  const session = { accessToken: account.token || accountToken(), user };
   localStorage.setItem('auth', JSON.stringify(session));
   return session;
 }

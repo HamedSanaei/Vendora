@@ -1,3 +1,4 @@
+import { readShippingSettings } from "../api/shippingApi";
 import { useEffect, useState } from 'react';
 import { getInternalExchangeRate } from '../api/adminApi';
 import { AdminSelect } from './AdminUi';
@@ -17,6 +18,8 @@ interface AdminProductPricingProps {
 export function AdminProductPricing({ locale, mode, value, onModeChange, onChange }: AdminProductPricingProps) {
   const isFa = locale === 'fa';
   const [rate, setRate] = useState<InternalExchangeRate | null>(null);
+  const [shippingAmount, setShippingAmount] = useState(0);
+  useEffect(() => { let active = true; readShippingSettings().then(value => { if (active) setShippingAmount(value.policy.includedInPrice ? value.policy.unitAmount : 0); }).catch(() => undefined); return () => { active = false; }; }, []);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     let cancelled = false;
@@ -40,6 +43,7 @@ export function AdminProductPricing({ locale, mode, value, onModeChange, onChang
           value={value} placeholder={mode === 'usd' ? '3.25' : '1,250,000'}
           onChange={(event) => onChange(mode === 'usd' ? normalizeDigits(event.target.value).replace('٫', '.') : formatNumberInput(event.target.value, locale))} />
       </label>
+      <p className="admin-form-full">{isFa ? 'پیش‌نمایش قیمت فروش (با سهم ارسال): ' : 'Retail price preview (including shipping): '}{formatMoney((mode === 'usd' ? preview ?? 0 : Number(normalizeDigits(value).replaceAll(',', '')) || 0) + shippingAmount, locale)}</p>
       {mode === 'usd' && (
         <div className="admin-form-full" role="status">
           <p>{preview !== null

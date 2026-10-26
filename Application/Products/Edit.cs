@@ -48,7 +48,7 @@ public static class Edit
         IReadOnlyList<ProductAttributeInput>? Attributes = null,
         SeoInput? Seo = null,
         IReadOnlyList<ImageAltInput>? ImageAlts = null,
-        IReadOnlyList<string>? NewImageAlts = null) : IRequest<Result>;
+        IReadOnlyList<string>? NewImageAlts = null, int? WeightGrams = null, bool WeightGramsSpecified = false) : IRequest<Result>;
 
     /// <summary>Explicit alt updates leave other persisted image descriptions untouched.</summary>
     public sealed record ImageAltInput(Guid Id, string Alt);
@@ -189,6 +189,11 @@ public static class Edit
             await SeoWriter.RememberAsync(_db, "product", product.Id, product.Slug, slug, cancellationToken);
             product.Slug = slug;
             product.Description = description;
+            if (request.WeightGramsSpecified)
+            {
+                if (request.WeightGrams is <= 0 or > 1_000_000) return Invalid("Actual weight must be positive grams.");
+                product.WeightGrams = request.WeightGrams;
+            }
             var pricingError = await ProductPriceWriter.ApplyAsync(_db, product, request.Price, request.UsdPrice, cancellationToken);
             if (pricingError is not null) return Invalid(pricingError);
             product.StockQuantity = request.StockQuantity;

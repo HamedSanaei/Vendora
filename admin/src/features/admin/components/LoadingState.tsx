@@ -8,7 +8,7 @@ interface LoadingStateProps {
 export function LoadingState({ label }: LoadingStateProps) {
   return (
     <div className="admin-loading">
-      <ClipLoader color="#0989FF" size={24} />
+      <ClipLoader color="currentColor" size={24} />
       <span>{label}</span>
     </div>
   );

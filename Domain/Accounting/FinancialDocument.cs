@@ -5,7 +5,7 @@ public enum DocumentStatus { Draft, Posted, Voided }
 public enum DocumentCurrency { Toman, Usd }
 
 /// <summary>Immutable party details captured when a document is finalized.</summary>
-public sealed record PartySnapshot(string Name, string Phone, string Address, string? RegistrationNumber = null, string? ShippingTerms = null);
+public sealed record PartySnapshot(string Name, string Phone, string Address, string? RegistrationNumber = null, string? ShippingTerms = null, long? ShippingPolicyVersion = null, decimal? EmbeddedShippingUnitAmount = null);
 
 /// <summary>A commercial document; posted monetary/party/line snapshots cannot be edited.</summary>
 public sealed class FinancialDocument
@@ -107,6 +107,8 @@ public sealed class FinancialDocumentLine
     public string Title { get; private set; } = "";
     public int Quantity { get; private set; }
     public decimal UnitPrice { get; private set; }
+    public decimal? BaseUnitPrice { get; private set; }
+    public decimal EmbeddedShippingUnitAmount { get; private set; }
     public decimal Discount { get; private set; }
     public decimal Tax { get; private set; }
     public Guid? OriginalLineId { get; private set; }
@@ -117,10 +119,13 @@ public sealed class FinancialDocumentLine
 
     /// <summary>Snapshots a validated line. Discount/tax are line totals, not percentages.</summary>
     public FinancialDocumentLine(Guid documentId, Guid productId, int productCode, string title,
-        int quantity, decimal unitPrice, decimal discount, decimal tax, Guid? originalLineId = null)
+        int quantity, decimal unitPrice, decimal discount, decimal tax, Guid? originalLineId = null, decimal? baseUnitPrice = null, decimal embeddedShippingUnitAmount = 0)
     {
         if (quantity <= 0 || productId == Guid.Empty || title.Length is < 1 or > 500 || unitPrice < 0 || discount < 0 || discount > quantity * unitPrice || tax < 0)
             throw new ArgumentException("Invalid invoice line.");
+        if (embeddedShippingUnitAmount < 0 || (baseUnitPrice.HasValue && (baseUnitPrice < 0 || unitPrice != baseUnitPrice + embeddedShippingUnitAmount || discount > baseUnitPrice * quantity)))
+            throw new ArgumentException("Invalid embedded shipping snapshot.");
+        BaseUnitPrice = baseUnitPrice; EmbeddedShippingUnitAmount = embeddedShippingUnitAmount;
         DocumentId = documentId; ProductId = productId; ProductCode = productCode; Title = title;
         Quantity = quantity; UnitPrice = unitPrice; Discount = discount; Tax = tax; OriginalLineId = originalLineId;
     }

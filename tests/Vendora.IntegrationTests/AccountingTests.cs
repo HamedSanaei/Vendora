@@ -310,11 +310,11 @@ public sealed class AccountingTests
             new Persistence.Orders.OrderRepository(f.Db), new Persistence.Products.ProductReadRepository(f.Db), f.Db, f.Db);
         var address = new Application.Orders.Create.AddressInput("Home", "Buyer", "09123456789", "Province", "City", "Street", null, null,
             "1234567890", true, true);
-        var command = new Application.Orders.Create.Command(user.Id, 1, 0, null, address, [new(f.Product.Id, 1, 300)], "post", null, "checkout-1");
+        var command = new Application.Orders.Create.Command(user.Id, 1, 0, null, address, [new(f.Product.Id, 1, 300)], "tipax", null, "checkout-1");
         var order = await handler.Handle(command, default);
         var repeated = await handler.Handle(command, default);
         Assert.Equal(order.OrderNumber, repeated.OrderNumber);
-        Assert.Equal(60000, order.ShippingCost); Assert.Equal(60300, order.TotalAmount);
+        Assert.Equal(0, order.ShippingCost); Assert.Equal(300, order.TotalAmount);
         Assert.Equal(1, await f.Db.Orders.CountAsync()); Assert.Equal(1, await f.Db.StockReservations.CountAsync());
         var balance = await f.Db.InventoryBalances.SingleAsync();
         Assert.Equal(1, balance.OnHand); Assert.Equal(1, balance.Reserved); Assert.Equal(0, balance.Available);
@@ -334,8 +334,8 @@ public sealed class AccountingTests
         await f.Db.SaveChangesAsync();
         var pricing = new CartQuotation(f.Db, TimeProvider.System);
         var quote = await pricing.QuoteAsync([new(f.Product.Id, 2)], "tipax", "real", default);
-        Assert.Equal(100, quote.Discount); Assert.Equal(500, quote.Net); Assert.Equal(20000, quote.Freight);
-        var collect = await pricing.QuoteAsync([new(f.Product.Id, 1)], "freight", null, default);
+        Assert.Equal(100, quote.Discount); Assert.Equal(500, quote.Net); Assert.Equal(0, quote.Freight);
+        var collect = await pricing.QuoteAsync([new(f.Product.Id, 1)], "tipax", null, default);
         Assert.Equal(0, collect.Freight); Assert.False(collect.ShippingUndetermined);
         await Assert.ThrowsAsync<AccountingException>(() => pricing.QuoteAsync([new(f.Product.Id, 1)], "fake-free-post", null, default));
     }

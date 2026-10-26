@@ -36,6 +36,9 @@ public class Product : AuditableEntity
     /// Gets or sets the product price in Toman.
     /// </summary>
     public decimal Price { get; set; }
+    /// <summary>Actual unit shipping weight; null means not measured, never a fabricated default.</summary>
+    public int? WeightGrams { get; set; }
+
 
     /// <summary>Optional dollar base price; null retains fixed Toman pricing.</summary>
     public decimal? UsdPrice { get; set; }

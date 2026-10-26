@@ -32,7 +32,7 @@ public sealed class AccountingHttpTests
                 sp.GetRequiredService<IHostEnvironment>(), NullLogger<QuestCommercialDocumentRenderer>.Instance));
         });
         var user = new AppUser { FirstName = "خریدار", LastName = "آزمایشی", Email = "buyer@example.invalid", PhoneNumber = "09121111111", PhoneNumberConfirmed = true, FullName = "خریدار آزمایشی", UserName = Guid.NewGuid().ToString() };
-        var product = new Product { Title = "کیف آزمایشی", Slug = Guid.NewGuid().ToString(), Price = 1250000, StockQuantity = 3, Status = ProductStatus.Active };
+        var product = new Product { Title = "کیف آزمایشی", Slug = Guid.NewGuid().ToString(), Price = 1250000, StockQuantity = 30, Status = ProductStatus.Active };
         using (var scope = host.App.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -40,7 +40,7 @@ public sealed class AccountingHttpTests
         }
         using var client = host.Client("Customer"); client.DefaultRequestHeaders.Add("Test-User", user.Id.ToString());
         client.DefaultRequestHeaders.Add("Idempotency-Key", "http-proforma-same-key");
-        var request = new API.Controllers.CustomerDocumentsController.ProformaRequest([new(product.Id, 2, 1250000)], "freight");
+        var request = new API.Controllers.CustomerDocumentsController.ProformaRequest([new(product.Id, 11, 1250000)], "freight");
         using var issued = await client.PostAsJsonAsync("/api/account/documents/proformas", request);
         Assert.Equal(HttpStatusCode.OK, issued.StatusCode);
         var id = (await issued.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
@@ -64,10 +64,10 @@ public sealed class AccountingHttpTests
         var own = JsonSerializer.Deserialize<CustomerDocumentDto>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
         var buyer = JsonSerializer.Deserialize<Domain.Accounting.PartySnapshot>(own.BuyerSnapshotJson)!;
         Assert.Contains("هنگام تحویل", buyer.ShippingTerms);
-        Assert.Equal(2500000, own.TotalToman); Assert.Equal(0, own.Freight); Assert.False(own.ShippingUndetermined);
+        Assert.Equal(13750000, own.TotalToman); Assert.Equal(0, own.Freight); Assert.False(own.ShippingUndetermined);
         using var verifyScope = host.App.Services.CreateScope();
         var verify = verifyScope.ServiceProvider.GetRequiredService<AppDbContext>();
         Assert.Empty(await verify.StockMovements.ToListAsync()); Assert.Empty(await verify.PartyLedgerEntries.ToListAsync());
-        Assert.Equal(3, (await verify.Products.SingleAsync(x => x.Id == product.Id)).StockQuantity);
+        Assert.Equal(30, (await verify.Products.SingleAsync(x => x.Id == product.Id)).StockQuantity);
     }
 }

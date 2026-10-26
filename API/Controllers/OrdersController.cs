@@ -47,7 +47,7 @@ public class OrdersController : BaseApiController
                         request.NewAddress.Latitude,
                         request.NewAddress.Longitude),
                     (request.Items ?? []).Select(item => new Create.ItemInput(item.ProductId, item.Quantity, item.ExpectedUnitPrice)).ToList(),
-                    request.ShippingMethod, request.CouponCode, Request.Headers["Idempotency-Key"].FirstOrDefault()),
+                    request.ShippingMethod, request.CouponCode, Request.Headers["Idempotency-Key"].FirstOrDefault(), request.ShippingQuoteId),
                 cancellationToken);
         }
         catch (Application.Auth.CustomerProfileRequiredException)
@@ -117,7 +117,7 @@ public sealed record CreateOrderRequest(
     Guid? ShippingAddressId,
     CreateOrderAddressRequest? NewAddress,
     IReadOnlyList<CreateOrderItemRequest> Items,
-    string? ShippingMethod = null, string? CouponCode = null);
+    string? ShippingMethod = null, string? CouponCode = null, Guid? ShippingQuoteId = null);
 
 /// <summary>Represents an order item request body.</summary>
 public sealed record CreateOrderItemRequest(Guid ProductId, int Quantity, decimal? ExpectedUnitPrice = null);

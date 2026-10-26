@@ -131,11 +131,12 @@ async function main() {
     await ready(); browser = await chromium.launch({ headless: true });
     const routes = process.env.CARD_QA_EXTRA_ONLY === '1' ? {} : { home: '/fa', shop: '/fa/shop', search: '/fa/search?query=کیف', category: '/fa/category/qa-bags', related: '/fa/product/card-qa-0', wishlist: '/fa/account/wishlist' };
     const before = !baseline && fs.existsSync(path.join(output, 'before.json')) ? JSON.parse(fs.readFileSync(path.join(output, 'before.json'))) : {};
-    for (const width of [320, 390, 768, 1024, 1440]) for (const [name, route] of Object.entries(routes)) {
+    for (const width of (process.env.CARD_QA_WIDTHS || '320,390,768,1024,1440').split(',').map(Number)) for (const [name, route] of Object.entries(routes)) {
       const { context, page, errors } = await open(browser, width, route);
       const rows = await geometry(page); measurements[`${name}-${width}`] = rows;
       fs.writeFileSync(path.join(output, `latest-${name}-${width}.json`), JSON.stringify(rows, null, 2));
       if (!baseline) {
+        assert.equal(await page.locator('.vd-product-card .vd-product-price-freshness').count(), 0, 'Price update dates belong only on product details');
         for (const row of rows) {
           assert.ok(row.action && row.buttonVisible, `${name}/${width}: missing purchase action`);
           assert.ok(row.action.x + row.action.width <= row.price.x + 1, `${name}/${width}: button must be left of price`);
@@ -161,6 +162,10 @@ async function main() {
       await context.close(); console.log(`PASS ${baseline ? 'baseline' : 'layout'} ${name} ${width}`);
     }
     if (!baseline) {
+      const detail = await open(browser, 390, '/fa/product/card-qa-4');
+      await detail.page.locator('.vd-product-hero__purchase .vd-product-price-freshness').waitFor();
+      assert.equal(await detail.page.locator('.vd-product-card .vd-product-price-freshness').count(), 0);
+      await detail.context.close(); console.log('PASS fresh pricing date retained in product purchase panel only');
       for (const width of [390, 1440]) {
         const { context, page, errors } = await open(browser, width, '/en/shop');
         for (const row of await geometry(page)) {

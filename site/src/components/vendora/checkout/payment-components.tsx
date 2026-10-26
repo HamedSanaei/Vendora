@@ -169,7 +169,7 @@ export function PaymentSummary({ locale, totals, shippingMethodTitle, provider, 
         <SummaryLine label={isFa ? "جمع کالاها" : "Items subtotal"} value={formatPrice(totals.subtotal, locale)} />
         <SummaryLine label={isFa ? "تخفیف" : "Discount"} value={`− ${formatPrice(totals.discount, locale)}`} muted />
         <SummaryLine label={isFa ? "روش ارسال" : "Shipping method"} value={shippingMethodTitle} />
-        <SummaryLine label={isFa ? "هزینه ارسال" : "Shipping cost"} value={totals.shippingPayment === "collect" ? (isFa ? "پرداخت هنگام تحویل" : "Pay on delivery") : formatPrice(totals.shippingCost, locale)} accent={totals.shippingPayment === "collect"} />
+        <SummaryLine label={isFa ? "هزینه ارسال" : "Shipping cost"} value={totals.shippingPayment === "collect" ? (isFa ? "پرداخت هنگام تحویل" : "Pay on delivery") : totals.shippingPayment === "free" ? (isFa ? "رایگان" : "Free") : formatPrice(totals.shippingCost, locale)} accent={totals.shippingPayment === "collect"} />
       </dl>
       <hr className="my-5 border-vd-line" />
       <div className="flex items-center justify-between gap-3">
@@ -180,7 +180,7 @@ export function PaymentSummary({ locale, totals, shippingMethodTitle, provider, 
         {phase === "error"
           ? (isFa ? "سفارش ایجاد نشد؛ اطلاعات شما حفظ شده است." : "The order was not created; your checkout data is preserved.")
           : totals.shippingPayment === "collect"
-            ? (isFa ? "کرایه باربری به مبلغ آنلاین اضافه نمی‌شود." : "Freight charges are not included in the online total.")
+            ? (isFa ? "کرایه حمل به مبلغ آنلاین اضافه نمی‌شود." : "Delivery charges are not included in the online total.")
             : (isFa ? "پس از ثبت سفارش، مرحلهٔ انتقال نمایش داده می‌شود." : "A payment handoff state appears after the order is created.")}
       </p>
       <VendoraButton type="button" size="lg" className="mt-5 w-full" disabled={disabled} onClick={onSubmit}>

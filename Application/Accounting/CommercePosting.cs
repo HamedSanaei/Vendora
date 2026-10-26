@@ -81,6 +81,7 @@ public static class CommercePosting
                 if (!canFulfil)
                 {
                     if (hasLiveHold) await reservations.ReleaseAsync(order.Id, SystemActor, token);
+                    await new Application.Sms.SmsNotifications(db,time).PaidAsync(order, true, token);
                     return receipt.Id; // Genuine money remains unallocated; no fabricated sale/refund or negative stock.
                 }
                 var doc = new FinancialDocument(await work.NextNumberAsync(DocumentKind.Sale, token), DocumentKind.Sale,
@@ -92,14 +93,14 @@ public static class CommercePosting
                 for (int i = 0; i < sourceItems.Count; i++)
                 {
                     var item = sourceItems[i];
-                    decimal part = i == sourceItems.Count - 1 ? remainingDiscount : decimal.Floor(order.DiscountAmount * item.LineTotal / order.Subtotal);
+                    decimal part = item.DiscountSnapshot ?? (i == sourceItems.Count - 1 ? remainingDiscount : decimal.Floor(order.DiscountAmount * item.LineTotal / order.Subtotal));
                     remainingDiscount -= part;
-                    lines.Add(new FinancialDocumentLine(doc.Id, item.ProductId, products[item.ProductId].ProductCode, item.ProductTitle, item.Quantity, item.UnitPrice, part, 0));
+                    lines.Add(new FinancialDocumentLine(doc.Id, item.ProductId, products[item.ProductId].ProductCode, item.ProductTitle, item.Quantity, item.UnitPrice, part, 0, baseUnitPrice: item.BaseUnitPrice, embeddedShippingUnitAmount: item.EmbeddedShippingUnitAmount));
                 }
                 doc.SetDraftContent(lines, order.ShippingCost, false, historical ? "Historical verified payment; original cost unknown" : "",
                     await DocumentCommands.SellerSnapshotAsync(db, token), JsonSerializer.Serialize(new PartySnapshot(order.ShippingRecipientName,
                         order.ShippingPhoneNumber, $"{order.ShippingProvince}، {order.ShippingCity}، {order.ShippingStreetAddress}، {order.ShippingPlaque}، {order.ShippingPostalCode}",
-                        ShippingTerms: order.ShippingMethodId is null ? null : ProformaCommands.ShippingTerms(order.ShippingMethodId))));
+                        ShippingTerms: OrderShippingTerms(order))));
                 db.FinancialDocuments.Add(doc);
                 if (historical)
                 {
@@ -115,7 +116,18 @@ public static class CommercePosting
                 db.PaymentAllocations.Add(new PaymentAllocation { DocumentId = doc.Id, SettlementId = receipt.Id, AmountToman = receipt.AmountToman, PostedAtUtc = receipt.PostedAtUtc });
                 order.PaymentStatus = PaymentStatus.Verified;
                 if (order.Status == OrderStatus.PendingPayment) order.Status = OrderStatus.Paid;
+                await new Application.Sms.SmsNotifications(db,time).PaidAsync(order, false, token);
                 return receipt.Id;
             }, ct);
+    }
+    /// <summary>Uses original terms for historic documents and the immutable snapshot for new orders.</summary>
+    private static string? OrderShippingTerms(Domain.Entities.Order order)
+    {
+        if (order.ShippingPolicySnapshotJson is not null)
+        {
+            using var snapshot = JsonDocument.Parse(order.ShippingPolicySnapshotJson);
+            if (snapshot.RootElement.TryGetProperty("Terms", out var terms)) return terms.GetString();
+        }
+        return order.ShippingMethodId is null ? null : ProformaCommands.ShippingTerms(order.ShippingMethodId);
     }
 }

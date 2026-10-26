@@ -18,10 +18,17 @@ public static class DependencyInjection
     /// <returns>The same service collection.</returns>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
-        services.AddHttpClient<IPhoneCodeSender, Infrastructure.Auth.ParsGreenPhoneCodeSender>(client => client.Timeout = TimeSpan.FromSeconds(15))
+        services.AddHttpClient<ISmsGateway, Infrastructure.Auth.ParsGreenSmsGateway>(client => { client.Timeout = TimeSpan.FromSeconds(15); client.MaxResponseContentBufferSize = 32768; })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+        services.AddScoped<IPhoneCodeSender, Application.Sms.ConfiguredPhoneCodeSender>();
+        services.AddSingleton<Shipping.PostexReadCache>();
+        services.AddScoped<IPostexRates, Shipping.PostexRates>();
+        services.AddHttpClient("PostexRates", client => { client.Timeout = TimeSpan.FromSeconds(10); client.MaxResponseContentBufferSize = 16 * 1024 * 1024; })
+            .RedactLoggedHeaders(new[] { "x-api-key" })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
         services.AddScoped<ICommercialDocumentRenderer, Documents.QuestCommercialDocumentRenderer>();
+        services.AddScoped<IShippingLabelRenderer, Documents.QuestShippingLabelRenderer>();
         services.AddScoped<IProductDescriptionService, Infrastructure.Content.ProductDescriptionService>();
         services.AddScoped<IEnamadCodeParser, Infrastructure.Content.EnamadCodeParser>();
         services.AddScoped<ISeoAiGateway, Seo.NineRouterSeoGateway>();

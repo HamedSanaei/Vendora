@@ -20,20 +20,21 @@ public static class Get
     public sealed class Handler : IRequestHandler<Query, CartDto?>
     {
         private readonly ICartRepository _cartRepository;
+        private readonly Persistence.AppDbContext _db;
 
         /// <summary>
         /// Creates the handler.
         /// </summary>
-        public Handler(ICartRepository cartRepository)
+        public Handler(ICartRepository cartRepository, Persistence.AppDbContext db)
         {
-            _cartRepository = cartRepository;
+            _cartRepository = cartRepository; _db = db;
         }
 
         /// <inheritdoc />
         public async Task<CartDto?> Handle(Query request, CancellationToken cancellationToken)
         {
             var cart = await _cartRepository.GetByUserIdAsync(request.UserId, cancellationToken);
-            return cart is null ? null : CartMappings.Map(cart);
+            return cart is null ? null : await CartMappings.MapAsync(cart, _db, cancellationToken);
         }
     }
 }

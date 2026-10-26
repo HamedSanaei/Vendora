@@ -15,7 +15,8 @@ export interface CartTotals {
 export function getCartUnitPrice(item: CartLine): number {
   const price = Number(item.originalPrice) || 0;
   const discount = Math.min(Math.max(Number(item.discount) || 0, 0), 100);
-  return Math.round(price * (1 - discount / 100));
+  const embedded = Math.max(0, Number(item.embeddedShippingUnitAmount) || 0);
+  return Math.round(Math.max(0, price - embedded) * (1 - discount / 100)) + embedded;
 }
 
 /** Calculates the total for a single cart line. */

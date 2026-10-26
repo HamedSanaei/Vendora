@@ -30,4 +30,4 @@ public sealed record OrderDto(
     decimal DiscountAmount,
     decimal TotalAmount,
     OrderShippingAddressDto ShippingAddress,
-    IReadOnlyList<OrderItemDto> Items);
+    IReadOnlyList<OrderItemDto> Items, string? ShippingMethodId = null, string? ShippingPaymentMode = null);

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { BagArtwork, type ArtworkColor } from "@/components/vendora/product/bag-artwork";
 import { HeartIcon } from "@/components/vendora/icons";
 import { ProductCardPurchase } from "@/components/vendora/product/product-card-purchase";
-import { ProductPriceFreshness } from "./product-price-freshness";
 import { withLocalePath } from "@/lib/locale-path";
 import type { Locale } from "@/lib/vendora/types";
 import { getCatalogCopy } from "./catalog-copy";
@@ -34,7 +33,7 @@ export function CatalogProductCard({ product, locale, compact = false, favorited
     <article className={`vd-product-card group relative flex h-auto min-h-[382px] min-w-0 flex-col overflow-hidden rounded-[18px] border border-vd-line bg-white transition duration-200 hover:-translate-y-0.5 hover:border-[#c9d8d2] hover:shadow-[0_18px_46px_-30px_rgba(0,77,58,.55)] md:min-h-[410px] ${compact ? "p-[10px] md:p-[12px]" : "p-[12px] md:p-[16px]"}`}>
       <div className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-[14px] bg-surface-soft ${compact ? "aspect-square" : "aspect-[1.12/1]"}`}>
         <Link href={href} aria-label={product.title} className="vd-focus absolute inset-0 z-10 rounded-[14px]" />
-        {product.stock > 0 ? <span className="absolute start-2 top-2 z-20 rounded-full bg-white/95 px-2 py-1 text-[10px] font-bold text-jade shadow-sm md:start-3 md:top-3 md:text-xs">{t.freeShipping}</span> : null}
+        {product.stock > 0 && product.freeShipping ? <span className="absolute start-2 top-2 z-20 rounded-full bg-white/95 px-2 py-1 text-[10px] font-bold text-jade shadow-sm md:start-3 md:top-3 md:text-xs">{t.freeShipping}</span> : null}
         {product.image && isVendoraProductImage(product.image) ? (
           <Image src={product.image} alt={product.title} fill unoptimized={product.image.includes("/uploads/")} sizes="(max-width: 767px) 46vw, (max-width: 1279px) 30vw, 240px" className="object-cover transition-transform duration-300 group-hover:scale-[1.035]" />
         ) : (
@@ -53,7 +52,6 @@ export function CatalogProductCard({ product, locale, compact = false, favorited
         <ProductCardPurchase locale={locale} title={product.title} price={product.price} oldPrice={product.oldPrice} stock={product.stock} quantity={cartQuantity}
           onAdd={handleInitialAdd ? () => handleInitialAdd(product) : undefined}
           onIncrease={onIncreaseCart ? () => onIncreaseCart(product) : undefined} onDecrease={onDecreaseCart ? () => onDecreaseCart(product) : undefined} />
-        <ProductPriceFreshness product={product} locale={locale} />
       </div>
     </article>
   );

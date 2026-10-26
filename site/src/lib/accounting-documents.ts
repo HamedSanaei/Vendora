@@ -5,7 +5,9 @@ import { preparePdfPrintWindow } from "@/lib/pdf-browser";
 export interface CommercialLine { id: string; productCode: number; title: string; quantity: number; unitPrice: number; discount: number; tax: number; total: number }
 export interface CommercialDocument { id: string; number: string; kind: string; currency: string; exchangeRate: number; issuedAtUtc: string; net: number; tax: number; freight: number; totalToman: number; shippingUndetermined: boolean; lines: CommercialLine[] }
 export interface CommercialDocuments { items: CommercialDocument[]; page: number; pageSize: number; total: number }
-export interface ProformaRequest { items: Array<{ productId: string; quantity: number; expectedUnitPrice: number }>; shippingMethod?: string; couponCode?: string }
+export interface ProformaRequest { items: Array<{ productId: string; quantity: number; expectedUnitPrice: number }>; shippingMethod?: string; couponCode?: string; shippingQuoteId?: string | null; addressId?: string }
+/** Safe document feedback; sign-in is requested only after the same credential is rejected by account/me. */
+export interface CommercialFailure { message: string; signInRequired: boolean }
 
 /** Reads existing authentication without inventing a token or changing sign-in behavior. */
 export function documentToken(): string | null {
@@ -15,6 +17,20 @@ export function documentToken(): string | null {
 /** Reads only the signed-in customer's saved proformas through the shared Axios instance. */
 export async function myProformas(page: number, token: string, signal?: AbortSignal): Promise<CommercialDocuments> {
   return (await http.get<CommercialDocuments>("/account/documents", { params: { page, kind: 2 }, headers: { Authorization: `Bearer ${token}` }, signal })).data;
+}
+
+/** Distinguishes document access failures from rejected sessions without deleting auth or inferring JWT expiry. */
+export async function commercialFailure(error: unknown, token: string, fa: boolean, signal?: AbortSignal): Promise<CommercialFailure> {
+  if (!axios.isAxiosError(error) || error.response?.status !== 401) return { message: commercialError(error, fa), signInRequired: false };
+  try {
+    const { data } = await http.get<{ id?: string }>('/account/me', { headers: { Authorization: `Bearer ${token}` }, signal, timeout: 5000 });
+    const verified = typeof data?.id === 'string' && data.id.length > 0;
+    return { message: documentCopy[fa ? 'fa' : 'en'][verified ? 'accessFailed' : 'verificationFailed'], signInRequired: false };
+  } catch (verificationError) {
+    if (axios.isCancel(verificationError)) throw verificationError;
+    const rejected = axios.isAxiosError(verificationError) && verificationError.response?.status === 401;
+    return { message: rejected ? commercialError(error, fa) : documentCopy[fa ? 'fa' : 'en'].verificationFailed, signInRequired: rejected };
+  }
 }
 
 /** Issues an immutable, server-priced quote using a key retained across uncertain response failures and refresh. */
@@ -53,11 +69,11 @@ export function commercialError(error: unknown, fa: boolean): string {
   const code: unknown = axios.isAxiosError(error) ? error.response?.data?.code : undefined;
   if (code === "PRICE_CHANGED") return fa ? "قیمت تغییر کرده است؛ سبد خرید را به‌روز کنید و دوباره درخواست دهید." : "Prices changed. Refresh your cart and request again.";
   if (typeof code === "string" && code.startsWith("PDF_")) return fa ? "سند شما ذخیره شده، اما تولید PDF فعلاً در دسترس نیست. بعداً از همین فهرست دوباره دانلود کنید." : "Your document is saved, but PDF is currently unavailable. Download again from this list later.";
-  if (axios.isAxiosError(error) && error.response?.status === 401) return fa ? "نشست شما منقضی شده است؛ دوباره وارد شوید." : "Your session expired. Please sign in again.";
+  if (axios.isAxiosError(error) && error.response?.status === 401) return fa ? "اعتبار ورود شما تأیید نشد؛ دوباره وارد شوید." : "Your sign-in could not be verified. Please sign in again.";
   return fa ? "درخواست انجام نشد. اتصال را بررسی و دوباره تلاش کنید." : "Request failed. Check your connection and try again.";
 }
 
 export const documentCopy = {
-  fa: { title: "پیش‌فاکتورهای من", subtitle: "آرشیو پیش‌فاکتورهای صادرشده از سبد خرید، با دریافت مجدد PDF", issue: "دریافت پیش‌فاکتور", issuing: "در حال صدور…", count: "تعداد پیش‌فاکتورهای صادرشده", latest: "دریافت آخرین PDF", all: "همهٔ پیش‌فاکتورها", rules: "قواعد صدور پیش‌فاکتور", disclaimer: "این سند رسید پرداخت، تضمین قیمت یا رزرو موجودی نیست. هنگام ثبت سفارش، قیمت و موجودی روز دوباره بررسی می‌شوند.", loading: "در حال بارگذاری…", empty: "هنوز پیش‌فاکتوری ندارید", emptyBody: "از سبد خرید خود پیش‌فاکتور دریافت کنید؛ در اینجا ذخیره می‌شود.", cart: "بازگشت به سبد خرید", retry: "تلاش مجدد", date: "تاریخ صدور", number: "شماره سند / شرح", amount: "مبلغ (تومان)", print: "چاپ", next: "بعدی", previous: "قبلی" },
-  en: { title: "My proformas", subtitle: "Saved cart quotations and repeat PDF downloads", issue: "Get proforma", issuing: "Issuing…", count: "Issued proformas", latest: "Download latest PDF", all: "All proformas", rules: "Proforma terms", disclaimer: "This document is not proof of payment, a price guarantee or a stock reservation. Current prices and stock are checked again at checkout.", loading: "Loading…", empty: "No proformas yet", emptyBody: "Request a proforma from your cart to save it here.", cart: "Back to cart", retry: "Retry", date: "Issue date", number: "Document / description", amount: "Amount (Toman)", print: "Print", next: "Next", previous: "Previous" },
+  fa: { signIn: "ورود مجدد", accessFailed: "دسترسی به اسناد تأیید نشد. دوباره تلاش کنید؛ ورود شما معتبر است.", verificationFailed: "بررسی اعتبار ورود انجام نشد. اتصال را بررسی و دوباره تلاش کنید.", title: "پیش‌فاکتورهای من", subtitle: "آرشیو پیش‌فاکتورهای صادرشده از سبد خرید، با دریافت مجدد PDF", issue: "دریافت پیش‌فاکتور", issuing: "در حال صدور…", count: "تعداد پیش‌فاکتورهای صادرشده", latest: "دریافت آخرین PDF", all: "همهٔ پیش‌فاکتورها", rules: "قواعد صدور پیش‌فاکتور", disclaimer: "این سند رسید پرداخت، تضمین قیمت یا رزرو موجودی نیست. هنگام ثبت سفارش، قیمت و موجودی روز دوباره بررسی می‌شوند.", loading: "در حال بارگذاری…", empty: "هنوز پیش‌فاکتوری ندارید", emptyBody: "از سبد خرید خود پیش‌فاکتور دریافت کنید؛ در اینجا ذخیره می‌شود.", cart: "بازگشت به سبد خرید", retry: "تلاش مجدد", date: "تاریخ صدور", number: "شماره سند / شرح", amount: "مبلغ (تومان)", print: "چاپ", next: "بعدی", previous: "قبلی" },
+  en: { signIn: "Sign in again", accessFailed: "Document access could not be verified. Please retry; your sign-in is valid.", verificationFailed: "Sign-in verification is unavailable. Check your connection and retry.", title: "My proformas", subtitle: "Saved cart quotations and repeat PDF downloads", issue: "Get proforma", issuing: "Issuing…", count: "Issued proformas", latest: "Download latest PDF", all: "All proformas", rules: "Proforma terms", disclaimer: "This document is not proof of payment, a price guarantee or a stock reservation. Current prices and stock are checked again at checkout.", loading: "Loading…", empty: "No proformas yet", emptyBody: "Request a proforma from your cart to save it here.", cart: "Back to cart", retry: "Retry", date: "Issue date", number: "Document / description", amount: "Amount (Toman)", print: "Print", next: "Next", previous: "Previous" },
 };

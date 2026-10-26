@@ -155,7 +155,28 @@ public sealed class SeedVisibilityTests
         await db.GetService<IMigrator>().MigrateAsync("20261024003215_AddOrderShippingMethodSnapshot");
         var known = new Product { Title = "Edited sample", Slug = "renamed-sample", Price = 10, Status = ProductStatus.Active };
         var real = new Product { Title = "Real", Slug = "seed-not-in-the-manifest", Price = 20, Status = ProductStatus.Active };
-        db.AddRange(known, real); db.SlugHistories.Add(new SlugHistory { EntityId = known.Id, Kind = "product", Slug = "seed-everyday-shoulder-bag" });
+        // Insert the historical shape, excluding columns introduced after this migration target.
+        var columns = new HashSet<string>();
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "PRAGMA table_info('Products')";
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync()) columns.Add(reader.GetString(1));
+        }
+        var table = Microsoft.EntityFrameworkCore.Metadata.StoreObjectIdentifier.Table("Products", null);
+        var properties = db.Model.FindEntityType(typeof(Product))!.GetProperties()
+            .Where(property => property.PropertyInfo is not null && columns.Contains(property.GetColumnName(table)!)).ToList();
+        foreach (var product in new[] { known, real })
+        {
+            var names = string.Join(",", properties.Select(property => "\"" + property.GetColumnName(table) + "\""));
+            var placeholders = string.Join(",", properties.Select((_, i) => "$p" + i));
+            var values = properties.Select(property => property.Name == nameof(Product.ProductCode) ? (object)(product == known ? 100 : 101) : property.PropertyInfo!.GetValue(product)).Select((value, i) => (object)new SqliteParameter("$p" + i, value is Enum e ? (object)Convert.ToInt32(e) : value ?? DBNull.Value)).ToArray();
+            await using var insert = connection.CreateCommand();
+            insert.CommandText = $"INSERT INTO Products ({names}) VALUES ({placeholders})";
+            insert.Parameters.AddRange(values.Cast<SqliteParameter>().ToArray());
+            await insert.ExecuteNonQueryAsync();
+        }
+        db.SlugHistories.Add(new SlugHistory { EntityId = known.Id, Kind = "product", Slug = "seed-everyday-shoulder-bag" });
         await db.SaveChangesAsync(); await db.Database.MigrateAsync();
         Assert.True(await db.SeedRecords.AnyAsync(x => x.EntityType == "Product" && x.EntityId == known.Id));
         Assert.False(await db.SeedRecords.AnyAsync(x => x.EntityId == real.Id));

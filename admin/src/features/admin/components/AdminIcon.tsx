@@ -2,12 +2,15 @@ import type { ReactNode, SVGProps } from 'react';
 
 export type AdminIconName =
   | 'alert'
+  | 'accounting'
+  | 'attributes'
   | 'arrow'
   | 'brand'
   | 'category'
   | 'chevron'
   | 'close'
   | 'coupon'
+  | 'colors'
   | 'dashboard'
   | 'download'
   | 'edit'
@@ -22,6 +25,7 @@ export type AdminIconName =
   | 'plus'
   | 'products'
   | 'search'
+  | 'seo'
   | 'staff'
   | 'store'
   | 'trash'
@@ -30,9 +34,14 @@ export type AdminIconName =
 interface AdminIconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
   name: AdminIconName;
   size?: number;
+  direction?: 'left' | 'right' | 'down';
 }
 
 const iconPaths: Record<AdminIconName, ReactNode> = {
+  accounting: <><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h2m4 0h2m-8 4h2m4 0h2"/></>,
+  attributes: <><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></>,
+  colors: <><path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1-3.7 1.5 1.5 0 0 1 1-2.8h2A4 4 0 0 0 21 10c0-4-4-7-9-7Z"/><path d="M7 10h.01M10 6.5h.01M15 7h.01M6.5 15h.01"/></>,
+  seo: <><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6M6 12l3-3 2 2 3-4"/></>,
   alert: <><path d="M12 3 2.8 19a1.4 1.4 0 0 0 1.2 2h16a1.4 1.4 0 0 0 1.2-2L12 3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></>,
   arrow: <><path d="m9 18 6-6-6-6"/></>,
   brand: <><path d="M4 6.5 12 3l8 3.5v11L12 21l-8-3.5v-11Z"/><path d="M8.5 9.5 12 11l3.5-1.5"/><path d="M12 11v6"/></>,
@@ -60,8 +69,8 @@ const iconPaths: Record<AdminIconName, ReactNode> = {
   users: <><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></>,
 };
 
-/** Renders the dependency-free stroke icon set used by the Penpot admin components. */
-export function AdminIcon({ name, size = 20, ...props }: AdminIconProps) {
+/** Renders the existing stroke family; navigation glyphs accept explicit direction without rotating other icons. */
+export function AdminIcon({ name, size = 20, direction, ...props }: AdminIconProps) {
   return (
     <svg
       aria-hidden={props['aria-label'] ? undefined : true}
@@ -73,9 +82,12 @@ export function AdminIcon({ name, size = 20, ...props }: AdminIconProps) {
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="1.8"
+      data-icon-direction={direction}
       {...props}
     >
-      {iconPaths[name]}
+      {direction && (name === 'arrow' || name === 'chevron')
+        ? <path d={direction === 'left' ? 'm15 18-6-6 6-6' : direction === 'down' ? 'm6 9 6 6 6-6' : 'm9 18 6-6-6-6'} />
+        : iconPaths[name]}
     </svg>
   );
 }

@@ -278,7 +278,7 @@ export function OrderDetailContent({ orderId, locale }: { orderId: string; local
             <div className="flex justify-between gap-3">
               <dt className="vd-text-caption text-vd-muted">{d.shippingCost}</dt>
               <dd className="text-[0.8125rem] font-medium text-ink">
-                {order.shippingCost === 0 ? d.freeShipping : formatPrice(order.shippingCost, locale, false)}
+                {order.shippingPaymentMode === "collect" ? (locale === "fa" ? "پس‌کرایه؛ پرداخت هنگام تحویل" : "Pay on delivery") : order.shippingCost === 0 ? d.freeShipping : formatPrice(order.shippingCost, locale, false)}
               </dd>
             </div>
             <hr className="border-vd-line" />

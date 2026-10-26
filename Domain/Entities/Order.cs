@@ -108,6 +108,9 @@ public class Order : AuditableEntity
     public decimal ShippingCost { get; set; }
     /// <summary>Validated shipping choice captured at order creation; null for historical orders with no recorded evidence.</summary>
     public string? ShippingMethodId { get; set; }
+    /// <summary>Immutable terms and pricing policy at order placement.</summary>
+    public string? ShippingPolicySnapshotJson { get; set; }
+
 
     /// <summary>
     /// Gets or sets the discount amount.

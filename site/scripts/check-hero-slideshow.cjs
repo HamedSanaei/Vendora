@@ -80,6 +80,9 @@ async function main() {
       const page = await context.newPage(), errors = []; page.on('pageerror', e => errors.push(e.message));
       await page.goto(origin + '/fa');
       const hero = page.locator('.vd-hero-slideshow'); await hero.waitFor(); await hero.hover(); await hero.focus(); await active(page, 0);
+      for (const element of [hero.locator('.vd-hero__photos'), hero.locator('.vd-hero__photo.is-active > img')]) {
+        assert.ok(await element.evaluate(node => parseFloat(getComputedStyle(node).borderTopLeftRadius) >= 24 && parseFloat(getComputedStyle(node).borderBottomLeftRadius) >= 24), 'Both physical left corners are rounded');
+      }
       assert.equal(await hero.getByRole('group', { name: 'انتخاب عکس' }).count(), 0, 'Old indicator panel removed');
       assert.equal(await hero.locator('.vd-hero__next').isVisible(), !touch && width >= 768);
       if (!touch && width >= 768) {
@@ -141,7 +144,12 @@ async function main() {
     await fallback.locator('.vd-hero__swiper .vd-hero__photo[data-ready="true"]').first().waitFor();
     assert.equal(await fallback.locator('.vd-hero__swiper .swiper-slide').count(), 3);
     await fallback.locator('.vd-hero-slideshow').focus(); await fallback.keyboard.press('ArrowLeft');
-    await fallback.locator('.swiper-slide[aria-hidden="false"] .vd-hero__photo[data-editorial="true"]').waitFor();
+    const editorial = fallback.locator('.swiper-slide[aria-hidden="false"] .vd-hero__photo[data-editorial="true"][data-ready="true"] > img');
+    await editorial.waitFor();
+    assert.ok(await editorial.evaluate(img => {
+      const box = img.getBoundingClientRect(), style = getComputedStyle(img);
+      return Math.abs(box.width / box.height - img.naturalWidth / img.naturalHeight) < .02 && parseFloat(style.borderTopLeftRadius) >= 24 && parseFloat(style.borderBottomLeftRadius) >= 24;
+    }), 'Editorial image box matches its uncropped pixels so its left corner radius is visible');
     await fallback.screenshot({ path: path.join(output, 'default-editorial.png'), animations: 'disabled' });
     await fallbackContext.close(); failPlaylist = false;
     console.log('PASS API failure retains original default playlist');

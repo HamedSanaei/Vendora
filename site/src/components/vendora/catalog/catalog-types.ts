@@ -15,6 +15,10 @@ export interface ProductSpecification {
 
 /** Product shape returned by the current storefront API. */
 export interface StoreProduct {
+  basePrice?: number;
+  embeddedShippingUnitAmount?: number;
+  shippingPolicyVersion?: number;
+  freeShipping?: boolean;
   productCode?: number;
   slug?: string;
   galleryAlts?: string[];
@@ -49,6 +53,7 @@ export interface StoreProduct {
 
 /** Display-safe view of an API product shared by cards and details. */
 export interface CatalogProductModel {
+  freeShipping?: boolean;
   slug: string;
   galleryAlts: string[];
   breadcrumbs: Array<{id:string;name:string;slug:string}>;
@@ -89,12 +94,13 @@ export function toCatalogProduct(product: StoreProduct): CatalogProductModel {
     galleryAlts: product.galleryAlts ?? [],
     breadcrumbs: product.breadcrumbs ?? [],
     title: product.title,
+    freeShipping: product.freeShipping,
     description: product.description ?? "",
     descriptionHtml: descriptionHtml ?? "",
     priceFreshness: product.priceFreshness,
     image: product.image ?? "",
     gallery,
-    price: discount > 0 ? Math.round(price * (1 - discount / 100)) : price,
+    price: discount > 0 ? Math.round((price - (product.embeddedShippingUnitAmount ?? 0)) * (1 - discount / 100)) + (product.embeddedShippingUnitAmount ?? 0) : price,
     oldPrice: discount > 0 ? price : undefined,
     stock: product.quantity ?? 0,
     sku: product.productCode && product.productCode >= 100 ? String(product.productCode) : (product.sku ?? "—"),

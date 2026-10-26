@@ -50,6 +50,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
   const [loadedProductId, setLoadedProductId] = useState<string | null>(null);
   const productReady = !isEdit || loadedProductId === productId;
   const [price, setPrice] = useState('');
+  const [weightGrams, setWeightGrams] = useState('');
   const [priceMode, setPriceMode] = useState<'toman' | 'usd'>('toman');
   const [usdPrice, setUsdPrice] = useState('');
   const [stockQuantity, setStockQuantity] = useState('0');
@@ -84,6 +85,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
       }
 
       setTitle(product.title);
+      setWeightGrams(product.weightGrams == null ? "" : String(product.weightGrams));
       setProductCode(product.productCode);
       setPreviewUrl(product.status === 'Active' ? productStorefrontUrl(locale, product.slug) : undefined);
       setSlug(product.slug);
@@ -236,6 +238,8 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
     catch (error) { setFormError(error instanceof Error ? error.message : 'Invalid attributes.'); return; }
 
     const payload: CreateAdminProductInput = {
+      weightGramsSpecified: true,
+      weightGrams: weightGrams === "" ? null : Number(weightGrams),
       seo,
       imageAlts: gallery.filter((image): image is Extract<GalleryItem, {kind:'existing'}> => image.kind === 'existing').map(image => ({id:image.id,alt:image.name})),
       newImageAlts: newImages.map(image => image.name),
@@ -297,6 +301,7 @@ export const AdminAddProductPage = observer(function AdminAddProductPage({ mode 
               {isFa ? 'اسلاگ' : 'Slug'}
               <input name="slug" value={slug} onChange={(event) => { clearErrors(); setSlug(event.target.value); }} placeholder="laptop-briefcase" />
             </label>
+            <label>{isFa ? 'وزن واقعی هر واحد (گرم)' : 'Actual unit weight (grams)'}<input type="number" min="1" max="1000000" step="1" value={weightGrams} onChange={event => setWeightGrams(event.target.value)} /><small>{isFa ? 'برای کرایه پستی لازم است؛ تا زمان اندازه‌گیری خالی بگذارید.' : 'Required for postal quotes; leave blank until measured.'}</small></label>
             <AdminProductPricing locale={locale} mode={priceMode} value={priceMode === 'usd' ? usdPrice : price}
               onModeChange={(value) => { clearErrors(); setPriceMode(value); }}
               onChange={(value) => { clearErrors(); if (priceMode === 'usd') setUsdPrice(value); else setPrice(value); }} />

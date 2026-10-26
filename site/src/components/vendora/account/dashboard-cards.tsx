@@ -165,7 +165,7 @@ export function SupportNoticeCard({ locale }: { locale: Locale }) {
         <h2 className="text-[1.0625rem] font-bold leading-7 text-ink">{t.account.dashboard.supportTitle}</h2>
         <p className="vd-text-caption mt-1 text-vd-muted">{brand.hours || t.account.dashboard.supportBody}</p>
       </div>
-      <VendoraButton href={withLocalePath("/contact", locale)} variant="outline" size="lg" className="min-h-12 w-full shrink-0 sm:w-auto sm:min-w-[192px]">
+      <VendoraButton href={withLocalePath("/account/tickets", locale)} variant="outline" size="lg" className="min-h-12 w-full shrink-0 sm:w-auto sm:min-w-[192px]">
         {t.account.dashboard.supportCta}
       </VendoraButton>
     </section>

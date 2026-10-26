@@ -5,6 +5,8 @@ export interface AuthAccount {
     name: string;
     email?: string;
     phone?: string;
+    role?: string;
+    completion?: { isComplete: boolean; phoneNumberConfirmed: boolean };
   };
 }
 
@@ -13,6 +15,7 @@ export interface AuthAdapterResult {
   account?: AuthAccount;
   message?: string;
   retryAfter?: number;
+  codeLength?: number;
 }
 
 export interface PhoneAuthAdapter {

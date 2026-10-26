@@ -51,7 +51,7 @@ public static class Create
         Guid? ShippingAddressId,
         AddressInput? NewAddress,
         IReadOnlyList<ItemInput> Items,
-        string? ShippingMethod = null, string? CouponCode = null, string? IdempotencyKey = null) : IRequest<OrderDto>;
+        string? ShippingMethod = null, string? CouponCode = null, string? IdempotencyKey = null, Guid? ShippingQuoteId = null) : IRequest<OrderDto>;
 
     /// <summary>
     /// Handles create-order commands.
@@ -115,15 +115,17 @@ public static class Create
 
             string shippingMethod = request.ShippingMethod ?? (request.ShippingCost switch
             {
-                60000 => "post", 20000 => "tipax", 0 => "freight",
+                60000 => "post", 20000 => "tipax", 0 => "tipax",
                 _ => throw new AccountingException("SHIPPING_METHOD_REQUIRED", 400)
             });
             if (request.DiscountAmount != 0 && string.IsNullOrWhiteSpace(request.CouponCode))
                 throw new AccountingException("COUPON_CODE_REQUIRED", 400);
             var quote = await new CartQuotation(_dbContext, TimeProvider.System).QuoteAsync(checkoutItems
-                .Select(x => new CartQuoteItem(x.ProductId, x.Quantity, x.ExpectedUnitPrice)).ToList(), shippingMethod, request.CouponCode, cancellationToken);
+                .Select(x => new CartQuoteItem(x.ProductId, x.Quantity, x.ExpectedUnitPrice)).ToList(), shippingMethod, request.CouponCode, cancellationToken, request.ShippingQuoteId, request.UserId, address.Id, true);
             order.ShippingCost = quote.Freight;
             order.ShippingMethodId = shippingMethod;
+            order.ShippingPolicySnapshotJson = System.Text.Json.JsonSerializer.Serialize(new { quote.Policy.Version, quote.Policy.IncludedInPrice,
+                quote.Policy.UnitAmount, Terms = Application.Shipping.ShippingPricing.Terms(shippingMethod, quote.Policy.IncludedInPrice), request.ShippingQuoteId });
             order.DiscountAmount = quote.Discount;
             bool accountingActive = await _dbContext.AccountingStates.AsNoTracking().AnyAsync(x => x.Id == 1 && x.Activated, cancellationToken);
             var reservations = new OrderReservations(_dbContext, new InventoryPosting(_dbContext, TimeProvider.System), TimeProvider.System);
@@ -138,15 +140,19 @@ public static class Create
                     throw new InvalidOperationException($"Product {product.Title} does not have enough stock.");
                 }
 
-                // Dollar prices may move between display and submit. Require an explicit reconfirmation.
-                if (product.UsdPrice.HasValue && cartItem.ExpectedUnitPrice != product.Price)
-                    throw new PriceChangedException(product.Id, product.Price);
+                var quoted = quote.Lines.Single(x => x.Product.Id == product.Id);
+                // Prices were checked authoritatively for both fixed and dollar products by CartQuotation.
+                if (product.UsdPrice.HasValue && cartItem.ExpectedUnitPrice != quoted.UnitPrice)
+                    throw new PriceChangedException(product.Id, quoted.UnitPrice);
 
                 var line = new OrderItem
                 {
                     ProductId = product.Id,
                     ProductTitle = product.Title,
-                    UnitPrice = product.Price,
+                    UnitPrice = quoted.UnitPrice,
+                    BaseUnitPrice = product.Price,
+                    EmbeddedShippingUnitAmount = quoted.EmbeddedShippingUnitAmount,
+                    DiscountSnapshot = quoted.Discount,
                     UsdUnitPrice = product.UsdPrice,
                     PriceExchangeRate = product.PriceExchangeRate,
                     Quantity = cartItem.Quantity

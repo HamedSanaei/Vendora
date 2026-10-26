@@ -1,3 +1,4 @@
+using Application.Shipping;
 using Application.Catalog;
 using Domain.Entities;
 using Domain.Enums;
@@ -7,10 +8,10 @@ using Persistence;
 namespace Application.Accounting;
 
 public sealed record CartQuoteItem(Guid ProductId, int Quantity, decimal? ExpectedUnitPrice = null);
-public sealed record QuotedLine(Product Product, int Quantity, decimal Discount);
-public sealed record CartQuote(IReadOnlyList<QuotedLine> Lines, decimal Freight, bool ShippingUndetermined)
+public sealed record QuotedLine(Product Product, int Quantity, decimal Discount, decimal UnitPrice, decimal EmbeddedShippingUnitAmount);
+public sealed record CartQuote(IReadOnlyList<QuotedLine> Lines, decimal Freight, bool ShippingUndetermined, ShippingPolicy Policy)
 {
-    public decimal Net => Lines.Sum(x => x.Product.Price * x.Quantity - x.Discount);
+    public decimal Net => Lines.Sum(x => x.UnitPrice * x.Quantity - x.Discount);
     public decimal Discount => Lines.Sum(x => x.Discount);
 }
 
@@ -18,12 +19,15 @@ public sealed record CartQuote(IReadOnlyList<QuotedLine> Lines, decimal Freight,
 public sealed class CartQuotation(AppDbContext db, TimeProvider time)
 {
     /// <summary>Resolves products, valid coupon/category scope and configured shipping into one server quote.</summary>
-    public async Task<CartQuote> QuoteAsync(IReadOnlyList<CartQuoteItem> items, string? shippingMethod, string? couponCode, CancellationToken ct)
+    public async Task<CartQuote> QuoteAsync(IReadOnlyList<CartQuoteItem> items, string? shippingMethod, string? couponCode, CancellationToken ct, Guid? shippingQuoteId = null, Guid? userId = null, Guid? addressId = null, bool requireShipping = false)
     {
         if (items is null || items.Count is < 1 or > 300 || items.Any(x => x is null || x.ProductId == Guid.Empty || x.Quantity is < 1 or > 100000))
             throw new AccountingException("INVALID_CART", 400);
         var grouped = items.GroupBy(x => x.ProductId).Select(g => new CartQuoteItem(g.Key, checked(g.Sum(x => x.Quantity)),
             g.Select(x => x.ExpectedUnitPrice).Distinct().Count() == 1 ? g.First().ExpectedUnitPrice : null)).OrderBy(x => x.ProductId).ToList();
+        if (requireShipping && string.IsNullOrWhiteSpace(shippingMethod)) throw new AccountingException("SHIPPING_METHOD_REQUIRED", 400);
+        var policy = await ShippingPricing.ReadAsync(db, ct);
+        ShippingPricing.ValidateMethod(shippingMethod, grouped.Sum(x => x.Quantity));
         var ids = grouped.Select(x => x.ProductId).ToList();
         var products = await db.Products.VisibleInUi(db).Include(x => x.Categories).Where(x => ids.Contains(x.Id) && x.Status == ProductStatus.Active).ToDictionaryAsync(x => x.Id, ct);
         if (products.Count != ids.Count) throw new AccountingException("PRODUCT_NOT_FOUND", 404);
@@ -31,8 +35,8 @@ public sealed class CartQuotation(AppDbContext db, TimeProvider time)
         {
             var p = products[item.ProductId];
             if (p.StockQuantity < item.Quantity) throw new AccountingException("INSUFFICIENT_STOCK");
-            if ((item.ExpectedUnitPrice.HasValue || p.UsdPrice.HasValue) && item.ExpectedUnitPrice != p.Price)
-                throw new Pricing.PriceChangedException(p.Id, p.Price);
+            if ((item.ExpectedUnitPrice.HasValue || p.UsdPrice.HasValue || policy.IncludedInPrice) && item.ExpectedUnitPrice != policy.SellingPrice(p.Price))
+                throw new Pricing.PriceChangedException(p.Id, policy.SellingPrice(p.Price));
         }
         decimal discount = 0;
         var eligible = grouped;
@@ -63,10 +67,30 @@ public sealed class CartQuotation(AppDbContext db, TimeProvider time)
         {
             decimal part = discount == 0 || !eligible.Any(x => x.ProductId == item.ProductId) ? 0 : item.ProductId == lastEligible ? remaining
                 : decimal.Floor(discount * (products[item.ProductId].Price * item.Quantity) / eligibleNet);
-            remaining -= part; lines.Add(new(products[item.ProductId], item.Quantity, part));
+            remaining -= part; lines.Add(new(products[item.ProductId], item.Quantity, part, policy.SellingPrice(products[item.ProductId].Price), policy.IncludedInPrice ? policy.UnitAmount : 0));
         }
-        decimal freight = shippingMethod switch { null or "" => 0, "post" => 60000, "tipax" => 20000, "freight" => 0,
-            _ => throw new AccountingException("INVALID_SHIPPING_METHOD", 400) };
-        return new(lines, freight, string.IsNullOrWhiteSpace(shippingMethod));
+        decimal freight = 0;
+        bool undetermined = !policy.IncludedInPrice && string.IsNullOrWhiteSpace(shippingMethod);
+        if (!policy.IncludedInPrice && shippingMethod == "post")
+        {
+            if (!shippingQuoteId.HasValue)
+            {
+                if (requireShipping) throw new AccountingException("SHIPPING_QUOTE_REQUIRED", 422);
+                undetermined = true;
+            }
+            else
+            {
+                var saved = await db.ShippingQuotes.AsNoTracking().SingleOrDefaultAsync(x => x.Id == shippingQuoteId && x.UserId == userId && x.AddressId == addressId, ct)
+                    ?? throw new AccountingException("SHIPPING_QUOTE_INVALID", 422);
+                var address = await db.CustomerAddresses.AsNoTracking().SingleOrDefaultAsync(x => x.Id == addressId && x.UserId == userId, ct)
+                    ?? throw new AccountingException("ADDRESS_NOT_FOUND", 404);
+                var provisional = new CartQuote(lines, 0, false, policy);
+                if (saved.ExpiresAtUtc <= time.GetUtcNow().UtcDateTime || saved.PolicyVersion != policy.Version ||
+                    saved.Fingerprint != ShippingUseCases.Fingerprint(policy, address, provisional, saved.DestinationCityCode))
+                    throw new AccountingException("SHIPPING_QUOTE_EXPIRED", 409);
+                freight = saved.CostToman;
+            }
+        }
+        return new(lines, freight, undetermined, policy);
     }
 }

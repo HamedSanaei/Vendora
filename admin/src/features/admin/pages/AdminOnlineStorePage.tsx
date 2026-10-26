@@ -1,3 +1,5 @@
+import { AdminSmsSettings } from "../components/AdminSmsSettings";
+import { AdminShippingSettings } from "../components/AdminShippingSettings";
 import { useParams } from 'react-router-dom';
 import { AdminButton, AdminFeedback, AdminPageHeader } from '../components/AdminUi';
 import { AdminIcon } from '../components/AdminIcon';
@@ -23,6 +25,8 @@ export function AdminOnlineStorePage() {
     <section className="admin-page">
       <AdminPageHeader eyebrow={isFa ? 'پیش‌نمایش Storefront' : 'Storefront preview'} title={isFa ? 'فروشگاه آنلاین' : 'Online store'} description={copy.pageDescription} />
       <AdminSeedVisibility locale={locale} />
+      <AdminShippingSettings locale={locale} />
+      <AdminSmsSettings locale={locale} />
       <AdminSlideshowManager key={locale} locale={locale} />
       <AdminStoreSettingsForm key={`settings-${locale}`} locale={locale} />
       <AdminFeedback tone="info"><span dir="ltr">VITE_STOREFRONT_URL = {storefrontBaseUrl}</span></AdminFeedback>

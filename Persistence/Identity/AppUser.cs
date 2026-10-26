@@ -20,4 +20,10 @@ public sealed class AppUser : IdentityUser<Guid>
     /// Gets or sets an optional short customer profile biography.
     /// </summary>
     public string? Bio { get; set; }
+
+    /// <summary>Retains the former verified destination until the new phone is confirmed and its security alert is queued.</summary>
+    public string? PreviousVerifiedPhone { get; set; }
+
+    /// <summary>Rejects legacy sessions after an explicit password reset/change; modern sessions also bind the security stamp.</summary>
+    public DateTime? TokensRevokedAtUtc { get; set; }
 }

@@ -1,8 +1,10 @@
+import { OrderLabelActions } from '../components/OrderLabelActions';
+import { useOrderLabelSelection } from '../hooks/useOrderLabelSelection';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { AdminConfirmDialog, AdminEmptyState, AdminFeedback, AdminFilterBar, AdminPageHeader, AdminPagination, AdminPanel } from '../components/AdminUi';
+import { AdminCheckbox, AdminConfirmDialog, AdminEmptyState, AdminFeedback, AdminFilterBar, AdminPageHeader, AdminPagination, AdminPanel } from '../components/AdminUi';
 import { LoadingState } from '../components/LoadingState';
 import { StatusBadge } from '../components/StatusBadge';
 import { useAdminOrderQuery } from '../hooks/useAdminOrderQuery';
@@ -26,6 +28,10 @@ export const AdminOrdersPage = observer(function AdminOrdersPage() {
   const locale = normalizeAdminLocale(useParams().locale);
   const isFa = locale === 'fa';
   const list = useAdminOrderQuery(orders.orders, 10);
+  const selection = useOrderLabelSelection(JSON.stringify([list.query,list.status,list.payment]));
+  const pageIds = list.pageItems.map(order => order.id);
+  const pageSelected = pageIds.length > 0 && pageIds.every(id => selection.ids.includes(id));
+  const pageWouldExceed = new Set([...selection.ids, ...pageIds]).size > 100;
   const [pendingTransition, setPendingTransition] = useState<PendingTransition | null>(null);
 
   useEffect(() => {
@@ -71,15 +77,20 @@ export const AdminOrdersPage = observer(function AdminOrdersPage() {
           </select>
         </AdminFilterBar>
 
+        <div className="admin-form">
+          <OrderLabelActions orderIds={selection.ids} locale={locale} bulk />
+          {pageIds.length > 0 && <AdminCheckbox label={isFa ? 'انتخاب همه سفارش‌های این صفحه' : 'Select all orders on this page'} checked={pageSelected} disabled={!pageSelected && pageWouldExceed} onChange={event => selection.toggle(pageIds,event.target.checked)} />}
+        </div>
         {list.pageItems.length === 0 ? (
           <AdminEmptyState icon="orders" title={isFa ? 'سفارشی پیدا نشد' : 'No orders found'} description={isFa ? 'فیلترها را تغییر دهید؛ سفارش‌های جدید پس از ثبت اینجا نمایش داده می‌شوند.' : 'Adjust the filters; new orders appear here after checkout.'} />
         ) : (
           <div className="admin-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>{isFa ? 'سفارش' : 'Order'}</th><th>{isFa ? 'مشتری' : 'Customer'}</th><th>{isFa ? 'تاریخ' : 'Date'}</th><th>{isFa ? 'مبلغ' : 'Total'}</th><th>{isFa ? 'پرداخت' : 'Payment'}</th><th>{isFa ? 'مرحله سفارش' : 'Order stage'}</th></tr></thead>
+              <thead><tr><th className="admin-selection-cell">{isFa ? 'انتخاب' : 'Select'}</th><th>{isFa ? 'سفارش' : 'Order'}</th><th>{isFa ? 'مشتری' : 'Customer'}</th><th>{isFa ? 'تاریخ' : 'Date'}</th><th>{isFa ? 'مبلغ' : 'Total'}</th><th>{isFa ? 'پرداخت' : 'Payment'}</th><th>{isFa ? 'مرحله سفارش' : 'Order stage'}</th></tr></thead>
               <tbody>
                 {list.pageItems.map((order) => (
                   <tr key={order.id}>
+                    <td className="admin-order-label-selection" data-label={isFa ? 'انتخاب برچسب' : 'Label selection'}><AdminCheckbox label={<span className="sr-only">{isFa ? `انتخاب سفارش ${order.orderNumber}` : `Select order ${order.orderNumber}`}</span>} checked={selection.ids.includes(order.id)} disabled={!selection.ids.includes(order.id) && selection.ids.length >= 100} onChange={event => selection.toggle([order.id],event.target.checked)} /></td>
                     <td data-label={isFa ? 'سفارش' : 'Order'}><Link to={adminPath(locale, `orders/${order.id}`)}><strong>{order.orderNumber}</strong></Link><small>{order.itemCount.toLocaleString(isFa ? 'fa-IR' : 'en-US')} {isFa ? 'قلم کالا' : 'item(s)'}</small></td>
                     <td data-label={isFa ? 'مشتری' : 'Customer'}>{order.customerName}</td>
                     <td data-label={isFa ? 'تاریخ' : 'Date'}>{formatDate(order.createdAtUtc, locale)}</td>

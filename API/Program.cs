@@ -40,6 +40,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
         };
+        options.Events = new JwtBearerEvents { OnTokenValidated = async context => {
+            var id = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(id, out var userId)) { context.Fail("Invalid account."); return; }
+            var sender = context.HttpContext.RequestServices.GetRequiredService<MediatR.ISender>();
+            if (!await sender.Send(new Application.Auth.SessionValidation.Query(userId, context.Principal?.FindFirst("sst")?.Value), context.HttpContext.RequestAborted))
+                context.Fail("Account session revoked.");
+        } };
     });
 builder.Services.AddAuthorization(options =>
 {

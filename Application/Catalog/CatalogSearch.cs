@@ -46,8 +46,10 @@ public static class CatalogSearch
             }
             if (request.Brand?.Length > 0) query = query.Where(x => x.Brand != null && (request.Brand.Contains(x.Brand.Slug) || request.Brand.Contains(x.Brand.Name)));
             if (request.Color?.Length > 0) query = query.Where(x => x.Colors.Any(c => request.Color.Contains(c.CatalogColor.Slug)));
-            if (request.PriceMin.HasValue) query = query.Where(x => x.Price >= request.PriceMin.Value);
-            if (request.PriceMax.HasValue) query = query.Where(x => x.Price <= request.PriceMax.Value);
+            var policy = await Application.Shipping.ShippingPricing.ReadAsync(db, ct);
+            decimal embedded = policy.IncludedInPrice ? policy.UnitAmount : 0;
+            if (request.PriceMin.HasValue) query = query.Where(x => x.Price >= request.PriceMin.Value - embedded);
+            if (request.PriceMax.HasValue) query = query.Where(x => x.Price <= request.PriceMax.Value - embedded);
             if (request.InStock) query = query.Where(x => x.StockQuantity > 0);
             int page = Math.Max(1, request.Page), size = Math.Clamp(request.PageSize, 1, 48);
             int total = await query.CountAsync(ct);

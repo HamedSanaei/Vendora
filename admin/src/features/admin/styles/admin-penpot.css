@@ -20,15 +20,25 @@
   --va-sidebar: #161a1d;
   --va-sidebar-2: #20262b;
   --va-brass: #b89555;
-  --va-brass-dark: #8d6b36;
+  --va-brass-dark: #7c5b2b;
   --va-brass-soft: #f0e7d6;
-  --va-muted: #74797c;
+  --va-muted: #5b6267;
   --va-border: #ddd8ce;
+  --va-control-border: #8d8679;
+  --va-text-body: 15px;
+  --va-text-label: 14px;
+  --va-text-small: 13px;
+  --va-text-heading: 18px;
+  --va-space-1: 8px;
+  --va-space-2: 12px;
+  --va-space-3: 16px;
+  --va-space-4: 24px;
+  --va-space-5: 32px;
   --va-green: #3d735a;
   --va-green-soft: #e3efe8;
   --va-blue: #456b8a;
   --va-blue-soft: #e7eef3;
-  --va-amber: #a96f25;
+  --va-amber: #895817;
   --va-amber-soft: #f6ebd9;
   --va-red: #9b433e;
   --va-red-soft: #f5e4e2;
@@ -115,11 +125,34 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   background: var(--va-canvas);
   color: var(--va-ink);
   font-family: "Vazirmatn", Tahoma, sans-serif;
+  font-size: var(--va-text-body);
+  line-height: 1.8;
+  font-synthesis: none;
 }
 
 .admin-shell[data-admin-theme="penpot"] *,
 .admin-auth-page[data-admin-theme="penpot"] * {
   box-sizing: border-box;
+}
+
+/* Keep icons intact beside wrapping Persian labels and use the loaded family in notifications. */
+.admin-shell[data-admin-theme="penpot"] svg,
+.admin-auth-page[data-admin-theme="penpot"] svg {
+  flex-shrink: 0;
+}
+
+.admin-shell[data-admin-theme="penpot"] .Toastify__toast,
+.admin-auth-page[data-admin-theme="penpot"] .Toastify__toast {
+  font-family: inherit;
+  font-size: var(--va-text-body);
+  line-height: 1.8;
+}
+
+.admin-shell[data-admin-theme="penpot"] input::placeholder,
+.admin-shell[data-admin-theme="penpot"] textarea::placeholder,
+.admin-auth-page[data-admin-theme="penpot"] input::placeholder {
+  color: var(--va-muted);
+  opacity: 1;
 }
 
 .admin-shell[data-admin-theme="penpot"] button,
@@ -135,7 +168,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 
 .admin-shell[data-admin-theme="penpot"] :focus-visible,
 .admin-auth-page[data-admin-theme="penpot"] :focus-visible {
-  outline: 3px solid rgb(184 149 85 / 34%);
+  outline: 3px solid var(--va-brass-dark);
   outline-offset: 2px;
 }
 
@@ -148,6 +181,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   width: min(86vw, 292px);
   flex-direction: column;
   overflow: hidden;
+  visibility: hidden;
   border: 0;
   background: linear-gradient(180deg, var(--va-sidebar) 0%, #121517 100%);
   color: #fff;
@@ -163,6 +197,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-sidebar-open,
 .admin-shell[data-admin-theme="penpot"][dir="ltr"] .admin-sidebar-open {
   transform: translateX(0);
+  visibility: visible;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-brand {
@@ -201,14 +236,14 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-brand-copy small {
-  color: rgb(255 255 255 / 50%);
-  font-size: 11px;
+  color: rgb(255 255 255 / 72%);
+  font-size: var(--va-text-small);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-sidebar-close {
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   margin-inline-start: auto;
   place-items: center;
   border: 0;
@@ -216,6 +251,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   background: rgb(255 255 255 / 6%);
   color: rgb(255 255 255 / 75%);
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-menu {
@@ -240,10 +276,10 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-menu-section > h2 {
   margin: 0;
   padding: 4px 12px 8px;
-  color: rgb(255 255 255 / 38%);
-  font-size: 11px;
+  color: rgb(255 255 255 / 66%);
+  font-size: var(--va-text-small);
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: normal;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-menu-link {
@@ -251,15 +287,15 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   width: 100%;
   min-height: 46px;
   align-items: center;
-  gap: 11px;
+  gap: var(--va-space-2);
   margin: 0;
   padding: 8px 10px;
   border: 0;
   border-radius: 10px;
   background: transparent;
   color: rgb(255 255 255 / 70%);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--va-text-label);
+  font-weight: 600;
   text-align: start;
   text-decoration: none;
   cursor: pointer;
@@ -300,18 +336,6 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-menu-chevron {
   margin-inline-start: auto;
   transition: transform 160ms ease;
-}
-
-.admin-shell[data-admin-theme="penpot"][dir="rtl"] .admin-menu-chevron {
-  transform: rotate(180deg);
-}
-
-.admin-shell[data-admin-theme="penpot"] .admin-menu-chevron-open {
-  transform: rotate(90deg);
-}
-
-.admin-shell[data-admin-theme="penpot"][dir="rtl"] .admin-menu-chevron-open {
-  transform: rotate(90deg);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-submenu {
@@ -379,7 +403,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   border-radius: 10px;
   background: transparent;
   color: rgb(255 255 255 / 64%);
-  font-size: 12px;
+  font-size: var(--va-text-small);
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
@@ -393,10 +417,6 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 
 .admin-shell[data-admin-theme="penpot"] .admin-store-arrow {
   margin-inline-start: auto;
-}
-
-.admin-shell[data-admin-theme="penpot"][dir="rtl"] .admin-store-arrow {
-  transform: rotate(180deg);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-backdrop {
@@ -456,7 +476,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-header-breadcrumb a {
   overflow: hidden;
   color: var(--va-muted);
-  font-size: 12px;
+  font-size: var(--va-text-small);
   font-weight: 500;
   text-decoration: none;
   text-overflow: ellipsis;
@@ -465,7 +485,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 
 .admin-shell[data-admin-theme="penpot"] .admin-header-breadcrumb > span {
   color: var(--va-border);
-  font-size: 10px;
+  font-size: var(--va-text-small);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-header-breadcrumb strong {
@@ -510,7 +530,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   outline: 0;
   background: transparent;
   color: var(--va-ink);
-  font-size: 14px;
+  font-size: var(--va-text-body);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-profile {
@@ -553,7 +573,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 
 .admin-shell[data-admin-theme="penpot"] .admin-page {
   display: grid;
-  gap: 18px;
+  gap: var(--va-space-4);
   max-width: none;
   margin: 0;
   padding: 0;
@@ -578,10 +598,10 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-page-title h1 {
   margin: 0;
   color: var(--va-ink);
-  font-size: clamp(24px, 3vw, 34px);
+  font-size: clamp(24px, 3vw, 30px);
   font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.35;
+  letter-spacing: normal;
+  line-height: 1.6;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-page-heading p,
@@ -589,7 +609,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   max-width: 760px;
   margin: 5px 0 0;
   color: var(--va-muted);
-  font-size: 12px;
+  font-size: var(--va-text-body);
   line-height: 1.8;
 }
 
@@ -597,13 +617,16 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   display: block;
   margin-bottom: 5px;
   color: var(--va-brass-dark);
-  font-size: 11px;
+  font-size: var(--va-text-small);
   font-weight: 700;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-page-heading-actions,
 .admin-shell[data-admin-theme="penpot"] .admin-title-row > button {
   flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--va-space-1);
 }
 
 .admin-action,
@@ -618,9 +641,9 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   padding: 9px 15px;
   border: 1px solid transparent;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--va-text-label);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.7;
   text-decoration: none;
   cursor: pointer;
   transition: transform 140ms ease, background 140ms ease, border-color 140ms ease, color 140ms ease;
@@ -663,7 +686,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-action-secondary,
 .admin-action-ghost,
 .admin-shell[data-admin-theme="penpot"] .admin-ghost-btn {
-  border-color: var(--va-border);
+  border-color: var(--va-control-border);
   background: var(--va-surface);
   color: var(--va-graphite);
 }
@@ -683,11 +706,11 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-surface,
 .admin-shell[data-admin-theme="penpot"] .admin-panel {
   min-width: 0;
-  padding: 18px;
+  padding: var(--va-space-4);
   border: 1px solid var(--va-border);
   border-radius: 16px;
   background: var(--va-surface);
-  box-shadow: 0 12px 36px rgb(23 27 31 / 4%);
+  box-shadow: 0 4px 18px rgb(23 27 31 / 3%);
 }
 
 .admin-surface-header,
@@ -706,7 +729,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-panel h3 {
   margin: 0;
   color: var(--va-ink);
-  font-size: 15px;
+  font-size: var(--va-text-heading);
   font-weight: 700;
 }
 
@@ -714,15 +737,16 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-panel-head span {
   margin: 3px 0 0;
   color: var(--va-muted);
-  font-size: 11px;
+  font-size: var(--va-text-small);
+  line-height: 1.9;
 }
 
 .admin-filter-bar {
   display: grid;
-  gap: 10px;
+  gap: var(--va-space-2);
   margin-bottom: 16px;
-  padding: 12px;
-  border: 1px solid var(--va-border);
+  padding: var(--va-space-2);
+  border: 0;
   border-radius: 12px;
   background: var(--va-surface-2);
 }
@@ -733,10 +757,11 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   align-items: center;
   gap: 9px;
   padding-inline: 12px;
-  border: 1px solid var(--va-border);
+  border: 1px solid var(--va-control-border);
   border-radius: 10px;
   background: var(--va-surface);
   color: var(--va-muted);
+  min-width: 0;
 }
 
 .admin-filter-search input {
@@ -745,7 +770,15 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   outline: 0;
   background: transparent;
   color: var(--va-ink);
-  font-size: 12px;
+  font-size: var(--va-text-body);
+  min-width: 0;
+}
+
+.admin-filter-search:focus-within,
+.admin-shell[data-admin-theme="penpot"] .admin-search:focus-within,
+.admin-auth-password > div:focus-within {
+  outline: 3px solid var(--va-brass-dark);
+  outline-offset: 2px;
 }
 
 .admin-filter-controls {
@@ -759,16 +792,18 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   min-width: 132px;
   min-height: 44px;
   padding-inline: 12px 34px;
-  border: 1px solid var(--va-border);
+  border: 1px solid var(--va-control-border);
   border-radius: 10px;
   background-color: var(--va-surface);
   color: var(--va-ink);
-  font-size: 12px;
+  font-size: var(--va-text-body);
+  max-width: 100%;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-table-wrap {
   width: 100%;
   overflow: visible;
+  container: admin-table / inline-size;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-table {
@@ -776,18 +811,20 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   border-collapse: separate;
   border-spacing: 0;
   color: var(--va-graphite);
-  font-size: 12px;
+  font-size: var(--va-text-body);
+  table-layout: fixed;
+  min-width: 0;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-table th {
   padding: 12px;
   border-bottom: 1px solid var(--va-border);
   background: var(--va-surface-2);
-  color: var(--va-muted);
-  font-size: 10px;
+  color: var(--va-graphite);
+  font-size: var(--va-text-label);
   font-weight: 600;
   text-align: start;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-table th:first-child {
@@ -806,6 +843,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   color: var(--va-graphite);
   text-align: start;
   vertical-align: middle;
+  overflow-wrap: anywhere;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-table tbody tr:last-child td {
@@ -830,12 +868,12 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   display: block;
   margin-top: 3px;
   color: var(--va-muted);
-  font-size: 10px;
+  font-size: var(--va-text-small);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-product-cell {
   display: flex;
-  min-width: 210px;
+  min-width: 0;
   align-items: center;
   gap: 11px;
 }
@@ -857,9 +895,11 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   gap: 5px;
   padding: 4px 9px;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: var(--va-text-small);
   font-weight: 700;
   white-space: nowrap;
+  line-height: 1.7;
+  max-width: 100%;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-badge::before {
@@ -893,7 +933,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   display: grid;
   gap: 7px;
   color: var(--va-graphite);
-  font-size: 11px;
+  font-size: var(--va-text-label);
   font-weight: 600;
 }
 
@@ -909,14 +949,15 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   width: 100%;
   min-height: 46px;
   padding: 10px 12px;
-  border: 1px solid var(--va-border);
+  border: 1px solid var(--va-control-border);
   border-radius: 10px;
   outline: 0;
   background: var(--va-surface);
   color: var(--va-ink);
-  font-size: 12px;
+  font-size: var(--va-text-body);
   font-weight: 400;
   transition: border-color 140ms ease, box-shadow 140ms ease;
+  line-height: 1.8;
 }
 
 .admin-field textarea {
@@ -945,7 +986,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 
 .admin-field small {
   color: var(--va-muted);
-  font-size: 10px;
+  font-size: var(--va-text-small);
   font-weight: 400;
 }
 
@@ -981,14 +1022,14 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-category-option,
 .admin-shell[data-admin-theme="penpot"] .admin-color-option {
   display: inline-flex;
-  min-height: 42px;
+  min-height: 44px;
   align-items: center;
   gap: 8px;
   padding: 8px 11px;
   border: 1px solid var(--va-border);
   border-radius: 10px;
   background: var(--va-surface-2);
-  font-size: 11px;
+  font-size: var(--va-text-label);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-category-option-child {
@@ -1083,11 +1124,12 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-stat-card strong {
   display: block;
   color: var(--va-ink);
-  font-size: clamp(21px, 2.4vw, 30px);
+  font-size: clamp(24px, 2.4vw, 32px);
   font-weight: 700;
   line-height: 1.5;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   font-variant-numeric: tabular-nums;
+  letter-spacing: normal;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-stat-blue { color: var(--va-blue); border-top: 3px solid var(--va-blue); }
@@ -1098,11 +1140,15 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-grid {
   display: grid;
   gap: 16px;
+  align-items: start;
 }
 
-/* Dashboard hierarchy stays readable without increasing type across unrelated admin forms. */
+/* Metric emphasis builds on the shared admin typography without changing the font family. */
 .admin-stat-card .admin-stat-value {
   color: inherit;
+  display: block;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-eyebrow {
@@ -1110,7 +1156,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-page-heading h1 {
-  font-size: clamp(28px, 3vw, 36px);
+  font-size: clamp(24px, 3vw, 30px);
   font-weight: 700;
 }
 
@@ -1121,7 +1167,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-stat-label {
-  font-size: 16px;
+  font-size: var(--va-text-body);
   font-weight: 700;
 }
 
@@ -1137,7 +1183,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-stat-card:has(.admin-stat-unit) strong {
-  font-size: clamp(20px, 2.2vw, 30px);
+  font-size: 24px;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-dashboard-page .admin-stat-unit {
@@ -1219,9 +1265,11 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 13px 0;
-  border-bottom: 1px solid #ebe8e1;
+  gap: var(--va-space-3);
+  padding: var(--va-space-3) 0;
+  border: 0;
+  border-bottom: 1px solid var(--va-border);
+  border-radius: 0;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-list-row:last-child {
@@ -1235,20 +1283,20 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 
 .admin-shell[data-admin-theme="penpot"] .admin-list-row strong {
   color: var(--va-ink);
-  font-size: 12px;
+  font-size: var(--va-text-body);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-list-row small {
   margin-top: 4px;
   color: var(--va-muted);
-  font-size: 10px;
+  font-size: var(--va-text-small);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-list-end {
   display: grid;
   justify-items: end;
   gap: 5px;
-  font-size: 11px;
+  font-size: var(--va-text-small);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-product-grid {
@@ -1269,28 +1317,20 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   min-height: 44px;
 }
 
-.admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table-wrap {
-  container: admin-products / inline-size;
-}
-
-.admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table {
-  min-width: 0;
-}
-
 /* The sidebar changes the available table width independently of the viewport. */
-@container admin-products (width < 56rem) {
-  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table thead {
+@container admin-table (width < 56rem) {
+  .admin-shell[data-admin-theme="penpot"] .admin-table thead {
     display: none;
   }
 
-  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table,
-  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table tbody {
+  .admin-shell[data-admin-theme="penpot"] .admin-table,
+  .admin-shell[data-admin-theme="penpot"] .admin-table tbody {
     display: grid;
     min-width: 0;
     gap: 12px;
   }
 
-  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table tr {
+  .admin-shell[data-admin-theme="penpot"] .admin-table tr {
     display: grid;
     min-width: 0;
     padding: 8px 12px;
@@ -1299,7 +1339,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
     background: var(--va-surface-2);
   }
 
-  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table td {
+  .admin-shell[data-admin-theme="penpot"] .admin-table td {
     display: flex;
     min-width: 0;
     align-items: center;
@@ -1309,22 +1349,22 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
     text-align: end;
   }
 
-  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table td::before {
+  .admin-shell[data-admin-theme="penpot"] .admin-table td::before {
     flex: 0 0 auto;
     color: var(--va-muted);
     content: attr(data-label);
-    font-size: 11px;
+    font-size: var(--va-text-small);
     text-align: start;
   }
 
-  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-product-cell {
+  .admin-shell[data-admin-theme="penpot"] .admin-product-cell {
     min-width: 0;
     flex: 1;
     text-align: start;
     overflow-wrap: anywhere;
   }
 
-  .admin-shell[data-admin-theme="penpot"] .admin-products-page .admin-table td:last-child {
+  .admin-shell[data-admin-theme="penpot"] .admin-table td:last-child {
     border-bottom: 0;
   }
 }
@@ -1353,14 +1393,15 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-product-card h2 {
   margin: 0;
   color: var(--va-ink);
-  font-size: 14px;
+  font-size: var(--va-text-heading);
+  line-height: 1.8;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-product-card p,
 .admin-shell[data-admin-theme="penpot"] .admin-card-footer {
   margin: 3px 0 0;
   color: var(--va-muted);
-  font-size: 10px;
+  font-size: var(--va-text-small);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-card-footer {
@@ -1383,8 +1424,8 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-pagination-modern button,
 .admin-shell[data-admin-theme="penpot"] .admin-pagination button {
   display: grid;
-  min-width: 40px;
-  height: 40px;
+  min-width: 44px;
+  height: 44px;
   place-items: center;
   border: 1px solid var(--va-border);
   border-radius: 10px;
@@ -1408,18 +1449,6 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 
 .admin-pagination-ellipsis {
   color: var(--va-muted);
-}
-
-.admin-icon-back {
-  transform: rotate(180deg);
-}
-
-.admin-shell[data-admin-theme="penpot"][dir="rtl"] .admin-icon-back {
-  transform: none;
-}
-
-.admin-shell[data-admin-theme="penpot"][dir="rtl"] .admin-pagination-modern > button:last-child svg {
-  transform: rotate(180deg);
 }
 
 .admin-empty-state,
@@ -1456,7 +1485,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-empty-state p {
   max-width: 420px;
   color: var(--va-muted);
-  font-size: 11px;
+  font-size: var(--va-text-small);
   line-height: 1.8;
 }
 
@@ -1469,8 +1498,9 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   padding: 12px 14px;
   border: 1px solid;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: var(--va-text-body);
   line-height: 1.8;
+  flex-wrap: wrap;
 }
 
 .admin-feedback-info,
@@ -1513,25 +1543,27 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-invoice-grid p {
   margin: 7px 0;
   color: var(--va-muted);
-  font-size: 11px;
+  font-size: var(--va-text-small);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-order-status-control {
   display: flex;
-  min-width: 190px;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-order-status-control select {
   min-width: 118px;
-  min-height: 40px;
+  min-height: 44px;
   padding-inline: 10px;
   border: 1px solid var(--va-border);
   border-radius: 9px;
   background: var(--va-surface);
   color: var(--va-graphite);
-  font-size: 10px;
+  font-size: var(--va-text-small);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-order-detail-statuses {
@@ -1572,7 +1604,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-detail-list dt,
 .admin-shell[data-admin-theme="penpot"] .admin-detail-list dd {
   margin: 0;
-  font-size: 11px;
+  font-size: var(--va-text-small);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-detail-list dt { color: var(--va-muted); }
@@ -1581,7 +1613,8 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-detail-total dt,
 .admin-shell[data-admin-theme="penpot"] .admin-detail-total dd { color: inherit; font-size: 13px; font-weight: 700; }
 
-.admin-shell[data-admin-theme="penpot"] .admin-choice {
+.admin-shell[data-admin-theme="penpot"] .admin-choice,
+.admin-shell[data-admin-theme="penpot"] .admin-form .admin-choice {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -1593,6 +1626,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-shell[data-admin-theme="penpot"] .admin-choice input {
   width: 18px;
   height: 18px;
+  flex-shrink: 0;
   accent-color: var(--va-brass-dark);
 }
 
@@ -1605,7 +1639,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   border-radius: 999px;
   background: var(--va-surface-2);
   color: var(--va-graphite);
-  font-size: 10px;
+  font-size: var(--va-text-small);
   font-weight: 700;
 }
 
@@ -1625,7 +1659,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 
 .admin-shell[data-admin-theme="penpot"] .admin-permission-banner strong,
 .admin-shell[data-admin-theme="penpot"] .admin-permission-banner p { margin: 0; }
-.admin-shell[data-admin-theme="penpot"] .admin-permission-banner p { margin-top: 3px; color: var(--va-graphite); font-size: 11px; line-height: 1.8; }
+.admin-shell[data-admin-theme="penpot"] .admin-permission-banner p { margin-top: 3px; color: var(--va-graphite); font-size: var(--va-text-small); line-height: 1.8; }
 
 .admin-shell[data-admin-theme="penpot"] .admin-bulk-bar {
   display: flex;
@@ -1695,6 +1729,16 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   min-height: 36px;
 }
 
+/* Keep the label-selection column compact without shrinking its checkbox hit area. */
+.admin-shell[data-admin-theme="penpot"] .admin-table .admin-order-label-selection {
+  padding-inline: 5px;
+}
+
+.admin-shell[data-admin-theme="penpot"] .admin-order-label-selection .admin-choice {
+  min-width: 44px;
+  justify-content: center;
+}
+
 .admin-dialog-backdrop {
   position: fixed;
   inset: 0;
@@ -1739,7 +1783,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 
 .admin-dialog p {
   color: var(--va-muted);
-  font-size: 12px;
+  font-size: var(--va-text-small);
   line-height: 1.9;
 }
 
@@ -1796,7 +1840,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-storefront-card h2 { color: var(--va-ink); font-size: 16px; }
-.admin-shell[data-admin-theme="penpot"] .admin-storefront-card p { min-height: 52px; color: var(--va-muted); font-size: 11px; line-height: 1.9; }
+.admin-shell[data-admin-theme="penpot"] .admin-storefront-card p { min-height: 52px; color: var(--va-muted); font-size: var(--va-text-small); line-height: 1.9; }
 .admin-shell[data-admin-theme="penpot"] .admin-storefront-card .admin-action { margin-top: auto; }
 
 .admin-shell .admin-slideshow {
@@ -1843,6 +1887,9 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   background: var(--va-canvas);
   color: var(--va-ink);
   font-family: "Vazirmatn", Tahoma, sans-serif;
+  font-size: var(--va-text-body);
+  line-height: 1.8;
+  font-synthesis: none;
 }
 
 .admin-auth-brand-panel {
@@ -1889,13 +1936,14 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 .admin-auth-card header h2 {
   color: var(--va-ink);
   font-size: 24px;
+  font-weight: 700;
   line-height: 1.5;
 }
 
 .admin-auth-card header p {
   margin-top: 6px;
   color: var(--va-muted);
-  font-size: 11px;
+  font-size: var(--va-text-small);
   line-height: 1.9;
 }
 
@@ -1910,7 +1958,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   display: grid;
   gap: 7px;
   color: var(--va-graphite);
-  font-size: 11px;
+  font-size: var(--va-text-label);
   font-weight: 600;
 }
 
@@ -1918,7 +1966,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   display: flex;
   min-height: 46px;
   align-items: center;
-  border: 1px solid var(--va-border);
+  border: 1px solid var(--va-control-border);
   border-radius: 10px;
   background: var(--va-surface);
 }
@@ -1931,6 +1979,8 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   outline: 0;
   background: transparent;
   color: var(--va-ink);
+  min-width: 0;
+  font-size: var(--va-text-body);
 }
 
 .admin-auth-password button {
@@ -1971,7 +2021,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 
 .admin-auth-links a {
   color: var(--va-brass-dark);
-  font-size: 10px;
+  font-size: var(--va-text-small);
   font-weight: 600;
   text-decoration: none;
 }
@@ -1984,7 +2034,18 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   border-radius: 10px;
   background: var(--va-blue-soft);
   color: var(--va-blue);
-  font-size: 10px;
+  font-size: var(--va-text-small);
+}
+
+/* Currency totals keep all digits at the shared readable size in narrow dashboard grids. */
+@media (max-width: 639px) {
+  .admin-shell[data-admin-theme="penpot"] .admin-stats-grid .admin-stat-card:has(.admin-stat-unit) {
+    grid-column: 1 / -1;
+  }
+
+  .admin-shell[data-admin-theme="penpot"] .admin-stats-grid .admin-stat-card:last-child:nth-child(even) {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (min-width: 640px) {
@@ -2026,11 +2087,11 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
 
   .admin-auth-brand > div { display: grid; gap: 2px; }
   .admin-auth-brand strong { font-family: Arial, sans-serif; letter-spacing: 0.15em; }
-  .admin-auth-brand small { color: rgb(255 255 255 / 48%); font-size: 10px; }
+  .admin-auth-brand small { color: rgb(255 255 255 / 48%); font-size: var(--va-text-small); }
 
   .admin-auth-brand-copy { max-width: 570px; }
-  .admin-auth-brand-copy > span { color: var(--va-brass); font-size: 11px; font-weight: 700; }
-  .admin-auth-brand-copy h1 { margin: 12px 0; font-size: clamp(34px, 4vw, 54px); line-height: 1.45; }
+  .admin-auth-brand-copy > span { color: var(--va-brass); font-size: var(--va-text-small); font-weight: 700; }
+  .admin-auth-brand-copy h1 { margin: 12px 0; font-size: clamp(34px, 4vw, 54px); font-weight: 700; line-height: 1.45; }
   .admin-auth-brand-copy p { max-width: 500px; margin: 0; color: rgb(255 255 255 / 55%); font-size: 13px; line-height: 2; }
 
   .admin-auth-brand-panel ul {
@@ -2052,7 +2113,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
     border-radius: 12px;
     background: rgb(255 255 255 / 3%);
     color: rgb(255 255 255 / 68%);
-    font-size: 10px;
+    font-size: var(--va-text-small);
   }
 
   .admin-auth-brand-panel li svg { color: var(--va-brass); }
@@ -2071,7 +2132,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   border-radius: 10px;
   background: var(--va-surface);
   box-shadow: none;
-  font-size: 11px;
+  font-size: var(--va-text-body);
 }
 
 .admin-shell[data-admin-theme="penpot"] .admin-select__control--is-focused {
@@ -2086,7 +2147,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   border-radius: 10px;
   background: var(--va-surface);
   box-shadow: 0 16px 40px rgb(23 27 31 / 12%);
-  font-size: 11px;
+  font-size: var(--va-text-body);
 }
 
 .admin-shell[data-admin-theme="penpot"] .Toastify__toast {
@@ -2095,7 +2156,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   background: var(--va-surface);
   color: var(--va-ink);
   font-family: "Vazirmatn", Tahoma, sans-serif;
-  font-size: 11px;
+  font-size: var(--va-text-small);
   box-shadow: 0 16px 46px rgb(23 27 31 / 14%);
 }
 
@@ -2111,64 +2172,6 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
   .admin-shell[data-admin-theme="penpot"] .admin-title-row > button,
   .admin-shell[data-admin-theme="penpot"] .admin-title-row > a {
     width: 100%;
-  }
-
-  .admin-shell[data-admin-theme="penpot"] .admin-table thead {
-    display: none;
-  }
-
-  .admin-shell[data-admin-theme="penpot"] .admin-table,
-  .admin-shell[data-admin-theme="penpot"] .admin-table tbody {
-    display: grid;
-    gap: 10px;
-  }
-
-  .admin-shell[data-admin-theme="penpot"] .admin-table tr {
-    display: grid;
-    gap: 0;
-    padding: 8px 12px;
-    border: 1px solid var(--va-border);
-    border-radius: 12px;
-    background: var(--va-surface-2);
-  }
-
-  .admin-shell[data-admin-theme="penpot"] .admin-table td {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    padding: 10px 0;
-    border-bottom: 1px solid #e7e3da;
-    text-align: end;
-  }
-
-  .admin-shell[data-admin-theme="penpot"] .admin-table td:last-child {
-    border-bottom: 0;
-  }
-
-  .admin-shell[data-admin-theme="penpot"] .admin-table td::before {
-    flex: 0 0 auto;
-    color: var(--va-muted);
-    content: attr(data-label);
-    font-size: 10px;
-    text-align: start;
-  }
-
-  .admin-shell[data-admin-theme="penpot"] .admin-table td[data-label=""]::before {
-    display: none;
-  }
-
-  .admin-shell[data-admin-theme="penpot"] .admin-table .admin-product-cell {
-    min-width: 0;
-    flex: 1;
-    text-align: start;
-  }
-
-  .admin-shell[data-admin-theme="penpot"] .admin-table td .admin-action,
-  .admin-shell[data-admin-theme="penpot"] .admin-table td .admin-ghost-btn,
-  .admin-shell[data-admin-theme="penpot"] .admin-table td .admin-danger-btn {
-    min-height: 40px;
   }
 
   .admin-shell[data-admin-theme="penpot"] .admin-form-actions > * {
@@ -2253,6 +2256,7 @@ body:has(.admin-auth-page[data-admin-theme="penpot"]) {
     width: 264px;
     transform: translateX(0);
     box-shadow: none;
+    visibility: visible;
   }
 
   .admin-shell[data-admin-theme="penpot"] .admin-main {

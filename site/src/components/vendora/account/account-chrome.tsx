@@ -28,6 +28,7 @@ import {
   QuickPayIcon,
   ReturnIcon,
   WalletIcon,
+  SupportIcon,
   type VendoraIconProps,
 } from "@/components/vendora/icons";
 
@@ -43,6 +44,7 @@ export const accountMenuIcons: Record<string, (props: VendoraIconProps) => React
   wishlist: HeartIcon,
   quickPay: QuickPayIcon,
   proformas: OrdersIcon,
+  tickets: SupportIcon,
 };
 
 /**

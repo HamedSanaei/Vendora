@@ -1,5 +1,7 @@
 "use client";
 
+import { useAccountLogout } from "@/lib/auth/use-account-logout";
+import { notifySuccess } from "@/utils/toast";
 import { useMemo, useState } from "react";
 import { getDict } from "@/lib/vendora/i18n";
 import type { Locale } from "@/lib/vendora/types";
@@ -52,6 +54,7 @@ function getPasswordErrorMessage(result: unknown, locale: Locale, security: Retu
  * guidance, field validation, and the authenticated change-password request.
  */
 export function PasswordForm({ locale }: { locale: Locale }) {
+  const logout = useAccountLogout(locale);
   const t = getDict(locale);
   const security = t.account.security;
   const [current, setCurrent] = useState("");
@@ -117,6 +120,8 @@ export function PasswordForm({ locale }: { locale: Locale }) {
       return;
     }
 
+    notifySuccess(locale === "fa" ? "رمز تغییر کرد؛ دوباره وارد شوید." : "Password changed. Sign in again.");
+    logout();
     setUpdated(true);
     setCurrent("");
     setNext("");

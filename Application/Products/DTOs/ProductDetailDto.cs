@@ -12,4 +12,4 @@ public sealed record ProductDetailDto(
     int StockQuantity,
     string? CategoryName,
     IReadOnlyList<ProductImageDto> Images,
-    int ProductCode = 0);
+    int ProductCode = 0, decimal BasePrice = 0, decimal EmbeddedShippingUnitAmount = 0, long ShippingPolicyVersion = 1, bool FreeShipping = false);

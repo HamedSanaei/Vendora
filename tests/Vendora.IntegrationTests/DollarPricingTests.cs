@@ -198,8 +198,8 @@ public sealed class DollarPricingTests
         await fixture.Db.SaveChangesAsync();
         var handler = new Application.Orders.Create.Handler(new CartRepository(fixture.Db), new OrderRepository(fixture.Db),
             new ProductReadRepository(fixture.Db), fixture.Db, fixture.Db);
-        var command = new Application.Orders.Create.Command(address.UserId, 60000, 0, address.Id, null,
-            [new(product.Id, 2, 300000)]);
+        var command = new Application.Orders.Create.Command(address.UserId, 0, 0, address.Id, null,
+            [new(product.Id, 2, 300000)], "tipax");
         await Assert.ThrowsAsync<PriceChangedException>(() => handler.Handle(command, default));
         Assert.Equal(0, await fixture.Db.Orders.CountAsync());
         fixture.Db.ChangeTracker.Clear();
@@ -208,7 +208,7 @@ public sealed class DollarPricingTests
         Assert.Equal(320000m, line.UnitPrice);
         Assert.Equal(3m, line.UsdUnitPrice);
         Assert.Equal(103500m, line.PriceExchangeRate);
-        Assert.Equal(700000m, result.TotalAmount);
+        Assert.Equal(640000m, result.TotalAmount);
         Assert.Equal(18, (await fixture.Db.Products.FindAsync(product.Id))!.StockQuantity);
     }
 

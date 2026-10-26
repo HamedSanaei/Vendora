@@ -1,16 +1,4 @@
-import ForgotPasswordArea from "@components/forget-password-area";
-
-
-export const metadata = {
-  title: "Forgot Password - Harri Shop",
-};
-
-const ForgotPassword = async ({ params }) => {
-  const {token} = await params;
-  return (
-    <ForgotPasswordArea token={token} />
-  );
-};
-
-
-export default ForgotPassword;
+import { redirect } from "next/navigation";
+import { getServerLocale } from "@/lib/vendora/server-locale";
+/** Retires the development token URL and directs customers to verified-phone recovery. */
+export default async function LegacyPasswordReset() { redirect(`/${await getServerLocale()}/forgot`); }

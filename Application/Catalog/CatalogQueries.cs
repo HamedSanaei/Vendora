@@ -37,7 +37,7 @@ public static class CatalogQueries
         IReadOnlyList<ProductAttributeDto>? Attributes = null,
         SeoDto? Seo = null,
         IReadOnlyList<CatalogSearch.CategoryLink>? Breadcrumbs = null,
-        double Rating = 0, int RatingCount = 0, int ReviewCount = 0, int ProductCode = 0);
+        double Rating = 0, int RatingCount = 0, int ReviewCount = 0, int ProductCode = 0, decimal BasePrice = 0, decimal EmbeddedShippingUnitAmount = 0, long ShippingPolicyVersion = 1, bool FreeShipping = false);
 
     /// <summary>Represents a recursive category node.</summary>
     public sealed record CatalogCategoryDto(Guid Id, string Name, string Slug, Guid? ParentCategoryId, IReadOnlyList<CatalogCategoryDto> Children);
@@ -96,6 +96,7 @@ public static class CatalogQueries
 
                 // One local database read for the entire result; never one exchange request per product or user.
                 var rate = await _dbContext.UsdtExchangeRates.AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+                var policy = await Application.Shipping.ShippingPricing.ReadAsync(_dbContext, cancellationToken);
                 var now = _time.GetUtcNow().UtcDateTime;
                 var categoryGraph = request.Identifier is null ? [] : await _dbContext.DisplayCategoriesAsync(cancellationToken);
                 var hierarchy = new CategoryHierarchy(categoryGraph);
@@ -113,7 +114,7 @@ public static class CatalogQueries
                         product.Title,
                         product.Slug,
                         _descriptions.Excerpt(product.Description),
-                        product.Price,
+                        policy.SellingPrice(product.Price),
                         product.StockQuantity,
                         ResolvePrimaryCategoryId(product),
                         ResolvePrimaryCategoryName(product),
@@ -146,7 +147,7 @@ public static class CatalogQueries
                         discussions.GetValueOrDefault(product.Id)?.Rating ?? 0,
                         discussions.GetValueOrDefault(product.Id)?.RatingCount ?? 0,
                         discussions.GetValueOrDefault(product.Id)?.ReviewCount ?? 0,
-                        product.ProductCode);
+                        product.ProductCode, product.Price, policy.IncludedInPrice ? policy.UnitAmount : 0, policy.Version, policy.IncludedInPrice);
                 }).ToList();
             }
 

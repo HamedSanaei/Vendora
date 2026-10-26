@@ -24,7 +24,7 @@ export const AdminAuthShellPage = observer(function AdminAuthShellPage({ mode }:
   const [fullName, setFullName] = useState(''); const [email, setEmail] = useState(searchParams.get('email') ?? ''); const [phoneNumber, setPhoneNumber] = useState(''); const [password, setPassword] = useState(''); const [inviteCode, setInviteCode] = useState(''); const [resetToken, setResetToken] = useState(''); const [showPassword, setShowPassword] = useState(false);
   const isRegister = mode === 'register'; const isForgot = mode === 'forgot'; const isReset = mode === 'reset';
   const title = isFa ? (isRegister ? 'ساخت حساب مدیر' : isForgot ? 'بازیابی رمز عبور' : isReset ? 'تنظیم رمز جدید' : 'ورود به پنل مدیریت') : (isRegister ? 'Register admin' : isForgot ? 'Forgot password' : isReset ? 'Reset password' : 'Admin sign in');
-  const description = isFa ? (isRegister ? 'حساب دعوت‌شده وندورا را فعال کنید.' : isForgot ? 'ایمیل حساب مدیریتی را وارد کنید.' : isReset ? 'توکن بازیابی و رمز جدید را ثبت کنید.' : 'برای مدیریت فروشگاه با حساب Admin وارد شوید.') : (isRegister ? 'Activate an invited Vendora admin account.' : isForgot ? 'Enter the admin account email.' : isReset ? 'Enter the reset token and a new password.' : 'Sign in with an Admin account.');
+  const description = isFa ? (isRegister ? 'حساب دعوت‌شده وندورا را فعال کنید.' : isForgot ? 'برای بازیابی امن حساب با مدیر اصلی سامانه تماس بگیرید.' : isReset ? 'بازیابی حساب مدیریت از مسیر امن مالک سامانه انجام می‌شود.' : 'برای مدیریت فروشگاه با حساب Admin وارد شوید.') : (isRegister ? 'Activate an invited Vendora admin account.' : isForgot ? 'Contact the owner for secure administrator recovery.' : isReset ? 'Administrator recovery uses the owner’s secure process.' : 'Sign in with an Admin account.');
 
   function resolveReturnTo(): string {
     const requested = searchParams.get('returnTo');
@@ -36,7 +36,7 @@ export const AdminAuthShellPage = observer(function AdminAuthShellPage({ mode }:
     event.preventDefault();
     const succeeded = isRegister ? await auth.register({ fullName, email, password, phoneNumber, inviteCode }) : isForgot ? await auth.forgotPassword(email) : isReset ? await auth.resetPassword(email, resetToken, password) : await auth.login(email, password);
     if (!succeeded) return;
-    if (isForgot) { toast.info(isFa ? 'توکن بازیابی توسعه‌ای ایجاد شد.' : 'Development reset token generated.'); return; }
+    if (isForgot) { toast.info(isFa ? 'برای بازیابی حساب مدیریت با مدیر اصلی سامانه تماس بگیرید.' : 'Contact the owner for secure administrator recovery.'); return; }
     if (isReset) { toast.success(isFa ? 'رمز عبور با موفقیت تغییر کرد.' : 'Password reset successfully.'); navigate(adminPath(locale, 'login')); return; }
     toast.success(isFa ? 'ورود موفق بود.' : 'Signed in successfully.'); navigate(resolveReturnTo(), { replace: true });
   }
@@ -53,7 +53,7 @@ export const AdminAuthShellPage = observer(function AdminAuthShellPage({ mode }:
         <div className="admin-auth-mobile-brand">{profile.logoUrl ? <img className="admin-store-brand-image" src={storeImageUrl(profile.logoUrl)} alt={brand.name} /> : <AdminIcon name="brand" size={23} />}<strong>{brand.wordmark}</strong></div>
         <div className="admin-auth-card">
           <header><span className="admin-eyebrow">{isFa ? 'دسترسی امن' : 'Secure access'}</span><h2>{title}</h2><p>{brandText(description, profile, locale)}</p></header>
-          <form className="admin-auth-form" onSubmit={handleSubmit}>
+          {isForgot || isReset ? <AdminFeedback tone="info">{isFa ? "بازیابی پیامکی مخصوص مشتریان است. برای بازیابی امن حساب مدیریت با مدیر اصلی سامانه تماس بگیرید؛ توکن بازیابی در مرورگر نمایش داده نمی‌شود." : "SMS recovery is customer-only. Contact the owner for secure administrator recovery; reset tokens are never displayed in the browser."}</AdminFeedback> : <form className="admin-auth-form" onSubmit={handleSubmit}>
             {isRegister ? <AdminField autoComplete="name" label={isFa ? 'نام کامل' : 'Full name'} onChange={(event) => setFullName(event.target.value)} required value={fullName} /> : null}
             <AdminField autoComplete="email" dir="ltr" label={isFa ? 'ایمیل' : 'Email'} onChange={(event) => setEmail(event.target.value)} placeholder="admin@vendora.local" required type="email" value={email} />
             {isRegister ? <AdminField autoComplete="tel" dir="ltr" label={isFa ? 'شماره تماس' : 'Phone number'} onChange={(event) => setPhoneNumber(event.target.value)} placeholder="09120000000" value={phoneNumber} /> : null}
@@ -63,7 +63,7 @@ export const AdminAuthShellPage = observer(function AdminAuthShellPage({ mode }:
             {auth.error ? <AdminFeedback tone="error">{auth.error}</AdminFeedback> : null}
             {auth.resetToken ? <div className="admin-auth-token"><strong>{isFa ? 'توکن توسعه‌ای' : 'Development reset token'}</strong><textarea dir="ltr" readOnly rows={4} value={auth.resetToken} /><AdminButton onClick={() => navigate(`${adminPath(locale, 'reset-password')}?email=${encodeURIComponent(email)}`)} variant="secondary">{isFa ? 'تنظیم رمز جدید' : 'Set new password'}</AdminButton></div> : null}
             <AdminButton className="admin-auth-submit" disabled={auth.isLoading} type="submit" variant="brass">{auth.isLoading ? (isFa ? 'لطفاً صبر کنید…' : 'Please wait…') : (isFa ? 'ادامه' : 'Continue')}</AdminButton>
-          </form>
+          </form>}
           <nav className="admin-auth-links">
             {mode === 'login' ? <><Link to={adminPath(locale, 'forgot-password')}>{isFa ? 'رمز عبور را فراموش کرده‌اید؟' : 'Forgot password?'}</Link><Link to={adminPath(locale, 'register')}>{isFa ? 'فعال‌سازی حساب دعوت‌شده' : 'Activate invited account'}</Link></> : <Link to={adminPath(locale, 'login')}>{isFa ? 'بازگشت به ورود' : 'Back to sign in'}</Link>}
           </nav>

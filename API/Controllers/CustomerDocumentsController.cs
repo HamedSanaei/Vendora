@@ -47,7 +47,7 @@ public sealed class CustomerDocumentsController(ISender sender) : ControllerBase
     public async Task<ActionResult> Issue(ProformaRequest input, [FromHeader(Name = "Idempotency-Key")] string key, CancellationToken ct)
     {
         if (!TryActor(out var actor)) return Unauthorized();
-        try { return Ok(new { id = await sender.Send(new ProformaCommands.Issue(actor, key, input.Items, input.ShippingMethod, input.CouponCode), ct) }); }
+        try { return Ok(new { id = await sender.Send(new ProformaCommands.Issue(actor, key, input.Items, input.ShippingMethod, input.CouponCode, input.ShippingQuoteId, input.AddressId), ct) }); }
         catch (Application.Auth.CustomerProfileRequiredException) { return StatusCode(403, new { code = "PROFILE_INCOMPLETE" }); }
         catch (AccountingException e) { return StatusCode(e.Status, new { code = e.Code }); }
         catch (Application.Pricing.PriceChangedException e) { return Conflict(new { code = "PRICE_CHANGED", productId = e.ProductId, currentPrice = e.CurrentPrice }); }
@@ -57,5 +57,5 @@ public sealed class CustomerDocumentsController(ISender sender) : ControllerBase
     }
     /// <summary>Reads the trusted subject claim, not a client-supplied ownership flag.</summary>
     private bool TryActor(out Guid actor) => Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out actor);
-    public sealed record ProformaRequest(IReadOnlyList<CartQuoteItem> Items, string? ShippingMethod = null, string? CouponCode = null);
+    public sealed record ProformaRequest(IReadOnlyList<CartQuoteItem> Items, string? ShippingMethod = null, string? CouponCode = null, Guid? ShippingQuoteId = null, Guid? AddressId = null);
 }

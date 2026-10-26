@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { httpClient } from '../../../lib/api/httpClient';
-import { preparePdfPrintWindow } from '../../../lib/pdf-browser';
+import { downloadPdf } from '../../../lib/pdf-download';
 
 const root = '/api/admin/accounting';
 
@@ -16,21 +16,7 @@ export async function accountingWrite(path: string, payload: unknown, key: strin
 
 /** Downloads the same authorized PDF used for print; blob errors are decoded before displaying safe feedback. */
 export async function accountingPdf(id: string, size: 'A4' | 'A5', print = false): Promise<void> {
-  const printWindow = print ? preparePdfPrintWindow() : null;
-  try {
-    const { data } = await httpClient.get<Blob>(`${root}/documents/${id}/pdf`, { params: { size }, responseType: 'blob', timeout: 60000 });
-    const url = URL.createObjectURL(data);
-    // The browser's native PDF viewer provides print/printer selection locally; no server printer is involved.
-    if (printWindow) printWindow.location.replace(url);
-    else { const a = document.createElement('a'); a.href = url; a.download = `${id}-${size}.pdf`; a.click(); }
-    window.setTimeout(() => URL.revokeObjectURL(url), 120000);
-  } catch (error) {
-    printWindow?.close();
-    if (axios.isAxiosError(error) && error.response?.data instanceof Blob) {
-      try { error.response.data = JSON.parse(await error.response.data.text()); } catch { /* Preserve HTTP failure. */ }
-    }
-    throw error;
-  }
+  await downloadPdf({url: `${root}/documents/${id}/pdf`, params: {size}}, `${id}-${size}.pdf`, print);
 }
 
 /** Maps financial/concurrency errors to actionable localized messages, without leaking exception internals. */

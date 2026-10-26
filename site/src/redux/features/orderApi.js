@@ -23,6 +23,7 @@ function mapOrder(order) {
     address: address.streetAddress,
     postalCode: address.postalCode,
     shippingCost: order.shippingCost,
+    shippingPaymentMode: order.shippingPaymentMode,
     discount: order.discountAmount,
     totalAmount: order.totalAmount,
     cart: (order.items ?? []).map((item) => ({

@@ -35,7 +35,7 @@ const menuSections: AdminMenuSection[] = [
         ],
       },
       { titleKey: 'orders', path: (locale) => adminPath(locale, 'orders'), icon: 'orders' },
-      { titleKey: 'accounting', path: (locale) => adminPath(locale, 'accounting'), icon: 'orders' },
+      { titleKey: 'accounting', path: (locale) => adminPath(locale, 'accounting'), icon: 'accounting' },
       { titleKey: 'discussions', path: (locale) => adminPath(locale, 'discussions'), icon: 'newsletter' },
     ],
   },
@@ -44,15 +44,16 @@ const menuSections: AdminMenuSection[] = [
     items: [
       { titleKey: 'category', path: (locale) => adminPath(locale, 'category'), icon: 'category' },
       { titleKey: 'brand', path: (locale) => adminPath(locale, 'brands'), icon: 'brand' },
-      { titleKey: 'colors', path: (locale) => adminPath(locale, 'colors'), icon: 'category' },
-      { titleKey: 'attributes', path: (locale) => adminPath(locale, 'attributes'), icon: 'category' },
-      { titleKey: 'seo', path: (locale) => adminPath(locale, 'seo'), icon: 'category' },
+      { titleKey: 'colors', path: (locale) => adminPath(locale, 'colors'), icon: 'colors' },
+      { titleKey: 'attributes', path: (locale) => adminPath(locale, 'attributes'), icon: 'attributes' },
+      { titleKey: 'seo', path: (locale) => adminPath(locale, 'seo'), icon: 'seo' },
       { titleKey: 'coupons', path: (locale) => adminPath(locale, 'coupon'), icon: 'coupon' },
     ],
   },
   {
     labelKey: 'customersGrowth',
     items: [
+      { titleKey: 'tickets', path: (locale) => adminPath(locale, 'tickets'), icon: 'newsletter' },
       { titleKey: 'profile', path: (locale) => adminPath(locale, 'profile'), icon: 'users' },
       { titleKey: 'subscribers', path: (locale) => adminPath(locale, 'newsletter-subscriptions'), icon: 'newsletter' },
     ],
@@ -141,13 +142,19 @@ export const AdminLayout = observer(function AdminLayout() {
     if (!sidebar) {
       return undefined;
     }
+    const drawer = sidebar;
 
     const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-    const focusableElements = Array.from(sidebar.querySelectorAll<HTMLElement>(focusableSelector));
-    focusableElements[0]?.focus();
+    /** Excludes collapsed submenu items and responds to a submenu opening while the drawer is active. */
+    function drawerFocusTargets(): HTMLElement[] {
+      return Array.from(drawer.querySelectorAll<HTMLElement>(focusableSelector))
+        .filter(element => !element.closest('[inert]') && element.getClientRects().length > 0);
+    }
+    drawerFocusTargets()[0]?.focus();
 
     /** Keeps keyboard focus inside the open mobile navigation drawer. */
     function trapDrawerFocus(event: KeyboardEvent): void {
+      const focusableElements = drawerFocusTargets();
       if (event.key !== 'Tab' || focusableElements.length === 0) return;
       const first = focusableElements[0];
       const last = focusableElements[focusableElements.length - 1];
@@ -222,15 +229,16 @@ export const AdminLayout = observer(function AdminLayout() {
                     <div className="admin-menu-group" key={item.titleKey}>
                       <button
                         aria-expanded={isOpen}
+                        aria-controls={`admin-submenu-${item.titleKey}`}
                         className={`admin-menu-link admin-menu-parent ${hasActiveChild ? 'admin-menu-link-active' : ''}`}
                         onClick={() => setOpenMenu(isOpen ? null : item.titleKey)}
                         type="button"
                       >
                         <span className="admin-menu-icon"><AdminIcon name={item.icon} size={19} /></span>
                         <span>{adminText(locale, item.titleKey)}</span>
-                        <AdminIcon className={`admin-menu-chevron ${isOpen ? 'admin-menu-chevron-open' : ''}`} name="chevron" size={17} />
+                        <AdminIcon className="admin-menu-chevron" direction={isOpen ? 'down' : locale === 'fa' ? 'left' : 'right'} name="chevron" size={18} />
                       </button>
-                      <div className={`admin-submenu ${isOpen ? 'admin-submenu-open' : ''}`}>
+                      <div className={`admin-submenu ${isOpen ? 'admin-submenu-open' : ''}`} id={`admin-submenu-${item.titleKey}`} inert={!isOpen}>
                         {item.children.map((child) => (
                           <NavLink className={({ isActive }) => `admin-submenu-link ${isActive ? 'admin-submenu-link-active' : ''}`} key={child.titleKey} to={child.path(locale)}>
                             {adminText(locale, child.titleKey)}
@@ -254,7 +262,7 @@ export const AdminLayout = observer(function AdminLayout() {
 
         <div className="admin-sidebar-footer">
           <a className="admin-store-link" href={`${storefrontBaseUrl}/${locale}`} rel="noreferrer" target="_blank">
-            <AdminIcon name="store" size={18} /><span>{adminText(locale, 'openStore')}</span><AdminIcon className="admin-store-arrow" name="arrow" size={16} />
+            <AdminIcon name="store" size={18} /><span>{adminText(locale, 'openStore')}</span><AdminIcon className="admin-store-arrow" direction={locale === 'fa' ? 'left' : 'right'} name="arrow" size={18} />
           </a>
           <button className="admin-logout-btn" onClick={handleLogout} type="button">
             <AdminIcon name="logout" size={18} /><span>{adminText(locale, 'logout')}</span>
@@ -285,7 +293,7 @@ export const AdminLayout = observer(function AdminLayout() {
           <Link className="admin-profile" to={adminPath(locale, 'profile')} aria-label={`${adminText(locale, 'account')}: ${store.auth.profile?.fullName ?? 'Vendora Admin'}`}>
             <span className="admin-profile-avatar">{initials}</span>
             <div><strong>{store.auth.profile?.fullName ?? 'Vendora Admin'}</strong><small>{adminText(locale, 'account')}</small></div>
-            <AdminIcon className="admin-profile-chevron" name="chevron" size={16} />
+            <AdminIcon className="admin-profile-chevron" direction={locale === 'fa' ? 'left' : 'right'} name="chevron" size={18} />
           </Link>
         </header>
 

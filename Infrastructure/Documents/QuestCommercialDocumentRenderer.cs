@@ -6,7 +6,6 @@ using Domain.Accounting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using QuestPDF.Drawing;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -17,8 +16,6 @@ namespace Infrastructure.Documents;
 public sealed class QuestCommercialDocumentRenderer(IConfiguration configuration, IHostEnvironment environment,
     ILogger<QuestCommercialDocumentRenderer> logger) : ICommercialDocumentRenderer
 {
-    private static readonly object FontGate = new();
-    private static bool fontsRegistered;
     private const string Ink = "#171B1F", Soft = "#F7F5F0", Line = "#DDD8CE", Brass = "#B89555";
     private static readonly CultureInfo Persian = CultureInfo.GetCultureInfo("fa-IR");
 
@@ -30,7 +27,7 @@ public sealed class QuestCommercialDocumentRenderer(IConfiguration configuration
             throw new DocumentRenderUnavailableException("PDF_DOCUMENT_NOT_SUPPORTED");
         try
         {
-            ConfigureRenderer();
+            PdfRenderingResources.EnsureReady(configuration, environment);
             bool compact = size == DocumentPaperSize.A5, quote = document.Kind == "Proforma";
             var seller = ReadParty(document.SellerSnapshotJson);
             var buyer = ReadParty(document.BuyerSnapshotJson);
@@ -117,24 +114,6 @@ public sealed class QuestCommercialDocumentRenderer(IConfiguration configuration
             // Layout exceptions may embed customer text. Log only the safe identifier and failure type.
             logger.LogError("Commercial PDF rendering failed for document {DocumentId}: {FailureType}", document.Id, exception.GetType().Name);
             throw new DocumentRenderUnavailableException("PDF_RENDER_FAILED");
-        }
-    }
-
-    /// <summary>Checks startup licensing and loads the published font files once, including in offline Linux containers.</summary>
-    private void ConfigureRenderer()
-    {
-        CommercialPdfConfiguration.RequireConfigured(configuration, environment);
-        lock (FontGate)
-        {
-            string fontDirectory = Path.Combine(AppContext.BaseDirectory, "Fonts");
-            string[] fonts = ["Vazirmatn-Regular.ttf", "Vazirmatn-Medium.ttf", "Vazirmatn-SemiBold.ttf", "Vazirmatn-Bold.ttf"];
-            if (!fontsRegistered)
-            {
-                if (fonts.Any(font => !File.Exists(Path.Combine(fontDirectory, font))))
-                    throw new DocumentRenderUnavailableException("PDF_FONT_NOT_AVAILABLE");
-                foreach (string font in fonts) FontManager.RegisterFontFromFile(Path.Combine(fontDirectory, font));
-                fontsRegistered = true;
-            }
         }
     }
 

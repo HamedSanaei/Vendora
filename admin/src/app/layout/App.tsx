@@ -1,3 +1,4 @@
+import { AdminSupportTicketsPage } from "../../features/admin/pages/AdminSupportTicketsPage";
 
 import { useEffect } from 'react';
 import { AdminStoreDocument, AdminStoreSettingsProvider } from '../../features/admin/components/AdminStoreSettingsProvider';
@@ -94,6 +95,8 @@ function App() {
               <Route path="colors" element={<AdminColorsPage />} />
               <Route path="attributes" element={<AdminAttributesPage />} />
               <Route path="seo" element={<AdminSeoPage />} />
+              <Route path="tickets" element={<AdminSupportTicketsPage />} />
+              <Route path="tickets/:id" element={<AdminSupportTicketsPage />} />
               <Route path="discussions" element={<AdminDiscussionsPage />} />
               <Route path="coupon" element={<AdminCouponsPage />} />
               <Route path="profile" element={<AdminProfilePage />} />

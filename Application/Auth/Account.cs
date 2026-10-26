@@ -205,11 +205,12 @@ public static class Account
         public sealed class Handler : IRequestHandler<Command, Result>
         {
             private readonly UserManager<AppUser> _userManager;
+            private readonly AppDbContext _db;
 
             /// <summary>Creates the handler.</summary>
-            public Handler(UserManager<AppUser> userManager)
+            public Handler(UserManager<AppUser> userManager, AppDbContext db)
             {
-                _userManager = userManager;
+                _userManager = userManager; _db = db;
             }
 
             /// <inheritdoc />
@@ -233,11 +234,18 @@ public static class Account
                     return Result.Fail("User was not found.");
                 }
 
+                await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
                 var result = await _userManager.ChangePasswordAsync(
                     user,
                     request.CurrentPassword,
                     request.NewPassword);
 
+                if (result.Succeeded)
+                {
+                    user.TokensRevokedAtUtc = DateTime.UtcNow;
+                    await new Application.Sms.SmsNotifications(_db, TimeProvider.System).CustomerAsync("PasswordChanged", "password:" + user.SecurityStamp, user.Id, null, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken); await transaction.CommitAsync(cancellationToken);
+                }
                 return result.Succeeded
                     ? new Result(true, null)
                     : Result.Fail(string.Join(" ", result.Errors.Select(error => error.Description)));
@@ -287,11 +295,13 @@ public static class Account
         public sealed class Handler : IRequestHandler<Command, Result>
         {
             private readonly UserManager<AppUser> _userManager;
+            private readonly AppDbContext _db;
+            private readonly IConfiguration _settings;
 
             /// <summary>Creates the handler.</summary>
-            public Handler(UserManager<AppUser> userManager)
+            public Handler(UserManager<AppUser> userManager, AppDbContext db, IConfiguration settings)
             {
-                _userManager = userManager;
+                _userManager = userManager; _db = db; _settings = settings;
             }
 
             /// <inheritdoc />
@@ -328,6 +338,7 @@ public static class Account
                     return Result.Fail("Phone number must be a valid Iranian mobile number.");
                 }
 
+                await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
                 if (!string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
                 {
                     var existing = await _userManager.FindByEmailAsync(email);
@@ -353,7 +364,10 @@ public static class Account
                 if (request.FirstName is not null) user.FirstName = request.FirstName.Trim();
                 if (request.LastName is not null) user.LastName = request.LastName.Trim();
                 if (!string.Equals(user.PhoneNumber, string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber, StringComparison.Ordinal))
+                {
+                    if (user.PhoneNumberConfirmed) user.PreviousVerifiedPhone = user.PhoneNumber;
                     user.PhoneNumberConfirmed = false;
+                }
                 user.PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber;
                 user.Bio = string.IsNullOrWhiteSpace(request.Bio) ? null : request.Bio.Trim();
 
@@ -363,8 +377,9 @@ public static class Account
                     return Result.Fail(string.Join(" ", updateResult.Errors.Select(error => error.Description)));
                 }
 
+                await transaction.CommitAsync(cancellationToken);
                 string role = await ResolveRoleAsync(_userManager, user);
-                string token = string.Empty;
+                string token = await CreateTokenAsync(_userManager, _settings, user, role);
                 return new Result(true, null, new AccountDto(user.Id, user.FullName, user.Email ?? string.Empty, role, token, user.PhoneNumber, user.Bio) { Completion = CustomerProfile.Describe(user) });
             }
         }
@@ -592,7 +607,7 @@ public static class Account
         }
     }
 
-    /// <summary>Generates a password reset token for the caller to deliver through email later.</summary>
+    /// <summary>Returns generic recovery-channel guidance without minting client-deliverable reset tokens.</summary>
     public static class ForgotPassword
     {
         /// <summary>Represents a forgot-password command.</summary>
@@ -618,8 +633,7 @@ public static class Account
                     return new Result(true, null);
                 }
 
-                string token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                return new Result(true, null, Token: token);
+                return new Result(true, null);
             }
         }
     }
@@ -842,7 +856,8 @@ public static class Account
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Email, user.Email ?? string.Empty),
             new(ClaimTypes.Name, user.FullName),
-            new(ClaimTypes.Role, role)
+            new(ClaimTypes.Role, role),
+            new("sst", user.SecurityStamp ?? "")
         };
 
         foreach (var claim in await userManager.GetClaimsAsync(user))

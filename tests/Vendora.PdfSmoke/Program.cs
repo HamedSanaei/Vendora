@@ -35,7 +35,26 @@ foreach (int count in new[] { 2, 65 })
     await File.WriteAllBytesAsync(Path.Combine(outputDirectory, name), bytes);
     Console.WriteLine($"{name}: {bytes.Length} bytes SHA256={Convert.ToHexString(SHA256.HashData(bytes))}");
 }
-Console.WriteLine($"PASS: Community / {System.Runtime.InteropServices.RuntimeInformation.OSDescription} / {Environment.UserName}; no DB or network required.");
+var labelRenderer = new QuestShippingLabelRenderer(configuration, environment, NullLogger<QuestShippingLabelRenderer>.Instance);
+string labelOutput = Path.Combine(outputDirectory, "shipping-labels"); Directory.CreateDirectory(labelOutput);
+foreach (string variant in new[] { "single", "multiple", "long" })
+{
+    var labels = Enumerable.Range(0, variant == "multiple" ? 3 : 1).Select(Label).ToArray();
+    if (variant == "long") labels[0] = labels[0] with { StreetAddress = string.Join("، ", Enumerable.Repeat("خیابان نمونه، کوچه آزمایشی، مجتمع وندورا", 5)) };
+    byte[] bytes = await labelRenderer.RenderAsync(labels, default);
+    await File.WriteAllBytesAsync(Path.Combine(labelOutput, $"shipping-label-{variant}-A5.pdf"), bytes);
+    Console.WriteLine($"Shipping label {variant}: {bytes.Length} bytes");
+}
+try
+{
+    await labelRenderer.RenderAsync([Label(0) with { StreetAddress = string.Join(" ", Enumerable.Repeat("نشانی غیرقابل‌جاگیری", 2000)) }], default);
+    throw new InvalidOperationException("Oversized label was not rejected.");
+}
+catch (Application.Orders.ShippingLabels.LabelException exception) when (exception.Code == "LABEL_CONTENT_TOO_LONG") { }
+Console.WriteLine($"PASS: Community / {System.Runtime.InteropServices.RuntimeInformation.OSDescription} / {Environment.UserName}; invoices and A5 labels; no DB or network required.");
+
+/// <summary>Supplies an isolated logistics-only snapshot for the production Linux renderer.</summary>
+static ShippingLabelData Label(int index) => new(Guid.NewGuid(), $"VD-{100 + index}", "گیرنده آزمایشی فارسی", "09121234567", "تهران", "تهران", "خیابان نمونه، کوچه آزمایشی", "۱۲", "۳", "1234567890", "فروشگاه وندورا", "تهران، خیابان فرستنده، پلاک ۴۵", "02112345678", index == 1 ? "تیپاکس" : "پست پیشتاز", index == 1 ? "پرداخت هنگام تحویل" : "رایگان");
 
 /// <summary>Creates a fixed, synthetic Persian snapshot with long titles and real decimal totals for offline render validation.</summary>
 static CustomerDocumentDto Snapshot(string kind, int count)

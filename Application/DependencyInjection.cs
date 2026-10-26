@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Persistence;
@@ -22,6 +23,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddPersistence(configuration);
+        services.AddDataProtection();
         services.AddIdentityCore<AppUser>(options =>
             {
                 options.User.RequireUniqueEmail = true;
@@ -36,6 +38,8 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<AppDbContext>()
             .AddSignInManager()
             .AddDefaultTokenProviders();
+        services.RemoveAll<IUserValidator<AppUser>>();
+        services.AddScoped<IUserValidator<AppUser>, Sms.VerifiedPhoneUserValidator>();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ApplicationAssemblyMarker>());
         services.AddHostedService<ApplicationDatabaseInitializerHostedService>();
         services.AddSingleton(TimeProvider.System);
@@ -47,6 +51,8 @@ public static class DependencyInjection
         services.AddScoped<Accounting.CartQuotation>();
         services.AddScoped<Accounting.OrderReservations>();
         services.AddHostedService<Accounting.AccountingWorker>();
+        services.AddScoped<Sms.SmsNotifications>();
+        services.AddHostedService<Sms.SmsWorker>();
 
         return services;
     }

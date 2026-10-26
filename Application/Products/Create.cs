@@ -46,7 +46,7 @@ public static class Create
         decimal? UsdPrice = null,
         IReadOnlyList<ProductAttributeInput>? Attributes = null,
         SeoInput? Seo = null,
-        IReadOnlyList<string>? NewImageAlts = null) : IRequest<Result>;
+        IReadOnlyList<string>? NewImageAlts = null, int? WeightGrams = null, bool WeightGramsSpecified = false) : IRequest<Result>;
 
     /// <summary>
     /// Represents the create-product outcome.
@@ -199,6 +199,11 @@ public static class Create
                     .ToList()
             };
 
+            if (request.WeightGramsSpecified)
+            {
+                if (request.WeightGrams is <= 0 or > 1_000_000) return Invalid("Actual weight must be positive grams.");
+                product.WeightGrams = request.WeightGrams;
+            }
             var pricingError = await ProductPriceWriter.ApplyAsync(_db, product, request.Price, request.UsdPrice, cancellationToken);
             if (pricingError is not null) return Invalid(pricingError);
 

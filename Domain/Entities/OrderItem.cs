@@ -31,6 +31,11 @@ public class OrderItem : EntityBase
     /// Gets or sets the unit price snapshot used at checkout.
     /// </summary>
     public decimal UnitPrice { get; set; }
+    /// <summary>Retail base and embedded shipping captured at checkout; null marks a legacy line.</summary>
+    public decimal? BaseUnitPrice { get; set; }
+    public decimal EmbeddedShippingUnitAmount { get; set; }
+    public decimal? DiscountSnapshot { get; set; }
+
 
     /// <summary>Immutable dollar unit price at order creation, if dollar pricing was used.</summary>
     public decimal? UsdUnitPrice { get; set; }

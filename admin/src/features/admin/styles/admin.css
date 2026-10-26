@@ -591,6 +591,11 @@ textarea {
   color: #056ece;
 }
 
+.admin-badge-neutral {
+  background: #ece9e2;
+  color: #5b6267;
+}
+
 .admin-loading,
 .admin-error {
   display: flex;

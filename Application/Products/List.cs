@@ -21,36 +21,38 @@ public static class List
     public sealed class Handler : IRequestHandler<Query, IReadOnlyList<ProductListItemDto>>
     {
         private readonly IProductReadRepository _productReadRepository;
+        private readonly Persistence.AppDbContext _db;
 
         /// <summary>
         /// Creates the handler.
         /// </summary>
-        public Handler(IProductReadRepository productReadRepository)
+        public Handler(IProductReadRepository productReadRepository, Persistence.AppDbContext db)
         {
-            _productReadRepository = productReadRepository;
+            _productReadRepository = productReadRepository; _db = db;
         }
 
         /// <inheritdoc />
         public async Task<IReadOnlyList<ProductListItemDto>> Handle(Query request, CancellationToken cancellationToken)
         {
             var products = await _productReadRepository.GetActiveProductsAsync(cancellationToken);
-            return products.Select(MapListItem).ToList();
+            var policy = await Application.Shipping.ShippingPricing.ReadAsync(_db, cancellationToken);
+            return products.Select(p => MapListItem(p, policy)).ToList();
         }
 
-        internal static ProductListItemDto MapListItem(Product product)
+        internal static ProductListItemDto MapListItem(Product product, ShippingPolicy policy)
         {
             return new ProductListItemDto(
                 product.Id,
                 product.Title,
                 product.Slug,
-                product.Price,
+                policy.SellingPrice(product.Price),
                 product.StockQuantity,
                 product.Category?.Name,
                 product.Images
                     .OrderBy(image => image.SortOrder)
                     .Select(image => image.ImageUrl)
                     .FirstOrDefault(),
-                product.ProductCode);
+                product.ProductCode, product.Price, policy.IncludedInPrice ? policy.UnitAmount : 0, policy.Version, policy.IncludedInPrice);
         }
     }
 }

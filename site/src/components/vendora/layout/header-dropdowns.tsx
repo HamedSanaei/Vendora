@@ -34,7 +34,7 @@ interface SurfaceProps {
   onBack?: () => void;
 }
 
-const accountKeys = ["overview", "orders", "addresses", "wishlist", "returns", "transactions", "proformas", "security"];
+const accountKeys = ["overview", "orders", "addresses", "wishlist", "returns", "transactions", "proformas", "tickets", "security"];
 const accountItems = accountKeys.flatMap(key => accountNavItems.filter(item => item.key === key));
 
 /** The two approved account states, backed by the existing navigation model and logout workflow. */
@@ -44,7 +44,7 @@ export function HeaderAccountDropdown({ locale, panelRef, onPointerEnter, onPoin
   const copy = getHeaderDropdownCopy(locale);
   const t = getDict(locale);
   const search = useSearchParams();
-  const displayedItems = mobile ? ["wishlist", "addresses", "proformas", "transactions", "returns", "security"].flatMap(key => accountItems.filter(item => item.key === key)) : accountItems;
+  const displayedItems = mobile ? ["wishlist", "addresses", "proformas", "tickets", "transactions", "returns", "security"].flatMap(key => accountItems.filter(item => item.key === key)) : accountItems;
   const labels: Record<string, string> = { overview: copy.overview, orders: copy.orders, addresses: copy.addresses, security: copy.security };
   // LoginCard already validates locale-local return paths and directs incomplete profiles to completion.
   const requestedReturn = /^\/(fa|en)\/(login|register|forgot)(\/|$)/.test(pathname) ? search.get("returnTo") : pathname;
@@ -58,7 +58,6 @@ export function HeaderAccountDropdown({ locale, panelRef, onPointerEnter, onPoin
         {mobile ? <MobileAccountSummary locale={locale} userId={userId} userName={userName} onNavigate={onNavigate} /> : <Link href={withLocalePath("/account", locale)} onClick={onNavigate} className="vd-focus vd-header-text-link mx-[22px] flex min-h-[93px] items-start gap-[16px] border-b border-vd-line pb-[16px] pt-[18px]">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--vd-header-tint)] text-jade"><UserIcon size={24} /></span>
           <span className="min-w-0 flex-1"><strong className="block truncate text-[19px] font-bold leading-8 text-ink">{userName || t.common.account}</strong><span className="block text-xs leading-[26px] text-vd-muted">{copy.accountSubtitle}</span></span>
-          <ChevronIcon size={24} className="mt-4 shrink-0 text-vd-muted ltr:rotate-180" />
         </Link>}
         <nav aria-label={t.common.account} className="px-[14px] pt-[12px]">
           <ul>
@@ -69,7 +68,7 @@ export function HeaderAccountDropdown({ locale, panelRef, onPointerEnter, onPoin
               return <li key={item.key} className="vd-header-account-row">
                 <Link href={withLocalePath(item.href, locale)} onClick={event => { if (mobile && item.key === "wishlist" && onOpenWishlist) { event.preventDefault(); onOpenWishlist(); } else onNavigate(); }} aria-current={active ? "page" : undefined}
                   className={`vd-focus vd-header-text-link flex h-[49px] items-center gap-[16px] rounded-[10px] px-[10px] text-sm ${active ? "bg-[var(--vd-header-soft)] font-bold text-jade" : "font-medium text-ink hover:bg-[var(--vd-header-soft)] hover:text-jade"}`}>
-                  <Icon size={24} className="shrink-0 text-vd-muted" /><span className="flex-1">{label}</span><ChevronIcon size={24} className="shrink-0 text-vd-muted ltr:rotate-180" />
+                  <Icon size={24} className="shrink-0 text-vd-muted" /><span className="flex-1">{label}</span>
                 </Link>
               </li>;
             })}
@@ -83,12 +82,12 @@ export function HeaderAccountDropdown({ locale, panelRef, onPointerEnter, onPoin
         <div className={mobile ? "vd-header-mobile-intro" : undefined}>
         <div className="flex items-start gap-[16px]"><span className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full bg-[var(--vd-header-tint)] text-jade"><UserIcon size={24} /></span><h2 className="min-w-0 flex-1 text-lg font-bold leading-[34px] text-ink">{copy.welcome(brandName)}</h2></div>
         <p className="!mt-[6px] min-h-[53px] text-[13px] leading-[26px] text-vd-muted">{mobile ? copy.mobileIntroduction : copy.introduction}</p>
-        <VendoraButton href={loginHref} onClick={onNavigate} className="mt-[23px] !flex !h-[54px] w-full !justify-between !px-5 !text-base !font-bold"><span className="flex-1">{copy.signIn}</span><ChevronIcon size={24} className="ltr:rotate-180" /></VendoraButton>
+        <VendoraButton href={loginHref} onClick={onNavigate} className="mt-[23px] !flex !h-[54px] w-full !justify-between !px-5 !text-base !font-bold"><span className="flex-1">{copy.signIn}</span></VendoraButton>
         </div>
         <div className="mt-[18px] divide-y divide-vd-line border-t border-vd-line">
-          <Link href={withLocalePath("/cart", locale)} onClick={onNavigate} className="vd-focus vd-header-text-link flex h-[59px] w-full items-center gap-[16px] text-sm font-medium text-ink"><ShoppingCartIcon size={24} className="text-vd-muted" /><span className="flex-1 text-start">{mobile ? copy.mobileCart : copy.viewCart}</span><ChevronIcon size={24} className="text-vd-muted ltr:rotate-180" /></Link>
-          {mobile && <Link href={`${withLocalePath("/login", locale)}?returnTo=${encodeURIComponent(withLocalePath("/account/orders", locale))}`} onClick={onNavigate} className="vd-focus vd-header-text-link flex min-h-[62px] items-center gap-[16px] text-[15px]"><OrdersIcon size={24} className="text-vd-muted" /><span className="flex-1">{copy.trackOrder}</span><ChevronIcon size={24} className="text-vd-muted ltr:rotate-180" /></Link>}
-          <Link href={withLocalePath("/faq", locale)} onClick={onNavigate} className="vd-focus vd-header-text-link flex h-[59px] items-center gap-[16px] text-sm font-medium text-ink"><DocumentIcon size={24} className="text-vd-muted" /><span className="flex-1">{copy.guide}</span><ChevronIcon size={24} className="text-vd-muted ltr:rotate-180" /></Link>
+          <Link href={withLocalePath("/cart", locale)} onClick={onNavigate} className="vd-focus vd-header-text-link flex h-[59px] w-full items-center gap-[16px] text-sm font-medium text-ink"><ShoppingCartIcon size={24} className="text-vd-muted" /><span className="flex-1 text-start">{mobile ? copy.mobileCart : copy.viewCart}</span></Link>
+          {mobile && <Link href={`${withLocalePath("/login", locale)}?returnTo=${encodeURIComponent(withLocalePath("/account/orders", locale))}`} onClick={onNavigate} className="vd-focus vd-header-text-link flex min-h-[62px] items-center gap-[16px] text-[15px]"><OrdersIcon size={24} className="text-vd-muted" /><span className="flex-1">{copy.trackOrder}</span></Link>}
+          <Link href={withLocalePath("/faq", locale)} onClick={onNavigate} className="vd-focus vd-header-text-link flex h-[59px] items-center gap-[16px] text-sm font-medium text-ink"><DocumentIcon size={24} className="text-vd-muted" /><span className="flex-1">{copy.guide}</span></Link>
         </div>
       </div>}
     </section>

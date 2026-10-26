@@ -92,7 +92,7 @@ public static class AddItem
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 
-            return CartMappings.Map(cart);
+            return await CartMappings.MapAsync(cart, _db, cancellationToken);
         }
     }
 }

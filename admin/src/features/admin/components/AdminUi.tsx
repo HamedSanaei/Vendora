@@ -136,8 +136,8 @@ export function AdminPagination({ currentPage, label, locale = 'fa', onPageChang
 
   return (
     <nav aria-label={label} className="admin-pagination-modern">
-      <button disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)} type="button">
-        <AdminIcon className="admin-icon-back" name="chevron" size={17} />
+      <button aria-label={locale === 'fa' ? 'صفحهٔ قبلی' : 'Previous page'} disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)} type="button">
+        <AdminIcon direction={locale === 'fa' ? 'right' : 'left'} name="chevron" size={18} />
       </button>
       {pages.map((page, index) => (
         <span className="admin-pagination-slot" key={page}>
@@ -152,8 +152,8 @@ export function AdminPagination({ currentPage, label, locale = 'fa', onPageChang
           </button>
         </span>
       ))}
-      <button disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)} type="button">
-        <AdminIcon name="chevron" size={17} />
+      <button aria-label={locale === 'fa' ? 'صفحهٔ بعدی' : 'Next page'} disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)} type="button">
+        <AdminIcon direction={locale === 'fa' ? 'left' : 'right'} name="chevron" size={18} />
       </button>
     </nav>
   );
@@ -267,7 +267,7 @@ export function AdminSelect({ children, error, help, id, label, ...selectProps }
   return (
     <label className={`admin-field ${error ? 'admin-field-error' : ''}`} htmlFor={inputId}>
       <span>{label}</span>
-      <select aria-invalid={Boolean(error)} id={inputId} {...selectProps}>{children}</select>
+      <select aria-label={label} aria-invalid={Boolean(error)} id={inputId} {...selectProps}>{children}</select>
       {error ? <small role="alert">{error}</small> : help ? <small>{help}</small> : null}
     </label>
   );
@@ -285,7 +285,7 @@ export function AdminTextarea({ error, help, id, label, ...textareaProps }: Admi
   return (
     <label className={`admin-field ${error ? 'admin-field-error' : ''}`} htmlFor={inputId}>
       <span>{label}</span>
-      <textarea aria-invalid={Boolean(error)} id={inputId} {...textareaProps} />
+      <textarea aria-label={label} aria-invalid={Boolean(error)} id={inputId} {...textareaProps} />
       {error ? <small role="alert">{error}</small> : help ? <small>{help}</small> : null}
     </label>
   );

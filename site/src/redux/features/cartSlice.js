@@ -111,6 +111,9 @@ export const cartSlice = createSlice({
           item.sku = String(current.productCode);
           changed = true;
         }
+        for (const key of ['basePrice', 'embeddedShippingUnitAmount', 'shippingPolicyVersion', 'freeShipping']) {
+          if (Object.hasOwn(current, key) && item[key] !== current[key]) { item[key] = current[key]; changed = true; }
+        }
         if (item.originalPrice !== current.originalPrice || item.price !== current.price || item.discount !== current.discount) {
           item.originalPrice = current.originalPrice;
           item.price = current.price;

@@ -24,4 +24,4 @@ public sealed record AdminProductDto(
     decimal? PriceExchangeRate = null,
     IReadOnlyList<ProductAttributeDto>? Attributes = null,
     Application.Seo.SeoDto? Seo = null,
-    int ProductCode = 0, DateTime? CreatedAtUtc = null, DateTime? UpdatedAtUtc = null);
+    int ProductCode = 0, int? WeightGrams = null, DateTime? CreatedAtUtc = null, DateTime? UpdatedAtUtc = null);

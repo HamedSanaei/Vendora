@@ -70,6 +70,7 @@ export function AddressOption({ address, locale, selected, onSelect }: AddressOp
 }
 
 interface ShippingMethodCardProps {
+  disabled?: boolean;
   method: ShippingMethod;
   locale: Locale;
   selected: boolean;
@@ -77,12 +78,12 @@ interface ShippingMethodCardProps {
 }
 
 /** Shipping method card with prepaid/collect state and an accessible radio. */
-export function ShippingMethodCard({ method, locale, selected, onSelect }: ShippingMethodCardProps) {
+export function ShippingMethodCard({ method, locale, selected, disabled = false, onSelect }: ShippingMethodCardProps) {
   const isFa = locale === "fa";
   const collect = method.paymentMode === "collect";
   return (
-    <label className={`vd-focus group flex min-h-[124px] cursor-pointer items-center gap-3 rounded-[18px] border p-4 transition-colors ${selected ? "border-jade bg-jade-tint" : "border-vd-line bg-white hover:border-jade"}`}>
-      <input type="radio" name="shipping-method" checked={selected} onChange={onSelect} className="sr-only" />
+    <label aria-disabled={disabled} className={`vd-focus group flex min-h-[124px] items-center gap-3 rounded-[18px] border p-4 transition-colors ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"} ${selected ? "border-jade bg-jade-tint" : "border-vd-line bg-white hover:border-jade"}`}>
+      <input type="radio" name="shipping-method" value={method.id} disabled={disabled} checked={selected} onChange={onSelect} className="sr-only" />
       <span aria-hidden className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${selected ? "border-jade bg-jade" : "border-vd-line bg-white"}`}>
         {selected ? <CheckIcon size={13} className="text-white" /> : null}
       </span>
@@ -94,12 +95,12 @@ export function ShippingMethodCard({ method, locale, selected, onSelect }: Shipp
           <span className="block text-sm font-extrabold text-ink">{getShippingMethodTitle(method, locale)}</span>
           <span className="mt-1 block text-xs text-vd-muted">{getShippingDeliveryTime(method, locale)}</span>
           <span className={`mt-2 inline-flex rounded-full px-2 py-1 text-[10px] font-bold ${collect ? "bg-vd-warning-tint text-vd-warning" : "bg-jade-tint text-jade"}`}>
-            {collect ? (isFa ? "پس‌پرداخت کرایه" : "Pay on delivery") : (isFa ? "پیش‌پرداخت کرایه" : "Prepaid shipping")}
+            {collect ? (isFa ? "پس‌پرداخت کرایه" : "Pay on delivery") : method.paymentMode === "free" ? (isFa ? "ارسال رایگان" : "Free shipping") : (isFa ? "پیش‌پرداخت کرایه" : "Prepaid shipping")}
           </span>
         </span>
       </span>
       <span className="shrink-0 text-end text-xs font-extrabold text-ink">
-        {collect ? <><span className="block text-vd-warning">{isFa ? "پرداخت هنگام تحویل" : "Pay on delivery"}</span><span className="mt-1 block text-[10px] font-semibold text-vd-muted">{isFa ? "محاسبه توسط باربری" : "Calculated by carrier"}</span></> : formatPrice(method.cost, locale)}
+        {collect ? <><span className="block text-vd-warning">{isFa ? "پرداخت هنگام تحویل" : "Pay on delivery"}</span><span className="mt-1 block text-[10px] font-semibold text-vd-muted">{isFa ? "محاسبه توسط شرکت حمل" : "Calculated by carrier"}</span></> : method.paymentMode === "free" ? (isFa ? "رایگان" : "Free") : method.requiresQuote && !method.cost ? (isFa ? "نیازمند استعلام" : "Quote required") : formatPrice(method.cost, locale)}
       </span>
     </label>
   );
@@ -125,11 +126,11 @@ export function OrderSummary({ locale, subtotal, discount = 0, shippingMethod, a
       <dl className="space-y-4 text-sm">
         <SummaryLine label={isFa ? "جمع کالاها" : "Items subtotal"} value={formatPrice(subtotal, locale)} />
         <SummaryLine label={isFa ? "تخفیف" : "Discount"} value={discount ? `− ${formatPrice(discount, locale)}` : formatPrice(0, locale)} muted />
-        <SummaryLine label={isFa ? "هزینه ارسال" : "Shipping"} value={shippingMethod?.paymentMode === "collect" ? (isFa ? "پرداخت هنگام تحویل" : "Pay on delivery") : shippingMethod ? formatPrice(shippingCost, locale) : (isFa ? "انتخاب نشده" : "Not selected")} accent={Boolean(shippingMethod)} />
+        <SummaryLine label={isFa ? "هزینه ارسال" : "Shipping"} value={shippingMethod?.paymentMode === "collect" ? (isFa ? "پرداخت هنگام تحویل" : "Pay on delivery") : shippingMethod?.paymentMode === "free" ? (isFa ? "رایگان" : "Free") : shippingMethod?.requiresQuote && !shippingMethod.cost ? (isFa ? "نیازمند استعلام" : "Quote required") : shippingMethod ? formatPrice(shippingCost, locale) : (isFa ? "انتخاب نشده" : "Not selected")} accent={Boolean(shippingMethod)} />
       </dl>
       <hr className="my-5 border-vd-line" />
       <div className="flex items-center justify-between gap-3"><span className="font-extrabold text-ink">{isFa ? "مبلغ قابل پرداخت" : "Payable now"}</span><strong className="text-lg font-extrabold text-jade-dark">{formatPrice(payable, locale)}</strong></div>
-      {shippingMethod?.paymentMode === "collect" ? <p className="mt-3 flex items-start gap-2 rounded-control bg-vd-warning-tint p-3 text-xs leading-6 text-vd-warning"><WarningIcon size={16} className="mt-1 shrink-0" />{isFa ? "کرایه باربری هنگام تحویل جداگانه دریافت می‌شود." : "The carrier collects shipping charges on delivery."}</p> : null}
+      {shippingMethod?.paymentMode === "collect" ? <p className="mt-3 flex items-start gap-2 rounded-control bg-vd-warning-tint p-3 text-xs leading-6 text-vd-warning"><WarningIcon size={16} className="mt-1 shrink-0" />{isFa ? "کرایه توسط شرکت حمل‌ونقل هنگام تحویل جداگانه دریافت می‌شود." : "The carrier collects shipping charges on delivery."}</p> : null}
       {action ? <div className="mt-5">{action}</div> : null}
     </aside>
   );

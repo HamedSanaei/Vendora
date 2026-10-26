@@ -100,7 +100,21 @@ async function main() {
       await dialog.locator('.vd-product-lightbox__stage').click({ position: { x: 2, y: 2 } }); await dialog.waitFor({ state: 'hidden' });
       await trigger.click(); await dialog.waitFor();
       await dialog.getByRole('button', { name: 'بستن گالری' }).click(); await dialog.waitFor({ state: 'hidden' });
+      const thumbnails = page.getByRole('group', { name: 'گالری تصاویر محصول', exact: true }).getByRole('button');
+      for (let index = 0; index < images.length; index++) {
+        const thumbnail = thumbnails.nth(index);
+        await thumbnail.click(); await dialog.waitFor(); await checkImage(dialog, width, height);
+        assert.equal(await dialog.locator('.vd-product-lightbox__image').getAttribute('src'), images[index].imageUrl, 'Thumbnail opens its own photo');
+        await page.keyboard.press('Escape'); await dialog.waitFor({ state: 'hidden' });
+        assert.ok(await thumbnail.evaluate(node => node === document.activeElement), 'Focus returns to the clicked thumbnail');
+        assert.equal(await thumbnail.getAttribute('aria-pressed'), 'true');
+      }
+      await thumbnails.first().focus(); await page.keyboard.press('Enter'); await dialog.waitFor();
+      assert.equal(await dialog.locator('.vd-product-lightbox__image').getAttribute('src'), images[0].imageUrl, 'Keyboard opens the selected thumbnail');
+      await dialog.getByRole('button', { name: 'بستن گالری' }).click(); await dialog.waitFor({ state: 'hidden' });
+      assert.ok(await thumbnails.first().evaluate(node => node === document.activeElement));
       assert.deepEqual(errors, []); await context.close(); console.log(`PASS gallery modal ${width}: images, aspect, arrows, wrap, swipe, focus, Escape, backdrop, close, scroll restoration`);
+      console.log(`PASS thumbnails ${width}: every photo opens directly, keyboard activation and exact focus restoration`);
     }
     const context = await browser.newContext({ viewport: { width: 390, height: 700 }, reducedMotion: 'reduce' }), page = await context.newPage();
     for (const id of ['single', 'empty', 'broken']) {
@@ -118,6 +132,11 @@ async function main() {
     await page.keyboard.press('ArrowRight'); await checkImage(dialog, 390, 700);
     assert.ok((await dialog.locator('img.vd-product-lightbox__image').getAttribute('src')).includes('portrait'));
     await page.keyboard.press('Escape'); await dialog.waitFor({ state: 'hidden' });
+    const englishThumbnail = page.getByRole('group', { name: 'Product image gallery', exact: true }).getByRole('button').last();
+    await englishThumbnail.click(); await dialog.waitFor(); await checkImage(dialog, 390, 700);
+    assert.equal(await dialog.locator('.vd-product-lightbox__image').getAttribute('src'), images[2].imageUrl);
+    await page.keyboard.press('Escape'); await dialog.waitFor({ state: 'hidden' });
+    assert.ok(await englishThumbnail.evaluate(node => node === document.activeElement));
     await context.close(); console.log('PASS English LTR gallery');
   } finally { if (browser) await browser.close(); app.kill(); api.closeAllConnections(); api.close(); }
 }

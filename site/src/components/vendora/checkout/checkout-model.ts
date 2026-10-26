@@ -44,11 +44,11 @@ export function calculateCheckoutTotals(
     ? items
         .filter((item) => item.type === productType)
         .reduce(
-          (sum, item) => sum + getCartUnitPrice(item) * (Number(item.orderQuantity) || 0),
+          (sum, item) => sum + Math.max(0, getCartUnitPrice(item) - (item.embeddedShippingUnitAmount ?? 0)) * (Number(item.orderQuantity) || 0),
           0,
         )
-    : subtotal;
-  const discount = subtotal >= minimumAmount ? eligibleSubtotal * (percentage / 100) : 0;
+    : items.reduce((sum, item) => sum + Math.max(0, getCartUnitPrice(item) - (item.embeddedShippingUnitAmount ?? 0)) * (Number(item.orderQuantity) || 0), 0);
+  const discount = subtotal >= minimumAmount ? Math.floor(eligibleSubtotal * (percentage / 100)) : 0;
   const prepaidShipping = shippingPayment === "prepaid" ? Math.max(0, shippingCost) : 0;
 
   return {

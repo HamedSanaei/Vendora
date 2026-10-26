@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useLoginUserMutation } from "@/redux/features/auth/authApi";
 import { userLoggedIn } from "@/redux/features/auth/authSlice";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
 import type { Locale } from "@/lib/vendora/types";
-import { unavailableAuthAdapter, type AuthAccount, type PhoneAuthAdapter } from "@/lib/auth/auth-adapter";
+import { type AuthAccount, type PhoneAuthAdapter } from "@/lib/auth/auth-adapter";
 import { notifySuccess } from "@/utils/toast";
 import { CheckoutContextNotice, LoginModeTabs, OtpInput, PhoneField, type LoginMode } from "./login-components";
 import { GoogleIdentityButton } from "./google-identity-button";
@@ -19,6 +19,8 @@ import { storePresentation, useStoreSettings } from '../layout/store-settings-pr
 import { resolveApiImageUrl } from '@/lib/http';
 import { completeProfileHref, type ProfileCompletion } from '@/lib/auth/customer-profile';
 import { googleErrorMessage } from '@/lib/auth/google-errors';
+
+import { createPhoneAuthAdapter, smsCapabilities, smsErrorMessage } from "@/lib/sms-client";
 
 type PhoneStep = "identifier" | "otp";
 
@@ -30,7 +32,7 @@ interface LoginCardProps {
 }
 
 /** Penpot-aligned responsive login card with email, phone OTP and Google modes. */
-export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdapter }: LoginCardProps) {
+export function LoginCard({ locale, returnTo, phoneAdapter }: LoginCardProps) {
   const isFa = locale === "fa";
   const storeProfile = useStoreSettings();
   const brand = storePresentation(storeProfile, locale);
@@ -52,7 +54,10 @@ export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdap
   const [googleLoading, setGoogleLoading] = useState(false);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const destination = safeReturnTo(returnTo, locale);
-  const phoneAvailable = phoneAdapter !== unavailableAuthAdapter;
+  const adapter = useMemo(() => phoneAdapter ?? createPhoneAuthAdapter(), [phoneAdapter]);
+  const [smsEnabled, setSmsEnabled] = useState(false);
+  const phoneAvailable = Boolean(phoneAdapter) || smsEnabled;
+  useEffect(() => { const abort = new AbortController(); smsCapabilities(abort.signal).then(value => setSmsEnabled(value.phoneLogin)).catch(() => { if (!abort.signal.aborted) setSmsEnabled(false); }); return () => abort.abort(); }, []);
   const googleAvailable = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim());
 
   useEffect(() => {
@@ -99,16 +104,16 @@ export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdap
       return;
     }
     setPhoneLoading(true);
-    const result = await phoneAdapter.requestCode(normalizedPhone);
+    const result = await adapter.requestCode(normalizedPhone);
     setPhoneLoading(false);
     if (!result.ok) {
       setError(adapterMessage(result.message, isFa ? "ارسال کد انجام نشد." : "The code could not be sent.", isFa ? "ورود با کد پیامکی هنوز به سرویس پیامک متصل نشده است." : "Phone sign-in is not connected to an SMS service yet."));
       return;
     }
     setSecondsLeft(result.retryAfter ?? 120);
-    setOtp(["", "", "", "", ""]);
+    setOtp(Array(Math.min(8, Math.max(4, result.codeLength ?? 5))).fill(""));
     setPhoneStep("otp");
-    setInfo(isFa ? "کد ورود برای شما ارسال شد." : "A sign-in code was sent to your phone.");
+    setInfo(isFa ? "اگر شماره واجد شرایط باشد، کد ورود برای آن ارسال می‌شود." : "A code is sent if the number is eligible.");
     window.setTimeout(() => otpRefs.current[0]?.focus(), 0);
   };
 
@@ -116,12 +121,12 @@ export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdap
     event.preventDefault();
     setError("");
     const code = otp.join("");
-    if (!/^\d{5}$/.test(code)) {
-      setError(isFa ? "کد پنج‌رقمی را کامل وارد کنید." : "Enter the 5-digit code.");
+    if (code.length !== otp.length || /\D/.test(code)) {
+      setError(isFa ? "کد را کامل وارد کنید." : "Enter the complete code.");
       return;
     }
     setPhoneLoading(true);
-    const result = await phoneAdapter.verifyCode(normalizeDigits(phone), code);
+    const result = await adapter.verifyCode(normalizeDigits(phone), code);
     setPhoneLoading(false);
     if (!result.ok || !result.account) {
       setError(adapterMessage(result.message, secondsLeft === 0 ? (isFa ? "کد منقضی شده است." : "The code has expired.") : (isFa ? "کد واردشده صحیح نیست." : "The code is incorrect."), isFa ? "تأیید کد پیامکی هنوز به سرویس احراز هویت متصل نشده است." : "Phone verification is not connected to an auth service yet."));
@@ -129,7 +134,7 @@ export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdap
     }
     persistAdapterAccount(result.account, dispatch);
     notifySuccess(isFa ? "با موفقیت وارد شدید." : "You are signed in.");
-    router.push(destination);
+    router.push(result.account.user.completion?.isComplete ? destination : completeProfileHref(locale, destination));
   };
 
   const handleGoogle = async (credential: string) => {
@@ -163,17 +168,17 @@ export function LoginCard({ locale, returnTo, phoneAdapter = unavailableAuthAdap
 
   const handleOtpPaste = (event: ClipboardEvent<HTMLInputElement>) => {
     event.preventDefault();
-    const pasted = normalizeDigits(event.clipboardData.getData("text")).replace(/\D/g, "").slice(0, 5).split("");
+    const pasted = normalizeDigits(event.clipboardData.getData("text")).replace(/\D/g, "").slice(0, otp.length).split("");
     if (!pasted.length) return;
-    setOtp([...pasted, ...["", "", "", "", ""].slice(pasted.length)]);
-    otpRefs.current[Math.min(pasted.length, 5) - 1]?.focus();
+    setOtp([...pasted, ...Array(otp.length - pasted.length).fill("")]);
+    otpRefs.current[Math.min(pasted.length, otp.length) - 1]?.focus();
   };
 
   return (
     <section className="vd-root min-h-[calc(100vh-132px)] bg-surface-soft px-4 py-8 md:px-8 md:py-12" dir={isFa ? "rtl" : "ltr"}>
       <div className="mx-auto w-full max-w-[520px]">
         <div className="rounded-[24px] border border-vd-line bg-white p-5 shadow-[0_24px_70px_-45px_rgba(0,77,58,.65)] md:p-8">
-          <div className="text-center"><span className="text-[26px] font-extrabold tracking-tight text-ink">{storeProfile.logoUrl ? <Image unoptimized width={180} height={48} className="mx-auto h-12 max-w-[180px] object-contain" src={resolveApiImageUrl(storeProfile.logoUrl)} alt={brand.name} /> : brand.wordmark}</span><h2 className="mt-7 text-2xl font-extrabold text-ink">{isFa ? "ورود به حساب کاربری" : "Sign in to your account"}</h2><p className="mt-2 text-sm leading-7 text-vd-muted">{isFa ? "با ایمیل و رمز عبور خود وارد شوید." : "Enter your email and password."}</p></div>
+          <div className="text-center"><span className="text-[26px] font-extrabold tracking-tight text-ink">{storeProfile.logoUrl ? <Image unoptimized width={180} height={48} className="mx-auto h-12 max-w-[180px] object-contain" src={resolveApiImageUrl(storeProfile.logoUrl)} alt={brand.name} /> : brand.wordmark}</span><h2 className="mt-7 text-2xl font-extrabold text-ink">{isFa ? "ورود به حساب کاربری" : "Sign in to your account"}</h2><p className="mt-2 text-sm leading-7 text-vd-muted">{mode === "phone" ? (isFa ? "با کد پیامکی وارد شوید یا حساب بسازید." : "Sign in or register using an SMS code.") : (isFa ? "با ایمیل و رمز عبور خود وارد شوید." : "Enter your email and password.")}</p></div>
           {destination.includes("/shipping") ? <CheckoutContextNotice locale={locale} /> : null}
           {phoneAvailable ? <LoginModeTabs locale={locale} mode={mode} onChange={changeMode} /> : null}
 
@@ -200,11 +205,12 @@ function safeReturnTo(value: string | undefined, locale: Locale) {
 }
 
 function adapterMessage(message: string | undefined, fallback: string, unavailable: string) {
+  if (message && /^[A-Z_]+$/.test(message)) return smsErrorMessage(message, /[\u0600-\u06ff]/.test(fallback));
   return message === "AUTH_ADAPTER_UNAVAILABLE" ? unavailable : message ?? fallback;
 }
 
 function persistAdapterAccount(account: AuthAccount, dispatch: (action: ReturnType<typeof userLoggedIn>) => void) {
-  const user = { _id: account.user.id, id: account.user.id, name: account.user.name, email: account.user.email, phone: account.user.phone };
+  const user = { _id: account.user.id, id: account.user.id, name: account.user.name, email: account.user.email, phone: account.user.phone, role: account.user.role, completion: account.user.completion };
   localStorage.setItem("auth", JSON.stringify({ accessToken: account.accessToken, user }));
   dispatch(userLoggedIn({ accessToken: account.accessToken, user }));
 }

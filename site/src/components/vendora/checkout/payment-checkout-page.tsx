@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { refreshShippingPolicy } from "@/lib/shipping-client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useAuthCheck from "@/hooks/use-auth-check";
@@ -41,6 +42,8 @@ function PaymentCheckoutContent() {
     shippingAddress,
     shippingMethod,
     shippingCompleted,
+    shippingPolicyReady,
+    shippingPolicyFailed,
     totals,
     provider,
     setProvider,
@@ -56,20 +59,21 @@ function PaymentCheckoutContent() {
   const shopHref = withLocalePath("/shop", locale);
 
   useEffect(() => {
-    if (!authChecked) return;
+    if (!authChecked || !shippingPolicyReady) return;
     if (!user) {
       const returnTo = withLocalePath("/checkout", locale);
       router.replace(`${withLocalePath("/login", locale)}?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
     if (items.length > 0 && !shippingCompleted) router.replace(shippingHref);
-  }, [authChecked, items.length, locale, router, shippingCompleted, shippingHref, user]);
+  }, [authChecked, items.length, locale, router, shippingCompleted, shippingPolicyReady, shippingHref, user]);
 
-  if (!authChecked || !user || (items.length > 0 && !shippingCompleted)) {
+  if (!authChecked || !shippingPolicyReady || !user || (items.length > 0 && !shippingCompleted)) {
     return (
       <CheckoutFlowLayout locale={locale}>
-        <main className="vd-container flex min-h-[520px] items-center justify-center text-sm text-vd-muted" role="status">
-          {isFa ? "در حال آماده‌سازی پرداخت…" : "Preparing payment…"}
+        <main className="vd-container flex min-h-[520px] flex-col items-center justify-center gap-4 text-sm text-vd-muted" role="status">
+          {shippingPolicyFailed ? (isFa ? "دریافت سیاست ارسال انجام نشد." : "Shipping settings unavailable.") : (isFa ? "در حال آماده‌سازی پرداخت…" : "Preparing payment…")}
+          {shippingPolicyFailed && <VendoraButton type="button" onClick={() => void refreshShippingPolicy(true)}>{isFa ? "تلاش مجدد" : "Retry"}</VendoraButton>}
         </main>
       </CheckoutFlowLayout>
     );
@@ -97,7 +101,7 @@ function PaymentCheckoutContent() {
     ? [shippingAddress.streetAddress, shippingAddress.plaque ? `${isFa ? "پلاک" : "No."} ${shippingAddress.plaque}` : "", shippingAddress.unit ? `${isFa ? "واحد" : "Unit"} ${shippingAddress.unit}` : ""].filter(Boolean).join("، ")
     : (isFa ? "برای ادامه، اطلاعات ارسال را تکمیل کنید." : "Complete your shipping details to continue.");
   const shippingTitle = getShippingMethodTitle(shippingMethod, locale);
-  const shippingMeta = `${getShippingDeliveryTime(shippingMethod, locale)} · ${shippingMethod.paymentMode === "collect" ? (isFa ? "کرایه هنگام تحویل" : "Pay on delivery") : formatPrice(shippingMethod.cost, locale)}`;
+  const shippingMeta = `${getShippingDeliveryTime(shippingMethod, locale)} · ${shippingMethod.paymentMode === "collect" ? (isFa ? "کرایه هنگام تحویل" : "Pay on delivery") : shippingMethod.paymentMode === "free" ? (isFa ? "رایگان" : "Free") : formatPrice(shippingMethod.cost, locale)}`;
 
   return (
     <CheckoutFlowLayout locale={locale}>
@@ -138,7 +142,7 @@ function PaymentCheckoutContent() {
                   type="shipping"
                   locale={locale}
                   title={shippingTitle}
-                  description={shippingMethod.paymentMode === "collect" ? (isFa ? "کرایه توسط باربری محاسبه و هنگام تحویل دریافت می‌شود." : "The carrier calculates and collects the shipping fee on delivery.") : (isFa ? "هزینه ارسال در مبلغ آنلاین سفارش محاسبه شده است." : "Shipping is included in the online payable amount.")}
+                  description={shippingMethod.paymentMode === "collect" ? (isFa ? "کرایه توسط باربری محاسبه و هنگام تحویل دریافت می‌شود." : "The carrier calculates and collects the shipping fee on delivery.") : (isFa ? "هزینه ارسال مطابق سیاست فروشگاه در مبلغ سفارش لحاظ شده است." : "Shipping is included in the online payable amount.")}
                   meta={shippingMeta}
                   editHref={shippingHref}
                 />

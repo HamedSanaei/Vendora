@@ -1,4 +1,5 @@
 "use client";
+import { shippingCartFingerprint } from "@/lib/shipping-client";
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -15,7 +16,7 @@ export function CartProformaAction({ locale }: { locale: Locale }) {
   const router = useRouter(), t = documentCopy[locale], guard = useRef(false);
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const items = useSelector((state: { cart: { cart_products: CartLine[] } }) => state.cart.cart_products);
-  const shipping = useSelector((state: { order: { shipping_info?: { shippingMethodId?: string } } }) => state.order.shipping_info);
+  const shipping = useSelector((state: { order: { shipping_info?: { shippingMethodId?: string; shippingQuoteId?: string; shippingAddressId?: string; shippingQuoteExpiresAtUtc?: string; shippingCartFingerprint?: string } } }) => state.order.shipping_info);
   const coupon = useSelector((state: { coupon: { coupon_info?: { couponCode?: string } } }) => state.coupon.coupon_info);
   /** Guests return to their preserved cart; issuance itself requires a separate explicit click after sign-in. */
   async function issue() {
@@ -25,7 +26,9 @@ export function CartProformaAction({ locale }: { locale: Locale }) {
     guard.current = true; setBusy(true); setError("");
     try {
       if (!(await readCustomerAccount()).completion?.isComplete) { router.push(completeProfileHref(locale, withLocalePath('/cart', locale))); return; }
-      const id = await issueProforma({ items: items.map(item => ({ productId: item._id, quantity: item.orderQuantity, expectedUnitPrice: getCartUnitPrice(item) })), shippingMethod: shipping?.shippingMethodId, couponCode: coupon?.couponCode }, token);
+      const currentQuote = shipping?.shippingCartFingerprint === shippingCartFingerprint(items, coupon?.couponCode) && Date.parse(shipping?.shippingQuoteExpiresAtUtc ?? '') > Date.now();
+      const method = shipping?.shippingMethodId === 'freight' && items.reduce((sum, item) => sum + item.orderQuantity, 0) <= 10 ? undefined : shipping?.shippingMethodId;
+      const id = await issueProforma({ items: items.map(item => ({ productId: item._id, quantity: item.orderQuantity, expectedUnitPrice: getCartUnitPrice(item) })), shippingMethod: method, shippingQuoteId: currentQuote ? shipping?.shippingQuoteId : undefined, addressId: currentQuote ? shipping?.shippingAddressId : undefined, couponCode: coupon?.couponCode }, token);
       router.push(`${withLocalePath("/account/proformas", locale)}?issued=${id}`);
     } catch (failure) {
       if (profileErrorCode(failure) === 'PROFILE_INCOMPLETE') router.push(completeProfileHref(locale, withLocalePath('/cart', locale)));

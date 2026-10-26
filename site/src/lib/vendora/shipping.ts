@@ -1,7 +1,7 @@
 import type { Locale } from "./types";
 
 export type ShippingMethodId = "post" | "tipax" | "freight";
-export type ShippingPaymentMode = "prepaid" | "collect";
+export type ShippingPaymentMode = "prepaid" | "collect" | "free";
 
 export interface ShippingMethod {
   id: ShippingMethodId;
@@ -11,12 +11,12 @@ export interface ShippingMethod {
   deliveryTimeEn: string;
   paymentMode: ShippingPaymentMode;
   cost: number;
+  requiresQuote?: boolean;
 }
 
 /**
  * Shipping choices shared by the Shipping page and the payment handoff.
- * Prices are the current storefront defaults and can be replaced centrally
- * when a server-side rate service becomes available.
+ * Delivery charges are supplied by the server policy/quote, never static tariffs.
  */
 export const shippingMethods: readonly ShippingMethod[] = [
   {
@@ -26,7 +26,8 @@ export const shippingMethods: readonly ShippingMethod[] = [
     deliveryTime: "۴ تا ۶ روز کاری",
     deliveryTimeEn: "4 to 6 business days",
     paymentMode: "prepaid",
-    cost: 60000,
+    cost: 0,
+    requiresQuote: true,
   },
   {
     id: "tipax",
@@ -34,8 +35,8 @@ export const shippingMethods: readonly ShippingMethod[] = [
     titleEn: "Tipax",
     deliveryTime: "۳ تا ۵ روز کاری",
     deliveryTimeEn: "3 to 5 business days",
-    paymentMode: "prepaid",
-    cost: 20000,
+    paymentMode: "collect",
+    cost: 0,
   },
   {
     id: "freight",
@@ -61,4 +62,10 @@ export function getShippingDeliveryTime(method: ShippingMethod, locale: Locale):
 /** Returns a method by id, falling back to the first configured choice. */
 export function findShippingMethod(id?: string | null): ShippingMethod {
   return shippingMethods.find((method) => method.id === id) ?? shippingMethods[0];
+}
+
+/** Resolves policy and saved quote without treating unpaid collect charges as free shipping. */
+export function resolveShippingMethod(id: string, included: boolean, cost = 0): ShippingMethod {
+  const method = findShippingMethod(id);
+  return { ...method, paymentMode: included ? "free" : method.id === "post" ? "prepaid" : "collect", cost: included ? 0 : cost, requiresQuote: !included && method.id === "post" };
 }

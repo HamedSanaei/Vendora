@@ -8,8 +8,9 @@ import { usePathname, useRouter } from "next/navigation";
 import useAuthCheck from "@/hooks/use-auth-check";
 import { useCreateAddressMutation, useGetAddressesQuery } from "@/redux/features/auth/authApi";
 import { set_shipping } from "@/redux/features/order/orderSlice";
+import { apiSlice } from "@/redux/api/apiSlice";
 import { formatPrice } from "@/lib/vendora/format";
-import { findShippingMethod, getShippingMethodTitle, shippingMethods, type ShippingMethodId } from "@/lib/vendora/shipping";
+import { findShippingMethod, resolveShippingMethod, getShippingMethodTitle, shippingMethods, type ShippingMethodId } from "@/lib/vendora/shipping";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
 import type { Locale } from "@/lib/vendora/types";
 import { notifySuccess } from "@/utils/toast";
@@ -20,8 +21,12 @@ import { PinIcon, TruckIcon } from "@/components/vendora/icons";
 import { getCartTotals, type CartLine } from "@/components/vendora/cart/cart-model";
 import { CustomerServiceGate } from '@/components/vendora/account/customer-service-gate';
 
+import { useShippingPolicy, refreshShippingPolicy, requestShippingQuote, shippingError, shippingCartFingerprint, type ShippingQuoteResult } from "@/lib/shipping-client";
+import { PostexCityPicker } from "./postex-city-picker";
+
 interface ShippingRootState {
-  auth: { user?: { name?: string; email?: string; phone?: string } };
+  coupon: { coupon_info?: { couponCode?: string } };
+  auth: { accessToken?: string; user?: { name?: string; email?: string; phone?: string } };
   cart: { cart_products: CartLine[] };
   order: { shipping_info?: Record<string, unknown> };
 }
@@ -40,13 +45,13 @@ function ShippingContent() {
   const router = useRouter();
   const dispatch = useDispatch();
   const authChecked = useAuthCheck();
-  const { user } = useSelector((state: ShippingRootState) => state.auth);
+  const { user, accessToken } = useSelector((state: ShippingRootState) => state.auth);
   const { cart_products: cartProducts } = useSelector((state: ShippingRootState) => state.cart);
   const { shipping_info: shippingInfo = {} } = useSelector((state: ShippingRootState) => state.order);
   const { data: addressData, isLoading: addressesLoading, isError: addressesError } = useGetAddressesQuery(undefined, { skip: !authChecked || !user });
   const [createAddress, { isLoading: isCreatingAddress }] = useCreateAddressMutation();
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(typeof shippingInfo.shippingAddressId === "string" ? shippingInfo.shippingAddressId : null);
-  const [selectedMethodId, setSelectedMethodId] = useState<ShippingMethodId>(() => findShippingMethod(String(shippingInfo.shippingMethodId ?? "post")).id);
+  const [selectedMethodId, setSelectedMethodId] = useState<ShippingMethodId | "">(() => findShippingMethod(String(shippingInfo.shippingMethodId ?? "post")).id);
   const [addressError, setAddressError] = useState("");
   const [methodError, setMethodError] = useState("");
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<ShippingAddressFormValues>({
@@ -70,10 +75,37 @@ function ShippingContent() {
     if (!Array.isArray(addressData)) return [];
     return addressData as ShippingAddressView[];
   }, [addressData]);
-  const selectedMethod = shippingMethods.find((method) => method.id === selectedMethodId) ?? shippingMethods[0];
+  const policy = useShippingPolicy();
+  const couponCode = useSelector((state: ShippingRootState) => state.coupon?.coupon_info?.couponCode);
+  const itemCount = cartProducts.reduce((sum, item) => sum + item.orderQuantity, 0);
+  const availableMethods = shippingMethods.filter(method => method.id !== "freight" || itemCount > 10);
+  const [destinationCityCode, setDestinationCityCode] = useState("");
+  const [rateAttempt, setRateAttempt] = useState(0);
+  const [rate, setRate] = useState<{key: string; data?: ShippingQuoteResult; error?: string; cityRequired?: boolean} | null>(null);
+  const cartFingerprint = shippingCartFingerprint(cartProducts, couponCode);
+  const rateKey = JSON.stringify([selectedAddressId, selectedMethodId, policy.version, cartFingerprint, destinationCityCode, rateAttempt]);
+  const rateData = rate?.key === rateKey ? rate.data : undefined;
+  const selectedMethod = resolveShippingMethod(selectedMethodId || "post", policy.includedInPrice, rateData?.cost ?? 0);
+  const waitingForRate = selectedMethodId === "post" && !policy.includedInPrice && !rateData;
+  useEffect(() => {
+    if (selectedMethodId === "freight" && itemCount <= 10) { setSelectedMethodId(""); setMethodError(isFa ? "تعداد سفارش برای باربری باید بیش از ۱۰ عدد باشد؛ روش دیگری انتخاب کنید." : "Freight needs more than ten units. Select another method."); }
+  }, [itemCount, selectedMethodId, isFa]);
+  useEffect(() => {
+    if (!policy.ready || !accessToken || !selectedAddressId || selectedAddressId === "new" || !selectedMethodId || !cartProducts.length) return;
+    const controller = new AbortController();
+    requestShippingQuote(accessToken, selectedAddressId, cartProducts, selectedMethodId, couponCode, destinationCityCode || undefined, controller.signal)
+      .then(data => { if (!controller.signal.aborted) setRate({ key: rateKey, data }); })
+      .catch(error => {
+        if (controller.signal.aborted) return;
+        if (error?.response?.data?.code === "PRICE_CHANGED") dispatch(apiSlice.util.invalidateTags(["Products", "Discount", "Product", "RelatedProducts"]));
+        setRate({ key: rateKey, error: shippingError(error, isFa), cityRequired: error?.response?.data?.code === 'POSTEX_CITY_SELECTION_REQUIRED' });
+      });
+    return () => controller.abort();
+  }, [policy.ready, accessToken, selectedAddressId, selectedMethodId, couponCode, destinationCityCode, rateKey, isFa, cartProducts, dispatch]);
   const subtotal = getCartTotals(cartProducts).subtotal;
   const isNewAddress = selectedAddressId === "new" || addresses.length === 0;
-  const busy = addressesLoading || isCreatingAddress;
+  const quoteBlocked = waitingForRate && !isNewAddress;
+  const busy = addressesLoading || isCreatingAddress || !policy.ready || policy.failed === true;
 
   useEffect(() => {
     if (!authChecked) return;
@@ -147,6 +179,12 @@ function ShippingContent() {
       return;
     }
 
+    if (!selectedMethodId) { setMethodError(isFa ? "روش ارسال را انتخاب کنید." : "Select a shipping method."); return; }
+    // eslint-disable-next-line react-hooks/purity -- Revalidate expiry only on submit; this callback is never invoked during render.
+    if (!rateData || (rateData.expiresAtUtc && Date.parse(rateData.expiresAtUtc) <= Date.now())) {
+      setRateAttempt(value => value + 1);
+      setMethodError(isFa ? "پس از انتخاب یا ذخیره آدرس، مبلغ نهایی و استعلام ارسال را بررسی و دوباره ادامه دهید." : "Review the latest total and delivery quote after saving the address, then continue."); return;
+    }
     dispatch(set_shipping({
       ...shippingInfo,
       shippingAddressId: addressId,
@@ -156,6 +194,11 @@ function ShippingContent() {
       shippingPaymentMode: selectedMethod.paymentMode,
       shippingCost: selectedMethod.paymentMode === "prepaid" ? selectedMethod.cost : 0,
       freightCollect: selectedMethod.paymentMode === "collect",
+      shippingQuoteId: rateData?.id ?? null,
+      shippingQuoteExpiresAtUtc: rateData?.expiresAtUtc ?? null,
+      shippingPolicyVersion: policy.version,
+      shippingCartFingerprint: cartFingerprint,
+      shippingServerTotals: rateData ? { subtotal: rateData.subtotal, discount: rateData.discount, payable: rateData.payable } : null,
       email: values.email,
       notes: values.notes,
     }));
@@ -180,18 +223,24 @@ function ShippingContent() {
             </section>
 
             <section className="rounded-[20px] border border-vd-line bg-white p-4 md:p-6">
-              <CheckoutSectionHeading icon={<TruckIcon />} title={isFa ? "روش ارسال" : "Shipping method"} body={isFa ? "پست و تیپاکس پیش‌پرداخت هستند؛ کرایه باربری هنگام تحویل دریافت می‌شود." : "Post and Tipax are prepaid; freight is collected on delivery."} />
-              <div className="mt-5 grid gap-3">{shippingMethods.map((method) => <ShippingMethodCard key={method.id} method={method} locale={locale} selected={selectedMethodId === method.id} onSelect={() => { setSelectedMethodId(method.id); setMethodError(""); }} />)}</div>
+              <CheckoutSectionHeading icon={<TruckIcon />} title={isFa ? "روش ارسال" : "Shipping method"} body={policy.includedInPrice ? (isFa ? "ارسال رایگان است؛ سهم ثابت ارسال در قیمت هر کالا لحاظ شده است." : "Delivery is included in each item price.") : (isFa ? "پست با کرایه استعلام‌شده؛ تیپاکس و باربری با پرداخت کرایه هنگام تحویل." : "Post uses a live quote; Tipax and freight are paid on delivery.")} />
+              <div className="mt-5 grid gap-3">{availableMethods.map((baseMethod) => <ShippingMethodCard key={baseMethod.id} method={resolveShippingMethod(baseMethod.id, policy.includedInPrice, rateData?.cost ?? 0)} locale={locale} selected={selectedMethodId === baseMethod.id} disabled={baseMethod.id === "post" && !policy.includedInPrice && rate?.key === rateKey && !!rate.error} onSelect={() => { setSelectedMethodId(baseMethod.id); setMethodError(""); }} />)}</div>
+              {selectedMethodId && <div className="mt-4 space-y-3" aria-live="polite">
+                {rate?.key === rateKey && rate.error ? <><p role="alert" className="text-sm text-vd-danger">{rate.error}</p><VendoraButton type="button" variant="outline" onClick={() => setRateAttempt(value => value + 1)}>{isFa ? "تلاش مجدد" : "Retry"}</VendoraButton></> : waitingForRate ? <p className="text-sm text-vd-muted">{isFa ? "پس از تعیین آدرس، کرایه از پستِکس استعلام می‌شود." : "A postal quote is requested after selecting an address."}</p> : null}
+                {rate?.key === rateKey && rate.cityRequired && accessToken && <PostexCityPicker token={accessToken} locale={locale} value={destinationCityCode} onChange={setDestinationCityCode} />}
+              </div>}
+
+              {policy.failed && <p role="alert" className="mt-4 text-sm text-vd-danger">{isFa ? "دریافت سیاست ارسال انجام نشد." : "Shipping settings unavailable."}<VendoraButton type="button" variant="outline" onClick={() => void refreshShippingPolicy(true)}>{isFa ? "تلاش مجدد" : "Retry"}</VendoraButton></p>}
               {methodError ? <p role="alert" className="mt-4 rounded-control bg-vd-danger-tint p-3 text-xs font-semibold text-vd-danger">{methodError}</p> : null}
             </section>
           </div>
 
           <div className="min-w-0">
-            <div className="hidden lg:block"><OrderSummary locale={locale} subtotal={subtotal} shippingMethod={selectedMethod} action={<VendoraButton type="submit" size="lg" className="w-full" disabled={busy}>{busy ? (isFa ? "در حال ذخیره…" : "Saving…") : (isFa ? "ادامه به پرداخت" : "Continue to payment")}</VendoraButton>} /></div>
-            <div className="lg:hidden"><OrderSummary locale={locale} subtotal={subtotal} shippingMethod={selectedMethod} /></div>
+            <div className="hidden lg:block"><OrderSummary locale={locale} subtotal={rateData?.subtotal ?? subtotal} discount={rateData?.discount ?? 0} shippingMethod={selectedMethod} action={<VendoraButton type="submit" size="lg" className="w-full" disabled={busy || quoteBlocked}>{busy ? (isFa ? "در حال ذخیره…" : "Saving…") : (isFa ? "ادامه به پرداخت" : "Continue to payment")}</VendoraButton>} /></div>
+            <div className="lg:hidden"><OrderSummary locale={locale} subtotal={rateData?.subtotal ?? subtotal} discount={rateData?.discount ?? 0} shippingMethod={selectedMethod} /></div>
           </div>
 
-          <CheckoutStickyAction label={isFa ? "مبلغ قابل پرداخت" : "Payable now"} value={formatPrice(subtotal + (selectedMethod.paymentMode === "prepaid" ? selectedMethod.cost : 0), locale)} action={<VendoraButton type="submit" size="lg" disabled={busy} className="min-w-[164px]">{busy ? (isFa ? "در حال ذخیره…" : "Saving…") : (isFa ? "ادامه به پرداخت" : "Continue")}</VendoraButton>} />
+          <CheckoutStickyAction label={isFa ? "مبلغ قابل پرداخت" : "Payable now"} value={formatPrice((rateData?.payable ?? subtotal + (selectedMethod.paymentMode === "prepaid" ? selectedMethod.cost : 0)), locale)} action={<VendoraButton type="submit" size="lg" disabled={busy || quoteBlocked} className="min-w-[164px]">{busy ? (isFa ? "در حال ذخیره…" : "Saving…") : (isFa ? "ادامه به پرداخت" : "Continue")}</VendoraButton>} />
         </form>
       </main>
     </CheckoutFlowLayout>

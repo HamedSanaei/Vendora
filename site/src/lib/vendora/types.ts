@@ -81,6 +81,7 @@ export interface OrderDetail extends OrderSummary {
   items: OrderItemLine[];
   itemsSubtotal: number;
   shippingCost: number;
+  shippingPaymentMode?: "free" | "prepaid" | "collect";
   shippingAddress: {
     title: string;
     address: string;

@@ -80,6 +80,7 @@ async function desktopChecks(browser, locale) {
   assert.match(await accountPanel.innerText(), /کاربر آزمایشی/);
   for (const route of ['account', 'account/orders', 'account/addresses', 'account/wishlist', 'account/returns', 'account/transactions', 'account/proformas', 'account/security']) assert.ok(await accountPanel.locator(`a[href="/${locale}/${route}"]`).count());
   assert.equal((await accountPanel.boundingBox()).width, 380);
+  assert.equal(await accountPanel.locator('a svg path[d="m9.5 6 6 6-6 6"]').count(), 0, 'Account navigation has no decorative chevrons');
   await accountPanel.hover(); await page.waitForTimeout(300); assert.ok(await accountPanel.isVisible());
   await accountPanel.screenshot({ path: path.join(output, `account-${locale}-1440.png`) });
   await page.keyboard.press('Escape'); await accountPanel.waitFor({ state: 'hidden' });
@@ -141,6 +142,7 @@ async function desktopChecks(browser, locale) {
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('cart_products')).length), 2);
   await page.locator('[data-header-trigger="account"]').hover();
   const guest = page.locator('[data-header-dropdown="account"]:visible'); await guest.waitFor();
+  assert.equal(await guest.locator('a svg path[d="m9.5 6 6 6-6 6"]').count(), 0);
   assert.ok(await guest.locator(`a[href*="/${locale}/login?returnTo="]`).isVisible());
   assert.equal(await guest.locator(`a[href="/${locale}/cart"]`).count(), 1);
   assert.equal(await guest.locator(`a[href="/${locale}/faq"]`).count(), 1);
@@ -174,6 +176,7 @@ async function mobileChecks(browser, width) {
   // Tap the visible upper part of the item, away from Next's local-only corner dev indicator.
   await account.tap({ position: { x: 60, y: 16 } }); const drawer = page.locator('#vd-header-account-mobile'); await drawer.waitFor();
   assert.equal(await drawer.locator('nav a').count(), 6);
+  assert.equal(await drawer.locator('nav a svg path[d="m9.5 6 6 6-6 6"]').count(), 0);
   await drawer.locator('.vd-header-mobile-order-tiles a').first().getByText('۲', { exact: true }).waitFor();
   assert.deepEqual(await drawer.locator('.vd-header-mobile-order-tiles span').allTextContents(), ['۲', '۲', '۱']);
   await drawer.getByText('۰۹۱۵•••۸۸۷۷', { exact: true }).waitFor();

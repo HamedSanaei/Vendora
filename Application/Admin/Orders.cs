@@ -299,6 +299,7 @@ public static class Orders
                     }
                 }
 
+                await new Application.Sms.SmsNotifications(_dbContext, TimeProvider.System).OrderStatusAsync(order, cancellationToken);
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return new Result(

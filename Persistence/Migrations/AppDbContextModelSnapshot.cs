@@ -15,7 +15,7 @@ namespace Persistence.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
             modelBuilder.Entity("Domain.Accounting.AccountingOperation", b =>
                 {
@@ -269,6 +269,9 @@ namespace Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal?>("BaseUnitPrice")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal?>("CostToman")
                         .HasColumnType("TEXT");
 
@@ -276,6 +279,9 @@ namespace Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("DocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("EmbeddedShippingUnitAmount")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("OriginalLineId")
@@ -1073,6 +1079,9 @@ namespace Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ShippingPolicySnapshotJson")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ShippingPostalCode")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -1130,6 +1139,15 @@ namespace Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("BaseUnitPrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("DiscountSnapshot")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("EmbeddedShippingUnitAmount")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("OrderId")
@@ -1316,6 +1334,9 @@ namespace Persistence.Migrations
                     b.Property<decimal?>("UsdPrice")
                         .HasPrecision(18, 4)
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("WeightGrams")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -1703,6 +1724,99 @@ namespace Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Entities.ShippingPolicy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CollectionType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CourierCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IncludedInPrice")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("OriginCityCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("OriginLatitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("OriginLongitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("PackagesJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PaymentType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ServiceType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("UnitAmount")
+                        .HasPrecision(18)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ShippingPolicies");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ShippingQuote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AddressId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("CostToman")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DestinationCityCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("PolicyVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Fingerprint", "ExpiresAtUtc");
+
+                    b.ToTable("ShippingQuotes");
+                });
+
             modelBuilder.Entity("Domain.Entities.SlideshowSlide", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1765,6 +1879,294 @@ namespace Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("SlugHistories");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SmsChallenge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CodeHash")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Consumed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProfileStamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RecoveryHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Phone", "Purpose", "ExpiresAtUtc");
+
+                    b.ToTable("SmsChallenges");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SmsMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ActorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(3000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DeliveryChecks")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ErrorCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Event")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EventKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LeaseUntilUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("NextAttemptAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProviderId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SettingsVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventKey", "Phone")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "NextAttemptAtUtc");
+
+                    b.ToTable("SmsMessages");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SmsPhoneBudget", b =>
+                {
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("NextSendAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("WindowStartUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Phone");
+
+                    b.ToTable("SmsPhoneBudgets");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SmsSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ActivatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LowStockThreshold")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("OtpType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("PasswordRecovery")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PatternId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("PhoneLogin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("PhoneVerification")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RecipientsJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RulesJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SmsSettings");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SmsStockWatch", b =>
+                {
+                    b.Property<Guid>("ProductId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LastAlertUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PreviousAvailable")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("SettingsVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ProductId");
+
+                    b.ToTable("SmsStockWatches");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SupportTicket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "UpdatedAtUtc");
+
+                    b.ToTable("SupportTickets");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SupportTicketMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsStaff")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(3000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId", "CreatedAtUtc");
+
+                    b.ToTable("SupportTicketMessages");
                 });
 
             modelBuilder.Entity("Domain.Entities.UsdtExchangeRate", b =>
@@ -1842,6 +2244,24 @@ namespace Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("UserAccounts", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.VerifiedPhoneIdentity", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("Phone")
+                        .IsUnique();
+
+                    b.ToTable("VerifiedPhoneIdentities");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -2030,7 +2450,13 @@ namespace Persistence.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("PreviousVerifiedPhone")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("SecurityStamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("TokensRevokedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("TwoFactorEnabled")
@@ -2545,6 +2971,24 @@ namespace Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Domain.Entities.SupportTicketMessage", b =>
+                {
+                    b.HasOne("Domain.Entities.SupportTicket", null)
+                        .WithMany("Messages")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Entities.VerifiedPhoneIdentity", b =>
+                {
+                    b.HasOne("Persistence.Identity.AppUser", null)
+                        .WithOne()
+                        .HasForeignKey("Domain.Entities.VerifiedPhoneIdentity", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -2649,6 +3093,11 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Entities.ProductAttribute", b =>
                 {
                     b.Navigation("Values");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SupportTicket", b =>
+                {
+                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }

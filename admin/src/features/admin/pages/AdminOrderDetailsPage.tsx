@@ -7,6 +7,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { adminPath, normalizeAdminLocale } from '../i18n';
 import { useAdminStore } from '../stores/AdminStoreContext';
 import { formatDate, formatMoney } from '../utils/formatters';
+import { OrderLabelActions } from '../components/OrderLabelActions';
 import { OrderAccountingContext } from '../accounting/OrderAccountingContext';
 
 /** Renders the responsive order, customer, item, and payment snapshot from the order API. */
@@ -39,6 +40,7 @@ export const AdminOrderDetailsPage = observer(function AdminOrderDetailsPage() {
         actions={<AdminButton icon="arrow" to={adminPath(locale, 'orders')} variant="secondary">{isFa ? 'بازگشت به سفارش‌ها' : 'Back to orders'}</AdminButton>}
       />
 
+      <OrderLabelActions orderIds={[order.id]} locale={locale} />
       <div className="admin-order-detail-statuses"><StatusBadge locale={locale} value={order.status} /><StatusBadge locale={locale} value={order.paymentStatus} /></div>
 
       <div className="admin-order-review-grid">

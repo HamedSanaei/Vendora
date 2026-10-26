@@ -7,6 +7,7 @@ export interface CategoryLink { id: string; name: string; slug: string }
 export interface CatalogCategory extends CategoryLink { parentCategoryId: string | null; children: CatalogCategory[] }
 export interface CategoryDetail extends CategoryLink { descriptionHtml?: string | null; description?: string | null; imageUrl?: string | null; seo?: SeoMetadataDto | null; breadcrumbs: CategoryLink[]; children: CategoryLink[] }
 export interface CatalogProductDto {
+  basePrice?: number; embeddedShippingUnitAmount?: number; shippingPolicyVersion?: number; freeShipping?: boolean;
   productCode: number;
   rating?: number; ratingCount?: number; reviewCount?: number;
   id: string; title: string; slug: string; description?: string | null; descriptionHtml?: string | null; price: number; stockQuantity: number;

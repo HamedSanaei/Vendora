@@ -22,14 +22,15 @@ public static class Details
     {
         private readonly IProductReadRepository _productReadRepository;
         private readonly IProductDescriptionService _descriptions;
+        private readonly Persistence.AppDbContext _db;
 
         /// <summary>
         /// Creates the handler.
         /// </summary>
-        public Handler(IProductReadRepository productReadRepository, IProductDescriptionService descriptions)
+        public Handler(IProductReadRepository productReadRepository, IProductDescriptionService descriptions, Persistence.AppDbContext db)
         {
             _productReadRepository = productReadRepository;
-            _descriptions = descriptions;
+            _descriptions = descriptions; _db = db;
         }
 
         /// <inheritdoc />
@@ -41,12 +42,13 @@ public static class Details
                 return null;
             }
 
+            var policy = await Application.Shipping.ShippingPricing.ReadAsync(_db, cancellationToken);
             return new ProductDetailDto(
                 product.Id,
                 product.Title,
                 product.Slug,
                 _descriptions.Sanitize(product.Description),
-                product.Price,
+                policy.SellingPrice(product.Price),
                 product.StockQuantity,
                 product.Category?.Name,
                 product.Images
@@ -58,7 +60,7 @@ public static class Details
                         image.IsPrimary,
                         image.SortOrder))
                     .ToList(),
-                product.ProductCode);
+                product.ProductCode, product.Price, policy.IncludedInPrice ? policy.UnitAmount : 0, policy.Version, policy.IncludedInPrice);
         }
     }
 }

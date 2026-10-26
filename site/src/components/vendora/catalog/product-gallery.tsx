@@ -26,19 +26,30 @@ export function ProductGallery({ product, locale, favorited, onFavorite }: Produ
   const [selected, setSelected] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
+  const opener = useRef<HTMLButtonElement | null>(null);
   const active = Math.min(selected, gallery.length - 1);
   const image = gallery[active];
   const alt = product.galleryAlts[product.gallery.indexOf(image)] || product.title;
-  const close = useCallback(() => { setExpanded(false); trigger.current?.focus({ preventScroll: true }); }, []);
+  const close = useCallback(() => {
+    setExpanded(false);
+    (opener.current?.isConnected ? opener.current : trigger.current)?.focus({ preventScroll: true });
+  }, []);
+
+  /** Opens the shared dialog at the requested photo and remembers the exact button for focus restoration. */
+  function openGallery(index: number, button: HTMLButtonElement) {
+    opener.current = button;
+    setSelected(index);
+    setExpanded(true);
+  }
 
   return <div className="vd-product-hero__gallery min-w-0">
     <div className="vd-product-hero__media relative aspect-[1.08/1] overflow-hidden rounded-[22px] border border-vd-line bg-surface-soft md:aspect-[1.18/1] lg:aspect-square">
       <button type="button" onClick={onFavorite} aria-label={favorited ? t.removeFromWishlist : t.addToWishlist} aria-pressed={favorited} className={`vd-focus absolute start-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-vd-line shadow-sm ${favorited ? "bg-vd-danger-tint text-vd-danger" : "bg-white/95 text-ink hover:text-vd-danger"}`}><HeartIcon size={20} filled={favorited} /></button>
-      <button ref={trigger} type="button" onClick={() => setExpanded(true)} aria-label={`${t.openGallery}: ${product.title}`} aria-haspopup="dialog" className="vd-focus vd-product-gallery__open">
+      <button ref={trigger} type="button" onClick={event => openGallery(active, event.currentTarget)} aria-label={`${t.openGallery}: ${product.title}`} aria-haspopup="dialog" className="vd-focus vd-product-gallery__open">
         {image ? <Image src={image} alt={alt} fill priority unoptimized={image.includes("/uploads/")} sizes="(max-width: 1023px) 92vw, 42vw" className="object-contain" /> : <BagArtwork color="jade" className="h-[58%] w-auto" />}
       </button>
     </div>
-    {gallery.length > 1 && <div className="mt-3 flex gap-2 overflow-x-auto pb-1">{gallery.map((src, index) => <button key={src} type="button" onClick={() => setSelected(index)} aria-label={`${product.title} ${formatNumber(index + 1, locale)}`} aria-pressed={active === index} className={`vd-focus relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-control border bg-surface-soft ${active === index ? "border-jade ring-1 ring-jade" : "border-vd-line"}`}><Image src={src} alt="" fill unoptimized={src.includes("/uploads/")} sizes="72px" className="object-contain" /></button>)}</div>}
+    {gallery.length > 1 && <div role="group" aria-label={t.gallery} className="mt-3 flex gap-2 overflow-x-auto pb-1">{gallery.map((src, index) => <button key={src} type="button" onClick={event => openGallery(index, event.currentTarget)} aria-label={`${product.title} ${formatNumber(index + 1, locale)}`} aria-haspopup="dialog" aria-pressed={active === index} className={`vd-focus relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-control border bg-surface-soft ${active === index ? "border-jade ring-1 ring-jade" : "border-vd-line"}`}><Image src={src} alt="" fill unoptimized={src.includes("/uploads/")} sizes="72px" className="object-contain" /></button>)}</div>}
     {expanded && <GalleryDialog key={product.id} gallery={gallery} product={product} locale={locale} selected={active} onSelect={setSelected} onClose={close} />}
   </div>;
 }

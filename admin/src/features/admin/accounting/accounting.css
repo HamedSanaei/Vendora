@@ -1,11 +1,11 @@
 /* Scoped extension of the existing vendora-admin-core tokens; no changes to unrelated screens. */
 .admin-accounting { display: grid; gap: 20px; }
 .accounting-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
-.accounting-tabs a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 18px; border: 1px solid var(--va-border); border-radius: 10px; background: var(--va-surface); color: var(--va-muted); text-decoration: none; font-size: 13px; font-weight: 600; }
+.accounting-tabs a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 18px; border: 1px solid var(--va-border); border-radius: 10px; background: var(--va-surface); color: var(--va-muted); text-decoration: none; font-size: var(--va-text-label); font-weight: 600; }
 .accounting-tabs a.active { background: var(--va-ink); color: white; border-color: var(--va-ink); }
 .accounting-tabs a:focus-visible { outline: 2px solid var(--va-brass); outline-offset: 3px; }
 .accounting-more { display: none; position: relative; min-width: 0; }
-.accounting-more summary { min-height: 44px; padding: 10px; cursor: pointer; list-style: none; background: var(--va-surface); border: 1px solid var(--va-border); border-radius: 10px; text-align: center; font-size: 13px; }
+.accounting-more summary { min-height: 44px; padding: 10px; cursor: pointer; list-style: none; background: var(--va-surface); border: 1px solid var(--va-border); border-radius: 10px; text-align: center; font-size: var(--va-text-label); }
 .accounting-more > div { position: absolute; inset-inline-end: 0; top: 48px; min-width: 210px; padding: 8px; display: grid; gap: 6px; background: var(--va-surface); border: 1px solid var(--va-border); border-radius: 12px; z-index: 25; box-shadow: 0 8px 24px #171b1f22; }
 .accounting-mobile-actions { display: none; }
 .accounting-metrics { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 20px; }
@@ -13,7 +13,7 @@
 .admin-shell[data-admin-theme="penpot"] .accounting-metrics .admin-stat-card { min-height: 106px; padding: 18px; border: 1px solid var(--va-border); border-radius: 12px; background: var(--va-surface); box-shadow: none; }
 .admin-shell[data-admin-theme="penpot"] .accounting-metrics .admin-stat-card::after,
 .admin-shell[data-admin-theme="penpot"] .accounting-metrics .admin-stat-card::before { display: none; }
-.admin-shell[data-admin-theme="penpot"] .accounting-metrics .admin-stat-card strong { font-size: 22px; }
+.admin-shell[data-admin-theme="penpot"] .accounting-metrics .admin-stat-card strong { font-size: 24px; }
 .admin-shell[data-admin-theme="penpot"] .admin-accounting .admin-table { table-layout: fixed; width: 100%; min-width: 0; }
 .admin-shell[data-admin-theme="penpot"] .admin-accounting .admin-table tbody,
 .admin-shell[data-admin-theme="penpot"] .admin-accounting .admin-table tr,
@@ -29,7 +29,7 @@
 .accounting-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .accounting-balances { display: grid; gap: 12px; padding: 16px; }
 .accounting-balances > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; background: var(--va-surface-2, #F7F5F0); padding: 16px; border-radius: 10px; }
-.accounting-balances dt { color: var(--va-muted); font-size: 13px; }
+.accounting-balances dt { color: var(--va-muted); font-size: var(--va-text-label); }
 .accounting-balances dd { margin: 0; font-weight: 700; }
 .admin-accounting .admin-surface { min-width: 0; }
 .accounting-line-list { display: grid; gap: 12px; padding: 16px; }
@@ -56,7 +56,7 @@
 .accounting-summary strong { font-size: 18px; }
 @media(max-width:1279px) { .accounting-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); } .accounting-line { grid-template-columns: repeat(2,minmax(0,1fr)); } .accounting-line .admin-field:first-child { grid-column: 1/-1; } }
 @media(max-width:1023px) { .accounting-overview-grid { grid-template-columns: 1fr; } .accounting-form-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-@media(max-width:639px) { .admin-accounting { gap: 20px; } .accounting-tabs { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); } .accounting-tabs a { padding: 8px; } .accounting-tabs > .accounting-secondary-tab { display: none; } .accounting-more { display: block; } .accounting-mobile-actions { display: block; } .accounting-form-grid { grid-template-columns: 1fr; padding: 16px; } .accounting-metrics { gap: 12px; } .accounting-line-list { padding: 10px; } .accounting-summary { flex-direction: column; } }
+@media(max-width:639px) { .admin-accounting { gap: 20px; } .accounting-tabs { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); } .accounting-tabs a { padding: 8px; } .accounting-tabs > .accounting-secondary-tab { display: none; } .accounting-more { display: block; } .accounting-mobile-actions { display: block; } .accounting-form-grid { grid-template-columns: 1fr; padding: 16px; } .accounting-metrics { gap: 12px; grid-template-columns: minmax(0,1fr); } .accounting-line-list { padding: 10px; } .accounting-summary { flex-direction: column; } }
 @media(max-width:767px) {
   .admin-shell[data-admin-theme="penpot"] .accounting-latest .admin-table tr { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 4px 8px; padding: 14px; background: white; }
   .admin-shell[data-admin-theme="penpot"] .accounting-latest .admin-table tr:nth-child(even) { background: var(--va-surface-2); }
@@ -66,4 +66,4 @@
   .admin-shell[data-admin-theme="penpot"] .accounting-latest .admin-table td:nth-child(2) { grid-column: 1/-1; }
   .admin-shell[data-admin-theme="penpot"] .accounting-latest .admin-table td:nth-child(3) { display: none; }
 }
-@media(max-width:639px) { .admin-accounting .accounting-settlement { display: none; } .admin-accounting .admin-page-heading h1 { font-size: 24px; } .admin-shell[data-admin-theme="penpot"] .accounting-metrics .admin-stat-card strong { font-size: 18px; white-space: nowrap; } }
+@media(max-width:639px) { .admin-accounting .accounting-settlement { display: none; } .admin-accounting .admin-page-heading h1 { font-size: 24px; } .admin-shell[data-admin-theme="penpot"] .accounting-metrics .admin-stat-card strong { font-size: 24px; white-space: nowrap; } }

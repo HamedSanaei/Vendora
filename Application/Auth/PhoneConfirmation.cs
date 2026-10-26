@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
+using Application.Sms;
 
 namespace Application.Auth;
 
@@ -30,6 +31,8 @@ public static class PhoneConfirmation
             if (challenge.NextSendAtUtc > now) return new(429, "RESEND_WAIT", (int)Math.Ceiling((challenge.NextSendAtUtc - now).TotalSeconds));
             if (challenge.WindowStartUtc.AddMinutes(30) <= now) { challenge.WindowStartUtc = now; challenge.SendCount = 0; }
             if (challenge.SendCount >= 5) return new(429, "SEND_LIMIT", (int)Math.Ceiling((challenge.WindowStartUtc.AddMinutes(30) - now).TotalSeconds));
+            int sharedWait = await SmsBudget.SpendAsync(db, user.PhoneNumber!, now, ct);
+            if (sharedWait > 0) return new(429, "RESEND_WAIT", sharedWait);
             challenge.PhoneNumber = user.PhoneNumber!; challenge.CodeHash = null; challenge.Attempts = 0;
             challenge.ProfileStamp = user.ConcurrencyStamp;
             challenge.SendCount++; challenge.NextSendAtUtc = now.AddSeconds(120); challenge.ExpiresAtUtc = now.AddMinutes(5);
@@ -65,8 +68,17 @@ public static class PhoneConfirmation
             bool valid = new PasswordHasher<PhoneVerification>().VerifyHashedPassword(challenge, challenge.CodeHash, code) != PasswordVerificationResult.Failed;
             if (valid)
             {
+                try { await PhoneOwnership.ClaimAsync(db, user.Id, SmsPolicy.Phone(user.PhoneNumber), ct); }
+                catch (Application.Accounting.AccountingException) { return new(409, "PHONE_OWNERSHIP_CONFLICT"); }
                 challenge.CodeHash = null; user.PhoneNumberConfirmed = true;
                 user.ConcurrencyStamp = Guid.NewGuid().ToString();
+                if (user.PreviousVerifiedPhone is not null)
+                {
+                    var events = new SmsNotifications(db, time);
+                    await events.CustomerAsync("PhoneChanged", "phone:" + challenge.Version, user.Id, null, ct, user.PreviousVerifiedPhone);
+                    await events.CustomerAsync("PhoneChanged", "phone-new:" + challenge.Version, user.Id, null, ct, user.PhoneNumber);
+                    user.PreviousVerifiedPhone = null;
+                }
             }
             try { await db.SaveChangesAsync(ct); }
             catch (DbUpdateException) { return new(409, "VERIFICATION_CONFLICT"); }

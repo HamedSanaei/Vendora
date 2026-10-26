@@ -16,6 +16,7 @@ export function mapCatalogProduct(product: CatalogProductDto) {
     rating: product.rating ?? 0, ratingCount: product.ratingCount ?? 0, reviewCount: product.reviewCount ?? 0,
     parent: categoryName, children: categorySlug, categorySlugs: categories.map(item => item.slug),
     tags: [categoryName, product.brandName, ...categories.map(item => item.name), ...(product.colors ?? []).map(color => color.name)].filter((value): value is string => Boolean(value)),
+    basePrice: product.basePrice, embeddedShippingUnitAmount: product.embeddedShippingUnitAmount ?? 0, shippingPolicyVersion: product.shippingPolicyVersion, freeShipping: product.freeShipping === true,
     image: primaryImage, originalPrice: Number(product.price), price: Number(product.price), discount: 0,
     relatedImages: images.length ? images : [primaryImage], galleryAlts: gallery.map(image => image.altText ?? product.title),
     description: product.description || '', descriptionHtml: product.descriptionHtml || '',

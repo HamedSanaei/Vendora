@@ -12,9 +12,12 @@ import type { Locale } from "@/lib/vendora/types";
 import { CheckoutStageHeader, CheckoutStickyAction } from "@/components/vendora/checkout/checkout-shell";
 import { CartItem, CartSummary, CartTrustBar, EmptyCartState } from "./cart-components";
 import { getCartTotals, type CartLine } from "./cart-model";
+import { useCartPricing } from "@/lib/shipping-client";
+import { clear_coupon } from "@/redux/features/coupon/couponSlice";
 
 interface CartRootState {
   cart: { cart_products: CartLine[] };
+  coupon: { coupon_info?: { couponCode?: string } };
 }
 
 /** Full responsive cart page translated from the approved Penpot frames. */
@@ -25,6 +28,9 @@ export function VendoraCartPage() {
   const dispatch = useDispatch();
   const items = useSelector((state: CartRootState) => state.cart.cart_products);
   const totals = getCartTotals(items);
+  const couponCode = useSelector((state: CartRootState) => state.coupon.coupon_info?.couponCode);
+  const pricing = useCartPricing(items, couponCode, locale === "fa");
+  const payable = pricing.data?.payable ?? totals.subtotal;
 
   /** Confirms the destructive action before removing all persisted cart lines. */
   const handleClearCart = () => {
@@ -62,7 +68,8 @@ export function VendoraCartPage() {
               </section>
 
               <div>
-                <CartSummary locale={locale} subtotal={totals.subtotal} />
+                <CartSummary locale={locale} subtotal={pricing.data?.subtotal ?? totals.subtotal} discount={pricing.data?.discount ?? 0} pending={pricing.pending} />
+                {pricing.error && <div role="alert" className="mt-3 rounded-control bg-vd-danger-tint p-4 text-sm text-vd-danger">{pricing.error}<button type="button" onClick={pricing.retry} className="vd-focus ms-2 min-h-11 font-bold underline">{locale === "fa" ? "تلاش مجدد" : "Retry"}</button><button type="button" onClick={() => dispatch(clear_coupon())} className="vd-focus ms-2 min-h-11 font-bold underline">{locale === "fa" ? "حذف کد تخفیف" : "Remove coupon"}</button></div>}
                 <Link href={withLocalePath("/shop", locale)} className="vd-focus mt-5 flex h-14 items-center justify-center rounded-control border border-jade text-sm font-bold text-jade hover:bg-jade-tint">{t.continueShopping}</Link>
                 <button type="button" onClick={handleClearCart} className="vd-focus mt-3 flex h-10 w-full items-center justify-center rounded-control text-sm font-bold text-vd-danger hover:bg-vd-danger-tint md:hidden">{t.clear}</button>
               </div>
@@ -71,7 +78,7 @@ export function VendoraCartPage() {
             <div className="mt-11"><CartTrustBar locale={locale} /></div>
             <p className="mt-6 text-center text-xs leading-6 text-vd-muted lg:hidden">{t.termsNote}</p>
 
-            <CheckoutStickyAction reserveMobileNavigation label={t.payable} value={formatPrice(totals.subtotal, locale)} action={<Link href={withLocalePath("/shipping", locale)} className="vd-focus flex h-[60px] min-w-[176px] items-center justify-center rounded-control bg-jade px-5 text-sm font-extrabold text-white hover:bg-jade-dark">{t.checkout}</Link>} />
+            <CheckoutStickyAction reserveMobileNavigation label={t.payable} value={formatPrice(payable, locale)} action={<Link href={withLocalePath("/shipping", locale)} className="vd-focus flex h-[60px] min-w-[176px] items-center justify-center rounded-control bg-jade px-5 text-sm font-extrabold text-white hover:bg-jade-dark">{t.checkout}</Link>} />
           </>
         )}
       </div>

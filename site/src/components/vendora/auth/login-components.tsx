@@ -60,7 +60,7 @@ interface OtpInputProps {
   onPaste: (event: ClipboardEvent<HTMLInputElement>) => void;
 }
 
-/** Five-digit OTP input with paste, focus and backspace hooks owned by LoginCard. */
+/** Provider-length OTP input with paste, focus and backspace hooks owned by LoginCard. */
 export function OtpInput({ locale, digits, invalid = false, setInputRef, onChange, onKeyDown, onPaste }: OtpInputProps) {
   const isFa = locale === "fa";
   return (
@@ -78,7 +78,7 @@ export function OtpInput({ locale, digits, invalid = false, setInputRef, onChang
           maxLength={1}
           aria-label={`${isFa ? "رقم" : "Digit"} ${index + 1}`}
           aria-invalid={invalid || undefined}
-          className={`vd-focus h-12 w-12 rounded-control border text-center text-lg font-extrabold text-ink outline-none ${invalid ? "border-vd-danger" : "border-vd-line"}`}
+          className={`vd-focus h-12 w-full min-w-0 max-w-12 rounded-control border text-center text-lg font-extrabold text-ink outline-none ${invalid ? "border-vd-danger" : "border-vd-line"}`}
         />
       ))}
     </div>

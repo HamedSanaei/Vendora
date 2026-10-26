@@ -1,4 +1,5 @@
 "use client";
+import { useShippingPolicy } from "@/lib/shipping-client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -106,11 +107,14 @@ export function CartItem({ item, locale, onDecrease, onIncrease, onRemove }: Car
 interface CartSummaryProps {
   locale: Locale;
   subtotal: number;
+  discount?: number;
+  pending?: boolean;
 }
 
 /** Reusable order summary used as the desktop side panel and mobile block. */
-export function CartSummary({ locale, subtotal }: CartSummaryProps) {
+export function CartSummary({ locale, subtotal, discount = 0, pending = false }: CartSummaryProps) {
   const t = getDict(locale).cart;
+  const policy = useShippingPolicy();
 
   return (
     <aside className="rounded-tile border border-vd-line bg-white p-6 lg:sticky lg:top-6">
@@ -118,11 +122,11 @@ export function CartSummary({ locale, subtotal }: CartSummaryProps) {
       <hr className="my-5 border-vd-line" />
       <dl className="space-y-4 text-sm">
         <SummaryLine label={t.subtotal} value={formatPrice(subtotal, locale)} />
-        <SummaryLine label={t.shipping} value={t.shippingPending} accent />
-        <SummaryLine label={t.discount} value={formatPrice(0, locale)} />
+        <SummaryLine label={t.shipping} value={policy.includedInPrice ? (locale === "fa" ? "رایگان" : "Free") : t.shippingPending} accent />
+        <SummaryLine label={t.discount} value={pending ? (locale === "fa" ? "در حال محاسبه…" : "Calculating…") : formatPrice(discount, locale)} />
       </dl>
       <hr className="my-5 border-vd-line" />
-      <div className="flex items-center justify-between gap-3"><span className="font-extrabold text-ink">{t.payable}</span><strong className="text-[17px] font-extrabold text-jade-dark">{formatPrice(subtotal, locale)}</strong></div>
+      <div className="flex items-center justify-between gap-3"><span className="font-extrabold text-ink">{t.payable}</span><strong className="text-[17px] font-extrabold text-jade-dark">{formatPrice(subtotal - discount, locale)}</strong></div>
       <Link href={withLocalePath("/shipping", locale)} className="vd-focus mt-6 flex h-14 items-center justify-center rounded-control bg-jade px-4 text-sm font-extrabold text-white hover:bg-jade-dark">{t.checkout}</Link>
       <p className="mt-3 text-center text-xs text-vd-muted">{t.secureNote}</p>
       <CartProformaAction locale={locale} />

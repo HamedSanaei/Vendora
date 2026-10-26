@@ -43,6 +43,7 @@ import type { SeoDto, SeoInput } from './seo/types';
 export interface AdminProductDto {
   createdAtUtc?: string | null;
   updatedAtUtc?: string | null;
+  weightGrams?: number | null;
   productCode: number;
   seo?: SeoDto | null;
   attributes?: ProductAttribute[];
@@ -84,6 +85,7 @@ export interface AdminProductImageDto {
 export interface AdminProduct {
   createdAtUtc?: string | null;
   updatedAtUtc?: string | null;
+  weightGrams?: number | null;
   productCode: number;
   seo?: SeoDto | null;
   attributes: ProductAttribute[];
@@ -257,6 +259,8 @@ export interface AdminNewsletterSubscription {
 }
 
 export interface CreateAdminProductInput {
+  weightGrams?: number | null;
+  weightGramsSpecified?: boolean;
   seo?: SeoInput;
   imageAlts?: Array<{ id: string; alt: string }>;
   newImageAlts?: string[];

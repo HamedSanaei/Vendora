@@ -247,18 +247,13 @@ public sealed class AccountController : ControllerBase
     public async Task<ActionResult> ForgotPassword(ForgotPasswordRequest request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new Account.ForgotPassword.Command(request.Email), cancellationToken);
-        return result.Succeeded ? Ok(new { message = "Password reset requested.", resetToken = result.Token }) : BadRequest(new { message = result.Error });
+        return result.Succeeded ? Ok(new { message = "Use verified-phone recovery or contact support." }) : BadRequest(new { message = result.Error });
     }
 
     /// <summary>Resets a password using a reset token.</summary>
     [HttpPost("account/reset-password")]
-    public async Task<ActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken cancellationToken)
-    {
-        var result = await _mediator.Send(
-            new Account.ResetPassword.Command(request.Email, request.Token, request.NewPassword),
-            cancellationToken);
-        return result.Succeeded ? Ok(new { message = "Password was reset." }) : BadRequest(new { message = result.Error });
-    }
+    public Task<ActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken cancellationToken)
+        => Task.FromResult<ActionResult>(StatusCode(410, new { code = "SMS_RECOVERY_REQUIRED", message = "Use verified-phone recovery." }));
 
     private ActionResult ToAccountResponse(Account.Result result)
     {
