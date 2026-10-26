@@ -10,9 +10,10 @@ type TextKey = Exclude<keyof StoreProfile, 'enamad' | 'enamadEnabled'>;
 const identity: TextKey[] = ['nameFa', 'nameEn', 'taglineFa', 'taglineEn', 'introFa', 'introEn', 'copyrightFa', 'copyrightEn'];
 const contact: TextKey[] = ['phone', 'email', 'addressFa', 'addressEn', 'hoursFa', 'hoursEn', 'socialProfiles'];
 const placeholders: Partial<Record<TextKey, string>> = { nameFa: 'وندورا', nameEn: 'VENDORA', taglineFa: 'وندورا', taglineEn: 'Bag Manufacturer', copyrightFa: '© ۱۴۰۵ وندورا · تمامی حقوق محفوظ است.', copyrightEn: '© 2026 Vendora · All rights reserved.' };
+export type StoreProfileSection = 'identity' | 'contact' | 'trust';
 
 /** Edits a local draft; only successful explicit submission publishes it to the shared admin branding. */
-export function AdminStoreSettingsForm({ locale }: { locale: 'fa' | 'en' }) {
+export function AdminStoreSettingsForm({ locale, section, onSectionChange }: { locale: 'fa' | 'en'; section?: StoreProfileSection; onSectionChange?: (section: StoreProfileSection) => void }) {
   const copy = storeSettingsCopy(locale);
   const { update } = useAdminStoreSettings();
   const [draft, setDraft] = useState<StoreProfile | null>(null);
@@ -31,11 +32,17 @@ export function AdminStoreSettingsForm({ locale }: { locale: 'fa' | 'en' }) {
     return () => { active = false; };
   }, [revision, copy.failed]);
 
-  /** Restores the entire draft without publishing or changing technical SEO/slideshow settings. */
+  /** Resets only the displayed scope when tabbed, preserving unrelated drafts and all published settings until save. */
   function resetDefaults(): void {
-    setDraft({}); setCode(''); setLogo(undefined); setFavicon(undefined); setErrors({}); setError(''); setStatus(copy.resetNotice);
-    if (logoRef.current) logoRef.current.value = '';
-    if (faviconRef.current) faviconRef.current.value = '';
+    if (!section) { setDraft({}); setCode(''); }
+    else if (section === 'trust') { setDraft(value => ({...value,enamadEnabled:false,enamad:null})); setCode(''); }
+    else setDraft(value => { const next = {...value}; for (const key of section === 'identity' ? [...identity,'logoUrl','faviconUrl'] as TextKey[] : contact) next[key] = null; return next; });
+    if (!section || section === 'identity') {
+      setLogo(undefined); setFavicon(undefined);
+      if (logoRef.current) logoRef.current.value = '';
+      if (faviconRef.current) faviconRef.current.value = '';
+    }
+    setErrors({}); setError(''); setStatus(copy.resetNotice);
   }
 
   /** Saves multipart settings and keeps the draft intact when validation or transport fails. */
@@ -65,17 +72,21 @@ export function AdminStoreSettingsForm({ locale }: { locale: 'fa' | 'en' }) {
     return <label key={key} className="admin-store-setting-field"><span>{copy.labels[key as keyof typeof copy.labels]}</span>{multiline ? <textarea {...props} rows={3} /> : <input {...props} type={key === 'email' ? 'email' : key === 'phone' ? 'tel' : 'text'} />}{errors[key] && <small id={`error-${key}`} role="alert">{errors[key]}</small>}</label>;
   }
 
-  return <AdminPanel title={copy.title} description={copy.help}>
+  const scopeKeys: Record<StoreProfileSection, string[]> = {identity:[...identity,'logo','favicon'],contact,trust:['enamadCode','enamadEnabled']};
+  const scopeTitles = {identity:copy.identity,contact:copy.contact,trust:copy.enamad};
+  return <AdminPanel title={section ? scopeTitles[section] : copy.title} description={copy.help}>
     {error && <AdminFeedback tone="error">{error}{!draft && <AdminButton onClick={() => setRevision(value => value + 1)}>{copy.retry}</AdminButton>}</AdminFeedback>}
     {!draft ? <p role="status">{copy.loading}</p> : <form className="admin-form admin-store-settings" onSubmit={event => void submit(event)}>
-      <fieldset disabled={busy}><legend>{copy.identity}</legend><div className="admin-form-grid">{identity.map(field)}</div>
+      {section && <p className="admin-attribute-help">{locale === 'fa' ? 'تغییرات هویت، تماس و نماد اعتماد با دکمهٔ ذخیرهٔ این فرم ثبت می‌شوند؛ جابه‌جایی بین تب‌ها پیش‌نویس را حفظ می‌کند.' : 'This form saves branding, contact and trust changes together. Switching tabs preserves your draft.'}</p>}
+      {section && (Object.keys(scopeKeys) as StoreProfileSection[]).filter(scope => scope !== section && scopeKeys[scope].some(key => errors[key])).map(scope => <AdminFeedback key={scope} tone="error"><AdminButton variant="secondary" onClick={() => onSectionChange?.(scope)}>{locale === 'fa' ? `بررسی خطاهای بخش ${scopeTitles[scope]}` : `Review ${scopeTitles[scope]} errors`}</AdminButton></AdminFeedback>)}
+      <fieldset hidden={Boolean(section && section !== 'identity')} disabled={busy || Boolean(section && section !== 'identity')}><legend>{copy.identity}</legend><div className="admin-form-grid">{identity.map(field)}</div>
         <p className="admin-attribute-help">{copy.imageHelp}</p><div className="admin-form-grid">
           <label className="admin-store-setting-field"><span>{copy.logo}</span><input ref={logoRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={event => { setLogo(event.target.files?.[0]); setStatus(''); }} /><ImagePreview file={logo} url={draft.logoUrl} alt={copy.logo} /><AdminButton variant="ghost" onClick={() => { setLogo(undefined); setDraft({ ...draft, logoUrl: null }); if (logoRef.current) logoRef.current.value = ''; }}>{copy.clear}</AdminButton>{errors.logo && <small role="alert">{errors.logo}</small>}</label>
           <label className="admin-store-setting-field"><span>{copy.favicon}</span><input ref={faviconRef} type="file" accept="image/png" onChange={event => { setFavicon(event.target.files?.[0]); setStatus(''); }} /><ImagePreview file={favicon} url={draft.faviconUrl} alt={copy.favicon} /><AdminButton variant="ghost" onClick={() => { setFavicon(undefined); setDraft({ ...draft, faviconUrl: null }); if (faviconRef.current) faviconRef.current.value = ''; }}>{copy.clear}</AdminButton>{errors.favicon && <small role="alert">{errors.favicon}</small>}</label>
         </div>
       </fieldset>
-      <fieldset disabled={busy}><legend>{copy.contact}</legend><div className="admin-form-grid">{contact.map(field)}</div></fieldset>
-      <fieldset disabled={busy}><legend>{copy.enamad}</legend><label className="admin-store-setting-field"><span>{copy.enamadCode}</span><textarea dir="ltr" rows={4} maxLength={10000} value={code} onChange={event => { setCode(event.target.value); setStatus(''); }} aria-invalid={Boolean(errors.enamadCode)} />{errors.enamadCode && <small role="alert">{errors.enamadCode}</small>}</label><p className="admin-attribute-help">{copy.enamadHelp}</p><label className="admin-seo-check"><input type="checkbox" checked={draft.enamadEnabled || false} onChange={event => setDraft({ ...draft, enamadEnabled: event.target.checked })} />{copy.enamadEnabled}</label></fieldset>
+      <fieldset hidden={Boolean(section && section !== 'contact')} disabled={busy || Boolean(section && section !== 'contact')}><legend>{copy.contact}</legend><div className="admin-form-grid">{contact.map(field)}</div></fieldset>
+      <fieldset hidden={Boolean(section && section !== 'trust')} disabled={busy || Boolean(section && section !== 'trust')}><legend>{copy.enamad}</legend><label className="admin-store-setting-field"><span>{copy.enamadCode}</span><textarea dir="ltr" rows={4} maxLength={10000} value={code} onChange={event => { setCode(event.target.value); setStatus(''); }} aria-invalid={Boolean(errors.enamadCode)} />{errors.enamadCode && <small role="alert">{errors.enamadCode}</small>}</label><p className="admin-attribute-help">{copy.enamadHelp}</p><label className="admin-seo-check"><input type="checkbox" checked={draft.enamadEnabled || false} onChange={event => setDraft({ ...draft, enamadEnabled: event.target.checked })} />{copy.enamadEnabled}</label></fieldset>
       {Object.entries(errors).filter(([key]) => ![...identity, ...contact, 'logo', 'favicon', 'enamadCode'].includes(key)).map(([key, value]) => <AdminFeedback key={key} tone="error">{value}</AdminFeedback>)}
       {status && <AdminFeedback tone={status === copy.saved ? 'success' : 'info'}>{status}</AdminFeedback>}
       <div className="flex flex-wrap gap-3"><AdminButton disabled={busy} type="submit" variant="brass">{busy ? copy.saving : copy.save}</AdminButton><AdminButton disabled={busy} onClick={resetDefaults} variant="secondary">{copy.defaults}</AdminButton></div>

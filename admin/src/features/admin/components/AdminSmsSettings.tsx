@@ -6,7 +6,7 @@ import { StatusBadge } from './StatusBadge';
 import { getSmsSettings,putSmsSettings,smsAccounts,smsHistory,sendSms,testSmsCode,verifySmsTest,smsEventLabels,type SmsSettings,type SmsAccount,type SmsLogPage,type SmsTestChallenge } from '../api/smsApi';
 
 /** Adds messaging controls to the existing store-management page; no credentials or automatic test sends. */
-export function AdminSmsSettings({locale}:{locale:'fa'|'en'}) {
+export function AdminSmsSettings({locale,active=true}:{locale:'fa'|'en';active?:boolean}) {
   const fa=locale==='fa', [params,setParams]=useSearchParams();
   const tab=params.get('smsTab')??'settings',page=Math.max(1,Number(params.get('smsPage'))||1),status=params.get('smsStatus')??'';
   const [draft,setDraft]=useState<SmsSettings|null>(null),[accounts,setAccounts]=useState<SmsAccount[]>([]),[history,setHistory]=useState<SmsLogPage|null>(null);
@@ -14,10 +14,10 @@ export function AdminSmsSettings({locale}:{locale:'fa'|'en'}) {
   const [recipient,setRecipient]=useState(''),[text,setText]=useState(''),[test,setTest]=useState<SmsTestChallenge|null>(null),[code,setCode]=useState(''),[seconds,setSeconds]=useState(0);
   const operation=useRef<{fingerprint:string;key:string}|null>(null);
   useEffect(()=>{ let active=true; Promise.all([getSmsSettings(),smsAccounts()]).then(([settings,users])=>{if(active){setDraft(settings);setAccounts(users);setError('');}}).catch(()=>{if(active)setError(fa?'دریافت تنظیمات پیامک انجام نشد.':'Could not load SMS settings.');});return()=>{active=false;};},[attempt,fa]);
-  useEffect(()=>{if(tab!=='history')return;let active=true;
-    const load=()=>smsHistory(page,status).then(value=>{if(active)setHistory(value);}).catch(()=>{if(active)setError(fa?'دریافت گزارش انجام نشد.':'Could not load history.');});
-    void load();const timer=setInterval(()=>void load(),10000);return()=>{active=false;clearInterval(timer);};
-  },[tab,page,status,attempt,fa]);
+  useEffect(()=>{if(!active||tab!=='history')return;let mounted=true;
+    const load=()=>smsHistory(page,status).then(value=>{if(mounted)setHistory(value);}).catch(()=>{if(mounted)setError(fa?'دریافت گزارش انجام نشد.':'Could not load history.');});
+    void load();const timer=setInterval(()=>void load(),10000);return()=>{mounted=false;clearInterval(timer);};
+  },[tab,page,status,attempt,fa,active]);
   useEffect(()=>{if(seconds<=0)return;const timer=setInterval(()=>setSeconds(value=>Math.max(0,value-1)),1000);return()=>clearInterval(timer);},[seconds]);
   /** Persists tab/filter/page in the existing URL without disturbing other store settings query parameters. */
   function query(name:string,value:string){const next=new URLSearchParams(params);if(value)next.set(name,value);else next.delete(name);if(name!=='smsPage')next.delete('smsPage');setParams(next);}

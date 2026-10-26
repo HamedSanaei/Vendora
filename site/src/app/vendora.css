@@ -278,15 +278,16 @@ html:has(.vd-header-mobile-surface) { overflow-x: clip; }
   gap: 4px;
 }
 
-/* Keep the viewport width identical to Penpot frames during account-page
-   scrolling; the approved frames do not reserve a scrollbar gutter. */
-html:has(.vd-account-page),
-html:has(.vd-home) {
+/* Keep the existing account-page gutter policy separate from the homepage's native scrollbar. */
+html:has(.vd-account-page) {
   scrollbar-width: none;
 }
-html:has(.vd-account-page)::-webkit-scrollbar,
-html:has(.vd-home)::-webkit-scrollbar {
+html:has(.vd-account-page)::-webkit-scrollbar {
   display: none;
+}
+
+html:has(.vd-home) {
+  scrollbar-gutter: stable;
 }
 
 /* Reserve the phone safe area once for every storefront surface that owns the

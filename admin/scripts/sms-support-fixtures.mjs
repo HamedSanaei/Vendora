@@ -39,6 +39,7 @@ export function messagingRoutes() {
 /** Tests explicit activation, unavailable providers, own-number OTP testing and masked audit states. */
 export async function checkMessaging(page, capture) {
   const panel=page.locator('section.admin-surface').filter({has:page.getByRole('heading',{name:'پیامک و اعلان‌ها',exact:true})});
+  await panel.getByRole('tab',{name:'تنظیمات',exact:true}).click();
   await panel.getByLabel('ورود و ثبت‌نام پیامکی مشتریان',{exact:true}).check();
   assert.equal(await panel.getByLabel('پروایدر فعال',{exact:true}).locator('option[value="Kavenegar"]').evaluate(el=>el.disabled),true,await panel.getByLabel('پروایدر فعال',{exact:true}).evaluate(el=>el.outerHTML));
   const saved=page.waitForRequest(req=>req.url().endsWith('/store-settings/sms')&&req.method()==='PUT');

@@ -7,3 +7,9 @@
 .admin-store-setting-field small[role="alert"] { color: #b42318; }
 .admin-store-image-preview { inline-size: 120px; block-size: 80px; object-fit: contain; }
 .admin-store-brand-image { max-inline-size: 100%; inline-size: 44px; block-size: 36px; object-fit: contain; }
+
+/* Scoped horizontal navigation, retaining the existing graphite/brass action tokens and native scrolling. */
+.admin-store-management-tabs { display: flex; gap: 8px; max-inline-size: 100%; min-inline-size: 0; overflow-x: auto; padding: 6px 2px 12px; margin-block-end: 20px; border-block-end: 1px solid var(--va-border); scrollbar-width: thin; overscroll-behavior-inline: contain; }
+.admin-store-management-tabs .admin-action { flex: 0 0 auto; min-block-size: 44px; white-space: nowrap; }
+.admin-store-management-panel { min-inline-size: 0; }
+.admin-store-management-panel[hidden], .admin-store-settings fieldset[hidden] { display: none; }

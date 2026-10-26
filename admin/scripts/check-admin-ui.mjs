@@ -1,5 +1,6 @@
 /** Exercises the real built admin with isolated browser-only API fixtures; never contacts production. */
 import assert from 'node:assert/strict';
+import {storeManagementRoutes,checkStoreManagement} from './store-management-fixtures.mjs';
 import {shippingLabelRoutes,checkOrderLabels,checkOrderLabelDetail} from './shipping-label-fixtures.mjs';
 import { messagingFixture, messagingRoutes, checkMessaging, checkSupport } from './sms-support-fixtures.mjs';
 import { createServer } from 'node:http';
@@ -79,10 +80,12 @@ async function main() {
       const context = await browser.newContext({ viewport: { width, height: 1000 } });
       let shippingState = fixture('/api/admin/store-settings/shipping');
       const messaging=messagingRoutes();
+      const management=storeManagementRoutes();
       const labels=await shippingLabelRoutes();
       await context.addInitScript(() => localStorage.setItem('vendora_admin_token', 'local-ui-fixture-only'));
       await context.route('**/*', async route => {
         const url = new URL(route.request().url());
+        if(await management.handle(route))return;
         if(await messaging.handle(route))return;
         if(await labels.handle(route))return;
         if (url.pathname === '/api/admin/store-settings/shipping') {
@@ -104,6 +107,7 @@ async function main() {
       if (!before) routes.push('product-grid', 'category', 'brands', 'colors', 'attributes', 'seo', 'discussions', 'coupon', 'newsletter-subscriptions', 'online-store', 'tickets', 'tickets/ticket-0', 'our-staff', 'register', 'forgot-password', 'reset-password');
       if(process.env.ADMIN_QA_ROUTE)routes.splice(0,routes.length,process.env.ADMIN_QA_ROUTE);
       for (const route of routes) {
+        if(route==='online-store')management.requests.length=0;
         await page.goto(`${origin}/fa/admin/${route}`);
         await page.locator('.admin-page-heading h1, .admin-auth-card, .admin-auth-form').first().waitFor();
         await page.waitForTimeout(220);
@@ -112,6 +116,8 @@ async function main() {
         } else await geometry(page, route, width);
         if (['dashboard', 'product-list', 'accounting', 'login', 'online-store'].includes(route)) await page.screenshot({ path: resolve(output, `${route}-${width}.png`), fullPage: true });
         if (!before && route === 'online-store') {
+          await checkStoreManagement(page,management,async name=>{await geometry(page,name,width);await page.screenshot({path:resolve(output,`${name}-${width}.png`),fullPage:true});});
+          await page.getByRole('tablist',{name:'بخش‌های مدیریت فروشگاه',exact:true}).getByRole('tab',{name:'ارسال و قیمت‌گذاری',exact:true}).click();
           const section = page.locator('section.admin-surface').filter({ has: page.getByRole('heading', { name: 'ارسال و قیمت‌گذاری', exact: true }) });
           await section.getByLabel('ارسال رایگان با احتساب هزینه در قیمت هر واحد کالا', { exact: true }).check();
           await section.getByLabel('سهم ثابت هر واحد (تومان)', { exact: true }).fill('300000');
@@ -126,7 +132,7 @@ async function main() {
           await geometry(page, 'shipping-settings', width);
           await section.screenshot({ path: resolve(output, `shipping-settings-${width}.png`) });
         }
-        if(!before&&route==='online-store') await checkMessaging(page,async name=>{await geometry(page,name,width);await page.locator("section.admin-surface").filter({has:page.getByRole("heading",{name:"پیامک و اعلان‌ها",exact:true})}).screenshot({path:resolve(output,`${name}-${width}.png`)});});
+        if(!before&&route==='online-store') { await page.getByRole('tablist',{name:'بخش‌های مدیریت فروشگاه',exact:true}).getByRole('tab',{name:'پیامک و اعلان‌ها',exact:true}).click(); await checkMessaging(page,async name=>{await geometry(page,name,width);await page.locator("section.admin-surface").filter({has:page.getByRole("heading",{name:"پیامک و اعلان‌ها",exact:true})}).screenshot({path:resolve(output,`${name}-${width}.png`)});}); }
         if(!before&&route==='tickets/ticket-0') await checkSupport(page,messaging.replyKeys,async name=>{await geometry(page,name,width);await page.screenshot({path:resolve(output,`${name}-${width}.png`),fullPage:true});});
         if(!before&&route==='orders') await checkOrderLabels(page,labels.calls,async name=>{await geometry(page,name,width);await page.screenshot({path:resolve(output,`${name}-${width}.png`),fullPage:true});});
         if(!before&&route==='orders/order-0') await checkOrderLabelDetail(page,async name=>{await geometry(page,name,width);await page.screenshot({path:resolve(output,`${name}-${width}.png`),fullPage:true});});
@@ -190,7 +196,13 @@ async function main() {
       assert.equal(await page.locator('.admin-shell').getAttribute('dir'), 'ltr');
       assert.equal(await page.getByRole('button', { name: 'Previous page', exact: true }).locator('svg').getAttribute('data-icon-direction'), 'left');
       assert.equal(await page.getByRole('button', { name: 'Next page', exact: true }).locator('svg').getAttribute('data-icon-direction'), 'right');
-      await context.close(); console.log('PASS English routing and semantic pagination directions');
+      await page.goto(origin + '/en/admin/online-store');
+      const storeTabs = page.getByRole('tablist', { name: 'Store management sections' });
+      await storeTabs.getByRole('tab', { name: 'Identity & branding', exact: true, selected: true }).waitFor();
+      await storeTabs.getByRole('tab', { name: 'Identity & branding', exact: true }).focus(); await page.keyboard.press('ArrowRight');
+      await storeTabs.getByRole('tab', { name: 'Contact & support', exact: true, selected: true }).waitFor();
+      assert.equal(await page.locator('[role="tabpanel"]:visible').count(), 1);
+      await context.close(); console.log('PASS English routing, semantic pagination directions and LTR store tabs');
     }
   } finally { await browser.close(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
 }
