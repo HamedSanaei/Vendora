@@ -53,6 +53,8 @@ function mapProduct(product: AdminProductDto): AdminProduct {
 
   return {
     id: product.id,
+    createdAtUtc: product.createdAtUtc,
+    updatedAtUtc: product.updatedAtUtc,
     productCode: product.productCode,
     title: product.title,
     slug: product.slug,

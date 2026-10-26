@@ -1,3 +1,4 @@
+import { AdminProductSort } from '../components/AdminProductSort';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
@@ -16,7 +17,7 @@ export const AdminProductGridPage = observer(function AdminProductGridPage() {
   const locale = normalizeAdminLocale(useParams().locale);
   const isFa = locale === 'fa';
   const location = useLocation();
-  const list = useAdminProductQuery(products.products, 9);
+  const list = useAdminProductQuery(products.products, 9, locale);
 
   useEffect(() => {
     void Promise.all([products.loadProducts(), products.loadCategoryOptions()]);
@@ -45,7 +46,8 @@ export const AdminProductGridPage = observer(function AdminProductGridPage() {
           <option value="all">{isFa ? 'همه وضعیت‌ها' : 'All statuses'}</option>
           <option value="Active">{isFa ? 'فعال' : 'Active'}</option><option value="Draft">{isFa ? 'پیش‌نویس' : 'Draft'}</option><option value="Archived">{isFa ? 'آرشیو' : 'Archived'}</option><option value="LowStock">{isFa ? 'رو به اتمام' : 'Low stock'}</option>
         </select>
-        <div className="admin-view-switch">
+        <AdminProductSort locale={locale} value={list.sort} onChange={list.setSort} />
+          <div className="admin-view-switch">
           <AdminButton icon="list" to={`${adminPath(locale, 'product-list')}?${new URLSearchParams(location.search).toString()}`} variant="secondary">{isFa ? 'لیست' : 'List'}</AdminButton>
           <AdminButton icon="grid" variant="primary">{isFa ? 'گرید' : 'Grid'}</AdminButton>
         </div>

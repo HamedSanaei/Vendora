@@ -54,7 +54,9 @@ internal static class AdminProductMappings
             product.PriceExchangeRate,
             ProductAttributeWriter.Map(product.Attributes),
             Application.Seo.SeoMapping.Map(product.Seo),
-            product.ProductCode);
+            product.ProductCode,
+            CreatedAtUtc: DateTime.SpecifyKind(product.CreatedAtUtc, DateTimeKind.Utc),
+            UpdatedAtUtc: product.UpdatedAtUtc.HasValue ? DateTime.SpecifyKind(product.UpdatedAtUtc.Value, DateTimeKind.Utc) : null);
     }
 
     private static Guid? ResolvePrimaryCategoryId(Product product)
