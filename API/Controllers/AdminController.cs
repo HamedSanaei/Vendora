@@ -541,7 +541,7 @@ public sealed class AdminController : ControllerBase
     public async Task<ActionResult> EditUser(Guid id, AdminUserRequest request, CancellationToken cancellationToken)
     {
         // TODO: Protect admin endpoints with role-based authorization before production.
-        if (!Enum.TryParse<UserRole>(request.Role, ignoreCase: true, out var role))
+        if (!Enum.TryParse<UserRole>(request.Role, ignoreCase: true, out var role) || !Enum.IsDefined(role))
         {
             return BadRequest(new { message = "User role must be Customer or Admin." });
         }

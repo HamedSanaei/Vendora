@@ -63,6 +63,7 @@ public static class StoreSettingsUseCases
             if (!string.IsNullOrWhiteSpace(phone) && (phone.Length > 40 || !phone.Any(char.IsAsciiDigit) || phone.Any(c => !char.IsAsciiDigit(c) && !"+()- .".Contains(c)))) errors["phone"] = "invalidPhone";
             if (input.NameFa?.Length > 150) errors["nameFa"] = "tooLong";
             if (input.NameEn?.Length > 150) errors["nameEn"] = "tooLong";
+            if (input.HomeTitleFa?.Length > 150) errors["homeTitleFa"] = "tooLong";
             if ((input.SocialProfiles ?? "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Any(url => !PublicUrl(url)))
                 errors["socialProfiles"] = "invalidUrl";
             if (!string.IsNullOrWhiteSpace(input.LogoUrl) && input.LogoUrl != current.LogoUrl) errors["logo"] = "uploadRequired";

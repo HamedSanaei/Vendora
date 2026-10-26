@@ -13,6 +13,7 @@ export function storeSettingsCopy(locale: 'fa' | 'en') {
     resetNotice: fa ? 'پیش‌فرض‌های وندورا در فرم قرار گرفتند؛ برای اعمال، ذخیره کنید.' : 'Vendora defaults are in the form. Save to apply them.',
     retry: fa ? 'تلاش مجدد' : 'Retry',
     identity: fa ? 'هویت فروشگاه' : 'Store identity',
+    homeTitleHelp: fa ? 'متن دقیق تب مرورگر صفحهٔ اصلی؛ حداکثر ۱۵۰ کاراکتر. خالی باشد، فقط نام فروشگاه نمایش داده می‌شود. عنوان محصولات و صفحات دیگر تغییر نمی‌کند.' : 'Exact Persian homepage browser title, up to 150 characters. Empty uses the store name once. Product and other page titles stay unchanged.',
     contact: fa ? 'اطلاعات تماس و شبکه‌های اجتماعی' : 'Contact and social profiles',
     logo: fa ? 'لوگو' : 'Logo', favicon: fa ? 'آیکن مرورگر (PNG)' : 'Browser icon (PNG)',
     imageHelp: fa ? 'لوگو: JPG، PNG یا WebP؛ آیکن: PNG؛ حداکثر هر فایل ۵ مگابایت.' : 'Logo: JPG, PNG or WebP; icon: PNG. Maximum 5MB per file.',
@@ -23,6 +24,7 @@ export function storeSettingsCopy(locale: 'fa' | 'en') {
     enamadHelp: fa ? 'فقط لینک و تصویر معتبر از کد استخراج می‌شود. کد دلخواه اجرا نخواهد شد.' : 'Only the verified link and image are extracted. Arbitrary code is never executed.',
     labels: {
       nameFa: fa ? 'نام فارسی' : 'Persian name', nameEn: fa ? 'نام انگلیسی' : 'English name',
+      homeTitleFa: fa ? 'عنوان تب صفحه اصلی (فارسی)' : 'Persian homepage tab title',
       taglineFa: fa ? 'شعار فارسی' : 'Persian tagline', taglineEn: fa ? 'شعار انگلیسی' : 'English tagline',
       introFa: fa ? 'معرفی کوتاه فارسی' : 'Persian introduction', introEn: fa ? 'معرفی کوتاه انگلیسی' : 'English introduction',
       copyrightFa: fa ? 'کپی‌رایت فارسی' : 'Persian copyright', copyrightEn: fa ? 'کپی‌رایت انگلیسی' : 'English copyright',

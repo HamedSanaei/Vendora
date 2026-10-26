@@ -1,4 +1,5 @@
 import Image from '@tiptap/extension-image';
+import { apiBaseUrl } from '../../../../lib/api/httpClient';
 
 export const articleLimit = 200_000;
 const ownedImage = /^\/uploads\/products\/[a-f0-9]{32}\.(?:jpg|jpeg|png|webp)$/i;
@@ -22,7 +23,7 @@ export const ArticleImage = Image.extend({
     return ({ node }) => {
       const image = document.createElement('img');
       const src = String(node.attrs.src ?? '');
-      if (ownedImage.test(src)) image.src = new URL(src, new URL(import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5020').origin).href;
+      if (ownedImage.test(src)) image.src = new URL(src, apiBaseUrl).href;
       image.alt = String(node.attrs.alt ?? '');
       image.loading = 'lazy';
       image.draggable = true;

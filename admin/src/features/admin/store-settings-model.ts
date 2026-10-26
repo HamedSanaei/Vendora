@@ -2,6 +2,7 @@
 export interface StoreProfile {
   nameFa?: string | null;
   nameEn?: string | null;
+  homeTitleFa?: string | null;
   logoUrl?: string | null;
   faviconUrl?: string | null;
   taglineFa?: string | null;

@@ -7,6 +7,8 @@ public sealed record StoreProfile
     public bool ShowSeedData { get; init; } = true;
     public string? NameFa { get; init; }
     public string? NameEn { get; init; }
+    /// <summary>Optional Persian homepage browser/social title; empty values use the store name without a duplicate suffix.</summary>
+    public string? HomeTitleFa { get; init; }
     public string? LogoUrl { get; init; }
     public string? FaviconUrl { get; init; }
     public string? TaglineFa { get; init; }

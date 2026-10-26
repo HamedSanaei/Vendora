@@ -1,144 +1,180 @@
 using Application.Admin.DTOs;
 using Domain.Enums;
 using MediatR;
-using Persistence.Admin;
-using Persistence.Common;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Persistence;
+using Persistence.Identity;
 
 namespace Application.Admin;
 
 /// <summary>
-/// User admin use cases.
+/// User administration over the same Identity accounts used for login.
+/// The legacy UserAccounts table is not an authentication source.
 /// </summary>
 public static class Users
 {
-    /// <summary>Lists users.</summary>
+    private const string AdminRole = "Admin";
+    private const string CustomerRole = "Customer";
+
+    // One database query for the list/detail endpoints, including the actual Identity role.
+    private static IQueryable<AdminUserDto> IdentityUsers(AppDbContext db, IQueryable<AppUser> source) =>
+        source.Select(user => new AdminUserDto(
+            user.Id,
+            user.FullName,
+            user.Email ?? string.Empty,
+            user.PhoneNumber,
+            db.UserRoles.Any(membership => membership.UserId == user.Id &&
+                db.Roles.Any(role => role.Id == membership.RoleId && role.NormalizedName == "ADMIN"))
+                ? UserRole.Admin : UserRole.Customer));
+
+    /// <summary>Lists real customer and administrator accounts.</summary>
     public static class List
     {
-        /// <summary>Represents the list users query.</summary>
         public sealed record Query : IRequest<IReadOnlyList<AdminUserDto>>;
 
-        /// <summary>Handles list users queries.</summary>
-        public sealed class Handler : IRequestHandler<Query, IReadOnlyList<AdminUserDto>>
+        public sealed class Handler(AppDbContext db) : IRequestHandler<Query, IReadOnlyList<AdminUserDto>>
         {
-            private readonly IAdminRepository _repository;
-
-            /// <summary>Creates the handler.</summary>
-            public Handler(IAdminRepository repository) => _repository = repository;
-
-            /// <inheritdoc />
-            public async Task<IReadOnlyList<AdminUserDto>> Handle(Query request, CancellationToken cancellationToken)
-            {
-                var users = await _repository.GetUsersAsync(cancellationToken);
-                return users.Select(AdminMappings.MapUser).ToList();
-            }
+            public async Task<IReadOnlyList<AdminUserDto>> Handle(Query request, CancellationToken cancellationToken) =>
+                await IdentityUsers(db, db.Users.AsNoTracking().OrderBy(user => user.FullName)).ToListAsync(cancellationToken);
         }
     }
 
-    /// <summary>Returns one user.</summary>
+    /// <summary>Returns a real Identity account.</summary>
     public static class Details
     {
-        /// <summary>Represents the details query.</summary>
         public sealed record Query(Guid Id) : IRequest<AdminUserDto?>;
 
-        /// <summary>Handles details queries.</summary>
-        public sealed class Handler : IRequestHandler<Query, AdminUserDto?>
+        public sealed class Handler(AppDbContext db) : IRequestHandler<Query, AdminUserDto?>
         {
-            private readonly IAdminRepository _repository;
-
-            /// <summary>Creates the handler.</summary>
-            public Handler(IAdminRepository repository) => _repository = repository;
-
-            /// <inheritdoc />
-            public async Task<AdminUserDto?> Handle(Query request, CancellationToken cancellationToken)
-            {
-                var user = await _repository.GetUserAsync(request.Id, trackChanges: false, cancellationToken);
-                return user is null ? null : AdminMappings.MapUser(user);
-            }
+            public Task<AdminUserDto?> Handle(Query request, CancellationToken cancellationToken) =>
+                IdentityUsers(db, db.Users.AsNoTracking().Where(user => user.Id == request.Id))
+                    .SingleOrDefaultAsync(cancellationToken);
         }
     }
 
-    /// <summary>Updates a user account.</summary>
+    /// <summary>Updates the real Identity profile and role atomically.</summary>
     public static class Edit
     {
-        /// <summary>Represents the edit user command.</summary>
         public sealed record Command(Guid Id, string FullName, string Email, string? PhoneNumber, UserRole Role) : IRequest<Result>;
-
-        /// <summary>Represents the edit result.</summary>
         public sealed record Result(AdminActionResult Action, AdminUserDto? User);
 
-        /// <summary>Handles edit user commands.</summary>
-        public sealed class Handler : IRequestHandler<Command, Result>
+        public sealed class Handler(
+            AppDbContext db,
+            UserManager<AppUser> userManager,
+            RoleManager<IdentityRole<Guid>> roleManager) : IRequestHandler<Command, Result>
         {
-            private readonly IAdminRepository _repository;
-            private readonly IUnitOfWork _unitOfWork;
-
-            /// <summary>Creates the handler.</summary>
-            public Handler(IAdminRepository repository, IUnitOfWork unitOfWork)
-            {
-                _repository = repository;
-                _unitOfWork = unitOfWork;
-            }
-
-            /// <inheritdoc />
             public async Task<Result> Handle(Command request, CancellationToken cancellationToken)
             {
-                var user = await _repository.GetUserAsync(request.Id, trackChanges: true, cancellationToken);
+                if (request.Role is not (UserRole.Customer or UserRole.Admin))
+                    return Fail("User role must be Customer or Admin.");
+
+                var user = await db.Users.SingleOrDefaultAsync(entry => entry.Id == request.Id, cancellationToken);
                 if (user is null)
-                {
                     return Fail("User was not found.");
-                }
 
-                string fullName = request.FullName.Trim();
-                string email = request.Email.Trim().ToLowerInvariant();
+                string fullName = request.FullName?.Trim() ?? string.Empty;
+                string email = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
+                string? phone = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
                 if (string.IsNullOrWhiteSpace(fullName))
-                {
                     return Fail("Full name is required.");
-                }
-
                 if (string.IsNullOrWhiteSpace(email) || !email.Contains('@', StringComparison.Ordinal))
-                {
                     return Fail("A valid email is required.");
-                }
 
-                if (await _repository.UserEmailExistsAsync(email, request.Id, cancellationToken))
-                {
+                var duplicateEmail = await userManager.FindByEmailAsync(email);
+                var duplicateName = await userManager.FindByNameAsync(email);
+                if ((duplicateEmail is not null && duplicateEmail.Id != user.Id) ||
+                    (duplicateName is not null && duplicateName.Id != user.Id))
                     return Fail("Another user already uses this email.");
+
+                bool isAdmin = await userManager.IsInRoleAsync(user, AdminRole);
+                if (isAdmin && request.Role == UserRole.Customer)
+                {
+                    // Never accidentally remove the sole administrator's access.
+                    bool hasOtherAdmin = await (
+                        from membership in db.UserRoles
+                        join identityRole in db.Roles on membership.RoleId equals identityRole.Id
+                        where membership.UserId != user.Id && identityRole.NormalizedName == "ADMIN"
+                        select membership.UserId
+                    ).AnyAsync(cancellationToken);
+                    if (!hasOtherAdmin)
+                        return Fail("The last administrator cannot be demoted.");
                 }
 
+                string desiredRole = request.Role == UserRole.Admin ? AdminRole : CustomerRole;
+                string oppositeRole = request.Role == UserRole.Admin ? CustomerRole : AdminRole;
+                bool hasDesiredRole = await userManager.IsInRoleAsync(user, desiredRole);
+                bool hasOppositeRole = await userManager.IsInRoleAsync(user, oppositeRole);
+                bool emailChanged = !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase);
+                bool phoneChanged = !string.Equals(user.PhoneNumber, phone, StringComparison.Ordinal);
+                bool roleChanged = !hasDesiredRole || hasOppositeRole;
+
+                await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
                 user.FullName = fullName;
                 user.Email = email;
-                user.PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
-                user.Role = request.Role;
+                user.UserName = email; // Login uses email as username.
+                user.PhoneNumber = phone;
+                if (emailChanged) user.EmailConfirmed = false;
+                if (phoneChanged) user.PhoneNumberConfirmed = false;
 
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-                return new Result(AdminActionResult.Ok(), AdminMappings.MapUser(user));
+                var updated = await userManager.UpdateAsync(user);
+                if (!updated.Succeeded)
+                    return Fail(Errors(updated));
+
+                if (!await roleManager.RoleExistsAsync(desiredRole))
+                {
+                    var created = await roleManager.CreateAsync(new IdentityRole<Guid>(desiredRole));
+                    if (!created.Succeeded)
+                        return Fail(Errors(created));
+                }
+
+                if (!hasDesiredRole)
+                {
+                    var added = await userManager.AddToRoleAsync(user, desiredRole);
+                    if (!added.Succeeded)
+                        return Fail(Errors(added));
+                }
+
+                if (hasOppositeRole)
+                {
+                    var removed = await userManager.RemoveFromRoleAsync(user, oppositeRole);
+                    if (!removed.Succeeded)
+                        return Fail(Errors(removed));
+                }
+
+                // Existing JWTs must not retain an old email/role/verified-phone context.
+                if (emailChanged || phoneChanged || roleChanged)
+                {
+                    var stamped = await userManager.UpdateSecurityStampAsync(user);
+                    if (!stamped.Succeeded)
+                        return Fail(Errors(stamped));
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+                return new Result(AdminActionResult.Ok(),
+                    new AdminUserDto(user.Id, user.FullName, user.Email ?? string.Empty, user.PhoneNumber, request.Role));
             }
 
+            private static string Errors(IdentityResult result) =>
+                string.Join(" ", result.Errors.Select(error => error.Description));
             private static Result Fail(string error) => new(AdminActionResult.Fail(error), null);
         }
     }
 
-    /// <summary>Represents a safe placeholder password reset action.</summary>
+    /// <summary>Safe placeholder until a real password-reset delivery flow is available.</summary>
     public static class RequestPasswordReset
     {
-        /// <summary>Represents the reset command.</summary>
         public sealed record Command(Guid Id) : IRequest<AdminActionResult>;
 
-        /// <summary>Handles reset commands without mutating password data until auth is implemented.</summary>
-        public sealed class Handler : IRequestHandler<Command, AdminActionResult>
+        public sealed class Handler(AppDbContext db) : IRequestHandler<Command, AdminActionResult>
         {
-            private readonly IAdminRepository _repository;
-
-            /// <summary>Creates the handler.</summary>
-            public Handler(IAdminRepository repository) => _repository = repository;
-
-            /// <inheritdoc />
             public async Task<AdminActionResult> Handle(Command request, CancellationToken cancellationToken)
             {
-                var user = await _repository.GetUserAsync(request.Id, trackChanges: false, cancellationToken);
-                return user is null
-                    ? AdminActionResult.Fail("User was not found.")
-                    : AdminActionResult.Fail("Password reset requires a real auth provider and is not configured yet.");
+                bool exists = await db.Users.AsNoTracking()
+                    .AnyAsync(user => user.Id == request.Id, cancellationToken);
+                return exists
+                    ? AdminActionResult.Fail("Password reset requires a real auth provider and is not configured yet.")
+                    : AdminActionResult.Fail("User was not found.");
             }
         }
     }

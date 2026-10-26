@@ -14,7 +14,9 @@ COPY . .
 # Build-time values inlined into the bundle by Vite. The admin SPA is served
 # under the /admin/ sub-path in production so its assets do not collide with
 # storefront assets on the same origin.
-ARG VITE_API_BASE_URL=http://localhost:5020
+# The gateway exposes /api on every storefront hostname. Do not pin API calls
+# to one domain: that breaks browser login from an additional storefront domain.
+ARG VITE_API_BASE_URL=/
 ARG VITE_STOREFRONT_URL=http://localhost:3000
 ARG VITE_BASE_URL=/admin/
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \

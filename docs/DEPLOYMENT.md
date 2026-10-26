@@ -728,9 +728,17 @@ Build-time variables for the frontends (baked into bundles):
 |---|---|
 | `NEXT_PUBLIC_API_BASE_URL` | storefront → `https://vendora.tofanservice.ir` |
 | `NEXT_PUBLIC_STRIPE_KEY` | storefront (optional) |
-| `VITE_API_BASE_URL` | admin → `https://vendora.tofanservice.ir` |
+| `VITE_API_BASE_URL` | admin → `/` (same origin; API clients already include `/api` in endpoint paths) |
 | `VITE_STOREFRONT_URL` | admin |
 | `VITE_BASE_URL` | admin → `/admin/` |
+
+The production admin bundle uses the current page origin for API requests on both
+`vendorashop.ir` and `vendora.tofanservice.ir`. The gateway proxies `/api/` and
+`/uploads/` on each domain. Do not set the admin API root to `/api` (endpoint paths
+already contain it), or pin it to the other storefront domain: the latter requires
+cross-origin preflight permissions and causes browser `Network Error` failures.
+An explicit absolute API URL is still supported for separate-origin development.
+Vite values are baked into JavaScript; deploy a rebuilt admin image after changes.
 
 ---
 

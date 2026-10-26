@@ -26,6 +26,8 @@ export async function checkStoreManagement(page,state,capture) {
   assert.equal(await tabs.getByRole('tab').count(),8);
   assert.equal(state.requests.some(path=>/\/admin\/(sms|slideshow)|\/store-settings\/shipping/.test(path)),false,'Unopened scopes do not eagerly load their APIs');
   await page.locator('#settings-nameFa').fill('برند پیش‌نویس');
+  await page.locator('#settings-homeTitleFa').fill('خرید کیف از وندورا | تولید مستقیم');
+  assert.equal(await page.locator('#settings-homeTitleFa').getAttribute('maxlength'),'150');
   await page.locator('.admin-store-settings input[type="file"]').first().setInputFiles({name:'logo.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6N2QAAAAASUVORK5CYII=','base64')});
   await choose('تماس و پشتیبانی');await page.locator('#settings-phone').fill('02187654321');
   await page.getByRole('button',{name:'تنظیمات پیش‌فرض',exact:true}).click();assert.equal(await page.locator('#settings-phone').inputValue(),'');
@@ -35,6 +37,7 @@ export async function checkStoreManagement(page,state,capture) {
   await page.getByRole('button',{name:/بررسی خطاهای بخش اطلاعات تماس/}).click();await tabs.getByRole('tab',{name:'تماس و پشتیبانی',exact:true,selected:true}).waitFor();
   await page.locator('#settings-email').fill('updated@example.invalid');await page.getByRole('button',{name:'ذخیره تنظیمات',exact:true}).click();await page.getByText('تنظیمات فروشگاه ذخیره شد.',{exact:true}).waitFor();
   assert.equal(state.saves.at(-1).input.profile.nameFa,'برند پیش‌نویس');assert.equal(state.saves.at(-1).input.profile.phone,'02187654321');assert.equal(state.saves.at(-1).hasLogo,true);
+  assert.equal(state.saves.at(-1).input.profile.homeTitleFa,'خرید کیف از وندورا | تولید مستقیم');
   await choose('نماد اعتماد');await page.getByRole('checkbox',{name:'نمایش اینماد در فوتر',exact:true}).waitFor();
   await choose('ارسال و قیمت‌گذاری');await page.getByLabel('سهم ثابت هر واحد (تومان)',{exact:true}).fill('333333');
   await choose('پیامک و اعلان‌ها');await page.getByLabel('آستانه موجودی قابل‌فروش کم',{exact:true}).fill('6');

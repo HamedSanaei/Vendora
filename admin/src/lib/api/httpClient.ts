@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { resolveAdminApiBaseUrl } from './api-url';
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5020';
+export const apiBaseUrl = resolveAdminApiBaseUrl(import.meta.env.VITE_API_BASE_URL, window.location.origin, import.meta.env.DEV);
 
 /** Shared Axios client for all API calls made by the React app. */
 export const httpClient = axios.create({

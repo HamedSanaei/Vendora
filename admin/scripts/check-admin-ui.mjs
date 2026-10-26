@@ -45,7 +45,8 @@ function fixture(path) {
 const server = createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, origin).pathname);
-    let file = resolve(root, `.${pathname}`);
+    // Mirror the production gateway's /admin/ asset prefix as well as root-based dev builds.
+    let file = resolve(root, `.${pathname.replace(/^\/admin\//, '/')}`);
     if (!file.startsWith(root + sep)) throw new Error('Outside dist');
     if (!extname(file)) file = resolve(root, 'index.html');
     const body = await readFile(file);

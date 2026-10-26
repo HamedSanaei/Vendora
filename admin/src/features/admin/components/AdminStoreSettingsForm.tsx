@@ -7,7 +7,7 @@ import { AdminButton, AdminFeedback, AdminPanel } from './AdminUi';
 import '../styles/store-settings.css';
 
 type TextKey = Exclude<keyof StoreProfile, 'enamad' | 'enamadEnabled'>;
-const identity: TextKey[] = ['nameFa', 'nameEn', 'taglineFa', 'taglineEn', 'introFa', 'introEn', 'copyrightFa', 'copyrightEn'];
+const identity: TextKey[] = ['nameFa', 'nameEn', 'homeTitleFa', 'taglineFa', 'taglineEn', 'introFa', 'introEn', 'copyrightFa', 'copyrightEn'];
 const contact: TextKey[] = ['phone', 'email', 'addressFa', 'addressEn', 'hoursFa', 'hoursEn', 'socialProfiles'];
 const placeholders: Partial<Record<TextKey, string>> = { nameFa: 'وندورا', nameEn: 'VENDORA', taglineFa: 'وندورا', taglineEn: 'Bag Manufacturer', copyrightFa: '© ۱۴۰۵ وندورا · تمامی حقوق محفوظ است.', copyrightEn: '© 2026 Vendora · All rights reserved.' };
 export type StoreProfileSection = 'identity' | 'contact' | 'trust';
@@ -66,10 +66,10 @@ export function AdminStoreSettingsForm({ locale, section, onSectionChange }: { l
   /** Renders each localized scalar field with accessible server validation feedback. */
   function field(key: TextKey) {
     const multiline = key.startsWith('intro') || key.startsWith('address') || key === 'socialProfiles';
-    const props = { id: `settings-${key}`, value: draft?.[key] || '', maxLength: key.startsWith('intro') || key === 'socialProfiles' ? 2000 : key.startsWith('name') ? 150 : 500,
-      dir: key.endsWith('Fa') ? 'rtl' : 'ltr', placeholder: placeholders[key], 'aria-invalid': Boolean(errors[key]), 'aria-describedby': errors[key] ? `error-${key}` : undefined,
+    const props = { id: `settings-${key}`, value: draft?.[key] || '', maxLength: key.startsWith('intro') || key === 'socialProfiles' ? 2000 : key.startsWith('name') || key === 'homeTitleFa' ? 150 : 500,
+      dir: key.endsWith('Fa') ? 'rtl' : 'ltr', placeholder: key === 'homeTitleFa' ? draft?.nameFa || 'وندورا' : placeholders[key], 'aria-invalid': Boolean(errors[key]), 'aria-describedby': [errors[key] ? `error-${key}` : '', key === 'homeTitleFa' ? 'settings-home-title-help' : ''].filter(Boolean).join(' ') || undefined,
       onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { setDraft(value => ({ ...value, [key]: event.target.value })); setStatus(''); } } as const;
-    return <label key={key} className="admin-store-setting-field"><span>{copy.labels[key as keyof typeof copy.labels]}</span>{multiline ? <textarea {...props} rows={3} /> : <input {...props} type={key === 'email' ? 'email' : key === 'phone' ? 'tel' : 'text'} />}{errors[key] && <small id={`error-${key}`} role="alert">{errors[key]}</small>}</label>;
+    return <label key={key} className="admin-store-setting-field"><span>{copy.labels[key as keyof typeof copy.labels]}</span>{multiline ? <textarea {...props} rows={3} /> : <input {...props} type={key === 'email' ? 'email' : key === 'phone' ? 'tel' : 'text'} />}{key === 'homeTitleFa' && <small id="settings-home-title-help">{copy.homeTitleHelp}</small>}{errors[key] && <small id={`error-${key}`} role="alert">{errors[key]}</small>}</label>;
   }
 
   const scopeKeys: Record<StoreProfileSection, string[]> = {identity:[...identity,'logo','favicon'],contact,trust:['enamadCode','enamadEnabled']};

@@ -3,6 +3,7 @@ export interface StoreProfile {
   showSeedData?: boolean;
   nameFa?: string | null;
   nameEn?: string | null;
+  homeTitleFa?: string | null;
   logoUrl?: string | null;
   faviconUrl?: string | null;
   taglineFa?: string | null;
@@ -36,6 +37,11 @@ export function storePresentation(profile: StoreProfile, locale: 'fa' | 'en') {
     hours: (fa ? profile.hoursFa : profile.hoursEn) || '',
     copyright: (fa ? profile.copyrightFa : profile.copyrightEn) || (fa ? '© ۱۴۰۵ وندورا · تمامی حقوق محفوظ است.' : '© 2026 Vendora · All rights reserved.'),
   };
+}
+
+/** Resolves the exact homepage tab title separately from the title pattern of products and other pages. */
+export function homepageTitle(profile: StoreProfile, locale: 'fa' | 'en'): string {
+  return (locale === 'fa' ? profile.homeTitleFa?.trim() : undefined) || storePresentation(profile, locale).name;
 }
 
 /** Substitutes the configured localized brand in existing copy without changing default text. */

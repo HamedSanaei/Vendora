@@ -22,6 +22,31 @@ public sealed class StoreSettingsTests
     private const string Badge = "<a href='https://trustseal.enamad.ir/?id=123&amp;Code=abc' target='_blank'><img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=123&amp;Code=abc' /></a>";
     private static readonly byte[] Png = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6N2QAAAAASUVORK5CYII=");
 
+    /// <summary>The exact homepage title round-trips through existing JSON settings without replacing identity or technical SEO.</summary>
+    [Fact]
+    public async Task HomepageTitle_SaveTrimClear_AndRejectTooLongWithoutMutation()
+    {
+        await using var host = await ProductArticleTests.ArticleHost.CreateAsync();
+        using var admin = host.Client("Admin"); using var guest = host.Client(null);
+        using var form = Form(new(new StoreProfile { NameFa = "وندورا", HomeTitleFa = "  فروشگاه کیف وندورا | خرید مستقیم  " }));
+        (await admin.PutAsync("/api/admin/store-settings", form)).EnsureSuccessStatusCode();
+        var saved = (await guest.GetFromJsonAsync<StoreProfile>("/api/store-settings"))!;
+        Assert.Equal("فروشگاه کیف وندورا | خرید مستقیم", saved.HomeTitleFa);
+        var seo = (await guest.GetFromJsonAsync<SiteSeoDto>("/api/catalog/seo"))!;
+        Assert.Equal("وندورا", seo.SiteName); Assert.Equal("{title} | {siteName}", seo.TitleTemplate);
+        using var tooLong = Form(new(saved with { HomeTitleFa = new string('x', 151) }));
+        using var rejected = await admin.PutAsync("/api/admin/store-settings", tooLong);
+        Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
+        Assert.Contains("homeTitleFa", await rejected.Content.ReadAsStringAsync());
+        Assert.Equal(saved, await guest.GetFromJsonAsync<StoreProfile>("/api/store-settings"));
+        using var boundary = Form(new(saved with { HomeTitleFa = new string('x', 150) }));
+        (await admin.PutAsync("/api/admin/store-settings", boundary)).EnsureSuccessStatusCode();
+        Assert.Equal(150, (await guest.GetFromJsonAsync<StoreProfile>("/api/store-settings"))!.HomeTitleFa!.Length);
+        using var clear = Form(new(saved with { HomeTitleFa = "  " }));
+        (await admin.PutAsync("/api/admin/store-settings", clear)).EnsureSuccessStatusCode();
+        Assert.Null((await guest.GetFromJsonAsync<StoreProfile>("/api/store-settings"))!.HomeTitleFa);
+    }
+
     /// <summary>Reading an unconfigured installation preserves the existing singleton and returns empty presentation overrides.</summary>
     [Fact]
     public async Task Defaults_Save_AndReset_PreserveTechnicalSeo()
