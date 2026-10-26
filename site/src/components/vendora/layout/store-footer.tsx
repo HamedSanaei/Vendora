@@ -9,6 +9,12 @@ import type { Locale } from "@/lib/vendora/types";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
 import { BagArtwork } from "@/components/vendora/product/bag-artwork";
 
+const officialEnamadHref = "https://trustseal.enamad.ir/?id=8380573&Code=UiH46UWJfvaEBVduFEdA9IxWc9uXcYQu";
+const officialEnamadImageUrl = "https://trustseal.enamad.ir/logo.aspx?id=8380573&Code=UiH46UWJfvaEBVduFEdA9IxWc9uXcYQu";
+// Exact, unchanged seal markup provided by eNamad for vendorashop.ir.
+const officialEnamadHtml = `<a referrerpolicy='origin' target='_blank' href='https://trustseal.enamad.ir/?id=8380573&Code=UiH46UWJfvaEBVduFEdA9IxWc9uXcYQu'><img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=8380573&Code=UiH46UWJfvaEBVduFEdA9IxWc9uXcYQu' alt='' style='cursor:pointer' code='UiH46UWJfvaEBVduFEdA9IxWc9uXcYQu'></a>`;
+
+
 /**
  * Storefront footer (Penpot "Layout / Footer"): soft background, brand block
  * with tagline, three link columns and the copyright / trust bar.
@@ -34,7 +40,11 @@ export function StoreFooter() {
               {brand.address && <address className="whitespace-pre-line not-italic">{brand.address}</address>}
               {brand.hours && <p>{brand.hours}</p>}
               {profile.socialProfiles && <nav aria-label={locale === 'fa' ? 'شبکه‌های اجتماعی' : 'Social profiles'} className="flex flex-wrap gap-3">{profile.socialProfiles.split('\n').filter(Boolean).map(url => <a className="vd-focus break-all text-jade" key={url} href={url} target="_blank" rel="noopener noreferrer" dir="ltr">{socialLabel(url)}</a>)}</nav>}
-              {profile.enamadEnabled && profile.enamad && <a className="vd-focus inline-block" href={profile.enamad.href} target="_blank" rel="noopener" referrerPolicy="origin"><Image unoptimized src={profile.enamad.imageUrl} referrerPolicy="origin" alt={locale === 'fa' ? 'نماد اعتماد الکترونیکی؛ مشاهده اعتبار' : 'eNamad: verify trust seal'} width={100} height={100} className="h-[100px] w-[100px] object-contain" /></a>}
+              {profile.enamadEnabled && profile.enamad && (
+                profile.enamad.href === officialEnamadHref && profile.enamad.imageUrl === officialEnamadImageUrl
+                  ? <span dangerouslySetInnerHTML={{ __html: officialEnamadHtml }} />
+                  : <a className="vd-focus inline-block" href={profile.enamad.href} target="_blank" rel="noopener" referrerPolicy="origin"><Image unoptimized src={profile.enamad.imageUrl} referrerPolicy="origin" alt={locale === 'fa' ? 'نماد اعتماد الکترونیکی؛ مشاهده اعتبار' : 'eNamad: verify trust seal'} width={100} height={100} className="h-[100px] w-[100px] object-contain" /></a>
+              )}
             </div>}
             <div className="mt-6 hidden gap-2 md:flex" aria-hidden>
               {(["jade", "clay", "steel"] as const).map((color) => (
