@@ -72,12 +72,13 @@ public static class SmsManagement
     {
         public Task<Guid> Handle(Send request, CancellationToken ct) => work.ExecuteAsync(request.ActorId, request.Key, "sms-manual", request, async token => {
             var policy = await SmsPolicy.ReadAsync(db, token);
-            if (!policy.Enabled || !SmsPolicy.Gateway(policy, gateways).TextConfigured) throw new AccountingException("SMS_NOT_CONFIGURED", 503);
+            var gateway = SmsPolicy.Gateway(policy, gateways);
+            if (!policy.Enabled || !gateway.TextConfigured) throw new AccountingException("SMS_NOT_CONFIGURED", 503);
             if (request.Test && request.UserId != request.ActorId) throw new AccountingException("SMS_TEST_OWN_PHONE_ONLY", 400);
             var user = await db.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == request.UserId && x.PhoneNumberConfirmed, token) ?? throw new AccountingException("SMS_VERIFIED_RECIPIENT_REQUIRED", 400);
             if (await PhoneOwnership.ResolveAsync(db, SmsPolicy.Phone(user.PhoneNumber), token) != user.Id) throw new AccountingException("PHONE_OWNERSHIP_CONFLICT",409);
             string text = request.Test ? "این پیام برای آزمایش اتصال پیامک وندورا ارسال شده است." : request.Text.Trim();
-            if (text.Length is < 1 or > 3000) throw new AccountingException("SMS_INVALID_TEXT", 400);
+            if (text.Length < 1 || text.Length > gateway.MaxTextLength) throw new AccountingException("SMS_INVALID_TEXT", 400);
             var row = new SmsMessage { ActorId = request.ActorId, UserId = user.Id, Phone = SmsPolicy.Phone(user.PhoneNumber), Body = text,
                 Event = request.Test ? "Test" : "Manual", EventKey = "manual:" + request.ActorId + ":" + request.Key, Provider = policy.Provider,
                 SettingsVersion = policy.Version, CreatedAtUtc = time.GetUtcNow().UtcDateTime, NextAttemptAtUtc = time.GetUtcNow().UtcDateTime };

@@ -10,6 +10,8 @@ public interface ISmsGateway
     bool OtpConfigured { get; }
     bool TextConfigured { get; }
     bool DeliveryConfigured => false;
+    /// <summary>Maximum service-message length accepted by this provider; existing adapters retain their current bound.</summary>
+    int MaxTextLength => 3000;
     Task<string?> SendCodeAsync(string phone, int otpType, int patternId, CancellationToken ct);
     Task<SmsGatewayResult> SendTextAsync(string phone, string text, CancellationToken ct);
     Task<SmsGatewayResult> DeliveryAsync(string providerId, CancellationToken ct);

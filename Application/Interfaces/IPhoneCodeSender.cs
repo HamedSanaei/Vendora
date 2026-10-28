@@ -1,6 +1,6 @@
 namespace Application.Interfaces;
 
-/// <summary>Infrastructure boundary for ParsGreen OTP delivery; the returned code must never reach an API response or log.</summary>
+/// <summary>Provider-neutral OTP delivery boundary; the returned code must never reach an API response or log.</summary>
 public interface IPhoneCodeSender
 {
     bool IsConfigured { get; }

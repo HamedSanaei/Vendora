@@ -27,3 +27,6 @@ export async function testSmsCode():Promise<SmsTestChallenge> { return (await ht
 export async function verifySmsTest(challengeId:string,code:string):Promise<void> { await httpClient.post('/api/admin/sms/test-code/verify',{challengeId,code}); }
 
 export const smsEventLabels:Record<string,string> = { OrderPaid:'پرداخت موفق سفارش',OrderShipped:'ارسال سفارش',OrderDelivered:'تحویل سفارش',OrderCancelled:'لغو سفارش',TicketReply:'پاسخ پشتیبانی',PasswordChanged:'تغییر رمز',PhoneChanged:'تغییر شماره همراه',PaymentReview:'پرداخت نیازمند بررسی',AdminOrderPaid:'مدیر: سفارش پرداخت‌شده جدید',AdminTicketNew:'مدیر: تیکت جدید',AdminTicketReply:'مدیر: پاسخ مشتری',AdminLowStock:'مدیر: موجودی کم',AdminPaymentReview:'مدیر: پرداخت نیازمند بررسی',Manual:'ارسال دستی',Test:'تست خدماتی',OtpLogin:'کد ورود',OtpRecovery:'کد بازیابی',OtpTest:'کد آزمایشی',OtpVerification:'کد تأیید شماره' };
+
+/** Keeps provider identifiers stable while giving Persian management screens readable names. */
+export const smsProviderLabels:Record<string,string>={ParsGreen:'پارس‌گرین',Kavenegar:'کاوه‌نگار'};

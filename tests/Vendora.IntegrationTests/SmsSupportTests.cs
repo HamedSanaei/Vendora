@@ -22,6 +22,32 @@ namespace Vendora.IntegrationTests;
 /// <summary>Real controllers/Identity/SQLite with an isolated in-memory carrier. No live SMS, customer data or production configuration.</summary>
 public sealed class SmsSupportTests
 {
+    /// <summary>Provider changes affect new OTPs/messages only; previously queued rows retain their own carrier and credentials boundary.</summary>
+    [Fact]
+    public async Task KavenegarSelection_UsesSharedOtpOutboxAndLengthValidation_WithoutReroutingOldMessages()
+    {
+        await using var f=await Fixture.Create(kavenegar:true);
+        var customer=await f.User("Customer","09120000301");var admin=await f.User("Admin","09120000302");
+        using var staff=f.Client(admin,"Admin");using var guest=f.Host.Client(null);
+        var old=await Write(staff,"/api/admin/sms/send",new{userId=customer.Id,text="Old ParsGreen message"},"before-switch");old.EnsureSuccessStatusCode();
+        var settings=(await staff.GetFromJsonAsync<SmsSettingsView>("/api/admin/store-settings/sms"))!;
+        Assert.True(settings.Providers.Single(x=>x.Id=="Kavenegar").Available);
+        var changed=await staff.PutAsJsonAsync("/api/admin/store-settings/sms",settings with{Provider="Kavenegar"});changed.EnsureSuccessStatusCode();
+        Assert.Equal("Kavenegar",(await changed.Content.ReadFromJsonAsync<SmsSettingsView>())!.Provider);
+        var otp=await guest.PostAsJsonAsync("/api/account/otp/request",new{phone=customer.PhoneNumber});otp.EnsureSuccessStatusCode();
+        Assert.Equal(1,f.Kavenegar.CodeCalls);Assert.Equal(0,f.Gateway.CodeCalls);
+        Assert.DoesNotContain(f.Kavenegar.Code,await otp.Content.ReadAsStringAsync());
+        var valid=await Write(staff,"/api/admin/sms/send",new{userId=customer.Id,text=new string('x',1800)},"after-switch");valid.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.BadRequest,(await Write(staff,"/api/admin/sms/send",new{userId=customer.Id,text=new string('x',1801)},"over-limit")).StatusCode);
+        settings=(await staff.GetFromJsonAsync<SmsSettingsView>("/api/admin/store-settings/sms"))!;
+        (await staff.PutAsJsonAsync("/api/admin/store-settings/sms",settings with{Provider="ParsGreen"})).EnsureSuccessStatusCode();
+        using var scope=f.Host.App.Services.CreateScope();var db=scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await new SmsDispatch(db,[f.Gateway,f.Kavenegar],f.Clock).ProcessAsync(default);
+        Assert.Equal(1,f.Gateway.TextCalls);Assert.Equal(1,f.Kavenegar.TextCalls);
+        var messages=await db.SmsMessages.Where(x=>x.Event=="Manual").ToListAsync();
+        Assert.Equal(2,messages.Count);Assert.All(messages,x=>Assert.Equal("Accepted",x.Status));
+        Assert.Contains(messages,x=>x.Provider=="ParsGreen");Assert.Contains(messages,x=>x.Provider=="Kavenegar");
+    }
     [Fact]
     public async Task PhoneOnlyProfileCompletion_RenewsStampedSession_AndNewRecoveryInvalidatesPriorGrant()
     {
@@ -226,7 +252,7 @@ public sealed class SmsSupportTests
     /// <summary>No HTTP implementation exists in this fixture, making accidental real SMS impossible.</summary>
     private sealed class FakeGateway : ISmsGateway
     {
-        public string Id=>"ParsGreen";public bool OtpConfigured=>true;public bool TextConfigured=>true;public bool DeliveryConfigured=>true;public string Code="123456";public int CodeCalls,TextCalls;public SmsGatewayResult Result=new("Accepted","100001");
+        public string Id{get;init;}="ParsGreen";public bool OtpConfigured=>true;public bool TextConfigured=>true;public bool DeliveryConfigured=>true;public int MaxTextLength=>Id=="Kavenegar"?1800:3000;public string Code="123456";public int CodeCalls,TextCalls;public SmsGatewayResult Result=new("Accepted","100001");
         public Task<string?> SendCodeAsync(string phone,int otpType,int patternId,CancellationToken ct){CodeCalls++;return Task.FromResult<string?>(Code);}
         public Task<SmsGatewayResult> SendTextAsync(string phone,string text,CancellationToken ct){TextCalls++;return Task.FromResult(Result);}
         public Task<SmsGatewayResult> DeliveryAsync(string id,CancellationToken ct)=>Task.FromResult(new SmsGatewayResult("Delivered",id));
@@ -234,9 +260,9 @@ public sealed class SmsSupportTests
     /// <summary>Isolated migrated SQLite/Identity host with no live credentials, gateways or production access.</summary>
     private sealed class Fixture : IAsyncDisposable
     {
-        public ProductArticleTests.ArticleHost Host=null!;public FakeGateway Gateway=new();public Clock Clock=new();
+        public ProductArticleTests.ArticleHost Host=null!;public FakeGateway Gateway=new();public FakeGateway Kavenegar=new(){Id="Kavenegar",Code="654321"};public Clock Clock=new();
         private string? _databaseFile;
-        public static async Task<Fixture> Create(bool fileBacked=false)
+        public static async Task<Fixture> Create(bool fileBacked=false,bool kavenegar=false)
         {
             var f=new Fixture();
             if(fileBacked)f._databaseFile=Path.Combine(Path.GetTempPath(),"vendora-sms-fixture-"+Guid.NewGuid().ToString("N")+".db");
@@ -244,6 +270,7 @@ public sealed class SmsSupportTests
                 if(f._databaseFile is not null){services.RemoveAll<DbContextOptions<AppDbContext>>();services.AddScoped(_=>new DbContextOptionsBuilder<AppDbContext>().UseSqlite("Data Source="+f._databaseFile+";Default Timeout=30;Pooling=False").Options);}
                 services.AddDataProtection().UseEphemeralDataProtectionProvider();
                 services.AddSingleton<TimeProvider>(f.Clock);services.AddSingleton<ISmsGateway>(f.Gateway);
+                if(kavenegar)services.AddSingleton<ISmsGateway>(f.Kavenegar);
                 services.AddIdentityCore<AppUser>(options=>{options.User.RequireUniqueEmail=true;options.Password.RequireNonAlphanumeric=false;options.Password.RequireUppercase=false;}).AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
                 services.RemoveAll<IUserValidator<AppUser>>();services.AddScoped<IUserValidator<AppUser>,VerifiedPhoneUserValidator>();services.AddScoped<IPhoneCodeSender,ConfiguredPhoneCodeSender>();services.AddScoped<AccountingUnitOfWork>();
             });

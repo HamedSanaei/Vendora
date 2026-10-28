@@ -20,6 +20,10 @@ public static class DependencyInjection
     {
         services.AddHttpClient<ISmsGateway, Infrastructure.Auth.ParsGreenSmsGateway>(client => { client.Timeout = TimeSpan.FromSeconds(15); client.MaxResponseContentBufferSize = 32768; })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+        // Kavenegar authenticates in the URI path, so default HttpClient request/response URL logging must be disabled.
+        services.AddHttpClient<ISmsGateway, Infrastructure.Auth.KavenegarSmsGateway>("SmsKavenegar", client => { client.Timeout = TimeSpan.FromSeconds(15); client.MaxResponseContentBufferSize = 32768; })
+            .RemoveAllLoggers()
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.AddScoped<IPhoneCodeSender, Application.Sms.ConfiguredPhoneCodeSender>();
         services.AddSingleton<Shipping.PostexReadCache>();
         services.AddScoped<IPostexRates, Shipping.PostexRates>();

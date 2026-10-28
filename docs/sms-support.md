@@ -13,7 +13,43 @@ Sms__ParsGreen__DeliveredCodes
 Sms__ParsGreen__FailedDeliveryCodes
 ```
 
-`Signature` enables OTP requests. Service messages also need an authorized sender number. The UI exposes configuration booleans, not credentials. Templates, OTP type/pattern ID, selected verified administrators and low-stock threshold are database settings. Kavenegar is an unavailable registry entry until a real adapter is implemented; selecting it is rejected. There is no automatic provider fallback.
+`Signature` enables ParsGreen OTP requests. ParsGreen service messages also need an authorized sender number. The UI exposes configuration booleans, not credentials. Service templates, ParsGreen OTP type/pattern ID, selected verified administrators and low-stock threshold are database settings. Both ParsGreen and Kavenegar adapters are installed. There is no automatic provider fallback.
+
+### Kavenegar
+
+Official contract: [REST API, Send, Lookup and Status](https://kavenegar.com/rest.html).
+Set these **server-only** values through the secure deployment configuration:
+
+```text
+Sms__Kavenegar__ApiKey
+Sms__Kavenegar__OtpTemplate
+Sms__Kavenegar__SenderNumber
+```
+
+- `ApiKey` is required. Do not put it in source, frontend environment variables, admin fields or chat.
+- `OtpTemplate` is the English name of an approved Lookup template containing `%token`.
+  Lookup requires the appropriate provider account service and approval. The adapter generates a
+  cryptographically random six-digit numeric code, posts it to `verify/lookup.json`, and returns
+  it only to the existing server-side hashing flow after a valid acceptance receipt. ParsGreen's
+  numeric type/pattern fields do not configure Kavenegar and are hidden when Kavenegar is selected.
+- `SenderNumber` is optional; blank uses the sender configured as default in the Kavenegar account.
+  Service messages use `sms/send.json` and a maximum of 1800 characters. An account's line permissions,
+  recipient blocking, balance and URL restrictions still apply; readiness flags do not prove delivery.
+- Delivery uses `sms/status.json`: 1/2/4/5 mean accepted/pending, 10 means delivered,
+  6/11/13/14 mean failed, and 100/unrecognized values mean unknown. No delivery failure resends a message.
+- Requests use TLS and encoded POST bodies. The API key is in the provider-required URL path;
+  the dedicated `SmsKavenegar` HttpClient removes default URL loggers and disables redirects.
+  Do not enable external full-URL/body capture on this client without credential/OTP redaction.
+  Raw provider messages and exceptions are never included in API errors or the SMS audit history.
+- Timeouts, malformed/oversized responses and ambiguous acceptance remain unknown without blind retries.
+  Explicit provider rejection codes 409/429/451 may use the existing bounded outbox retry schedule.
+
+After configuring the server, open **Store management → SMS & notifications**, select **Kavenegar**,
+save settings explicitly, then use **Test & send** with the administrator's verified phone.
+The same selected provider serves customer registration/login, phone confirmation, password recovery,
+manual service messages and notification outbox entries. Existing queued messages retain their original
+provider snapshot when the selected provider changes. No migration or reactivation of historical events
+is needed. The development tests use fake HTTP handlers and do not send real messages or test live credentials.
 
 ParsGreen contract references inspected:
 
@@ -72,7 +108,7 @@ All controllers delegate to MediatR. Admin routes require Admin authorization; t
 - `GET/POST /api/account/tickets`, `GET /{id}`, `POST /{id}/messages`, `PATCH /{id}/status` — owned support conversations.
 - Corresponding `/api/admin/tickets` reads/replies/status actions use staff authorization.
 
-`SmsAuthentication.RequestHandler/VerifyHandler/ResetHandler`, `SmsManagement` handlers and `SupportTickets` handlers contain the use cases. `SessionValidation` centralizes session validity. `SmsNotifications` captures events; `SmsDispatch` handles leases/retry/delivery/stock watches; `ParsGreenSmsGateway` is the concrete Infrastructure adapter.
+`SmsAuthentication.RequestHandler/VerifyHandler/ResetHandler`, `SmsManagement` handlers and `SupportTickets` handlers contain the use cases. `SessionValidation` centralizes session validity. `SmsNotifications` captures events; `SmsDispatch` handles leases/retry/delivery/stock watches; `ParsGreenSmsGateway` and `KavenegarSmsGateway` are the concrete Infrastructure adapters.
 
 ## Tickets
 
