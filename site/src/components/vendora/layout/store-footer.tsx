@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useBrandCopy, useStoreSettings, storePresentation } from './store-settings-provider';
 import { resolveApiImageUrl } from '@/lib/http';
@@ -69,9 +70,7 @@ export function StoreFooter() {
           ))}
           {showEnamad && profile.enamad && (
             <div className="flex justify-center md:justify-end" role="group" aria-label={locale === 'fa' ? 'نماد اعتماد الکترونیکی' : 'eNamad trust seal'}>
-              {profile.enamad.href === officialEnamadHref && profile.enamad.imageUrl === officialEnamadImageUrl
-                ? <span dangerouslySetInnerHTML={{ __html: officialEnamadHtml }} />
-                : <a className="vd-focus inline-block" href={profile.enamad.href} target="_blank" rel="noopener" referrerPolicy="origin"><Image unoptimized src={profile.enamad.imageUrl} referrerPolicy="origin" alt={locale === 'fa' ? 'نماد اعتماد الکترونیکی؛ مشاهده اعتبار' : 'eNamad: verify trust seal'} width={100} height={100} className="h-[100px] w-[100px] object-contain" /></a>}
+              <EnamadSeal key={`${profile.enamad.href}|${profile.enamad.imageUrl}`} badge={profile.enamad} locale={locale} />
             </div>
           )}
         </div>
@@ -84,6 +83,40 @@ export function StoreFooter() {
       </div>
     </footer>
   );
+}
+
+/** Keeps the official remote seal intact while reserving space and preserving issuer verification when its image cannot load. */
+function EnamadSeal({ badge, locale }: { badge: { href: string; imageUrl: string }; locale: Locale }) {
+  const imageRoot = useRef<HTMLSpanElement>(null);
+  const [phase, setPhase] = useState<'loading' | 'slow' | 'ready' | 'error'>('loading');
+  const [attempt, setAttempt] = useState(0);
+  const fa = locale === 'fa';
+  useEffect(() => {
+    const image = imageRoot.current?.querySelector('img');
+    if (!image) return;
+    /** Handles both cached SSR images and later load/error events without treating image availability as proof of certification. */
+    const settled = () => setPhase(image.complete && image.naturalWidth > 0 ? 'ready' : 'error');
+    image.addEventListener('load', settled); image.addEventListener('error', settled);
+    const cached = image.complete ? window.setTimeout(settled, 0) : undefined;
+    const slow = window.setTimeout(() => {
+      if (image.complete) settled(); else setPhase('slow');
+    }, 8000);
+    return () => { image.removeEventListener('load', settled); image.removeEventListener('error', settled); window.clearTimeout(cached); window.clearTimeout(slow); };
+  }, [attempt]);
+
+  return <div className="relative min-h-[136px] w-[125px]" data-enamad-state={phase}>
+    <span ref={imageRoot} key={attempt} inert={phase !== 'ready'} className={phase === 'ready' ? 'block' : 'pointer-events-none block opacity-0'}>
+      {badge.href === officialEnamadHref && badge.imageUrl === officialEnamadImageUrl
+        ? <span dangerouslySetInnerHTML={{ __html: officialEnamadHtml }} />
+        : <a className="vd-focus inline-block" href={badge.href} target="_blank" rel="noopener" referrerPolicy="origin"><Image unoptimized src={badge.imageUrl} referrerPolicy="origin" alt={fa ? 'نماد اعتماد الکترونیکی؛ مشاهده اعتبار' : 'eNamad: verify trust seal'} width={100} height={100} className="h-[100px] w-[100px] object-contain" /></a>}
+    </span>
+    {phase !== 'ready' && <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-control border border-vd-line bg-white p-2 text-center">
+      <p className="text-xs font-bold text-ink">{fa ? 'نماد اعتماد الکترونیکی' : 'eNamad trust seal'}</p>
+      <a className="vd-focus flex min-h-11 items-center justify-center rounded-sm text-sm font-bold text-jade underline underline-offset-4" href={badge.href} target="_blank" rel="noopener" referrerPolicy="origin">{fa ? 'مشاهده اعتبار' : 'Verify with issuer'}</a>
+      {phase === 'loading' ? <p className="text-xs text-vd-muted" role="status">{fa ? 'در حال دریافت تصویر…' : 'Loading image…'}</p>
+        : <button type="button" className="vd-focus min-h-11 rounded-sm text-xs text-vd-muted underline" onClick={() => { setPhase('loading'); setAttempt(value => value + 1); }}>{fa ? 'دریافت دوباره تصویر' : 'Retry image'}</button>}
+    </div>}
+  </div>;
 }
 
 /** Uses a readable host name for social links without requiring a fixed list of providers. */
