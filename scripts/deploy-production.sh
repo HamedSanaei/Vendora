@@ -171,7 +171,8 @@ trap rollback ERR
 
 # --- 1. Pull the exact immutable images ----------------------------------------
 log "Pulling images for $VERSION"
-"${COMPOSE[@]}" pull
+# Pull only versioned GHCR application images. Nginx is pre-provisioned locally.
+"${COMPOSE[@]}" pull vendora-api vendora-site vendora-admin
 
 # --- 2. Verify images are present locally --------------------------------------
 for service in vendora-api vendora-site vendora-admin; do
