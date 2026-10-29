@@ -86,7 +86,15 @@ export function AdminStoreSettingsForm({ locale, section, onSectionChange }: { l
         </div>
       </fieldset>
       <fieldset hidden={Boolean(section && section !== 'contact')} disabled={busy || Boolean(section && section !== 'contact')}><legend>{copy.contact}</legend><div className="admin-form-grid">{contact.map(field)}</div></fieldset>
-      <fieldset hidden={Boolean(section && section !== 'trust')} disabled={busy || Boolean(section && section !== 'trust')}><legend>{copy.enamad}</legend><label className="admin-store-setting-field"><span>{copy.enamadCode}</span><textarea dir="ltr" rows={4} maxLength={10000} value={code} onChange={event => { setCode(event.target.value); setStatus(''); }} aria-invalid={Boolean(errors.enamadCode)} />{errors.enamadCode && <small role="alert">{errors.enamadCode}</small>}</label><p className="admin-attribute-help">{copy.enamadHelp}</p><label className="admin-seo-check"><input type="checkbox" checked={draft.enamadEnabled || false} onChange={event => setDraft({ ...draft, enamadEnabled: event.target.checked })} />{copy.enamadEnabled}</label></fieldset>
+      <fieldset hidden={Boolean(section && section !== 'trust')} disabled={busy || Boolean(section && section !== 'trust')}><legend>{copy.enamad}</legend>
+        <div className="admin-store-seal-visibility">
+          <div><p id="settings-enamad-label" className="font-bold">{copy.enamadEnabled}</p><p id="settings-enamad-help" className="admin-attribute-help">{copy.enamadVisibilityHelp}</p></div>
+          <AdminButton variant="secondary" className="admin-store-seal-toggle" role="switch" aria-checked={Boolean(draft.enamadEnabled)} aria-labelledby="settings-enamad-label" aria-describedby="settings-enamad-help" disabled={busy} onClick={() => { setDraft(value => ({ ...value, enamadEnabled: !value?.enamadEnabled })); setStatus(''); }}>
+            <span aria-hidden="true" className="admin-store-seal-toggle-content"><span className="admin-store-seal-toggle-track"><span /></span><span>{draft.enamadEnabled ? copy.enamadOn : copy.enamadOff}</span></span>
+          </AdminButton>
+        </div>
+        <label className="admin-store-setting-field"><span id="settings-enamad-code-label">{copy.enamadCode}</span><textarea id="settings-enamad-code" aria-labelledby="settings-enamad-code-label" dir="ltr" rows={4} maxLength={10000} value={code} onChange={event => { setCode(event.target.value); setStatus(''); }} aria-invalid={Boolean(errors.enamadCode)} />{errors.enamadCode && <small role="alert">{errors.enamadCode}</small>}</label><p className="admin-attribute-help">{copy.enamadHelp}</p>
+      </fieldset>
       {Object.entries(errors).filter(([key]) => ![...identity, ...contact, 'logo', 'favicon', 'enamadCode'].includes(key)).map(([key, value]) => <AdminFeedback key={key} tone="error">{value}</AdminFeedback>)}
       {status && <AdminFeedback tone={status === copy.saved ? 'success' : 'info'}>{status}</AdminFeedback>}
       <div className="flex flex-wrap gap-3"><AdminButton disabled={busy} type="submit" variant="brass">{busy ? copy.saving : copy.save}</AdminButton><AdminButton disabled={busy} onClick={resetDefaults} variant="secondary">{copy.defaults}</AdminButton></div>

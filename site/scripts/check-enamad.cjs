@@ -62,9 +62,10 @@ async function main(){
         assert.ok(await seal.getByRole('link',{name:'مشاهده اعتبار',exact:true}).isVisible());
         await Promise.all(pending.splice(0).map(finish=>finish()));await page.locator('footer [data-enamad-state="ready"]').waitFor();
       }
-      if(locale==='en'){
+      {
         enabled=false;const before=requests;await page.reload({waitUntil:'domcontentloaded'});await page.locator('footer').waitFor();
-        assert.equal(await seal.count(),0);assert.equal(requests,before,'Explicitly disabled seals never fetch an image');enabled=true;
+        assert.equal(await seal.count(),0);assert.equal(await page.locator('footer img[src*="enamad.ir"]').count(),0);
+        assert.equal(requests,before,'Explicitly disabled seals never fetch an image');enabled=true;
       }
       assert.deepEqual(errors,[]);await context.close();console.log(`PASS ${locale}/${width}: reserved layout, issuer link, unchanged official markup, explicit retry and recovery`);
     }

@@ -22,6 +22,29 @@ public sealed class StoreSettingsTests
     private const string Badge = "<a href='https://trustseal.enamad.ir/?id=123&amp;Code=abc' target='_blank'><img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=123&amp;Code=abc' /></a>";
     private static readonly byte[] Png = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6N2QAAAAASUVORK5CYII=");
 
+    /// <summary>Visibility round-trips independently of the retained badge and other presentation settings.</summary>
+    [Fact]
+    public async Task EnamadVisibility_ToggleAndReload_RetainsBadgeAndIdentity()
+    {
+        await using var host = await ProductArticleTests.ArticleHost.CreateAsync();
+        using var admin = host.Client("Admin"); using var guest = host.Client(null);
+        var profile = new StoreProfile { NameFa = "فروشگاه من", Phone = "02112345678" };
+        EnamadBadge? originalBadge = null;
+        foreach (bool enabled in new[] { true, false, true, false })
+        {
+            using var form = Form(new(profile with { EnamadEnabled = enabled }, Badge));
+            (await admin.PutAsync("/api/admin/store-settings", form)).EnsureSuccessStatusCode();
+            profile = (await admin.GetFromJsonAsync<StoreProfile>("/api/admin/store-settings"))!;
+            originalBadge ??= profile.Enamad;
+            Assert.NotNull(originalBadge);
+            Assert.Equal(enabled, profile.EnamadEnabled);
+            Assert.Equal(originalBadge, profile.Enamad);
+            Assert.Equal("فروشگاه من", profile.NameFa);
+            Assert.Equal("02112345678", profile.Phone);
+            Assert.Equal(profile, await guest.GetFromJsonAsync<StoreProfile>("/api/store-settings"));
+        }
+    }
+
     /// <summary>The exact homepage title round-trips through existing JSON settings without replacing identity or technical SEO.</summary>
     [Fact]
     public async Task HomepageTitle_SaveTrimClear_AndRejectTooLongWithoutMutation()

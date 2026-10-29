@@ -21,6 +21,9 @@ export function storeSettingsCopy(locale: 'fa' | 'en') {
     enamad: fa ? 'اینماد' : 'eNamad',
     enamadCode: fa ? 'کد رسمی اینماد' : 'Official eNamad code',
     enamadEnabled: fa ? 'نمایش اینماد در فوتر' : 'Show eNamad in the footer',
+    enamadOn: fa ? 'روشن' : 'On',
+    enamadOff: fa ? 'خاموش' : 'Off',
+    enamadVisibilityHelp: fa ? 'در حالت خاموش، اینماد از سایت حذف می‌شود و تصویر آن بارگذاری نمی‌شود. کد ذخیره‌شده برای فعال‌سازی دوباره حفظ می‌شود. برای اعمال تغییر، «ذخیره تنظیمات» را بزنید.' : 'When off, the seal is hidden and its image is not loaded. The saved code is retained for re-enabling. Select Save settings to apply the change.',
     enamadHelp: fa ? 'فقط لینک و تصویر معتبر از کد استخراج می‌شود. کد دلخواه اجرا نخواهد شد.' : 'Only the verified link and image are extracted. Arbitrary code is never executed.',
     labels: {
       nameFa: fa ? 'نام فارسی' : 'Persian name', nameEn: fa ? 'نام انگلیسی' : 'English name',

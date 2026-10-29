@@ -8,6 +8,17 @@
 .admin-store-image-preview { inline-size: 120px; block-size: 80px; object-fit: contain; }
 .admin-store-brand-image { max-inline-size: 100%; inline-size: 44px; block-size: 36px; object-fit: contain; }
 
+/* The seal uses the persisted visibility flag; toggling never removes its official code. */
+.admin-store-seal-visibility { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-block-end: 24px; }
+.admin-store-seal-visibility > div { flex: 1 1 240px; min-inline-size: 0; }
+.admin-store-seal-visibility p { margin-block: 0 8px; }
+.admin-store-seal-toggle { flex: 0 0 auto; min-block-size: 44px; }
+.admin-store-seal-toggle-content { display: inline-flex; align-items: center; gap: 12px; }
+.admin-store-seal-toggle-track { display: block; position: relative; inline-size: 44px; block-size: 26px; border-radius: 20px; background: var(--va-muted); }
+.admin-store-seal-toggle-track > span { position: absolute; inset-block-start: 3px; inset-inline-start: 3px; inline-size: 20px; block-size: 20px; border-radius: 50%; background: #fff; }
+.admin-store-seal-toggle[aria-checked="true"] .admin-store-seal-toggle-track { background: var(--va-sidebar); }
+.admin-store-seal-toggle[aria-checked="true"] .admin-store-seal-toggle-track > span { inset-inline-start: 21px; }
+
 /* Scoped horizontal navigation, retaining the existing graphite/brass action tokens and native scrolling. */
 .admin-store-management-tabs { display: flex; gap: 8px; max-inline-size: 100%; min-inline-size: 0; overflow-x: auto; padding: 6px 2px 12px; margin-block-end: 20px; border-block-end: 1px solid var(--va-border); scrollbar-width: thin; overscroll-behavior-inline: contain; }
 .admin-store-management-tabs .admin-action { flex: 0 0 auto; min-block-size: 44px; white-space: nowrap; }

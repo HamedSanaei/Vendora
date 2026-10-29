@@ -25,6 +25,8 @@ The **Online store** admin page (`/fa/admin/online-store` and `/en/admin/online-
 
 ## Trust seal
 
+Store management → Trust seal includes a keyboard-accessible **Show eNamad in the footer** switch. Toggle it, then select **Save settings**. Turning it off retains the official code for later re-enabling, but removes the seal and its image request from new storefront page loads in both locales. Already-open pages require a reload. No repeated image retries or third-party requests are made while disabled.
+
 The server parses the supplied eNamad HTML with the existing AngleSharp parser. It retains only one HTTPS link/image pair on exact supported eNamad hosts and paths. Scripts and embedded executable documents are rejected; other attributes, including event handlers, are not copied. Original HTML is never persisted or rendered. The frontend builds the link/image itself with origin referrer policy, without proxying the provider image. No external validation or account registration is performed by saving the badge.
 
 ## Verification

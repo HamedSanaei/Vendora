@@ -13,6 +13,7 @@ export function storeManagementRoutes() {
       const input=JSON.parse(json);saves.push({input,hasLogo:raw.includes('filename="logo.png"')});
       if(input.profile.email&&!input.profile.email.includes('@')){await route.fulfill({status:400,json:{errors:{email:'invalidEmail'}}});return true;}
       profile={...profile,...input.profile};
+      profile.enamad=input.enamadCode ? {href:input.enamadCode.match(/href="([^"]+)"/)[1].replaceAll('&amp;','&'),imageUrl:input.enamadCode.match(/src="([^"]+)"/)[1].replaceAll('&amp;','&')} : null;
     }
     await route.fulfill({json:profile});return true;
   }};
@@ -38,7 +39,22 @@ export async function checkStoreManagement(page,state,capture) {
   await page.locator('#settings-email').fill('updated@example.invalid');await page.getByRole('button',{name:'ذخیره تنظیمات',exact:true}).click();await page.getByText('تنظیمات فروشگاه ذخیره شد.',{exact:true}).waitFor();
   assert.equal(state.saves.at(-1).input.profile.nameFa,'برند پیش‌نویس');assert.equal(state.saves.at(-1).input.profile.phone,'02187654321');assert.equal(state.saves.at(-1).hasLogo,true);
   assert.equal(state.saves.at(-1).input.profile.homeTitleFa,'خرید کیف از وندورا | تولید مستقیم');
-  await choose('نماد اعتماد');await page.getByRole('checkbox',{name:'نمایش اینماد در فوتر',exact:true}).waitFor();
+  await choose('نماد اعتماد');
+  const sealSwitch=page.getByRole('switch',{name:'نمایش اینماد در فوتر',exact:true});
+  const badgeCode='<a href="https://trustseal.enamad.ir/?id=123&Code=abc"><img src="https://trustseal.enamad.ir/logo.aspx?id=123&Code=abc" /></a>';
+  await sealSwitch.waitFor();assert.equal(await sealSwitch.getAttribute('aria-checked'),'false');
+  await page.getByLabel('کد رسمی اینماد',{exact:true}).fill(badgeCode);
+  const beforeToggle=state.saves.length;await sealSwitch.focus();await page.keyboard.press('Space');
+  assert.equal(await sealSwitch.getAttribute('aria-checked'),'true');assert.equal(state.saves.length,beforeToggle,'Toggle remains a draft until explicitly saved');
+  await page.getByRole('button',{name:'ذخیره تنظیمات',exact:true}).click();await page.getByText('تنظیمات فروشگاه ذخیره شد.',{exact:true}).waitFor();
+  assert.equal(state.saves.at(-1).input.profile.enamadEnabled,true);
+  await page.reload();await sealSwitch.waitFor();assert.equal(await sealSwitch.getAttribute('aria-checked'),'true');
+  const savedCode=await page.getByLabel('کد رسمی اینماد',{exact:true}).inputValue();
+  await sealSwitch.click();await page.getByRole('button',{name:'ذخیره تنظیمات',exact:true}).click();await page.getByText('تنظیمات فروشگاه ذخیره شد.',{exact:true}).waitFor();
+  assert.equal(state.saves.at(-1).input.profile.enamadEnabled,false);assert.equal(state.saves.at(-1).input.enamadCode,savedCode);
+  await page.reload();await sealSwitch.waitFor();assert.equal(await sealSwitch.getAttribute('aria-checked'),'false');
+  assert.ok((await page.getByLabel('کد رسمی اینماد',{exact:true}).inputValue()).includes('https://trustseal.enamad.ir/'));
+  await capture('store-management-enamad-toggle');
   await choose('ارسال و قیمت‌گذاری');await page.getByLabel('سهم ثابت هر واحد (تومان)',{exact:true}).fill('333333');
   await choose('پیامک و اعلان‌ها');await page.getByLabel('آستانه موجودی قابل‌فروش کم',{exact:true}).fill('6');
   await choose('اسلایدر صفحه اصلی');await page.locator('#slideshow-order').fill('7');
