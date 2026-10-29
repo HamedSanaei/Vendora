@@ -79,6 +79,7 @@ async function main() {
   try {
     for (const width of (process.env.ADMIN_QA_WIDTH ? [Number(process.env.ADMIN_QA_WIDTH)] : [390, 768, 1024, 1440])) {
       const context = await browser.newContext({ viewport: { width, height: 1000 } });
+      if(width===390)await context.addInitScript(()=>{window.OTPCredential=function(){};Object.defineProperty(navigator,'credentials',{configurable:true,value:{get:()=>Promise.resolve({code:'123456',type:'otp'})}});});
       let shippingState = fixture('/api/admin/store-settings/shipping');
       const messaging=messagingRoutes();
       const management=storeManagementRoutes();

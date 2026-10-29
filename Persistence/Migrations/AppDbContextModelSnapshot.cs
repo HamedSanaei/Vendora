@@ -2048,6 +2048,9 @@ namespace Persistence.Migrations
                     b.Property<int>("OtpType")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("ParsGreenBrandedOtp")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("PasswordRecovery")
                         .HasColumnType("INTEGER");
 

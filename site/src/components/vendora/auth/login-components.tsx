@@ -75,7 +75,7 @@ export function OtpInput({ locale, digits, invalid = false, setInputRef, onChang
           onPaste={onPaste}
           inputMode="numeric"
           autoComplete={index === 0 ? "one-time-code" : "off"}
-          maxLength={1}
+          maxLength={index === 0 ? digits.length : 1}
           aria-label={`${isFa ? "رقم" : "Digit"} ${index + 1}`}
           aria-invalid={invalid || undefined}
           className={`vd-focus h-12 w-full min-w-0 max-w-12 rounded-control border text-center text-lg font-extrabold text-ink outline-none ${invalid ? "border-vd-danger" : "border-vd-line"}`}

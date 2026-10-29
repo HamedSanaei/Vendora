@@ -2,7 +2,7 @@ import { httpClient } from '../../../lib/api/httpClient';
 
 export interface SmsRule { event: string; enabled: boolean; template: string }
 export interface SmsRecipient { userId: string; events: string[] }
-export interface SmsSettings { version: number; enabled: boolean; provider: string; phoneLogin: boolean; passwordRecovery: boolean; phoneVerification: boolean; otpType: number; patternId: number; lowStockThreshold: number; rules: SmsRule[]; recipients: SmsRecipient[]; providers: Array<{id:string;available:boolean;otpConfigured:boolean;textConfigured:boolean;deliveryConfigured?:boolean}>; duplicateVerifiedPhones: string[] }
+export interface SmsSettings { parsGreenBrandedOtp?: boolean; otpTemplates?: Array<{purpose:string;text:string}>; version: number; enabled: boolean; provider: string; phoneLogin: boolean; passwordRecovery: boolean; phoneVerification: boolean; otpType: number; patternId: number; lowStockThreshold: number; rules: SmsRule[]; recipients: SmsRecipient[]; providers: Array<{id:string;available:boolean;otpConfigured:boolean;textConfigured:boolean;deliveryConfigured?:boolean;brandedOtpConfigured?:boolean}>; duplicateVerifiedPhones: string[] }
 export interface SmsAccount { id:string; name:string; phone:string; isAdmin:boolean }
 export interface SmsLog { id:string; event:string; phone:string; provider:string; status:string; createdAtUtc:string; attempts:number; errorCode?:string }
 export interface SmsLogPage { page:number; total:number; items:SmsLog[] }

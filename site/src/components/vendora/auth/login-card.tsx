@@ -21,6 +21,7 @@ import { completeProfileHref, type ProfileCompletion } from '@/lib/auth/customer
 import { googleErrorMessage } from '@/lib/auth/google-errors';
 
 import { createPhoneAuthAdapter, smsCapabilities, smsErrorMessage } from "@/lib/sms-client";
+import { createSmsCodeAutofill } from '@/lib/auth/sms-code-autofill';
 
 type PhoneStep = "identifier" | "otp";
 
@@ -55,6 +56,8 @@ export function LoginCard({ locale, returnTo, phoneAdapter }: LoginCardProps) {
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const destination = safeReturnTo(returnTo, locale);
   const adapter = useMemo(() => phoneAdapter ?? createPhoneAuthAdapter(), [phoneAdapter]);
+  const autofill = useMemo(() => createSmsCodeAutofill(), []);
+  useEffect(() => () => autofill.cancel(), [autofill]);
   const [smsEnabled, setSmsEnabled] = useState(false);
   const phoneAvailable = Boolean(phoneAdapter) || smsEnabled;
   useEffect(() => { const abort = new AbortController(); smsCapabilities(abort.signal).then(value => setSmsEnabled(value.phoneLogin)).catch(() => { if (!abort.signal.aborted) setSmsEnabled(false); }); return () => abort.abort(); }, []);
@@ -67,6 +70,7 @@ export function LoginCard({ locale, returnTo, phoneAdapter }: LoginCardProps) {
   }, [phoneStep, secondsLeft]);
 
   const changeMode = (nextMode: LoginMode) => {
+    autofill.cancel();
     setMode(nextMode);
     setError("");
     setInfo("");
@@ -104,21 +108,25 @@ export function LoginCard({ locale, returnTo, phoneAdapter }: LoginCardProps) {
       return;
     }
     setPhoneLoading(true);
+    autofill.start();
     const result = await adapter.requestCode(normalizedPhone);
     setPhoneLoading(false);
     if (!result.ok) {
+      autofill.cancel();
       setError(adapterMessage(result.message, isFa ? "ارسال کد انجام نشد." : "The code could not be sent.", isFa ? "ورود با کد پیامکی هنوز به سرویس پیامک متصل نشده است." : "Phone sign-in is not connected to an SMS service yet."));
       return;
     }
     setSecondsLeft(result.retryAfter ?? 120);
     setOtp(Array(Math.min(8, Math.max(4, result.codeLength ?? 5))).fill(""));
     setPhoneStep("otp");
+    autofill.ready(code => { if (code.length === (result.codeLength ?? 5)) setOtp(code.split('')); });
     setInfo(isFa ? "اگر شماره واجد شرایط باشد، کد ورود برای آن ارسال می‌شود." : "A code is sent if the number is eligible.");
     window.setTimeout(() => otpRefs.current[0]?.focus(), 0);
   };
 
   const verifyCode = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    autofill.cancel();
     setError("");
     const code = otp.join("");
     if (code.length !== otp.length || /\D/.test(code)) {
@@ -155,6 +163,11 @@ export function LoginCard({ locale, returnTo, phoneAdapter }: LoginCardProps) {
   };
 
   const handleOtpChange = (index: number, value: string) => {
+    const pasted = normalizeDigits(value).replace(/\D/g, '').slice(0, otp.length);
+    if (index === 0 && pasted.length > 1) {
+      setOtp([...pasted.split(''), ...Array(otp.length - pasted.length).fill('')]);
+      otpRefs.current[Math.min(pasted.length, otp.length) - 1]?.focus(); return;
+    }
     const digit = normalizeDigits(value).replace(/\D/g, "").slice(-1);
     const next = [...otp];
     next[index] = digit;
@@ -183,7 +196,7 @@ export function LoginCard({ locale, returnTo, phoneAdapter }: LoginCardProps) {
           {phoneAvailable ? <LoginModeTabs locale={locale} mode={mode} onChange={changeMode} /> : null}
 
           {mode === "phone" && phoneStep === "identifier" ? <form onSubmit={requestCode} className="mt-6"><PhoneField locale={locale} value={phone} onChange={setPhone} invalid={Boolean(error)} /><button type="submit" disabled={phoneLoading} className="vd-focus mt-5 flex h-12 w-full items-center justify-center rounded-control bg-jade text-sm font-extrabold text-white hover:bg-jade-dark disabled:opacity-60">{phoneLoading ? (isFa ? "در حال ارسال…" : "Sending…") : (isFa ? "ارسال کد ورود" : "Send sign-in code")}</button></form> : null}
-          {mode === "phone" && phoneStep === "otp" ? <form onSubmit={verifyCode} className="mt-6"><p className="text-sm font-semibold text-vd-muted">{isFa ? "کد ارسال‌شده به" : "Code sent to"} <bdi dir="ltr" className="font-extrabold text-ink">{phone}</bdi></p><OtpInput locale={locale} digits={otp} invalid={Boolean(error)} setInputRef={(index, element) => { otpRefs.current[index] = element; }} onChange={handleOtpChange} onKeyDown={handleOtpKeyDown} onPaste={handleOtpPaste} /><button type="submit" disabled={phoneLoading} className="vd-focus mt-5 flex h-12 w-full items-center justify-center rounded-control bg-jade text-sm font-extrabold text-white hover:bg-jade-dark disabled:opacity-60">{phoneLoading ? (isFa ? "در حال بررسی…" : "Verifying…") : (isFa ? "تأیید و ورود" : "Verify and sign in")}</button><div className="mt-4 flex items-center justify-between gap-3 text-xs"><button type="button" onClick={() => { setPhoneStep("identifier"); setError(""); }} className="vd-focus rounded-sm font-bold text-jade">{isFa ? "ویرایش شماره" : "Edit number"}</button>{secondsLeft > 0 ? <span className="text-vd-muted">{isFa ? `${secondsLeft} ثانیه تا ارسال مجدد` : `Resend in ${secondsLeft}s`}</span> : <button type="button" onClick={() => void requestCode()} className="vd-focus rounded-sm font-bold text-jade">{isFa ? "ارسال مجدد" : "Resend code"}</button>}</div></form> : null}
+          {mode === "phone" && phoneStep === "otp" ? <form onSubmit={verifyCode} className="mt-6"><p className="text-sm font-semibold text-vd-muted">{isFa ? "کد ارسال‌شده به" : "Code sent to"} <bdi dir="ltr" className="font-extrabold text-ink">{phone}</bdi></p><OtpInput locale={locale} digits={otp} invalid={Boolean(error)} setInputRef={(index, element) => { otpRefs.current[index] = element; }} onChange={handleOtpChange} onKeyDown={handleOtpKeyDown} onPaste={handleOtpPaste} /><button type="submit" disabled={phoneLoading} className="vd-focus mt-5 flex h-12 w-full items-center justify-center rounded-control bg-jade text-sm font-extrabold text-white hover:bg-jade-dark disabled:opacity-60">{phoneLoading ? (isFa ? "در حال بررسی…" : "Verifying…") : (isFa ? "تأیید و ورود" : "Verify and sign in")}</button><div className="mt-4 flex items-center justify-between gap-3 text-xs"><button type="button" onClick={() => { autofill.cancel(); setPhoneStep("identifier"); setError(""); }} className="vd-focus rounded-sm font-bold text-jade">{isFa ? "ویرایش شماره" : "Edit number"}</button>{secondsLeft > 0 ? <span className="text-vd-muted">{isFa ? `${secondsLeft} ثانیه تا ارسال مجدد` : `Resend in ${secondsLeft}s`}</span> : <button type="button" onClick={() => void requestCode()} className="vd-focus rounded-sm font-bold text-jade">{isFa ? "ارسال مجدد" : "Resend code"}</button>}</div></form> : null}
           {mode === "email" ? <form onSubmit={handleEmailSubmit} className="mt-6 space-y-4"><div><FieldLabel htmlFor="login-email" label={isFa ? "ایمیل" : "Email"} /><input id="login-email" value={email} onChange={(event) => setEmail(event.target.value)} type="email" dir="ltr" placeholder="name@example.com" className={`vd-focus h-[52px] w-full rounded-control border bg-white px-4 text-sm text-ink outline-none ${error ? "border-vd-danger" : "border-vd-line"}`} /></div><div><div className="flex items-center justify-between gap-3"><FieldLabel htmlFor="login-password" label={isFa ? "رمز عبور" : "Password"} /><Link href={withLocalePath("/forgot", locale)} className="vd-focus text-xs font-bold text-jade">{isFa ? "فراموشی رمز؟" : "Forgot password?"}</Link></div><div className="relative"><input id="login-password" value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? "text" : "password"} dir="ltr" className={`vd-focus h-[52px] w-full rounded-control border bg-white px-4 pe-12 text-sm text-ink outline-none ${error ? "border-vd-danger" : "border-vd-line"}`} /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? (isFa ? "مخفی کردن رمز" : "Hide password") : (isFa ? "نمایش رمز" : "Show password")} className="vd-focus absolute inset-y-0 end-2 my-auto flex h-10 w-10 items-center justify-center rounded-full text-vd-muted">{showPassword ? "◉" : "○"}</button></div></div><button type="submit" disabled={emailLoading} className="vd-focus flex h-12 w-full items-center justify-center rounded-control bg-jade text-sm font-extrabold text-white hover:bg-jade-dark disabled:opacity-60">{emailLoading ? (isFa ? "در حال ورود…" : "Signing in…") : (isFa ? "ورود به حساب" : "Sign in")}</button><p className="font-sans text-center text-base font-medium leading-8 text-vd-muted">{isFa ? "حساب ندارید؟" : "Don't have an account?"} <Link href={withLocalePath("/register", locale)} className="vd-focus inline-flex min-h-11 items-center rounded-sm font-bold text-jade">{isFa ? "ثبت‌نام کنید" : "Create one"}</Link></p></form> : null}
 
           {googleAvailable ? <><div className="my-6 flex items-center gap-3 font-sans text-base font-medium text-vd-muted"><span className="h-px flex-1 bg-vd-line" />{isFa ? "یا" : "or"}<span className="h-px flex-1 bg-vd-line" /></div><GoogleIdentityButton locale={locale} onCredential={handleGoogle} />{googleLoading ? <p role="status" className="mt-2 font-sans text-center text-base leading-7 text-vd-muted">{isFa ? "در حال ورود…" : "Signing in…"}</p> : null}</> : null}

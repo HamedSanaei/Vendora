@@ -2,6 +2,30 @@
 
 ## Activation and server configuration
 
+### Registered Vendorashop texts and branded ParsGreen OTP
+
+`AddParsGreenBrandedOtpMode` adds one non-destructive Boolean setting, default **off**. Existing installations continue using ParsGreen `SendOtp` until an administrator explicitly selects **Use Vendorashop branded OTP text** and saves SMS settings. Enable it only after ParsGreen has approved the submitted WhiteText patterns and the authorized sender has been configured with `Sms__ParsGreen__SenderNumber` alongside `Sms__ParsGreen__Signature`. Configuration readiness does not certify provider approval or actual delivery. No live settings, credentials or production records are changed by this implementation.
+
+In branded mode, the adapter generates a cryptographically random ASCII six-digit code and sends one `SendGroupSMS` request to one validated recipient. There is no retry or fallback to legacy OTP after ambiguous acceptance. Only a positive acceptance receipt returns the ephemeral code to the existing hash-only challenge flow. Plaintext code-bearing messages are never placed in the outbox/audit body. Existing five-minute expiry, shared budgets, one-use verification and account ownership checks remain in force.
+
+The five immutable template previews are returned by the server. The exact first lines are:
+
+```text
+کد ورود شما به وندوراشاپ: {code}
+کد ثبت‌نام شما در وندوراشاپ: {code}
+کد تأیید شماره همراه شما در وندوراشاپ: {code}
+کد بازیابی رمز عبور شما در وندوراشاپ: {code}
+کد آزمایشی پیامک وندوراشاپ: {code}
+```
+
+Each message ends with a blank line and `@vendorashop.ir #{code}`, repeating the same code. No footer may follow this final line. Registration wording is selected server-side for a phone without a verified owner; login/registration retain their shared challenge and the public response does not reveal account existence. Administrator sign-in and nonexistent-account recovery still use decoy responses, with the same six-digit length in branded mode. Kavenegar keeps its approved Lookup template and is unaffected by the ParsGreen-specific setting.
+
+Notification defaults now match the fourteen submitted branded service texts, including the service test. Only exact former default texts are upgraded on read; custom templates, enabled flags, activation times and already-queued message snapshots are preserved. Review customized texts against provider-approved patterns before enabling them. Read-only OTP previews intentionally prevent accidental divergence from the registered templates; adding an arbitrary textarea would not configure provider approval.
+
+The storefront login, recovery and profile forms and the admin verification/test forms support consent-based WebOTP where available. Listeners start before the SMS request, buffer fast arrivals until the challenge is ready and cancel on failure, manual verification, navigation or a two-minute timeout. They fill fields without automatically submitting them. Safari/native suggestions keep `autocomplete="one-time-code"`, including distribution of a complete suggested code across the existing digit inputs. Manual entry remains available when permission is denied or the browser lacks support. The independent frontend build contexts each contain the small dependency-free transport helper; its lifecycle tests exercise both copies. Autofill requires the page hostname to match the SMS domain; legacy storefront hostnames can still use manual entry. Real handset autofill and carrier approval require live testing and are not claimed by browser mocks.
+
+Reference: [Chrome WebOTP message format](https://developer.chrome.com/docs/identity/web-apis/web-otp#format-the-sms-message).
+
 The existing Online Store administration page includes **SMS & notifications**, with URL-addressable settings, send/test and history tabs. New phone authentication, password recovery and all notification rules default to **off**. Existing authenticated profile-phone verification remains available. Saving a rule establishes its activation timestamp; historical payments and stock levels do not generate a notification backlog.
 
 Configure the following through the deployment's secure configuration mechanism, never the browser or a committed settings file:

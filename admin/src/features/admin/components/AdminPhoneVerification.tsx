@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { createSmsCodeAutofill } from '../utils/sms-code-autofill';
 import axios from 'axios';
 import { getAdminMe } from '../api/adminApi';
 import { confirmAdminPhoneVerification, requestAdminPhoneVerification } from '../api/smsApi';
@@ -13,11 +14,14 @@ interface AdminPhoneVerificationProps {
   remaining: number;
   onCooldown: (seconds: number) => void;
   onVerified: () => void;
+  active?: boolean;
 }
 
 /** Verifies the current administrator's saved phone inside the admin panel using existing account APIs. */
-export function AdminPhoneVerification({ locale, enabled, remaining, onCooldown, onVerified }: AdminPhoneVerificationProps) {
+export function AdminPhoneVerification({ locale, enabled, remaining, onCooldown, onVerified, active = true }: AdminPhoneVerificationProps) {
   const fa = locale === 'fa';
+  const autofill = useMemo(() => createSmsCodeAutofill(), []);
+  useEffect(() => { if (!active) autofill.cancel(); return () => autofill.cancel(); }, [active, autofill]);
   const [profile, setProfile] = useState<AdminAuthProfile | null>(null);
   const [revision, setRevision] = useState(0), [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false), [sent, setSent] = useState(false), [code, setCode] = useState('');
@@ -45,23 +49,27 @@ export function AdminPhoneVerification({ locale, enabled, remaining, onCooldown,
   async function send(): Promise<void> {
     if (busy || !enabled || !profile?.phoneNumber || remaining > 0) return;
     setBusy(true); setError(''); setNotice('');
+    autofill.start();
     try {
       const result = await requestAdminPhoneVerification();
       onCooldown(Math.min(1800, Math.max(0, result.retryAfter || 0)));
       if (result.code === 'PHONE_ALREADY_VERIFIED') {
+        autofill.cancel();
         const current = await getAdminMe(); setProfile(current);
         if (current.completion?.phoneNumberConfirmed === true) onVerified();
       } else {
         setSent(true); setCode('');
+        autofill.ready(setCode);
         setNotice(fa ? 'کد به شمارهٔ ثبت‌شدهٔ همین حساب ارسال شد؛ آن را در کادر زیر وارد کنید.' : 'A code was sent to this account’s saved number. Enter it below.');
       }
-    } catch (cause) { failure(cause); }
+    } catch (cause) { autofill.cancel(); failure(cause); }
     finally { setBusy(false); }
   }
 
   /** Consumes the ownership proof and refreshes the server-owned flag before announcing confirmation. */
   async function confirm(event: FormEvent): Promise<void> {
     event.preventDefault(); if (busy) return;
+    autofill.cancel();
     setBusy(true); setError(''); setNotice('');
     try {
       await confirmAdminPhoneVerification(code);
@@ -79,7 +87,7 @@ export function AdminPhoneVerification({ locale, enabled, remaining, onCooldown,
       {verified ? <AdminFeedback tone="success">{fa ? 'شمارهٔ همراه این حساب تأیید شده است.' : 'This account’s mobile number is verified.'}</AdminFeedback> : <>
         <p>{fa ? 'همین‌جا کد دریافت کنید و شماره را تأیید کنید؛ نیازی به ورود به فروشگاه نیست.' : 'Receive and confirm a code here without signing in to the storefront.'}</p>
         {!profile?.phoneNumber && <p>{fa ? 'ابتدا شمارهٔ حساب خود را در بخش کاربران ثبت کنید، سپس «دریافت مجدد شماره» را بزنید.' : 'Save your phone in Users, then reload the number here.'}</p>}
-        {!enabled && <p>{fa ? 'پیش از ارسال، سرویس پیامک و «تأیید شماره در پروفایل» را فعال و تنظیمات پیامک را ذخیره کنید.' : 'Enable SMS and profile phone verification, then save SMS settings before sending.'}</p>}
+        {!enabled && <p>{fa ? 'تنظیمات پیامک را ذخیره کنید؛ سرویس، تأیید شماره در پروفایل و اتصال روش ارسال انتخاب‌شده باید آماده باشند.' : 'Save SMS settings; the service, profile verification and selected sending mode must be ready.'}</p>}
         <AdminButton disabled={busy || !enabled || !profile?.phoneNumber || remaining > 0} onClick={() => void send()} variant="brass">
           {busy ? (fa ? 'در حال بررسی…' : 'Working…') : remaining > 0 ? `${remaining} ${fa ? 'ثانیه تا ارسال مجدد' : 'seconds before resending'}` : (fa ? 'ارسال کد تأیید شمارهٔ من' : 'Send my phone verification code')}
         </AdminButton>
@@ -93,7 +101,7 @@ export function AdminPhoneVerification({ locale, enabled, remaining, onCooldown,
     {error && <AdminFeedback tone="error">{error}</AdminFeedback>}
     {notice && <AdminFeedback tone="success">{notice}</AdminFeedback>}
     <div className="admin-page-actions">
-      <AdminButton variant="secondary" disabled={busy || loading} onClick={() => { setLoading(true); setNotice(''); setRevision(value => value + 1); }}>{fa ? 'دریافت مجدد شماره' : 'Reload my number'}</AdminButton>
+      <AdminButton variant="secondary" disabled={busy || loading} onClick={() => { autofill.cancel(); setLoading(true); setNotice(''); setRevision(value => value + 1); }}>{fa ? 'دریافت مجدد شماره' : 'Reload my number'}</AdminButton>
       <AdminButton to={adminPath(locale, 'profile')} variant="ghost">{fa ? 'ویرایش شماره در کاربران' : 'Edit number in Users'}</AdminButton>
     </div>
   </section>;

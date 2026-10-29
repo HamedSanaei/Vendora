@@ -12,6 +12,8 @@ public sealed class SmsSettings
     public bool PhoneVerification { get; set; } = true;
     public int OtpType { get; set; } = 1;
     public int PatternId { get; set; } = 3;
+    /// <summary>Explicit opt-in after white-text approval; false preserves legacy provider-generated OTP messages.</summary>
+    public bool ParsGreenBrandedOtp { get; set; }
     public int LowStockThreshold { get; set; } = 5;
     public string RulesJson { get; set; } = "[]";
     public string RecipientsJson { get; set; } = "[]";

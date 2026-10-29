@@ -28,7 +28,8 @@ public static class SmsManagement
                 .Select(x => SmsPolicy.Mask(x.Key) + ": " + string.Join(", ", x.Select(u => u.Id))).ToList();
             return new(policy.Version, policy.Enabled, policy.Provider, policy.PhoneLogin, policy.PasswordRecovery, policy.PhoneVerification,
                 policy.OtpType, policy.PatternId, policy.LowStockThreshold, SmsPolicy.Rules(policy), JsonSerializer.Deserialize<List<SmsRecipient>>(policy.RecipientsJson) ?? [],
-                new[] { "ParsGreen", "Kavenegar" }.Select(id => { var gateway = gateways.SingleOrDefault(x => x.Id == id); return new SmsProviderView(id, gateway is not null, gateway?.OtpConfigured == true, gateway?.TextConfigured == true, gateway?.DeliveryConfigured == true); }).ToList(), duplicates);
+                new[] { "ParsGreen", "Kavenegar" }.Select(id => { var gateway = gateways.SingleOrDefault(x => x.Id == id); return new SmsProviderView(id, gateway is not null, gateway?.OtpConfigured == true, gateway?.TextConfigured == true, gateway?.DeliveryConfigured == true, gateway?.BrandedOtpConfigured == true); }).ToList(), duplicates)
+                { ParsGreenBrandedOtp = policy.ParsGreenBrandedOtp, OtpTemplates = SmsCodeTemplates.Texts.Select(pair => new SmsOtpTemplateView(pair.Key.ToString(), pair.Value + "\n\n@" + SmsCodeTemplates.Domain + " #{code}")).ToList() };
         }
     }
 
@@ -42,7 +43,10 @@ public static class SmsManagement
                 throw new AccountingException("SMS_INVALID_SETTINGS", 400);
             SmsPolicy.ValidateRules(input.Rules);
             var gateway = gateways.SingleOrDefault(x => x.Id == input.Provider) ?? throw new AccountingException("SMS_PROVIDER_UNAVAILABLE", 400);
-            if (input.Enabled && ((input.PhoneLogin || input.PasswordRecovery || input.PhoneVerification) && !gateway.OtpConfigured || input.Rules.Any(x => x.Enabled) && !gateway.TextConfigured))
+            var row = await db.SmsSettings.SingleOrDefaultAsync(x => x.Id == 1, ct);
+            bool branded = input.ParsGreenBrandedOtp ?? row?.ParsGreenBrandedOtp ?? false;
+            bool codeConfigured = input.Provider == "ParsGreen" && branded ? gateway.BrandedOtpConfigured : gateway.OtpConfigured;
+            if (input.Enabled && ((input.PhoneLogin || input.PasswordRecovery || input.PhoneVerification) && !codeConfigured || input.Rules.Any(x => x.Enabled) && !gateway.TextConfigured))
                 throw new AccountingException("SMS_NOT_CONFIGURED", 400);
             var view = await new ReadHandler(db, gateways).Handle(new(), ct);
             if ((input.PhoneLogin || input.PasswordRecovery || input.Rules.Any(x => x.Enabled)) && view.DuplicateVerifiedPhones.Count > 0) throw new AccountingException("PHONE_OWNERSHIP_CONFLICT", 409);
@@ -52,11 +56,11 @@ public static class SmsManagement
                     !await db.Users.AnyAsync(x => x.Id == recipient.UserId && x.PhoneNumberConfirmed && x.PhoneNumber != null, ct) ||
                     !await db.UserRoles.AnyAsync(x => x.UserId == recipient.UserId && db.Roles.Any(r => r.Id == x.RoleId && r.Name == "Admin"), ct))
                     throw new AccountingException("SMS_INVALID_RECIPIENT", 400);
-            var row = await db.SmsSettings.SingleOrDefaultAsync(x => x.Id == 1, ct);
             if ((row?.Version ?? 1) != input.Version) throw new AccountingException("SMS_SETTINGS_CHANGED");
             if (row is null) { row = new(); db.SmsSettings.Add(row); }
             row.Enabled = input.Enabled; row.Provider = input.Provider; row.PhoneLogin = input.PhoneLogin; row.PasswordRecovery = input.PasswordRecovery;
             row.PhoneVerification = input.PhoneVerification; row.OtpType = input.OtpType; row.PatternId = input.PatternId; row.LowStockThreshold = input.LowStockThreshold;
+            row.ParsGreenBrandedOtp = branded;
             var previousRules = SmsPolicy.Rules(row);
             row.RulesJson = JsonSerializer.Serialize(input.Rules.Select(rule => rule with { EnabledAtUtc = rule.Enabled
                 ? previousRules.SingleOrDefault(x => x.Event == rule.Event && x.Enabled)?.EnabledAtUtc ?? time.GetUtcNow().UtcDateTime : null }));
@@ -77,7 +81,7 @@ public static class SmsManagement
             if (request.Test && request.UserId != request.ActorId) throw new AccountingException("SMS_TEST_OWN_PHONE_ONLY", 400);
             var user = await db.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == request.UserId && x.PhoneNumberConfirmed, token) ?? throw new AccountingException("SMS_VERIFIED_RECIPIENT_REQUIRED", 400);
             if (await PhoneOwnership.ResolveAsync(db, SmsPolicy.Phone(user.PhoneNumber), token) != user.Id) throw new AccountingException("PHONE_OWNERSHIP_CONFLICT",409);
-            string text = request.Test ? "این پیام برای آزمایش اتصال پیامک وندورا ارسال شده است." : request.Text.Trim();
+            string text = request.Test ? "این پیام برای آزمایش اتصال پیامک وندوراشاپ ارسال شده است." : request.Text.Trim();
             if (text.Length < 1 || text.Length > gateway.MaxTextLength) throw new AccountingException("SMS_INVALID_TEXT", 400);
             var row = new SmsMessage { ActorId = request.ActorId, UserId = user.Id, Phone = SmsPolicy.Phone(user.PhoneNumber), Body = text,
                 Event = request.Test ? "Test" : "Manual", EventKey = "manual:" + request.ActorId + ":" + request.Key, Provider = policy.Provider,
@@ -120,7 +124,7 @@ public static class SmsCapabilities
         public async Task<object> Handle(Query request,CancellationToken ct)
         {
             var policy = await SmsPolicy.ReadAsync(db,ct);
-            bool ready = policy.Enabled && gateways.Any(x => x.Id == policy.Provider && x.OtpConfigured);
+            bool ready = policy.Enabled && gateways.Any(x => x.Id == policy.Provider && SmsCodeTemplates.IsConfigured(policy, x));
             return new { phoneLogin = ready && policy.PhoneLogin, passwordRecovery = ready && policy.PasswordRecovery, phoneVerification = ready && policy.PhoneVerification };
         }
     }

@@ -1,7 +1,10 @@
 using System.Text;
+using System.Globalization;
+using System.Security.Cryptography;
 using System.Xml;
 using System.Xml.Linq;
 using Application.Interfaces;
+using Application.Sms;
 using Microsoft.Extensions.Configuration;
 
 namespace Infrastructure.Auth;
@@ -13,7 +16,17 @@ public sealed class ParsGreenSmsGateway(HttpClient client, IConfiguration config
     public bool OtpConfigured => !string.IsNullOrWhiteSpace(configuration["Sms:ParsGreen:Signature"]);
     public bool TextConfigured => OtpConfigured && !string.IsNullOrWhiteSpace(configuration["Sms:ParsGreen:SenderNumber"]);
     public bool DeliveryConfigured => !string.IsNullOrWhiteSpace(configuration["Sms:ParsGreen:DeliveredCodes"]);
+    public bool BrandedOtpConfigured => TextConfigured;
     private static readonly XNamespace Ns = "http://ParsGreen.com/";
+
+    /// <summary>Generates a secure six-digit code, sends the registered white text and exposes it only for server-side hashing after acceptance.</summary>
+    public async Task<string?> SendBrandedCodeAsync(string phone, SmsCodePurpose purpose, CancellationToken ct)
+    {
+        if (!BrandedOtpConfigured || phone.Length != 11 || !phone.StartsWith("09") || !phone.All(char.IsAsciiDigit)) return null;
+        string code = RandomNumberGenerator.GetInt32(1_000_000).ToString("D6", CultureInfo.InvariantCulture);
+        var result = await SendTextAsync(phone, SmsCodeTemplates.Render(purpose, code), ct);
+        return (result.Status is "Accepted" or "Delivered") && !string.IsNullOrWhiteSpace(result.ProviderId) ? code : null;
+    }
 
     /// <inheritdoc />
     public async Task<string?> SendCodeAsync(string phone, int otpType, int patternId, CancellationToken ct)

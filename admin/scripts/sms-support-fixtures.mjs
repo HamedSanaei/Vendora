@@ -1,9 +1,10 @@
 /** Isolated browser fixtures and interactions. No carrier/API traffic or real account records. */
 import assert from 'node:assert/strict';
 const events = ['OrderPaid','OrderShipped','OrderDelivered','OrderCancelled','TicketReply','PasswordChanged','PhoneChanged','PaymentReview','AdminOrderPaid','AdminTicketNew','AdminTicketReply','AdminLowStock','AdminPaymentReview'];
+const otpTemplates=[['Login','کد ورود شما به وندوراشاپ'],['Registration','کد ثبت‌نام شما در وندوراشاپ'],['PhoneVerification','کد تأیید شماره همراه شما در وندوراشاپ'],['Recovery','کد بازیابی رمز عبور شما در وندوراشاپ'],['Test','کد آزمایشی پیامک وندوراشاپ']].map(([purpose,text])=>({purpose,text:text+': {code}\n\n@vendorashop.ir #{code}'}));
 /** Returns synthetic contract data for SMS and support requests, ahead of generic store-settings fixtures. */
 export function messagingFixture(path) {
-  if (path === '/api/admin/store-settings/sms') return { version:1,enabled:true,provider:'ParsGreen',phoneLogin:false,passwordRecovery:false,phoneVerification:true,otpType:1,patternId:3,lowStockThreshold:5,rules:events.map(event=>({event,enabled:false,template:'اعلان خدماتی {link}'})),recipients:[],providers:[{id:'ParsGreen',available:true,otpConfigured:true,textConfigured:true,deliveryConfigured:false},{id:'Kavenegar',available:true,otpConfigured:true,textConfigured:true,deliveryConfigured:true}],duplicateVerifiedPhones:[] };
+  if (path === '/api/admin/store-settings/sms') return { version:1,enabled:true,provider:'ParsGreen',parsGreenBrandedOtp:false,otpTemplates,phoneLogin:false,passwordRecovery:false,phoneVerification:true,otpType:1,patternId:3,lowStockThreshold:5,rules:events.map(event=>({event,enabled:false,template:'اعلان خدماتی {link}'})),recipients:[],providers:[{id:'ParsGreen',available:true,otpConfigured:true,textConfigured:true,deliveryConfigured:false,brandedOtpConfigured:true},{id:'Kavenegar',available:true,otpConfigured:true,textConfigured:true,deliveryConfigured:true}],duplicateVerifiedPhones:[] };
   if (path === '/api/admin/sms/recipients') return [{id:'ui-admin',name:'مدیر آزمایشی',phone:'0912***128',isAdmin:true},{id:'ui-customer',name:'خریدار آزمایشی',phone:'0912***129',isAdmin:false}];
   if (path === '/api/admin/sms/messages') return {page:1,total:2,items:[{id:'sms-1',event:'OrderPaid',phone:'0912***129',provider:'ParsGreen',status:'Accepted',createdAtUtc:'2026-10-26T08:00:00Z',attempts:1},{id:'sms-2',event:'Test',phone:'0912***128',provider:'ParsGreen',status:'Unknown',createdAtUtc:'2026-10-26T08:05:00Z',attempts:1}]};
   const ticket={id:'ticket-0',subject:'پرسش درباره زمان ارسال سفارش و پیگیری پاسخ پشتیبانی',customerName:'خریدار با نام بلند آزمایشی',userId:'ui-customer',status:'WaitingForSupport',version:1,updatedAtUtc:'2026-10-26T08:00:00Z'};
@@ -43,6 +44,12 @@ export async function checkMessaging(page, capture) {
   await panel.getByRole('tab',{name:'تنظیمات',exact:true}).click();
   await panel.getByLabel('ورود و ثبت‌نام پیامکی مشتریان',{exact:true}).check();
   const provider=panel.getByLabel('پروایدر فعال',{exact:true});
+  await panel.getByRole('checkbox',{name:'ارسال کد با متن اختصاصی وندوراشاپ',exact:true}).check();
+  assert.equal(await panel.getByLabel('نوع کد پارس‌گرین',{exact:true}).count(),0);
+  await panel.getByText('مشاهدهٔ پنج متن ثبت‌شدهٔ کدها',{exact:true}).click();
+  assert.equal(await panel.getByLabel('کد ثبت‌نام با شماره',{exact:true}).inputValue(),'کد ثبت‌نام شما در وندوراشاپ: {code}\n\n@vendorashop.ir #{code}');
+  await capture('sms-branded-otp');
+  await panel.getByRole('button',{name:'ذخیره تنظیمات پیامک',exact:true}).click();await panel.getByText('تنظیمات پیامک ذخیره شد.',{exact:true}).waitFor();
   assert.equal(await provider.locator('option[value="Kavenegar"]').evaluate(el=>el.disabled),false);
   await provider.selectOption('Kavenegar');
   await panel.getByText(/الگو باید شامل %token باشد/).waitFor();
@@ -84,6 +91,7 @@ export async function checkMessaging(page, capture) {
   await capture('sms-verified-phone-required');
   await phone.getByRole('button',{name:'ارسال کد تأیید شمارهٔ من',exact:true}).click();
   await phone.getByLabel('کد تأیید شمارهٔ من',{exact:true}).waitFor();
+  if(page.viewportSize().width===390)assert.equal(await phone.getByLabel('کد تأیید شمارهٔ من',{exact:true}).inputValue(),'123456','WebOTP fills initial admin phone verification');
   await capture('sms-admin-phone-entry');
   await phone.getByLabel('کد تأیید شمارهٔ من',{exact:true}).fill('000000');
   assert.equal(initialSends,1);assert.equal(await panel.getByRole('button',{name:/ثانیه تا ارسال مجدد/}).isEnabled(),false);

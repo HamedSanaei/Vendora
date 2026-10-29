@@ -11,15 +11,22 @@ namespace Application.Sms;
 
 public sealed record SmsRule(string Event, bool Enabled, string Template, DateTime? EnabledAtUtc = null);
 public sealed record SmsRecipient(Guid UserId, string[] Events);
-public sealed record SmsProviderView(string Id, bool Available, bool OtpConfigured, bool TextConfigured, bool DeliveryConfigured = false);
+public sealed record SmsProviderView(string Id, bool Available, bool OtpConfigured, bool TextConfigured, bool DeliveryConfigured = false, bool BrandedOtpConfigured = false);
+/// <summary>Read-only registered text preview with placeholders, never an actual generated code.</summary>
+public sealed record SmsOtpTemplateView(string Purpose, string Text);
 public sealed record SmsSettingsView(long Version, bool Enabled, string Provider, bool PhoneLogin, bool PasswordRecovery,
     bool PhoneVerification, int OtpType, int PatternId, int LowStockThreshold, IReadOnlyList<SmsRule> Rules,
-    IReadOnlyList<SmsRecipient> Recipients, IReadOnlyList<SmsProviderView> Providers, IReadOnlyList<string> DuplicateVerifiedPhones);
+    IReadOnlyList<SmsRecipient> Recipients, IReadOnlyList<SmsProviderView> Providers, IReadOnlyList<string> DuplicateVerifiedPhones)
+{
+    /// <summary>Null on legacy requests preserves the saved sending mode instead of silently disabling it.</summary>
+    public bool? ParsGreenBrandedOtp { get; init; }
+    public IReadOnlyList<SmsOtpTemplateView>? OtpTemplates { get; init; }
+}
 
 /// <summary>One provider-neutral policy and approved template vocabulary. All credentials stay in Infrastructure.</summary>
 public static partial class SmsPolicy
 {
-    public static readonly IReadOnlyDictionary<string, string> Templates = new Dictionary<string, string> {
+    public static readonly IReadOnlyDictionary<string, string> LegacyTemplates = new Dictionary<string, string> {
         ["OrderPaid"] = "{name} عزیز، پرداخت سفارش {orderNumber} به مبلغ {amount} تومان تأیید شد. {link}",
         ["OrderShipped"] = "سفارش {orderNumber} ارسال شد. جزئیات و پیگیری: {link}",
         ["OrderDelivered"] = "سفارش {orderNumber} تحویل شد. سپاس از خرید شما. {link}",
@@ -35,6 +42,13 @@ public static partial class SmsPolicy
         ["AdminPaymentReview"] = "پرداخت سفارش {orderNumber} دریافت شده اما نیازمند بررسی دستی است. {link}"
     };
 
+    public static readonly IReadOnlyDictionary<string, string> Templates = LegacyTemplates.ToDictionary(pair => pair.Key, pair => "وندوراشاپ\n" + (pair.Key switch
+    {
+        "PasswordChanged" => "رمز عبور حساب شما تغییر کرد. اگر شما نبوده‌اید با پشتیبانی تماس بگیرید.",
+        "PhoneChanged" => "شماره همراه حساب شما تغییر کرد. اگر شما نبوده‌اید با پشتیبانی تماس بگیرید.",
+        _ => pair.Value
+    }));
+
     /// <summary>Reads safe defaults without writing or activating automatic messages.</summary>
     public static async Task<SmsSettings> ReadAsync(AppDbContext db, CancellationToken ct) =>
         await db.SmsSettings.AsNoTracking().SingleOrDefaultAsync(x => x.Id == 1, ct) ?? new SmsSettings();
@@ -43,7 +57,11 @@ public static partial class SmsPolicy
     public static IReadOnlyList<SmsRule> Rules(SmsSettings value)
     {
         var saved = JsonSerializer.Deserialize<List<SmsRule>>(value.RulesJson) ?? [];
-        return Templates.Select(pair => saved.SingleOrDefault(x => x.Event == pair.Key) ?? new(pair.Key, false, pair.Value)).ToList();
+        return Templates.Select(pair => {
+            var rule = saved.SingleOrDefault(x => x.Event == pair.Key);
+            // Upgrade only exact former defaults; customized text, activation dates and queued snapshots remain intact.
+            return rule is null ? new(pair.Key, false, pair.Value) : rule.Template == LegacyTemplates[pair.Key] ? rule with { Template = pair.Value } : rule;
+        }).ToList();
     }
 
     /// <summary>Normalizes phone assertions before comparison, never accepting a partial/foreign number.</summary>

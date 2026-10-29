@@ -3,7 +3,7 @@ export function smsErrorMessage(code: unknown, status: number | undefined, local
   const messages: Record<string, [string, string]> = {
     SMS_SETTINGS_CHANGED: ['تنظیمات توسط درخواست دیگری تغییر کرده است؛ «دریافت مجدد» را بزنید و تغییرات را دوباره ذخیره کنید.', 'Settings changed. Reload and save your changes again.'],
     PHONE_OWNERSHIP_CONFLICT: ['این شماره برای چند حساب تأیید شده است؛ ابتدا مالکیت شماره را در حساب کاربران اصلاح کنید.', 'Resolve duplicate verified phone ownership first.'],
-    SMS_NOT_CONFIGURED: ['تنظیمات پروایدر روی سرور کامل نیست. برای پارس‌گرین، کد تأیید به Signature و پیام خدماتی علاوه بر آن به SenderNumber نیاز دارد.', 'Server provider settings are incomplete. ParsGreen OTP needs Signature; service messages also need SenderNumber.'],
+    SMS_NOT_CONFIGURED: ['تنظیمات پروایدر روی سرور کامل نیست. برای پارس‌گرین، کد پیش‌فرض به Signature و کد اختصاصی وندوراشاپ و پیام خدماتی علاوه بر آن به SenderNumber نیاز دارند.', 'Server provider settings are incomplete. ParsGreen legacy OTP needs Signature; branded OTP and service messages also need SenderNumber.'],
     SMS_AUTH_UNAVAILABLE: ['سرویس پیامک در تنظیمات ذخیره‌شده غیرفعال است؛ آن را فعال و تنظیمات را ذخیره کنید.', 'SMS is disabled in the saved settings. Enable it and save first.'],
     SMS_PROVIDER_UNAVAILABLE: ['پروایدر انتخاب‌شده روی سرور در دسترس نیست؛ پروایدر آماده را انتخاب و ذخیره کنید.', 'The selected provider is unavailable on this server. Select an available provider and save.'],
     SMS_VERIFIED_RECIPIENT_REQUIRED: ['حساب گیرنده شمارهٔ موبایل تأییدشده ندارد. برای تست، شمارهٔ حساب مدیر را در بخش «تأیید شمارهٔ همراه من» همین پنل تأیید کنید.', 'A verified recipient phone is required. Use Verify my mobile number in this panel first.'],

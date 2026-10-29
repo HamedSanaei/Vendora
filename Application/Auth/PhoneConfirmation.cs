@@ -24,7 +24,7 @@ public static class PhoneConfirmation
             if (user is null) return new(401, "UNAUTHORIZED");
             if (!CustomerProfile.ValidPhone(user.PhoneNumber)) return new(400, "PHONE_REQUIRED");
             if (user.PhoneNumberConfirmed) return new(200, "PHONE_ALREADY_VERIFIED");
-            if (!sender.IsConfigured) return new(503, "SMS_NOT_CONFIGURED");
+            if (!await sender.IsConfiguredAsync(ct)) return new(503, "SMS_NOT_CONFIGURED");
             DateTime now = time.GetUtcNow().UtcDateTime;
             var challenge = await db.PhoneVerifications.SingleOrDefaultAsync(x => x.UserId == user.Id, ct);
             if (challenge is null) { challenge = new() { UserId = user.Id, WindowStartUtc = now }; db.PhoneVerifications.Add(challenge); }

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { createSmsCodeAutofill } from '@/lib/auth/sms-code-autofill';
 import { useDispatch } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
 import { userLoggedIn } from '@/redux/features/auth/authSlice';
@@ -16,6 +17,8 @@ import { getDict } from '@/lib/vendora/i18n';
 export function CustomerProfileForm({ locale }: { locale: Locale }) {
   const t = profileCopy(locale), copy = getDict(locale).account.profile, dispatch = useDispatch(), params = useSearchParams();
   const [account, setAccount] = useState<CustomerAccount | null>(null);
+  const autofill = useMemo(() => createSmsCodeAutofill(), []);
+  useEffect(() => () => autofill.cancel(), [autofill]);
   const [values, setValues] = useState<ProfileValues>({ firstName: '', lastName: '', email: '', phone: '' });
   const [loading, setLoading] = useState(true), [revision, setRevision] = useState(0), [busy, setBusy] = useState('');
   const [error, setError] = useState(''), [notice, setNotice] = useState(''), [code, setCode] = useState(''), [sent, setSent] = useState(false), [remaining, setRemaining] = useState(0);
@@ -51,19 +54,20 @@ export function CustomerProfileForm({ locale }: { locale: Locale }) {
   async function verify(send: boolean) {
     if (busy || dirty) return;
     setBusy(send ? 'send' : 'confirm'); setError(''); setNotice('');
+    if (send) autofill.start(); else autofill.cancel();
     try {
       const result = await confirmCustomerPhone(send ? undefined : normalizeDigits(code));
-      if (send) { setSent(true); setCode(''); setRemaining(result.retryAfter); setNotice(t.sent); }
+      if (send) { setSent(true); setCode(''); setRemaining(result.retryAfter); setNotice(t.sent); autofill.ready(setCode); }
       else { const value = await readCustomerAccount(); setAccount(value); dispatch(userLoggedIn(customerSession(value))); setCode(''); setSent(false); setNotice(t.verified); }
-    } catch (failure) { setRemaining(profileRetryAfter(failure)); setError(profileError(profileErrorCode(failure), locale)); }
+    } catch (failure) { autofill.cancel(); setRemaining(profileRetryAfter(failure)); setError(profileError(profileErrorCode(failure), locale)); }
     finally { setBusy(''); }
   }
   if (loading) return <p role="status">{t.loading}</p>;
-  if (!account) return <CardPanel><p role="alert">{error}</p><VendoraButton onClick={() => { setLoading(true); setRevision(value => value + 1); }}>{t.retry}</VendoraButton></CardPanel>;
+  if (!account) return <CardPanel><p role="alert">{error}</p><VendoraButton onClick={() => { autofill.cancel(); setLoading(true); setRevision(value => value + 1); }}>{t.retry}</VendoraButton></CardPanel>;
   return <CardPanel>
     <h2 className="text-[1.1875rem] font-bold text-ink">{copy.sectionTitle}</h2>
     {!account.completion?.isComplete && <p className="mt-4 rounded-control bg-vd-warning-tint p-4 text-sm leading-7 text-ink">{t.required}</p>}
-    <form onSubmit={save} className="mt-5 space-y-6">
+    <form onSubmit={save} onChange={() => autofill.cancel()} className="mt-5 space-y-6">
       <div className="grid gap-[20px] lg:grid-cols-2">
         <TextField label={t.firstName} required autoComplete="given-name" maxLength={100} value={values.firstName} onChange={e => setValues({ ...values, firstName: e.target.value })} />
         <TextField label={t.lastName} required autoComplete="family-name" maxLength={100} value={values.lastName} onChange={e => setValues({ ...values, lastName: e.target.value })} />

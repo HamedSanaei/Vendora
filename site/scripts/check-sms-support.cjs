@@ -42,12 +42,16 @@ async function run() {
     await ready(); browser = await chromium.launch();
     for (const width of [390, 768, 1024, 1440]) {
       const context = await browser.newContext({ viewport: { width, height: 1000 } });
-      let ticket = null, messages = [], failReply = true; const retryKeys = [], errors = [];
+      if(width===390)await context.addInitScript(()=>{window.OTPCredential=function(){};Object.defineProperty(navigator,'credentials',{configurable:true,value:{get:()=>Promise.resolve({code:'123456',type:'otp'})}});});
+      let ticket = null, messages = [], failReply = true, phoneConfirmed = true; const retryKeys = [], errors = [];
       await context.addInitScript(() => { if (!localStorage.getItem('sms-qa-cart')) { localStorage.setItem('sms-qa-cart', '1'); localStorage.setItem('cart_products', '[]'); } });
       await context.route('**/*', async route => {
         const req = route.request(), url = new URL(req.url()), p = url.pathname, method = req.method();
         if (!p.startsWith('/api/')) return url.origin === origin ? route.continue() : route.abort();
         let data = common(p), status = 200; const body = req.postDataJSON();
+        if(p==='/api/account/me')data={...user,completion:{...user.completion,isComplete:phoneConfirmed,phoneNumberConfirmed:phoneConfirmed}};
+        if(p==='/api/account/phone/send')data={retryAfter:120};
+        if(p==='/api/account/phone/confirm'){assert.equal(body.code,'123456');phoneConfirmed=true;data={retryAfter:0};}
         if (p === '/api/account/otp/request' || p === '/api/account/password/otp/request') data = challenge;
         if (p === '/api/account/otp/verify') { assert.equal(body.code, '123456'); data = { account: { ...user, token: 'local-sms-session' } }; }
         if (p === '/api/account/password/otp/verify') { assert.equal(body.code, '123456'); data = { ...challenge, resetGrant: 'local-transient-recovery-proof' }; }
@@ -72,7 +76,8 @@ async function run() {
       await page.getByLabel('شماره موبایل', { exact: true }).fill('09120000129');
       await page.getByRole('button', { name: 'ارسال کد ورود', exact: true }).click();
       await page.getByLabel('رقم 6', { exact: true }).waitFor();
-      for (let i = 0; i < 6; i++) await page.getByLabel('رقم ' + (i + 1), { exact: true }).fill(String(i + 1));
+      if(width===390){for(let i=0;i<6;i++)assert.equal(await page.getByLabel('رقم '+(i+1),{exact:true}).inputValue(),String(i+1),'WebOTP fills all six digits without submitting');assert.ok(page.url().includes('/fa/login'));}
+      else for (let i = 0; i < 6; i++) await page.getByLabel('رقم ' + (i + 1), { exact: true }).fill(String(i + 1));
       await capture(page, `login-otp-${width}`, 'fa');
       await page.getByRole('button', { name: 'تأیید و ورود', exact: true }).click();
       await page.waitForURL('**/fa/account/tickets');
@@ -89,9 +94,17 @@ async function run() {
       assert.ok(retryKeys[0]); assert.equal(retryKeys[0], retryKeys[1]);
       await page.getByRole('button', { name: 'بستن تیکت', exact: true }).click(); await page.getByRole('button', { name: 'بازگشایی تیکت', exact: true }).click(); await reply.waitFor();
       await capture(page, `ticket-${width}`, 'fa');
+      phoneConfirmed=false;await page.goto(origin+'/fa/account/profile');
+      await page.getByRole('button',{name:'ارسال کد تأیید',exact:true}).click();
+      await page.getByLabel('کد تأیید پیامک‌شده',{exact:true}).waitFor();
+      if(width===390)assert.equal(await page.getByLabel('کد تأیید پیامک‌شده',{exact:true}).inputValue(),'123456','Profile verification receives WebOTP');
+      else await page.getByLabel('کد تأیید پیامک‌شده',{exact:true}).fill('123456');
+      await page.getByRole('button',{name:'تأیید شماره',exact:true}).click();
+      await page.getByText('شماره همراه تأیید شده است',{exact:true}).first().waitFor();
+      await capture(page,`profile-phone-${width}`,'fa');
       await page.goto(origin + '/fa/forgot');
       await page.getByLabel('شماره همراه تأییدشده', { exact: true }).fill('09120000129'); await page.getByRole('button', { name: 'ارسال کد بازیابی', exact: true }).click();
-      await page.getByLabel('کد بازیابی', { exact: true }).fill('123456'); await page.getByRole('button', { name: 'تأیید کد', exact: true }).click();
+      if(width===390)assert.equal(await page.getByLabel('کد بازیابی',{exact:true}).inputValue(),'123456','Recovery supports buffered WebOTP');else await page.getByLabel('کد بازیابی', { exact: true }).fill('123456'); await page.getByRole('button', { name: 'تأیید کد', exact: true }).click();
       await page.getByLabel('رمز جدید', { exact: true }).fill('Changed123!'); await page.getByLabel('تکرار رمز جدید', { exact: true }).fill('Changed123!');
       assert.ok(!(await page.evaluate(() => JSON.stringify(localStorage))).includes('local-transient-recovery-proof'));
       await capture(page, `recovery-${width}`, 'fa'); await page.getByRole('button', { name: 'ثبت رمز جدید', exact: true }).click(); await page.getByText('رمز تغییر کرد؛ اکنون دوباره وارد شوید.', { exact: true }).waitFor();

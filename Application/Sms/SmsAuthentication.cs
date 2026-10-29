@@ -33,7 +33,7 @@ public static class SmsAuthentication
             if (!policy.Enabled || request.Purpose == "Login" && !policy.PhoneLogin || request.Purpose == "Recovery" && !policy.PasswordRecovery)
                 return new(503, "SMS_AUTH_UNAVAILABLE");
             var gateway = SmsPolicy.Gateway(policy, gateways);
-            if (!gateway.OtpConfigured) return new(503, "SMS_NOT_CONFIGURED");
+            if (!SmsCodeTemplates.IsConfigured(policy, gateway)) return new(503, "SMS_NOT_CONFIGURED");
             string? testPhone = request.Purpose == "Test"
                 ? (await db.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == request.Actor && x.PhoneNumberConfirmed, ct))?.PhoneNumber
                 : null;
@@ -57,9 +57,11 @@ public static class SmsAuthentication
             db.AddRange(challenge, log);
             try { await db.SaveChangesAsync(ct); await tx.CommitAsync(ct); }
             catch (DbUpdateException) { return new(409, "VERIFICATION_CONFLICT"); }
-            if (decoy) return new(200, ChallengeId: challenge.Id);
+            if (decoy) return new(200, ChallengeId: challenge.Id, CodeLength: SmsCodeTemplates.UsesBranded(policy, gateway) ? 6 : 5);
             string? code;
-            try { code = await gateway.SendCodeAsync(phone, policy.OtpType, policy.PatternId, ct); }
+            var purpose = request.Purpose == "Recovery" ? SmsCodePurpose.Recovery : request.Purpose == "Test" ? SmsCodePurpose.Test
+                : owner.HasValue ? SmsCodePurpose.Login : SmsCodePurpose.Registration;
+            try { code = await SmsCodeTemplates.SendAsync(policy, gateway, phone, purpose, ct); }
             catch (Exception e) when (e is HttpRequestException or TaskCanceledException) { code = null; }
             log.LeaseUntilUtc = null; log.Status = code is null ? "Unknown" : "Accepted"; log.ErrorCode = code is null ? "SMS_ACCEPTANCE_UNKNOWN" : null;
             if (code is not null) challenge.CodeHash = new PasswordHasher<SmsChallenge>().HashPassword(challenge, code);
