@@ -386,6 +386,8 @@ export interface AdminAuthAccount {
 }
 
 export interface AdminAuthProfile {
+  phoneNumber?: string | null;
+  completion?: { phoneNumberConfirmed: boolean };
   id: string;
   fullName: string;
   email: string;

@@ -22,6 +22,75 @@ namespace Vendora.IntegrationTests;
 /// <summary>Real controllers/Identity/SQLite with an isolated in-memory carrier. No live SMS, customer data or production configuration.</summary>
 public sealed class SmsSupportTests
 {
+    /// <summary>An administrator verifies their own saved number through the existing bearer-authenticated account flow.</summary>
+    [Fact]
+    public async Task AdministratorInitialPhoneVerification_UsesExistingEndpoints_ThenEnablesDeliveryTest()
+    {
+        await using var f = await Fixture.Create();
+        var admin = await f.User("Admin", "09120000305", verified: false);
+        var other = await f.User("Admin", "09120000306", verified: false);
+        using var staff = f.Client(admin, "Admin");
+        // Extra destination/ownership fields cannot redirect a challenge or verify another administrator.
+        using var sent = await staff.PostAsJsonAsync("/api/account/phone/send", new { userId = other.Id, phoneNumber = other.PhoneNumber, phoneNumberConfirmed = true });
+        Assert.Equal(HttpStatusCode.OK, sent.StatusCode);
+        Assert.DoesNotContain(f.Gateway.Code, await sent.Content.ReadAsStringAsync());
+        Assert.Equal(1, f.Gateway.CodeCalls);
+        using var invalid = await staff.PostAsJsonAsync("/api/account/phone/confirm", new { code = "000000" });
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+        var before = (await staff.GetFromJsonAsync<JsonElement>("/api/account/me")).GetProperty("completion");
+        Assert.False(before.GetProperty("phoneNumberConfirmed").GetBoolean());
+        using var confirmed = await staff.PostAsJsonAsync("/api/account/phone/confirm", new { code = f.Gateway.Code, userId = other.Id });
+        Assert.Equal(HttpStatusCode.OK, confirmed.StatusCode);
+        Assert.DoesNotContain("token", await confirmed.Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
+        var current = (await staff.GetFromJsonAsync<JsonElement>("/api/account/me")).GetProperty("completion");
+        Assert.True(current.GetProperty("phoneNumberConfirmed").GetBoolean());
+        using (var scope = f.Host.App.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            Assert.False((await db.Users.SingleAsync(x => x.Id == other.Id)).PhoneNumberConfirmed);
+            Assert.Equal(admin.PhoneNumber, (await db.SmsMessages.SingleAsync(x => x.Event == "OtpVerification")).Phone);
+        }
+        Assert.Equal(HttpStatusCode.BadRequest, (await staff.PostAsJsonAsync("/api/account/phone/confirm", new { code = f.Gateway.Code })).StatusCode);
+        f.Clock.Advance(TimeSpan.FromSeconds(121));
+        Assert.Equal(HttpStatusCode.OK, (await staff.PostAsync("/api/admin/sms/test-code", null)).StatusCode);
+        Assert.Equal(2, f.Gateway.CodeCalls);
+    }
+
+    /// <summary>An unverified administrator receives an actionable failure before budget, challenge or carrier effects.</summary>
+    [Fact]
+    public async Task AdminCodeTest_RequiresVerifiedPhone_WithoutSendingOrSpendingBudget()
+    {
+        await using var f = await Fixture.Create();
+        var admin = await f.User("Admin", "09120000303", verified: false);
+        using var staff = f.Client(admin, "Admin");
+        using var response = await staff.PostAsync("/api/admin/sms/test-code", null);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("SMS_VERIFIED_RECIPIENT_REQUIRED", (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("code").GetString());
+        Assert.Equal(0, f.Gateway.CodeCalls);
+        using var scope = f.Host.App.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Empty(await db.SmsChallenges.ToListAsync());
+        Assert.Empty(await db.SmsMessages.ToListAsync());
+        Assert.Empty(await db.SmsPhoneBudgets.ToListAsync());
+    }
+
+    /// <summary>OTP testing is independent of the service-message sender number readiness.</summary>
+    [Fact]
+    public async Task AdminCodeTest_WithVerifiedPhone_DoesNotRequireTextSender()
+    {
+        await using var f = await Fixture.Create();
+        f.Gateway.TextReady = false;
+        var admin = await f.User("Admin", "09120000304");
+        using var staff = f.Client(admin, "Admin");
+        var settings = (await staff.GetFromJsonAsync<SmsSettingsView>("/api/admin/store-settings/sms"))!;
+        Assert.True(settings.Providers.Single(x => x.Id == "ParsGreen").OtpConfigured);
+        Assert.False(settings.Providers.Single(x => x.Id == "ParsGreen").TextConfigured);
+        using var response = await staff.PostAsync("/api/admin/sms/test-code", null);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(1, f.Gateway.CodeCalls);
+        Assert.DoesNotContain(f.Gateway.Code, await response.Content.ReadAsStringAsync());
+    }
+
     /// <summary>Provider changes affect new OTPs/messages only; previously queued rows retain their own carrier and credentials boundary.</summary>
     [Fact]
     public async Task KavenegarSelection_UsesSharedOtpOutboxAndLengthValidation_WithoutReroutingOldMessages()
@@ -252,7 +321,7 @@ public sealed class SmsSupportTests
     /// <summary>No HTTP implementation exists in this fixture, making accidental real SMS impossible.</summary>
     private sealed class FakeGateway : ISmsGateway
     {
-        public string Id{get;init;}="ParsGreen";public bool OtpConfigured=>true;public bool TextConfigured=>true;public bool DeliveryConfigured=>true;public int MaxTextLength=>Id=="Kavenegar"?1800:3000;public string Code="123456";public int CodeCalls,TextCalls;public SmsGatewayResult Result=new("Accepted","100001");
+        public string Id{get;init;}="ParsGreen";public bool OtpConfigured=>true;public bool TextReady=true;public bool TextConfigured=>TextReady;public bool DeliveryConfigured=>true;public int MaxTextLength=>Id=="Kavenegar"?1800:3000;public string Code="123456";public int CodeCalls,TextCalls;public SmsGatewayResult Result=new("Accepted","100001");
         public Task<string?> SendCodeAsync(string phone,int otpType,int patternId,CancellationToken ct){CodeCalls++;return Task.FromResult<string?>(Code);}
         public Task<SmsGatewayResult> SendTextAsync(string phone,string text,CancellationToken ct){TextCalls++;return Task.FromResult(Result);}
         public Task<SmsGatewayResult> DeliveryAsync(string id,CancellationToken ct)=>Task.FromResult(new SmsGatewayResult("Delivered",id));

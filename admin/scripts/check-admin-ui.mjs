@@ -133,7 +133,7 @@ async function main() {
           await geometry(page, 'shipping-settings', width);
           await section.screenshot({ path: resolve(output, `shipping-settings-${width}.png`) });
         }
-        if(!before&&route==='online-store') { await page.getByRole('tablist',{name:'بخش‌های مدیریت فروشگاه',exact:true}).getByRole('tab',{name:'پیامک و اعلان‌ها',exact:true}).click(); await checkMessaging(page,async name=>{await geometry(page,name,width);await page.locator("section.admin-surface").filter({has:page.getByRole("heading",{name:"پیامک و اعلان‌ها",exact:true})}).screenshot({path:resolve(output,`${name}-${width}.png`)});}); }
+        if(!before&&route==='online-store') { await page.getByRole('tablist',{name:'بخش‌های مدیریت فروشگاه',exact:true}).getByRole('tab',{name:'پیامک و اعلان‌ها',exact:true}).click(); await checkMessaging(page,async name=>{await geometry(page,name,width);const target=name.startsWith('sms-admin-phone')?page.getByRole('region',{name:'تأیید شمارهٔ حساب مدیر',exact:true}):page.locator("section.admin-surface").filter({has:page.getByRole("heading",{name:"پیامک و اعلان‌ها",exact:true})});await target.screenshot({path:resolve(output,`${name}-${width}.png`)});}); }
         if(!before&&route==='tickets/ticket-0') await checkSupport(page,messaging.replyKeys,async name=>{await geometry(page,name,width);await page.screenshot({path:resolve(output,`${name}-${width}.png`),fullPage:true});});
         if(!before&&route==='orders') await checkOrderLabels(page,labels.calls,async name=>{await geometry(page,name,width);await page.screenshot({path:resolve(output,`${name}-${width}.png`),fullPage:true});});
         if(!before&&route==='orders/order-0') await checkOrderLabelDetail(page,async name=>{await geometry(page,name,width);await page.screenshot({path:resolve(output,`${name}-${width}.png`),fullPage:true});});
@@ -203,6 +203,11 @@ async function main() {
       await storeTabs.getByRole('tab', { name: 'Identity & branding', exact: true }).focus(); await page.keyboard.press('ArrowRight');
       await storeTabs.getByRole('tab', { name: 'Contact & support', exact: true, selected: true }).waitFor();
       assert.equal(await page.locator('[role="tabpanel"]:visible').count(), 1);
+      await storeTabs.getByRole('tab', { name: 'SMS & notifications', exact: true }).click();
+      const phone = page.getByRole('region', { name: 'Verify administrator phone', exact: true });
+      await phone.getByRole('button', { name: 'Send my phone verification code', exact: true }).waitFor();
+      assert.equal(await phone.getByRole('button', { name: 'Send my phone verification code', exact: true }).isEnabled(), false, 'Missing phone cannot trigger SMS');
+      assert.equal(await phone.getByRole('link', { name: 'Edit number in Users', exact: true }).getAttribute('href'), '/en/admin/profile');
       await context.close(); console.log('PASS English routing, semantic pagination directions and LTR store tabs');
     }
   } finally { await browser.close(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }

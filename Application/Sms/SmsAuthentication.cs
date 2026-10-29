@@ -34,9 +34,12 @@ public static class SmsAuthentication
                 return new(503, "SMS_AUTH_UNAVAILABLE");
             var gateway = SmsPolicy.Gateway(policy, gateways);
             if (!gateway.OtpConfigured) return new(503, "SMS_NOT_CONFIGURED");
-            string phone = request.Purpose == "Test"
-                ? SmsPolicy.Phone((await db.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == request.Actor && x.PhoneNumberConfirmed, ct))?.PhoneNumber)
-                : SmsPolicy.Phone(request.Phone);
+            string? testPhone = request.Purpose == "Test"
+                ? (await db.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == request.Actor && x.PhoneNumberConfirmed, ct))?.PhoneNumber
+                : null;
+            // Initial phone verification uses the authenticated profile flow; a delivery test must not bootstrap ownership.
+            if (request.Purpose == "Test" && string.IsNullOrWhiteSpace(testPhone)) return new(400, "SMS_VERIFIED_RECIPIENT_REQUIRED");
+            string phone = SmsPolicy.Phone(request.Purpose == "Test" ? testPhone : request.Phone);
             await using var tx = await db.Database.BeginTransactionAsync(ct);
             await new AccountingUnitOfWork(db, time).AcquireGateAsync(ct);
             Guid? owner = await PhoneOwnership.ResolveAsync(db, phone, ct);

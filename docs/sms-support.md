@@ -63,6 +63,14 @@ The public WSDL specifies an integer `GetDelivery` result but does **not** defin
 
 The test buttons use the authenticated administrator's own verified number. A code test cannot create a session. Service-message tests and single-account manual sends require an explicit confirmation and an idempotency key. No scheduled or automated test sends real SMS. Live credentials, sender approval, account balance and handset delivery have not been validated by the local tests.
 
+### Troubleshooting an administrator OTP test
+
+A saved phone number is not necessarily verified. If there is no verified phone on the current administrator, the OTP test returns `SMS_VERIFIED_RECIPIENT_REQUIRED` before contacting a carrier or consuming a send budget. **Store management → SMS & notifications** includes **Verify my mobile number**, available in the settings and test tabs. It shows the current administrator's saved phone, sends its initial ownership code and confirms it entirely inside the admin panel. No storefront sign-in is needed. If the phone is missing, edit the current account in the existing Users screen and reload the number in this section. Enable SMS and profile phone verification and save settings before sending. Do not mark a phone verified through a database edit.
+
+The form reuses `GET /api/account/me` and the existing authenticated `POST /api/account/phone/send` and `/confirm` endpoints with the admin bearer session. It never submits a destination phone, user ID or verified flag. Ownership changes only after a valid code; the current account is re-read before showing success, and administrator recipients refresh without discarding settings drafts. Verification and delivery tests share the resend countdown and server budget. A delivery test still cannot verify ownership or create an administrator session.
+
+An empty SMS history following a rejected test is consistent with pre-send validation; it is not evidence of a carrier delivery failure. ParsGreen OTP needs only the configured Signature plus valid OTP type/pattern settings; the separate service-message test additionally requires `Sms__ParsGreen__SenderNumber`. Missing delivery-status mappings do not block sends. The UI distinguishes these failures, preserves drafts and requires settings to be saved before test/send operations. A provider acceptance error is ambiguous: inspect history before retrying, since a network timeout can occur after an SMS was accepted.
+
 ## Data and security
 
 Migration: `20261026080116_AddSmsOutboxPhoneAuthenticationAndSupportTickets`.
