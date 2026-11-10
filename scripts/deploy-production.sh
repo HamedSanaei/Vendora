@@ -54,7 +54,7 @@ source "$ENV_FILE"
 set +a
 
 VENDORA_IMAGE_REGISTRY="${VENDORA_IMAGE_REGISTRY:?VENDORA_IMAGE_REGISTRY must be set in $ENV_FILE}"
-PUBLIC_HOST="${VENDORA_PUBLIC_HOST:-vendora.tofanservice.ir}"
+PUBLIC_HOST="${2:-${VENDORA_PUBLIC_HOST:-vendorashop.ir}}"
 export VENDORA_IMAGE_TAG="$VERSION"
 
 COMPOSE=(docker compose -f "$COMPOSE_FILE")

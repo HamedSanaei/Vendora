@@ -27,7 +27,7 @@ env:
   # Public endpoints baked into the client bundles at build time. The exact
   # commit SHA (GITHUB_SHA) is used for checkout, image tags, the deploy
   # argument, rollback state, and the summary — never the default branch HEAD.
-  PUBLIC_ORIGIN: https://vendora.tofanservice.ir
+  PUBLIC_ORIGIN: https://vendorashop.ir
 
 jobs:
   backend:
@@ -294,7 +294,7 @@ jobs:
           user="${PROD_USER:-root}"
           # ssh accepts raw IPv6 literals directly: root@2001:db8::1 or root@host
           ssh -i "$HOME/.ssh/deploy_key" -p "$port" -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
-            "$user@$host" "chmod +x /opt/vendora/scripts/*.sh && bash /opt/vendora/scripts/deploy-production.sh '$SHA'"
+            "$user@$host" "chmod +x /opt/vendora/scripts/*.sh && bash /opt/vendora/scripts/deploy-production.sh '$SHA' 'vendorashop.ir'"
 
       - name: Verify public endpoints from the runner
         env:
@@ -302,9 +302,9 @@ jobs:
         run: |
           set -euo pipefail
           for url in \
-            "https://vendora.tofanservice.ir/healthz" \
-            "https://vendora.tofanservice.ir/" \
-            "https://vendora.tofanservice.ir/fa/admin"; do
+            "https://vendorashop.ir/healthz" \
+            "https://vendorashop.ir/" \
+            "https://vendorashop.ir/fa/admin"; do
             curl -fsS --retry 10 --retry-delay 5 --retry-connrefused -o /dev/null "$url"
             echo "Public check passed: $url"
           done
@@ -326,10 +326,10 @@ jobs:
           | CI | ${{ needs.build-images.result == 'success' && 'Passed' || 'Failed' }} |
           | Image tags | \`ghcr.io/${{ github.repository_owner }}/vendora-{api,site,admin}:${{ steps.sha.outputs.sha }}\` |
           | Target environment | production |
-          | Hostname | https://vendora.tofanservice.ir |
+          | Hostname | https://vendorashop.ir |
           | Server deployment | ${{ steps.deploy.conclusion || 'skipped' }} |
           | Internal health | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |
-          | Cloudflare health | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |
+          | Public CDN health | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |
           | Rollback | ${{ job.status == 'success' && 'Not required' || 'See server logs /opt/vendora/logs' }} |
 
           ${{ job.status == 'success' && 'Deployment succeeded. The storefront, API, and admin panel are live.' || 'Deployment FAILED. Check the workflow logs and /opt/vendora/logs on the server. The previous version may have been restored automatically.' }}
