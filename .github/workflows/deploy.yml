@@ -30,6 +30,16 @@ env:
   PUBLIC_ORIGIN: https://vendorashop.ir
 
 jobs:
+  deployment-checks:
+    name: Deployment script tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test scripts/verify-public-endpoints.test.mjs
+
   backend:
     name: Backend (.NET)
     runs-on: ubuntu-latest
@@ -106,7 +116,7 @@ jobs:
   build-images:
     name: Build and push images
     runs-on: ubuntu-latest
-    needs: [backend, admin, site]
+    needs: [backend, admin, site, deployment-checks]
     outputs:
       images: ${{ steps.image-list.outputs.images }}
     steps:
@@ -294,20 +304,15 @@ jobs:
           user="${PROD_USER:-root}"
           # ssh accepts raw IPv6 literals directly: root@2001:db8::1 or root@host
           ssh -i "$HOME/.ssh/deploy_key" -p "$port" -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
-            "$user@$host" "chmod +x /opt/vendora/scripts/*.sh && bash /opt/vendora/scripts/deploy-production.sh '$SHA' 'vendorashop.ir'"
+            "$user@$host" "chmod +x /opt/vendora/scripts/*.sh && bash /opt/vendora/scripts/deploy-production.sh '$SHA' '${PUBLIC_ORIGIN#https://}'"
 
       - name: Verify public endpoints from the runner
+        id: public-check
         env:
           SHA: ${{ steps.sha.outputs.sha }}
         run: |
           set -euo pipefail
-          for url in \
-            "https://vendorashop.ir/healthz" \
-            "https://vendorashop.ir/" \
-            "https://vendorashop.ir/fa/admin"; do
-            curl -fsS --retry 10 --retry-delay 5 --retry-connrefused -o /dev/null "$url"
-            echo "Public check passed: $url"
-          done
+          bash scripts/verify-public-endpoints.sh "$PUBLIC_ORIGIN"
           echo "Public endpoints verified for $SHA"
 
       - name: Deployment summary
@@ -326,11 +331,11 @@ jobs:
           | CI | ${{ needs.build-images.result == 'success' && 'Passed' || 'Failed' }} |
           | Image tags | \`ghcr.io/${{ github.repository_owner }}/vendora-{api,site,admin}:${{ steps.sha.outputs.sha }}\` |
           | Target environment | production |
-          | Hostname | https://vendorashop.ir |
+          | Hostname | $PUBLIC_ORIGIN |
           | Server deployment | ${{ steps.deploy.conclusion || 'skipped' }} |
-          | Internal health | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |
-          | Public CDN health | ${{ job.status == 'success' && 'Passed' || 'Failed' }} |
-          | Rollback | ${{ job.status == 'success' && 'Not required' || 'See server logs /opt/vendora/logs' }} |
+          | Internal and server public health | ${{ steps.deploy.conclusion == 'success' && 'Passed' || 'Not confirmed; see server deployment step' }} |
+          | Runner public health | ${{ steps.public-check.conclusion || 'skipped' }} |
+          | Rollback | ${{ steps.deploy.conclusion == 'success' && 'Not triggered; server deployment completed' || 'See server logs /opt/vendora/logs' }} |
 
-          ${{ job.status == 'success' && 'Deployment succeeded. The storefront, API, and admin panel are live.' || 'Deployment FAILED. Check the workflow logs and /opt/vendora/logs on the server. The previous version may have been restored automatically.' }}
+          ${{ job.status == 'success' && 'Deployment and runner verification succeeded.' || (steps.deploy.conclusion == 'success' && 'Server deployment succeeded, but runner verification did not pass. The new version remains deployed; runner verification does not trigger rollback. Check the failing endpoint and origin TLS/network logs.' || 'Server deployment did not complete successfully. Check the workflow and /opt/vendora/logs for actual rollback status.') }}
           EOF

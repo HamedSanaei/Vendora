@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Production deployment for Vendora.
 #
-# Usage: deploy-production.sh <immutable-image-sha>
+# Usage: deploy-production.sh <immutable-image-sha> [public-host]
 #
 # Flow: lock -> record current version -> pull exact images -> verify images ->
 # backup database -> apply migrations -> apply production catalog seed ->
@@ -16,7 +16,7 @@ set -Eeuo pipefail
 
 VERSION="${1:-}"
 if [ -z "$VERSION" ]; then
-  echo "usage: deploy-production.sh <image-sha>" >&2
+  echo "usage: deploy-production.sh <image-sha> [public-host]" >&2
   exit 2
 fi
 
@@ -234,13 +234,7 @@ run_internal_checks
 
 # --- 7. Public checks through Cloudflare ----------------------------------------
 log "Public health checks via https://$PUBLIC_HOST"
-for url in \
-  "https://$PUBLIC_HOST/healthz" \
-  "https://$PUBLIC_HOST/" \
-  "https://$PUBLIC_HOST/fa/admin"; do
-  curl -fsS --retry 10 --retry-delay 5 --retry-connrefused -o /dev/null "$url"
-  log "Public check passed: $url"
-done
+bash "$DEPLOY_DIR/scripts/verify-public-endpoints.sh" "https://$PUBLIC_HOST"
 
 # --- 8. Record the deployed version ---------------------------------------------
 echo "$CURRENT_VERSION" > "$PREVIOUS_FILE"

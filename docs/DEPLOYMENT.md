@@ -769,10 +769,31 @@ Vite values are baked into JavaScript; deploy a rebuilt admin image after change
 | API exits with "Jwt:Key must be configured..." | Set a strong `Jwt__Key` in `production.env` |
 | nginx 502 | `sudo systemctl status nginx`; gateway may be down — `docker compose -f /opt/vendora/deploy/docker-compose.production.yml ps` |
 | Cloudflare 522/523 | Check host nginx listeners `ss -tlnp` (`:443`, `[::]:443`) and the origin certificate |
+| Cloudflare 525 during public verification | Cloudflare could not complete TLS with the origin. Correlate the failed timestamp/edge IP with origin nginx TLS logs. The shared checker retries transient failures within a bounded budget; persistent failures still fail deployment. Do not disable certificate validation. |
 | Cloudflare 526 | TLS mode not Full strict, or origin certificate/key mismatch |
 | Site healthy but admin broken | Confirm admin assets load via `https://vendora.tofanservice.ir/admin/assets/...` (gateway strips `/admin/` for the admin container) |
 | Database locked | Only the API container should hold the SQLite file; `docker compose ps` should show exactly one `vendora-api` |
 | Rollback needed | `bash /opt/vendora/scripts/rollback-production.sh` |
+
+Both the server deploy and runner verification use `scripts/verify-public-endpoints.sh`.
+It follows HTTPS redirects and requires a final 2xx for `/healthz`, `/`, and
+`/fa/admin`; accepting the root's locale redirect alone would miss a broken page.
+Each endpoint has six attempts (5-second connect timeout, 20-second total request
+timeout, 5-second gaps; at most 145 seconds). Transient HTTP errors, including
+Cloudflare 520-525, and selected transport errors retry; permanent HTTP errors
+and certificate validation failures stop immediately. No response bodies,
+credentials, cookies or private configuration are printed.
+
+The runner verification runs after the server records the deployed version. If
+only that step fails, the new version remains deployed and no automatic rollback
+is triggered by the runner. The workflow summary distinguishes this case from a
+server deployment failure; a red pipeline alone is not proof of a rolled-back or
+unhealthy application. A successful server step includes both internal checks and
+public verification from the server's network location.
+
+Run `node --test scripts/verify-public-endpoints.test.mjs` to exercise the actual
+Bash checker with isolated curl/sleep doubles (no server or Docker required).
+Both CI and the production image-build gate run these regression tests.
 
 ---
 
