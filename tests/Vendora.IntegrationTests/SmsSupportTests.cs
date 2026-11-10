@@ -23,7 +23,7 @@ namespace Vendora.IntegrationTests;
 public sealed class SmsSupportTests
 {
     [Fact]
-    public async Task BrandedMode_MissingSenderIsRejected_AndOldClientsDoNotClearSavedMode()
+    public async Task BrandedMode_UnconfiguredGatewayIsRejected_AndOldClientsDoNotClearSavedMode()
     {
         await using var f = await Fixture.Create(); var admin=await f.User("Admin","09120000410"); using var staff=f.Client(admin,"Admin");
         var original=(await staff.GetFromJsonAsync<SmsSettingsView>("/api/admin/store-settings/sms"))!;
@@ -110,6 +110,25 @@ public sealed class SmsSupportTests
         f.Clock.Advance(TimeSpan.FromSeconds(121));
         Assert.Equal(HttpStatusCode.OK, (await staff.PostAsync("/api/admin/sms/test-code", null)).StatusCode);
         Assert.Equal(2, f.Gateway.CodeCalls);
+    }
+
+    [Fact]
+    public async Task PhoneChange_QueuesApprovedAlertOnceForEachNumberAfterProof()
+    {
+        await using var f = await Fixture.Create();
+        var user = await f.User("Customer", "09120000134");
+        using var customer = f.Client(user, "Customer");
+        const string newPhone = "09120000135";
+        (await customer.PutAsJsonAsync("/api/account/profile", new { user.FirstName, user.LastName, user.FullName, user.Email, PhoneNumber = newPhone })).EnsureSuccessStatusCode();
+        (await customer.PostAsJsonAsync("/api/account/phone/send", new { })).EnsureSuccessStatusCode();
+        (await customer.PostAsJsonAsync("/api/account/phone/confirm", new { code = f.Gateway.Code })).EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.BadRequest, (await customer.PostAsJsonAsync("/api/account/phone/confirm", new { code = f.Gateway.Code })).StatusCode);
+
+        using var scope = f.Host.App.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var notices = await db.SmsMessages.Where(x => x.Event == "PhoneChanged").ToDictionaryAsync(x => x.Phone, x => x.Body);
+        Assert.Equal(new[] { user.PhoneNumber!, newPhone }, notices.Keys.Order().ToArray());
+        Assert.All(notices.Values, text => Assert.Equal("وندوراشاپ شماره همراه حساب شما تغییر کرد. اگر شما نبوده اید با پشتیبانی تماس بگیرید.", text));
     }
 
     /// <summary>An unverified administrator receives an actionable failure before budget, challenge or carrier effects.</summary>
@@ -256,7 +275,8 @@ public sealed class SmsSupportTests
         var fresh=(await users.FindByIdAsync(user.Id.ToString()))!; Assert.True(await users.CheckPasswordAsync(fresh,"Changed123!"));
         var sessions=new SessionValidation.Handler(db,f.Clock); Assert.False(await sessions.Handle(new(user.Id,oldStamp),default)); Assert.False(await sessions.Handle(new(user.Id,null),default)); Assert.True(await sessions.Handle(new(user.Id,fresh.SecurityStamp),default));
         Assert.Null((await db.SmsChallenges.SingleAsync(x=>x.Id==challenge)).RecoveryHash);
-        Assert.Single(await db.SmsMessages.Where(x=>x.Event=="PasswordChanged").ToListAsync());
+        var notice = await db.SmsMessages.SingleAsync(x => x.Event == "PasswordChanged");
+        Assert.Equal("وندوراشاپ رمز عبور حساب شما تغییر کرد. اگر شما نبوده اید با پشتیبانی تماس بگیرید.", notice.Body);
         var old=await guest.PostAsJsonAsync("/api/account/forgot-password",new{email=user.Email}); Assert.DoesNotContain("resetToken",await old.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.Gone,(await guest.PostAsJsonAsync("/api/account/reset-password",new{email=user.Email,token="exposed-old-token",newPassword="Changed456!"})).StatusCode);
     }
@@ -322,11 +342,42 @@ public sealed class SmsSupportTests
         Assert.Equal(HttpStatusCode.OK,(await Write(staff,$"/api/admin/tickets/{id}/messages",reply,"reply-fixture")).StatusCode);
         Assert.Equal(HttpStatusCode.Conflict,(await Write(staff,$"/api/admin/tickets/{id}/messages",new{version=detail.Ticket.Version,text="Changed"},"reply-fixture")).StatusCode);
         detail=(await customer.GetFromJsonAsync<TicketDetails>($"/api/account/tickets/{id}"))!;Assert.True(detail.Messages[1].IsStaff);Assert.Equal("WaitingForCustomer",detail.Ticket.Status);
-        using(var scope=f.Host.App.Services.CreateScope()){var db=scope.ServiceProvider.GetRequiredService<AppDbContext>();Assert.Single(await db.SupportTickets.ToListAsync());Assert.Equal(2,await db.SupportTicketMessages.CountAsync());Assert.Single(await db.SmsMessages.Where(x=>x.Event=="AdminTicketNew").ToListAsync());Assert.Single(await db.SmsMessages.Where(x=>x.Event=="TicketReply").ToListAsync());Assert.DoesNotContain("Private",string.Join("",await db.SmsMessages.Select(x=>x.Body).ToListAsync()));}
+        using (var scope = f.Host.App.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            Assert.Single(await db.SupportTickets.ToListAsync());
+            Assert.Equal(2, await db.SupportTicketMessages.CountAsync());
+            var messages = await db.SmsMessages.ToDictionaryAsync(x => x.Event, x => x.Body);
+            Assert.Equal(2, messages.Count);
+            Assert.Equal("وندوراشاپ تیکت پشتیبانی جدید ثبت شد. https://vendorashop.ir/fa/admin/tickets", messages["AdminTicketNew"]);
+            Assert.Equal("وندوراشاپ پشتیبانی به تیکت شما پاسخ داد. مشاهده پاسخ: https://vendorashop.ir/fa/account/tickets", messages["TicketReply"]);
+        }
         var close=await Write(customer,$"/api/account/tickets/{id}/status",new{version=detail.Ticket.Version,close=true},"close-fixture",true);Assert.Equal(HttpStatusCode.OK,close.StatusCode);
         detail=(await customer.GetFromJsonAsync<TicketDetails>($"/api/account/tickets/{id}"))!;
         Assert.Equal(HttpStatusCode.Conflict,(await Write(customer,$"/api/account/tickets/{id}/messages",new{version=detail.Ticket.Version,text="reply while closed"},"closed-reply")).StatusCode);
         Assert.Equal(HttpStatusCode.OK,(await Write(customer,$"/api/account/tickets/{id}/status",new{version=detail.Ticket.Version,close=false},"reopen-fixture",true)).StatusCode);
+    }
+
+    [Fact]
+    public async Task CustomerTicketReply_QueuesApprovedTextOnceForStaff()
+    {
+        await using var f = await Fixture.Create();
+        var user = await f.User("Customer", "09120000136");
+        var admin = await f.User("Admin", "09120000137");
+        await f.SelectAdmin(admin.Id);
+        using var customer = f.Client(user, "Customer");
+        using var created = await Write(customer, "/api/account/tickets", new { subject = "Ticket fixture", text = "Private original message" }, "customer-reply-ticket");
+        created.EnsureSuccessStatusCode();
+        Guid id = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
+        var detail = (await customer.GetFromJsonAsync<TicketDetails>($"/api/account/tickets/{id}"))!;
+        var reply = new { version = detail.Ticket.Version, text = "Private follow-up" };
+        (await Write(customer, $"/api/account/tickets/{id}/messages", reply, "customer-reply-fixture")).EnsureSuccessStatusCode();
+        (await Write(customer, $"/api/account/tickets/{id}/messages", reply, "customer-reply-fixture")).EnsureSuccessStatusCode();
+        using var scope = f.Host.App.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var notice = await db.SmsMessages.SingleAsync(x => x.Event == "AdminTicketReply");
+        Assert.Equal(admin.Id, notice.UserId);
+        Assert.Equal("وندوراشاپ مشتری به تیکت پشتیبانی پاسخ داد. https://vendorashop.ir/fa/admin/tickets", notice.Body);
     }
 
     [Fact]
@@ -354,15 +405,64 @@ public sealed class SmsSupportTests
     }
 
     [Fact]
+    public async Task ServiceTest_QueuesApprovedTextOnceForTheVerifiedAdministrator()
+    {
+        await using var f = await Fixture.Create();
+        var admin = await f.User("Admin", "09120000133");
+        using var staff = f.Client(admin, "Admin");
+        var settings = await staff.GetFromJsonAsync<SmsSettingsView>("/api/admin/store-settings/sms");
+        (await Write(staff, "/api/admin/sms/test", new { }, "approved-service-test")).EnsureSuccessStatusCode();
+        (await Write(staff, "/api/admin/sms/test", new { }, "approved-service-test")).EnsureSuccessStatusCode();
+        using var scope = f.Host.App.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var row = await db.SmsMessages.SingleAsync();
+        Assert.Equal("Test", row.Event);
+        Assert.Equal(admin.PhoneNumber, row.Phone);
+        Assert.Equal("این پیام برای آزمایش اتصال پیامک وندوراشاپ ارسال شده است.", row.Body);
+        Assert.Equal(row.Body, settings!.ServiceTestTemplate);
+        var dispatch = new SmsDispatch(db, [f.Gateway], f.Clock);
+        await dispatch.ProcessAsync(default);
+        await dispatch.ProcessAsync(default);
+        Assert.Equal(1, f.Gateway.TextCalls);
+    }
+
+    [Fact]
     public async Task LowStock_UsesSilentBaselineAndCooldown_AndPaymentNeedsActualEvidence()
     {
         await using var f=await Fixture.Create();var admin=await f.User("Admin","09120000123");var user=await f.User("Customer","09120000124");await f.SelectAdmin(admin.Id);
-        using var scope=f.Host.App.Services.CreateScope();var db=scope.ServiceProvider.GetRequiredService<AppDbContext>();var product=new Product{Title="Stock fixture",Slug="stock-fixture",Price=100,StockQuantity=10,Status=ProductStatus.Active};db.Products.Add(product);await db.SaveChangesAsync();
-        var dispatch=new SmsDispatch(db,[f.Gateway],f.Clock);await dispatch.LowStockAsync(default);Assert.Empty(await db.SmsMessages.ToListAsync());product.StockQuantity=4;await db.SaveChangesAsync();await dispatch.LowStockAsync(default);await dispatch.LowStockAsync(default);Assert.Single(await db.SmsMessages.Where(x=>x.Event=="AdminLowStock").ToListAsync());
-        var order=new Order{UserId=user.Id,OrderNumber="SMS-FIXTURE",ShippingRecipientName="Fixture",Items=[new OrderItem{ProductId=product.Id,ProductTitle=product.Title,Quantity=1,UnitPrice=100}]};order.RecalculateTotals();db.Orders.Add(order);await db.SaveChangesAsync();
+        using var scope=f.Host.App.Services.CreateScope();var db=scope.ServiceProvider.GetRequiredService<AppDbContext>();var product=new Product{Title="کیف دوشی مدل آوا",Slug="stock-fixture",Price=100,StockQuantity=10,Status=ProductStatus.Active};db.Products.Add(product);await db.SaveChangesAsync();
+        var dispatch=new SmsDispatch(db,[f.Gateway],f.Clock);await dispatch.LowStockAsync(default);Assert.Empty(await db.SmsMessages.ToListAsync());product.StockQuantity=3;await db.SaveChangesAsync();await dispatch.LowStockAsync(default);await dispatch.LowStockAsync(default);
+        var order=new Order{UserId=user.Id,OrderNumber="vd-1048",ShippingRecipientName="علی رضایی",Items=[new OrderItem{ProductId=product.Id,ProductTitle=product.Title,Quantity=1,UnitPrice=2_980_000}]};order.RecalculateTotals();db.Orders.Add(order);await db.SaveChangesAsync();
         var notifications=new SmsNotifications(db,f.Clock);await notifications.PaidAsync(order,false,default);await db.SaveChangesAsync();Assert.Empty(await db.SmsMessages.Where(x=>x.Event=="OrderPaid").ToListAsync());
         var payment=new PaymentTransaction{OrderId=order.Id,Provider=PaymentProvider.Zarinpal,Authority="fixture-authority",Amount=order.TotalAmount};payment.RecordServerVerification("fixture-reference",f.Clock.GetUtcNow().UtcDateTime,new string('D',64));db.PaymentTransactions.Add(payment);await db.SaveChangesAsync();
-        await notifications.PaidAsync(order,false,default);await notifications.PaidAsync(order,false,default);await db.SaveChangesAsync();Assert.Single(await db.SmsMessages.Where(x=>x.Event=="OrderPaid").ToListAsync());Assert.Single(await db.SmsMessages.Where(x=>x.Event=="AdminOrderPaid").ToListAsync());
+        await notifications.PaidAsync(order,false,default);await notifications.PaidAsync(order,false,default);await db.SaveChangesAsync();
+        var messages = await db.SmsMessages.ToDictionaryAsync(x => x.Event, x => x.Body);
+        Assert.Equal(3, messages.Count);
+        Assert.Equal("وندوراشاپ موجودی قابل فروش کیف دوشی مدل آوا کم است: 3 عدد. https://vendorashop.ir/fa/admin/product-list", messages["AdminLowStock"]);
+        Assert.Equal("وندوراشاپ علی رضایی عزیز، پرداخت سفارش vd-1048 به مبلغ 2,980,000 تومان تأیید شد. https://vendorashop.ir/fa/order/vd-1048", messages["OrderPaid"]);
+        Assert.Equal("وندوراشاپ سفارش پرداخت شده جدید: vd-1048، مبلغ 2,980,000 تومان. https://vendorashop.ir/fa/admin/orders", messages["AdminOrderPaid"]);
+        var reviewOrder = new Order { UserId = user.Id, OrderNumber = "vd-2048", TotalAmount = 2_980_000 };
+        db.Orders.Add(reviewOrder);
+        var reviewPayment = new PaymentTransaction { OrderId = reviewOrder.Id, Provider = PaymentProvider.Zarinpal, Authority = "fixture-review-authority", Amount = reviewOrder.TotalAmount };
+        reviewPayment.RecordServerVerification("fixture-review-reference", f.Clock.GetUtcNow().UtcDateTime, new string('E', 64));
+        db.PaymentTransactions.Add(reviewPayment);
+        await db.SaveChangesAsync();
+        await notifications.PaidAsync(reviewOrder, true, default);
+        await notifications.PaidAsync(reviewOrder, true, default);
+        foreach (var status in new[] { OrderStatus.Shipped, OrderStatus.Delivered, OrderStatus.Cancelled })
+        {
+            order.Status = status;
+            await notifications.OrderStatusAsync(order, default);
+            await notifications.OrderStatusAsync(order, default);
+        }
+        await db.SaveChangesAsync();
+        messages = await db.SmsMessages.ToDictionaryAsync(x => x.Event, x => x.Body);
+        Assert.Equal(8, messages.Count);
+        Assert.Equal("وندوراشاپ پرداخت سفارش vd-2048 دریافت شد؛ سفارش نیازمند بررسی پشتیبانی است. https://vendorashop.ir/fa/order/vd-2048", messages["PaymentReview"]);
+        Assert.Equal("وندوراشاپ پرداخت سفارش vd-2048 دریافت شده اما نیازمند بررسی دستی است. https://vendorashop.ir/fa/admin/orders", messages["AdminPaymentReview"]);
+        Assert.Equal("وندوراشاپ سفارش vd-1048 ارسال شد. جزئیات و پیگیری: https://vendorashop.ir/fa/order/vd-1048", messages["OrderShipped"]);
+        Assert.Equal("وندوراشاپ سفارش vd-1048 تحویل شد. سپاس از خرید شما. https://vendorashop.ir/fa/order/vd-1048", messages["OrderDelivered"]);
+        Assert.Equal("وندوراشاپ سفارش vd-1048 لغو شد. جزئیات: https://vendorashop.ir/fa/order/vd-1048", messages["OrderCancelled"]);
         var work=new AccountingUnitOfWork(db,f.Clock);await Assert.ThrowsAsync<AccountingException>(()=>work.ExecuteAsync(user.Id,"rolled-back-notification","sms-test",new{},async ct=>{await notifications.CustomerAsync("TicketReply","rollback",user.Id,null,ct);throw new AccountingException("ROLLBACK");},default));
         Assert.Empty(await db.SmsMessages.Where(x=>x.Event=="TicketReply").ToListAsync());
     }

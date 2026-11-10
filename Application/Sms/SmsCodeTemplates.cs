@@ -10,18 +10,21 @@ public static class SmsCodeTemplates
     public static readonly IReadOnlyDictionary<SmsCodePurpose, string> Texts = new Dictionary<SmsCodePurpose, string>
     {
         [SmsCodePurpose.Login] = "کد ورود شما به وندوراشاپ: {code}",
-        [SmsCodePurpose.Registration] = "کد ثبت‌نام شما در وندوراشاپ: {code}",
+        [SmsCodePurpose.Registration] = "کد ثبت نام شما در وندوراشاپ: {code}",
         [SmsCodePurpose.PhoneVerification] = "کد تأیید شماره همراه شما در وندوراشاپ: {code}",
         [SmsCodePurpose.Recovery] = "کد بازیابی رمز عبور شما در وندوراشاپ: {code}",
         [SmsCodePurpose.Test] = "کد آزمایشی پیامک وندوراشاپ: {code}"
     };
 
+    /// <summary>Returns the complete provider text with placeholders for safe administrative previews.</summary>
+    public static string Pattern(SmsCodePurpose purpose) => Texts[purpose] + "\n\n@" + Domain + " #{code}";
+
     /// <summary>Formats one ASCII six-digit code twice; the final origin-bound line must not receive a footer.</summary>
     public static string Render(SmsCodePurpose purpose, string code)
     {
-        if (code.Length != 6 || !code.All(char.IsAsciiDigit) || !Texts.TryGetValue(purpose, out var text))
+        if (code.Length != 6 || !code.All(char.IsAsciiDigit) || !Texts.ContainsKey(purpose))
             throw new ArgumentException("Invalid OTP purpose or code.");
-        return text.Replace("{code}", code) + "\n\n@" + Domain + " #" + code;
+        return Pattern(purpose).Replace("{code}", code);
     }
 
     /// <summary>Requires explicit opt-in and branded capability only for ParsGreen; other providers keep their existing templates.</summary>

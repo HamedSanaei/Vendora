@@ -1,10 +1,11 @@
 /** Isolated browser fixtures and interactions. No carrier/API traffic or real account records. */
 import assert from 'node:assert/strict';
 const events = ['OrderPaid','OrderShipped','OrderDelivered','OrderCancelled','TicketReply','PasswordChanged','PhoneChanged','PaymentReview','AdminOrderPaid','AdminTicketNew','AdminTicketReply','AdminLowStock','AdminPaymentReview'];
-const otpTemplates=[['Login','کد ورود شما به وندوراشاپ'],['Registration','کد ثبت‌نام شما در وندوراشاپ'],['PhoneVerification','کد تأیید شماره همراه شما در وندوراشاپ'],['Recovery','کد بازیابی رمز عبور شما در وندوراشاپ'],['Test','کد آزمایشی پیامک وندوراشاپ']].map(([purpose,text])=>({purpose,text:text+': {code}\n\n@vendorashop.ir #{code}'}));
+const otpTemplates=[['Login','کد ورود شما به وندوراشاپ'],['Registration','کد ثبت نام شما در وندوراشاپ'],['PhoneVerification','کد تأیید شماره همراه شما در وندوراشاپ'],['Recovery','کد بازیابی رمز عبور شما در وندوراشاپ'],['Test','کد آزمایشی پیامک وندوراشاپ']].map(([purpose,text])=>({purpose,text:text+': {code}\n\n@vendorashop.ir #{code}'}));
+const serviceTestTemplate = 'این پیام برای آزمایش اتصال پیامک وندوراشاپ ارسال شده است.';
 /** Returns synthetic contract data for SMS and support requests, ahead of generic store-settings fixtures. */
 export function messagingFixture(path) {
-  if (path === '/api/admin/store-settings/sms') return { version:1,enabled:true,provider:'ParsGreen',parsGreenBrandedOtp:false,otpTemplates,phoneLogin:false,passwordRecovery:false,phoneVerification:true,otpType:1,patternId:3,lowStockThreshold:5,rules:events.map(event=>({event,enabled:false,template:'اعلان خدماتی {link}'})),recipients:[],providers:[{id:'ParsGreen',available:true,otpConfigured:true,textConfigured:true,deliveryConfigured:false,brandedOtpConfigured:true},{id:'Kavenegar',available:true,otpConfigured:true,textConfigured:true,deliveryConfigured:true}],duplicateVerifiedPhones:[] };
+  if (path === '/api/admin/store-settings/sms') return { version:1,enabled:true,provider:'ParsGreen',parsGreenBrandedOtp:false,otpTemplates,serviceTestTemplate,phoneLogin:false,passwordRecovery:false,phoneVerification:true,otpType:1,patternId:3,lowStockThreshold:5,rules:events.map(event=>({event,enabled:false,template:'اعلان خدماتی {link}'})),recipients:[],providers:[{id:'ParsGreen',available:true,otpConfigured:true,textConfigured:true,deliveryConfigured:false,brandedOtpConfigured:true},{id:'Kavenegar',available:true,otpConfigured:true,textConfigured:true,deliveryConfigured:true}],duplicateVerifiedPhones:[] };
   if (path === '/api/admin/sms/recipients') return [{id:'ui-admin',name:'مدیر آزمایشی',phone:'0912***128',isAdmin:true},{id:'ui-customer',name:'خریدار آزمایشی',phone:'0912***129',isAdmin:false}];
   if (path === '/api/admin/sms/messages') return {page:1,total:2,items:[{id:'sms-1',event:'OrderPaid',phone:'0912***129',provider:'ParsGreen',status:'Accepted',createdAtUtc:'2026-10-26T08:00:00Z',attempts:1},{id:'sms-2',event:'Test',phone:'0912***128',provider:'ParsGreen',status:'Unknown',createdAtUtc:'2026-10-26T08:05:00Z',attempts:1}]};
   const ticket={id:'ticket-0',subject:'پرسش درباره زمان ارسال سفارش و پیگیری پاسخ پشتیبانی',customerName:'خریدار با نام بلند آزمایشی',userId:'ui-customer',status:'WaitingForSupport',version:1,updatedAtUtc:'2026-10-26T08:00:00Z'};
@@ -47,7 +48,38 @@ export async function checkMessaging(page, capture) {
   await panel.getByRole('checkbox',{name:'ارسال کد با متن اختصاصی وندوراشاپ',exact:true}).check();
   assert.equal(await panel.getByLabel('نوع کد پارس‌گرین',{exact:true}).count(),0);
   await panel.getByText('مشاهدهٔ پنج متن ثبت‌شدهٔ کدها',{exact:true}).click();
-  assert.equal(await panel.getByLabel('کد ثبت‌نام با شماره',{exact:true}).inputValue(),'کد ثبت‌نام شما در وندوراشاپ: {code}\n\n@vendorashop.ir #{code}');
+  assert.equal(await panel.getByLabel('کد ثبت‌نام با شماره',{exact:true}).inputValue(),'کد ثبت نام شما در وندوراشاپ: {code}\n\n@vendorashop.ir #{code}');
+  assert.equal(await panel.getByRole('button', { name: /^نمونه پیامک:/ }).count(), 19);
+  const tooltip = page.getByRole('tooltip');
+  const registration = panel.getByRole('button', { name: 'نمونه پیامک: کد ثبت‌نام با شماره', exact: true });
+  if (page.viewportSize().width === 390) await registration.tap();
+  else await registration.hover();
+  await tooltip.waitFor();
+  assert.equal(await tooltip.textContent(), 'کد ثبت نام شما در وندوراشاپ: 583164\n\n@vendorashop.ir #583164');
+  const bounds = await tooltip.boundingBox();
+  assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= page.viewportSize().width + 1);
+  await page.keyboard.press('Escape');
+  await tooltip.waitFor({ state: 'hidden' });
+  await page.mouse.move(0, 0);
+  const serviceTest = panel.getByRole('button', { name: 'نمونه پیامک: تست خدماتی', exact: true });
+  if (page.viewportSize().width !== 390) {
+    await page.keyboard.press('Tab');
+    await serviceTest.focus();
+    await tooltip.waitFor();
+    assert.equal(await tooltip.textContent(), serviceTestTemplate);
+    await page.keyboard.press('Escape');
+    await tooltip.waitFor({ state: 'hidden' });
+  }
+  const payment = panel.locator('.admin-discussion-entry').filter({ has: page.getByRole('checkbox', { name: 'پرداخت موفق سفارش', exact: true }) });
+  await payment.getByText('ویرایش متن خدماتی', { exact: true }).click();
+  await payment.getByLabel('متن پیام', { exact: true }).fill('آزمایش {orderNumber} برای {name}');
+  const paymentExample = payment.getByRole('button', { name: 'نمونه پیامک: پرداخت موفق سفارش', exact: true });
+  if (page.viewportSize().width === 390) await paymentExample.tap();
+  else await paymentExample.hover();
+  await tooltip.waitFor();
+  assert.equal(await tooltip.textContent(), 'آزمایش vd-1048 برای علی رضایی');
+  await page.keyboard.press('Escape');
+  await tooltip.waitFor({ state: 'hidden' });
   await capture('sms-branded-otp');
   await panel.getByRole('button',{name:'ذخیره تنظیمات پیامک',exact:true}).click();await panel.getByText('تنظیمات پیامک ذخیره شد.',{exact:true}).waitFor();
   assert.equal(await provider.locator('option[value="Kavenegar"]').evaluate(el=>el.disabled),false);

@@ -80,8 +80,7 @@ public sealed class SmsNotifications(AppDbContext db, TimeProvider time)
         if (occurredAtUtc.HasValue && occurredAtUtc < (rule.EnabledAtUtc ?? policy.ActivatedAtUtc)) return;
         string key = kind + ":" + sourceKey;
         if (db.SmsMessages.Local.Any(x => x.EventKey == key && x.Phone == phone) || await db.SmsMessages.AnyAsync(x => x.EventKey == key && x.Phone == phone, ct)) return;
-        string body = rule.Template;
-        foreach (string variable in new[] { "name", "orderNumber", "amount", "link", "product", "quantity" }) body = body.Replace("{" + variable + "}", values?.GetValueOrDefault(variable) ?? "");
+        string body = SmsPolicy.Render(rule.Template, values);
         db.SmsMessages.Add(new() { Event = kind, EventKey = key, UserId = userId, Phone = phone, Body = body, Provider = policy.Provider,
             SettingsVersion = policy.Version, CreatedAtUtc = time.GetUtcNow().UtcDateTime, NextAttemptAtUtc = time.GetUtcNow().UtcDateTime });
     }

@@ -1,6 +1,9 @@
 using System.Text;
 using System.Globalization;
+using System.Net;
+using System.Net.Http.Json;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Xml;
 using System.Xml.Linq;
 using Application.Interfaces;
@@ -9,12 +12,12 @@ using Microsoft.Extensions.Configuration;
 
 namespace Infrastructure.Auth;
 
-/// <summary>Fixed-host SOAP adapter based on the official WSDL. Never logs bodies, numbers, signatures or OTPs.</summary>
+/// <summary>Uses the fixed REST v2 text endpoint and the existing SOAP OTP and delivery contracts.</summary>
 public sealed class ParsGreenSmsGateway(HttpClient client, IConfiguration configuration) : ISmsGateway
 {
     public string Id => "ParsGreen";
     public bool OtpConfigured => !string.IsNullOrWhiteSpace(configuration["Sms:ParsGreen:Signature"]);
-    public bool TextConfigured => OtpConfigured && !string.IsNullOrWhiteSpace(configuration["Sms:ParsGreen:SenderNumber"]);
+    public bool TextConfigured => OtpConfigured;
     public bool DeliveryConfigured => !string.IsNullOrWhiteSpace(configuration["Sms:ParsGreen:DeliveredCodes"]);
     public bool BrandedOtpConfigured => TextConfigured;
     private static readonly XNamespace Ns = "http://ParsGreen.com/";
@@ -25,7 +28,7 @@ public sealed class ParsGreenSmsGateway(HttpClient client, IConfiguration config
         if (!BrandedOtpConfigured || phone.Length != 11 || !phone.StartsWith("09") || !phone.All(char.IsAsciiDigit)) return null;
         string code = RandomNumberGenerator.GetInt32(1_000_000).ToString("D6", CultureInfo.InvariantCulture);
         var result = await SendTextAsync(phone, SmsCodeTemplates.Render(purpose, code), ct);
-        return (result.Status is "Accepted" or "Delivered") && !string.IsNullOrWhiteSpace(result.ProviderId) ? code : null;
+        return result.Status == "Accepted" ? code : null;
     }
 
     /// <inheritdoc />
@@ -43,17 +46,43 @@ public sealed class ParsGreenSmsGateway(HttpClient client, IConfiguration config
     public async Task<SmsGatewayResult> SendTextAsync(string phone, string text, CancellationToken ct)
     {
         if (!TextConfigured) return new("Failed", ErrorCode: "SMS_NOT_CONFIGURED");
-        XDocument? xml;
-        try { xml = await CallAsync("SendGroupSMS", [new(Ns + "from", configuration["Sms:ParsGreen:SenderNumber"]), new(Ns + "to", new XElement(Ns + "string", phone)),
-            new(Ns + "text", text), new(Ns + "isFlash", false), new(Ns + "udh", ""), new(Ns + "success", 0), new(Ns + "retStr")], ct); }
-        catch (ProviderThrottledException) { return new("Failed", ErrorCode: "SMS_RATE_LIMIT", Retryable: true); }
-        if (xml is null) return new("Unknown", ErrorCode: "SMS_ACCEPTANCE_UNKNOWN");
-        var success = xml.Descendants(Ns + "success").SingleOrDefault()?.Value;
-        var receipt = xml.Descendants(Ns + "retStr").Elements(Ns + "string").SingleOrDefault()?.Value.Trim();
-        if (success == "1" && long.TryParse(receipt, out long id) && id > 0) return new("Accepted", receipt);
-        // A well-formed negative provider result is a rejection; unknown responses are never retried blindly.
-        return int.TryParse(xml.Descendants(Ns + "SendGroupSMSResult").SingleOrDefault()?.Value, out int result) && result < 0
-            ? new("Failed", ErrorCode: "PARSGREEN_REJECTED") : new("Unknown", ErrorCode: "PARSGREEN_RESPONSE_UNRECOGNIZED");
+        var payload = new Dictionary<string, object> { ["SmsBody"] = text, ["Mobiles"] = new[] { phone } };
+        var sender = configuration["Sms:ParsGreen:SenderNumber"];
+        if (!string.IsNullOrWhiteSpace(sender)) payload["SmsNumber"] = sender.Trim();
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://sms.parsgreen.ir/Apiv2/Message/SendSms");
+        request.Headers.TryAddWithoutValidation("Authorization", "BASIC APIKEY:" + configuration["Sms:ParsGreen:Signature"]!.Trim());
+        request.Content = JsonContent.Create(payload);
+        try
+        {
+            using var response = await client.SendAsync(request, ct);
+            if (response.StatusCode == HttpStatusCode.TooManyRequests) return new("Failed", ErrorCode: "SMS_RATE_LIMIT", Retryable: true);
+            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden) return new("Failed", ErrorCode: "PARSGREEN_REJECTED");
+            if (!response.IsSuccessStatusCode) return new("Unknown", ErrorCode: "SMS_ACCEPTANCE_UNKNOWN");
+
+            await using var stream = await response.Content.ReadAsStreamAsync(ct);
+            using var json = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+            var result = json.RootElement;
+            if (result.ValueKind == JsonValueKind.Object && result.TryGetProperty("R_Success", out var success))
+            {
+                if (success.ValueKind == JsonValueKind.False) return new("Failed", ErrorCode: "PARSGREEN_REJECTED");
+                if (success.ValueKind == JsonValueKind.True) return new("Accepted", ReadReceipt(result));
+            }
+            return new("Unknown", ErrorCode: "PARSGREEN_RESPONSE_UNRECOGNIZED");
+        }
+        catch (Exception error) when (!ct.IsCancellationRequested && error is HttpRequestException or TaskCanceledException or JsonException or IOException)
+        {
+            return new("Unknown", ErrorCode: "SMS_ACCEPTANCE_UNKNOWN");
+        }
+    }
+
+    /// <summary>Extracts an optional numeric receipt for the one submitted recipient without retaining provider data.</summary>
+    private static string? ReadReceipt(JsonElement result)
+    {
+        if (!result.TryGetProperty("DataList", out var items) || items.ValueKind != JsonValueKind.Array || items.GetArrayLength() != 1 ||
+            items[0].ValueKind != JsonValueKind.Object || !items[0].TryGetProperty("ReqID", out var receipt)) return null;
+        var value = receipt.ValueKind switch { JsonValueKind.String => receipt.GetString(), JsonValueKind.Number => receipt.GetRawText(), _ => null };
+        return long.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out long id) && id > 0 ? id.ToString(CultureInfo.InvariantCulture) : null;
     }
 
     /// <inheritdoc />

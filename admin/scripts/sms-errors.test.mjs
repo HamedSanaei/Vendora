@@ -7,7 +7,8 @@ test('missing verified phones and missing provider settings have distinct action
   assert.match(phone, /شمارهٔ موبایل تأییدشده ندارد/);
   assert.match(phone, /همین پنل/);
   assert.match(smsErrorMessage('SMS_TEST_OWN_PHONE_ONLY', 400, 'fa'), /مدیر فعلی/);
-  assert.match(smsErrorMessage('SMS_NOT_CONFIGURED', 503, 'fa'), /SenderNumber/);
+  assert.match(smsErrorMessage('SMS_NOT_CONFIGURED', 503, 'fa'), /شمارهٔ فرستنده اختیاری است/);
+  assert.match(smsErrorMessage('SMS_NOT_CONFIGURED', 503, 'en'), /sender number is optional/);
   assert.notEqual(phone, smsErrorMessage('SMS_NOT_CONFIGURED', 503, 'fa'));
 });
 

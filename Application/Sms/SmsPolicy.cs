@@ -21,11 +21,15 @@ public sealed record SmsSettingsView(long Version, bool Enabled, string Provider
     /// <summary>Null on legacy requests preserves the saved sending mode instead of silently disabling it.</summary>
     public bool? ParsGreenBrandedOtp { get; init; }
     public IReadOnlyList<SmsOtpTemplateView>? OtpTemplates { get; init; }
+    public string? ServiceTestTemplate { get; init; }
 }
 
 /// <summary>One provider-neutral policy and approved template vocabulary. All credentials stay in Infrastructure.</summary>
 public static partial class SmsPolicy
 {
+    public const string ServiceTestTemplate = "این پیام برای آزمایش اتصال پیامک وندوراشاپ ارسال شده است.";
+    private const string Storefront = "https://" + SmsCodeTemplates.Domain + "/fa/";
+
     public static readonly IReadOnlyDictionary<string, string> LegacyTemplates = new Dictionary<string, string> {
         ["OrderPaid"] = "{name} عزیز، پرداخت سفارش {orderNumber} به مبلغ {amount} تومان تأیید شد. {link}",
         ["OrderShipped"] = "سفارش {orderNumber} ارسال شد. جزئیات و پیگیری: {link}",
@@ -42,12 +46,30 @@ public static partial class SmsPolicy
         ["AdminPaymentReview"] = "پرداخت سفارش {orderNumber} دریافت شده اما نیازمند بررسی دستی است. {link}"
     };
 
-    public static readonly IReadOnlyDictionary<string, string> Templates = LegacyTemplates.ToDictionary(pair => pair.Key, pair => "وندوراشاپ\n" + (pair.Key switch
+    /// <summary>Approved white texts with fixed link paths and placeholders only for values that vary by event.</summary>
+    public static readonly IReadOnlyDictionary<string, string> Templates = new Dictionary<string, string>
+    {
+        ["OrderPaid"] = "وندوراشاپ {name} عزیز، پرداخت سفارش {orderNumber} به مبلغ {amount} تومان تأیید شد. " + Storefront + "order/{orderNumber}",
+        ["OrderShipped"] = "وندوراشاپ سفارش {orderNumber} ارسال شد. جزئیات و پیگیری: " + Storefront + "order/{orderNumber}",
+        ["OrderDelivered"] = "وندوراشاپ سفارش {orderNumber} تحویل شد. سپاس از خرید شما. " + Storefront + "order/{orderNumber}",
+        ["OrderCancelled"] = "وندوراشاپ سفارش {orderNumber} لغو شد. جزئیات: " + Storefront + "order/{orderNumber}",
+        ["TicketReply"] = "وندوراشاپ پشتیبانی به تیکت شما پاسخ داد. مشاهده پاسخ: " + Storefront + "account/tickets",
+        ["PasswordChanged"] = "وندوراشاپ رمز عبور حساب شما تغییر کرد. اگر شما نبوده اید با پشتیبانی تماس بگیرید.",
+        ["PhoneChanged"] = "وندوراشاپ شماره همراه حساب شما تغییر کرد. اگر شما نبوده اید با پشتیبانی تماس بگیرید.",
+        ["PaymentReview"] = "وندوراشاپ پرداخت سفارش {orderNumber} دریافت شد؛ سفارش نیازمند بررسی پشتیبانی است. " + Storefront + "order/{orderNumber}",
+        ["AdminOrderPaid"] = "وندوراشاپ سفارش پرداخت شده جدید: {orderNumber}، مبلغ {amount} تومان. " + Storefront + "admin/orders",
+        ["AdminTicketNew"] = "وندوراشاپ تیکت پشتیبانی جدید ثبت شد. " + Storefront + "admin/tickets",
+        ["AdminTicketReply"] = "وندوراشاپ مشتری به تیکت پشتیبانی پاسخ داد. " + Storefront + "admin/tickets",
+        ["AdminLowStock"] = "وندوراشاپ موجودی قابل فروش {product} کم است: {quantity} عدد. " + Storefront + "admin/product-list",
+        ["AdminPaymentReview"] = "وندوراشاپ پرداخت سفارش {orderNumber} دریافت شده اما نیازمند بررسی دستی است. " + Storefront + "admin/orders"
+    };
+
+    private static string FormerBrandedTemplate(string kind) => "وندوراشاپ\n" + (kind switch
     {
         "PasswordChanged" => "رمز عبور حساب شما تغییر کرد. اگر شما نبوده‌اید با پشتیبانی تماس بگیرید.",
         "PhoneChanged" => "شماره همراه حساب شما تغییر کرد. اگر شما نبوده‌اید با پشتیبانی تماس بگیرید.",
-        _ => pair.Value
-    }));
+        _ => LegacyTemplates[kind]
+    });
 
     /// <summary>Reads safe defaults without writing or activating automatic messages.</summary>
     public static async Task<SmsSettings> ReadAsync(AppDbContext db, CancellationToken ct) =>
@@ -59,10 +81,15 @@ public static partial class SmsPolicy
         var saved = JsonSerializer.Deserialize<List<SmsRule>>(value.RulesJson) ?? [];
         return Templates.Select(pair => {
             var rule = saved.SingleOrDefault(x => x.Event == pair.Key);
-            // Upgrade only exact former defaults; customized text, activation dates and queued snapshots remain intact.
-            return rule is null ? new(pair.Key, false, pair.Value) : rule.Template == LegacyTemplates[pair.Key] ? rule with { Template = pair.Value } : rule;
+            if (rule is null) return new SmsRule(pair.Key, false, pair.Value);
+            return rule.Template == LegacyTemplates[pair.Key] || rule.Template == FormerBrandedTemplate(pair.Key)
+                ? rule with { Template = pair.Value } : rule;
         }).ToList();
     }
+
+    /// <summary>Substitutes event values once so placeholder-shaped customer or product names are treated as literal text.</summary>
+    public static string Render(string template, IReadOnlyDictionary<string, string>? values) =>
+        Variables().Replace(template, match => values?.GetValueOrDefault(match.Groups[1].Value) ?? "");
 
     /// <summary>Normalizes phone assertions before comparison, never accepting a partial/foreign number.</summary>
     public static string Phone(string? input)

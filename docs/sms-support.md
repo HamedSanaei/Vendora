@@ -4,15 +4,17 @@
 
 ### Registered Vendorashop texts and branded ParsGreen OTP
 
-`AddParsGreenBrandedOtpMode` adds one non-destructive Boolean setting, default **off**. Existing installations continue using ParsGreen `SendOtp` until an administrator explicitly selects **Use Vendorashop branded OTP text** and saves SMS settings. Enable it only after ParsGreen has approved the submitted WhiteText patterns and the authorized sender has been configured with `Sms__ParsGreen__SenderNumber` alongside `Sms__ParsGreen__Signature`. Configuration readiness does not certify provider approval or actual delivery. No live settings, credentials or production records are changed by this implementation.
+See the [complete list of 19 ParsGreen templates and examples](parsgreen-sms-templates.md). In the SMS settings tab, hover over the eye icon beside a template to preview its message with fictional values. The icon also works with keyboard focus and touch.
 
-In branded mode, the adapter generates a cryptographically random ASCII six-digit code and sends one `SendGroupSMS` request to one validated recipient. There is no retry or fallback to legacy OTP after ambiguous acceptance. Only a positive acceptance receipt returns the ephemeral code to the existing hash-only challenge flow. Plaintext code-bearing messages are never placed in the outbox/audit body. Existing five-minute expiry, shared budgets, one-use verification and account ownership checks remain in force.
+The existing **Use Vendorashop branded OTP text** setting is off by default. When off, ParsGreen generates codes through `SendOtp`. When enabled, Vendora uses the five event-specific WhiteText patterns. Both modes use the existing server-side `Sms__ParsGreen__Signature`.
+
+In branded mode, the adapter generates a cryptographically random ASCII six-digit code and sends one REST v2 `Message/SendSms` request to one validated recipient. `R_Success: true` returns the ephemeral code to the existing hash-only challenge flow. An ambiguous response does not trigger a retry or fall back to `SendOtp`. Plaintext codes are kept out of the outbox and audit log. Existing five-minute expiry, shared budgets, one-use verification and account ownership checks remain in force.
 
 The five immutable template previews are returned by the server. The exact first lines are:
 
 ```text
 کد ورود شما به وندوراشاپ: {code}
-کد ثبت‌نام شما در وندوراشاپ: {code}
+کد ثبت نام شما در وندوراشاپ: {code}
 کد تأیید شماره همراه شما در وندوراشاپ: {code}
 کد بازیابی رمز عبور شما در وندوراشاپ: {code}
 کد آزمایشی پیامک وندوراشاپ: {code}
@@ -20,7 +22,7 @@ The five immutable template previews are returned by the server. The exact first
 
 Each message ends with a blank line and `@vendorashop.ir #{code}`, repeating the same code. No footer may follow this final line. Registration wording is selected server-side for a phone without a verified owner; login/registration retain their shared challenge and the public response does not reveal account existence. Administrator sign-in and nonexistent-account recovery still use decoy responses, with the same six-digit length in branded mode. Kavenegar keeps its approved Lookup template and is unaffected by the ParsGreen-specific setting.
 
-Notification defaults now match the fourteen submitted branded service texts, including the service test. Only exact former default texts are upgraded on read; custom templates, enabled flags, activation times and already-queued message snapshots are preserved. Review customized texts against provider-approved patterns before enabling them. Read-only OTP previews intentionally prevent accidental divergence from the registered templates; adding an arbitrary textarea would not configure provider approval.
+The fourteen approved service texts include the service test, with the literal `https://vendorashop.ir/fa/` URLs and the approved destination paths. The order number varies in the customer order URL. Only exact former defaults (including the prior branded defaults) are upgraded on read. Custom templates, enabled flags, activation times and already-queued message snapshots are preserved.
 
 The storefront login, recovery and profile forms and the admin verification/test forms support consent-based WebOTP where available. Listeners start before the SMS request, buffer fast arrivals until the challenge is ready and cancel on failure, manual verification, navigation or a two-minute timeout. They fill fields without automatically submitting them. Safari/native suggestions keep `autocomplete="one-time-code"`, including distribution of a complete suggested code across the existing digit inputs. Manual entry remains available when permission is denied or the browser lacks support. The independent frontend build contexts each contain the small dependency-free transport helper; its lifecycle tests exercise both copies. Autofill requires the page hostname to match the SMS domain; legacy storefront hostnames can still use manual entry. Real handset autofill and carrier approval require live testing and are not claimed by browser mocks.
 
@@ -37,7 +39,7 @@ Sms__ParsGreen__DeliveredCodes
 Sms__ParsGreen__FailedDeliveryCodes
 ```
 
-`Signature` enables ParsGreen OTP requests. ParsGreen service messages also need an authorized sender number. The UI exposes configuration booleans, not credentials. Service templates, ParsGreen OTP type/pattern ID, selected verified administrators and low-stock threshold are database settings. Both ParsGreen and Kavenegar adapters are installed. There is no automatic provider fallback.
+`Signature` enables ParsGreen OTP and REST v2 text requests. Text uses HTTPS `POST /Apiv2/Message/SendSms` with the API key in the redacted authorization header. The JSON body contains `SmsBody` and `Mobiles`; `SmsNumber` is sent only if configured. With a blank or missing `SenderNumber`, ParsGreen selects the sending route. A successful response may include a numeric `DataList[].ReqID` for delivery polling. The UI exposes readiness booleans and safe outcomes. Service templates, OTP type/pattern ID, selected verified administrators and low-stock threshold are database settings.
 
 ### Kavenegar
 
@@ -79,7 +81,7 @@ ParsGreen contract references inspected:
 
 - [Official SOAP service](https://login.parsgreen.com/Api/SendSMS.asmx)
 - [SendOtp](https://login.parsgreen.com/Api/SendSMS.asmx?op=SendOtp)
-- [SendGroupSMS](https://login.parsgreen.com/Api/SendSMS.asmx?op=SendGroupSMS)
+- [ParsGreen REST/SMS service](https://www.parsgreen.com/Web-Service/وب-سرویس-SMS)
 - [GetDelivery](https://login.parsgreen.com/Api/SendSMS.asmx?op=GetDelivery)
 - [WSDL](https://login.parsgreen.com/Api/SendSMS.asmx?WSDL)
 
@@ -93,7 +95,7 @@ A saved phone number is not necessarily verified. If there is no verified phone 
 
 The form reuses `GET /api/account/me` and the existing authenticated `POST /api/account/phone/send` and `/confirm` endpoints with the admin bearer session. It never submits a destination phone, user ID or verified flag. Ownership changes only after a valid code; the current account is re-read before showing success, and administrator recipients refresh without discarding settings drafts. Verification and delivery tests share the resend countdown and server budget. A delivery test still cannot verify ownership or create an administrator session.
 
-An empty SMS history following a rejected test is consistent with pre-send validation; it is not evidence of a carrier delivery failure. ParsGreen OTP needs only the configured Signature plus valid OTP type/pattern settings; the separate service-message test additionally requires `Sms__ParsGreen__SenderNumber`. Missing delivery-status mappings do not block sends. The UI distinguishes these failures, preserves drafts and requires settings to be saved before test/send operations. A provider acceptance error is ambiguous: inspect history before retrying, since a network timeout can occur after an SMS was accepted.
+An empty SMS history following a rejected test can indicate pre-send validation. Both ParsGreen test modes use `Signature`; the default OTP mode also uses the configured OTP type and pattern. An empty sender number or missing delivery-status mappings do not block sending. A network timeout can occur after the carrier accepts an SMS, so the outbox records the outcome as unknown and does not resend it.
 
 ## Data and security
 

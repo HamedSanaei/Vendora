@@ -29,7 +29,11 @@ public static class SmsManagement
             return new(policy.Version, policy.Enabled, policy.Provider, policy.PhoneLogin, policy.PasswordRecovery, policy.PhoneVerification,
                 policy.OtpType, policy.PatternId, policy.LowStockThreshold, SmsPolicy.Rules(policy), JsonSerializer.Deserialize<List<SmsRecipient>>(policy.RecipientsJson) ?? [],
                 new[] { "ParsGreen", "Kavenegar" }.Select(id => { var gateway = gateways.SingleOrDefault(x => x.Id == id); return new SmsProviderView(id, gateway is not null, gateway?.OtpConfigured == true, gateway?.TextConfigured == true, gateway?.DeliveryConfigured == true, gateway?.BrandedOtpConfigured == true); }).ToList(), duplicates)
-                { ParsGreenBrandedOtp = policy.ParsGreenBrandedOtp, OtpTemplates = SmsCodeTemplates.Texts.Select(pair => new SmsOtpTemplateView(pair.Key.ToString(), pair.Value + "\n\n@" + SmsCodeTemplates.Domain + " #{code}")).ToList() };
+                {
+                    ParsGreenBrandedOtp = policy.ParsGreenBrandedOtp,
+                    OtpTemplates = SmsCodeTemplates.Texts.Select(pair => new SmsOtpTemplateView(pair.Key.ToString(), SmsCodeTemplates.Pattern(pair.Key))).ToList(),
+                    ServiceTestTemplate = SmsPolicy.ServiceTestTemplate
+                };
         }
     }
 
@@ -81,7 +85,7 @@ public static class SmsManagement
             if (request.Test && request.UserId != request.ActorId) throw new AccountingException("SMS_TEST_OWN_PHONE_ONLY", 400);
             var user = await db.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == request.UserId && x.PhoneNumberConfirmed, token) ?? throw new AccountingException("SMS_VERIFIED_RECIPIENT_REQUIRED", 400);
             if (await PhoneOwnership.ResolveAsync(db, SmsPolicy.Phone(user.PhoneNumber), token) != user.Id) throw new AccountingException("PHONE_OWNERSHIP_CONFLICT",409);
-            string text = request.Test ? "این پیام برای آزمایش اتصال پیامک وندوراشاپ ارسال شده است." : request.Text.Trim();
+            string text = request.Test ? SmsPolicy.ServiceTestTemplate : request.Text.Trim();
             if (text.Length < 1 || text.Length > gateway.MaxTextLength) throw new AccountingException("SMS_INVALID_TEXT", 400);
             var row = new SmsMessage { ActorId = request.ActorId, UserId = user.Id, Phone = SmsPolicy.Phone(user.PhoneNumber), Body = text,
                 Event = request.Test ? "Test" : "Manual", EventKey = "manual:" + request.ActorId + ":" + request.Key, Provider = policy.Provider,
