@@ -1,0 +1,477 @@
+$(window).on('load', function () {
+
+    setTimeout(RemoveLoading, 1000);
+});
+var maxinput = 1000000000;
+var mininput = 1000;
+
+function RemoveLoading() {
+    $('.loading').fadeOut();
+}
+
+$(document).ajaxSend(function (evt, request, settings) {
+    if (settings.data !== 'operation=readPublicNotification' && !settings.skipGlobalLoading) {
+        $('.popup').css('z-index', 1111);
+        $('.loading').css('z-index', 1111113);
+        $('.loading').fadeIn();
+    }
+}).ajaxStop(function () {
+    $('.loading').fadeOut();
+    // $('.popup').css('z-index', 1111112);
+    $('.popup').css('z-index', 1111);
+    $('form').find('button[type=submit]').prop("disabled", false);
+});
+
+
+$(document).ready(function () {
+    $("input[data-type=currency]").on('keyup', function () {
+        formatCurrency($(this));
+    });
+    $("input[data-type=currency]").on('blur', function () {
+        formatCurrency($(this), "blur");
+    });
+
+    $("input[type='number']").on({
+        keyup: function (e) {
+            var input = e.target.value;
+            input = input.replace(/۰/g, '0');
+            input = input.replace(/۱/g, '1');
+            input = input.replace(/۲/g, '2');
+            input = input.replace(/۳/g, '3');
+            input = input.replace(/۴/g, '4');
+            input = input.replace(/۵/g, '5');
+            input = input.replace(/۶/g, '6');
+            input = input.replace(/۷/g, '7');
+            input = input.replace(/۸/g, '8');
+            input = input.replace(/۹/g, '9');
+            input = input.replace(/ /g, '');
+            e.target.value = input;
+        },
+    });
+
+    $("input[data-type=currency]").on({
+        keyup: function (e) {
+            var input = e.target.value;
+            input = input.replace(/۰/g, '0');
+            input = input.replace(/۱/g, '1');
+            input = input.replace(/۲/g, '2');
+            input = input.replace(/۳/g, '3');
+            input = input.replace(/۴/g, '4');
+            input = input.replace(/۵/g, '5');
+            input = input.replace(/۶/g, '6');
+            input = input.replace(/۷/g, '7');
+            input = input.replace(/۸/g, '8');
+            input = input.replace(/۹/g, '9');
+            e.target.value = input;
+        },
+    });
+
+    $("input[data-type='number']").on('keyup', function (e) {
+        var input = e.target.value;
+        var persianToEnglishMap = {
+            '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
+            '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9'
+        };
+
+        // تبدیل اعداد فارسی به انگلیسی
+        input = input.split('').map(function (char) {
+            return persianToEnglishMap[char] || char;
+        }).join('');
+
+        // حذف تمام کاراکترهای غیر عددی (فقط اعداد انگلیسی و فارسی مجازند)
+        input = input.replace(/[^0-9]/g, '');
+
+        // به‌روزرسانی مقدار ورودی با اعداد معتبر
+        e.target.value = input;
+    });
+
+    // $('form').on('submit', function (e) {
+    //     // $('.inputStatus').fadeOut();
+    //     // e.preventDefault();
+    //     var valid = true;
+    //     for (i = 0; i < $(this)[0].length; i++) {
+    //         $('.' + $(this)[0][i].name + '_span').css("visibility", "hidden");
+    //         $('#' + $(this)[0][i].name + '_span').css("visibility", "hidden");
+    //         if ($(this)[0][i].attributes.data_required !== undefined && $(this)[0][i].attributes.data_required.value === 'true' && $(this)[0][i].value === "") {
+    //             e.preventDefault();
+    //             $(`.${$(this)[0][i].name}_span`).css("visibility", "visible");
+    //             $(`.${$(this)[0][i].name}_span`).css('color', '#FF6085');
+    //             $(`.${$(this)[0][i].name}_span`).html($(this)[0][i].attributes.validate_name.value + " اجباری است ");
+    //             valid = false;
+    //         }
+    //     }
+    //     if (valid) {
+    //         $(this).find('button[type=submit]').prop("disabled", true)
+    //     }
+    // });
+    // // $('form').on('submit', function () {
+    //     $(this).find('button[type=submit]').prop("disabled", true)
+    // });
+    $('.closePopUp').on('click', function () {
+        $('.popup:not(.popup-rules-mandatory)').fadeOut();
+        // $("body").css('overflow','visible')
+        $('.inputStatus').css("visibility", "hidden");
+    });
+
+    $('.popup').on('click', function () {
+        $('.inputStatus').css("visibility", "hidden");
+    });
+
+    // $("#hprofile").click(function () {
+    //     $("#menuprofile").slideToggle();
+    //     //     	$("#userAccount").slideToggle();
+    // });//hprofile
+
+    // $('#userAccount').click(function () {
+    //     $("#menuNotic").slideToggle();
+    // });//clise the
+
+    $(".popuptime div").click(function (event) {
+        event.stopPropagation();
+    });
+
+    $("#navbar").click(function () {
+        $(".popup-menus-bg").fadeIn();
+        $(".part2-right > div").animate({"right": "0px"}, {queue: false, ducration: 300});
+		$(".part2 div.part2-right button.part2-right-tel").fadeIn();
+        // $(".part2 div.part2-right button.part2-right-tel").css({"display": "block"});
+
+        $(".popup-menus-bg").click(function () {
+            $(".part2-right > div").animate({"right": "-100%"}, {queue: false, ducration: 300});
+			$(".part2 div.part2-right button.part2-right-tel").fadeOut();
+            // $(".part2 div.part2-right button.part2-right-tel").css({"display": "none"});
+            $(".popup-menus-bg").fadeOut();
+        });
+    });
+
+    $("#hprofile #menuprofile").click(function (event) {
+        event.stopPropagation();
+    });
+
+});//doc is ready
+
+
+function formValidate(formID, refresh = true) {
+
+    let form = $(`form${formID}`);
+    let returnResponse = false;
+
+    // اعتبارسنجی در لحظه روی فیلدهای مختلف
+    form.find('input, textarea, select').on('input change blur', function () {
+        $(this).valid();
+    });
+    // هندل کردن ارسال فرم
+    form.on('submit', function (e) {
+        let validator = $(this).data('validator');
+        const validateAllFields = form.attr('data-validate-all-fields') === '1';
+        let prevIgnore = validator ? validator.settings.ignore : undefined;
+        if (validator && validateAllFields) {
+            validator.settings.ignore = [];
+        }
+        if (!$(this).valid()) {
+            if (validator && validateAllFields) {
+                validator.settings.ignore = prevIgnore;
+            }
+            e.preventDefault();
+            return false;
+        }
+        if (validator && validateAllFields) {
+            validator.settings.ignore = prevIgnore;
+        }
+        if (form.attr('data-skip-ajax-validation') === '1') {
+            return;
+        }
+        e.preventDefault();
+
+            var formData = new FormData(form[0]);
+            formData.append('type', 'ajax-validation');
+            $.ajax({
+                url: form.attr('action'),
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+
+                success: function (response) {
+                    if (refresh) {
+                        form.off('submit').submit();
+                    }
+                    returnResponse = true;
+                },
+
+                error: function (response) {
+                    // پاک کردن ارورهای قبلی
+                    $('span.empty').remove();
+                    var json = response.responseJSON;
+                    if (!json && response.responseText) {
+                        try {
+                            json = JSON.parse(response.responseText);
+                        } catch (parseError) {
+                            json = null;
+                        }
+                    }
+                    if (json && json.errors !== undefined) {
+                        $.each(json.errors, function (key, value) {
+
+                            var newElement = `<span id="${key}-error" class="${key}_span inputStatus empty">${value[0]}</span>`;
+
+                            if (key === 'phone' || key === 'area_code') {
+                                // برای فیلدهای خاص
+                                form.find(`div.inputphonecontent`).after(newElement);
+
+                            } else if (form.find(`input[name="${key}"]`).attr('type') === 'file') {
+                                form.find(`input[name="${key}"]`).parent(`label.frmfile`).after(newElement);
+
+                            } else {
+                                if (key.indexOf('.') != -1) {
+                                    key = key.replace('.', '[');
+                                    key += ']';
+                                }
+                                // فیلدهای معمولی
+                                form.find(`input[name="${key}"]`).after(newElement);
+                                form.find(`select[name="${key}"]`).after(newElement);
+                                form.find(`textarea[name="${key}"]`).after(newElement);
+                            }
+                        });
+                    } else if (json && (json.message || json.status)) {
+                        VanillaToasts.create({
+                            positionClass: 'topCenter',
+                            timeout: 8000,
+                            type: json.status || 'error',
+                            title: '',
+                            text: json.message || '',
+                            icon: (json.status || 'error') === 'error' ? '/assets/icons/close.svg' : '/assets/icons/tik-green.svg'
+                    });
+                    } else {
+                        VanillaToasts.create({
+                            positionClass: 'topCenter',
+                            timeout: 8000,
+                            type: 'error',
+                            title: '',
+                            text: 'خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.',
+                            icon: '/assets/icons/close.svg'
+                        });
+                    }
+
+                    returnResponse = false;
+                }
+            });
+    });
+
+    return returnResponse;
+}
+
+
+function formatNumber(n) {
+    return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
+
+// function formatCurrency(input, blur) {
+//     var input_val = input.val();
+//     if (input_val === "") {
+//         return;
+//     }
+//     var original_len = input_val.length;
+//     var caret_pos = input.prop("selectionStart");
+//     if (input_val.indexOf(".") >= 0) {
+//         var decimal_pos = input_val.indexOf(".");
+//         var left_side = input_val.substring(0, decimal_pos);
+//         var right_side = input_val.substring(decimal_pos);
+//         left_side = formatNumber(left_side);
+//         right_side = formatNumber(right_side);
+//         if (blur === "blur") {
+//             right_side += "00";
+//         }
+//         right_side = right_side.substring(0, 2);
+//         input_val = left_side + "." + right_side;
+//     } else {
+//         input_val = formatNumber(input_val);
+//
+//     }
+//     input.val(input_val);
+//     var updated_len = input_val.length;
+//     caret_pos = updated_len - original_len + caret_pos;
+//     input[0].setSelectionRange(caret_pos, caret_pos);
+// }
+
+function formatCurrency(input, changeVal = true) {
+    // const inputField = document.getElementById('numberInput');
+    let value;
+    if (changeVal) {
+        value = input.val().replace(/[^0-9]/g, '');
+    } else {
+        value = input.replace(/[^0-9]/g, '');
+    }
+
+    if (value.length > 1 && value.startsWith('0')) {
+        value = value.substring(1);
+    }
+
+
+    value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+
+    if (changeVal) {
+        // inputField.value = value;
+        input.val(value)
+    } else {
+        return value;
+    }
+}
+
+// Helper function to format number (for example, adding commas)
+function formatNumber(num) {
+    if (num === "") return "";
+    return parseInt(num, 10).toLocaleString("en-US");
+}
+
+
+// function Validate(form) {
+//     $('form').find('button[type=submit]').removeAttr('disabled');
+//     var validate = false;
+//     for (i = 0; i < form[0].length; i++) {
+//         if (form[0][i].attributes.data_required !== undefined && form[0][i].attributes.data_required.value === 'true' && form[0][i].value === "") {
+//             validate = true;
+//         }
+//         if (form[0][i].classList.contains('Error')) {
+//             validate = true;
+//         }
+//     }
+//     if (!validate) {
+//         return true;
+//     } else {
+//         return false;
+//     }
+// }
+
+function download(url,transactionID) {
+    // var time = (new Date).getTime();
+    var a = $("<a style='display:none' id='js-downloder'>")
+        .attr("href", url)
+        .attr("download", `TabaPay-Receipt-${transactionID}.png`)
+        .appendTo("body");
+
+    a[0].click();
+
+    a.remove();
+}
+
+//
+// function CheckValidity(input) {
+//     if (!input.checkValidity()) {
+//         input.setCustomValidity("validation error!!")
+//     }
+// }
+
+
+function openPanelPopup(selector) {
+    $("#menuShopSwitcher, #menuprofile, #menuNotic").stop(true, true).slideUp();
+    $("body").addClass("is-popup-open");
+    $(selector).fadeIn().css('display', 'flex');
+}
+
+function closePanelPopups() {
+    $("body").removeClass("is-popup-open");
+}
+
+function ShowPopUp(PopupClass) {
+    openPanelPopup("." + PopupClass);
+}//end ShowPopUp
+
+$(function () {
+    $(document).on('click', '.popup:not(.popup-create-success-creditcard):not(.popup-rules-mandatory)', function (e) {
+        if (e.target === this) {
+            $(this).fadeOut();
+            closePanelPopups();
+        }
+    });
+    $(document).on('click', '.popup > div', function (e) {
+        e.stopPropagation();
+    });
+    $(document).on('click', '.closePopUp', function () {
+        closePanelPopups();
+    });
+});
+
+// Function Copy Text
+function CopyToClipboard(containerid) {
+    var element = document.getElementById(containerid);
+    var range;
+    if (document.selection) {
+        range = document.body.createTextRange();
+        range.moveToElementText(element);
+        range.select().createTextRange();
+        document.execCommand("copy");
+    } else if (window.getSelection) {
+        range = document.createRange();
+        range.selectNode(element);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand("copy");
+    }//end else if
+
+    $("#tooltip" + containerid).fadeIn();
+    setTimeout(function () {
+        $("#tooltip" + containerid).fadeOut();
+    }, 1000);
+}
+
+
+function toggleLi(id) {
+    const container = $('#FB-li' + id + ' > div:not(:first-of-type)');
+    const isOpen = container.css('maxHeight') !== '0px' && container.css('maxHeight') !== '';
+    const arrowIcon = $('#FB-li' + id + ' .toggleBtnIcon');
+
+    if (isOpen) {
+        // بسته‌سازیش
+        container.css('maxHeight', '0');
+        arrowIcon.removeClass('rotate-up').addClass('rotate-down');
+    } else {
+        // بازسازیش
+        const fullHeight = container.prop('scrollHeight') + 'px';
+        container.css('maxHeight', fullHeight);
+        arrowIcon.removeClass('rotate-down').addClass('rotate-up');
+    }
+}
+
+
+
+
+$(document).ready(function () {
+    var oldDisplayStyles = [];
+
+    // تابع مشاهده‌گر تغییرات
+    var observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                var target = $(mutation.target);
+                var index = $('.popup').index(target);
+                var newDisplayStyle = target.css('display');
+
+                if (newDisplayStyle !== oldDisplayStyles[index]) {
+                    if (newDisplayStyle === 'flex') {
+
+                        $("body").css('overflow', 'hidden')
+
+                    } else if (newDisplayStyle === 'none') {
+
+                        $("body").css('overflow', 'visible')
+                    }
+                    oldDisplayStyles[index] = newDisplayStyle;
+                }
+            }
+        });
+    });
+
+    // تعیین عناصر هدف برای مشاهده
+    var targets = document.querySelectorAll('.popup');
+    targets.forEach(function (target, index) {
+        observer.observe(target, {
+            attributes: true, // پایش تغییرات در ویژگی‌ها
+            attributeOldValue: true // ذخیره مقدار قبلی ویژگی‌ها
+        });
+        oldDisplayStyles[index] = $(target).css('display');
+
+    });
+
+});

@@ -47,6 +47,8 @@ function PaymentCheckoutContent() {
     totals,
     provider,
     setProvider,
+    availability,
+    orderNumber,
     notes,
     setNotes,
     phase,
@@ -153,20 +155,22 @@ function PaymentCheckoutContent() {
 
             <section className="rounded-[20px] border border-vd-line bg-white p-4 md:p-6">
               <h2 className="text-lg font-extrabold text-ink">{isFa ? "انتخاب درگاه پرداخت" : "Choose a payment gateway"}</h2>
-              <p className="mt-1 text-xs leading-6 text-vd-muted">{isFa ? "پس از ثبت سفارش، وضعیت انتقال به درگاه نمایش داده می‌شود." : "A gateway handoff state appears after the order is created."}</p>
+              <p className="mt-1 text-xs leading-6 text-vd-muted">{isFa ? "پس از ثبت سفارش به صفحهٔ پرداخت تاباپی منتقل می‌شوید." : "After placing the order you will be sent to TabaPay."}</p>
               <div className="mt-5 grid gap-3 md:grid-cols-2">
-                {(["zarinpal", "bankMelli"] as const).map((paymentProvider) => (
-                  <PaymentMethodCard
-                    key={paymentProvider}
-                    provider={paymentProvider}
-                    locale={locale}
-                    selected={provider === paymentProvider}
-                    onSelect={() => setProvider(paymentProvider)}
-                    state={busy ? "disabled" : phase === "error" && provider === paymentProvider ? "error" : provider === paymentProvider ? "selected" : "default"}
-                    size="regular"
-                  />
-                ))}
+                <PaymentMethodCard
+                  provider="tabapay"
+                  locale={locale}
+                  selected
+                  onSelect={() => setProvider("tabapay")}
+                  state={busy || !availability?.available ? "disabled" : "selected"}
+                  size="regular"
+                />
               </div>
+              {availability?.sandbox && <p className="mt-3 text-sm font-bold text-vd-warning">{isFa ? "محیط آزمایشی تاباپی" : "TabaPay sandbox"}</p>}
+              {!availability?.available && <p className="mt-3 text-sm text-vd-muted" role="status">
+                {availability ? (isFa ? "درگاه پرداخت در حال حاضر در دسترس نیست." : "The payment gateway is currently unavailable.")
+                  : (isFa ? "در حال بررسی درگاه…" : "Checking gateway availability…")}
+              </p>}
             </section>
 
             <section className="rounded-[20px] border border-vd-line bg-white p-4 md:p-6">
@@ -186,6 +190,10 @@ function PaymentCheckoutContent() {
             {phase === "error" ? (
               <PaymentNotice locale={locale} state="error">
                 <span>{errorMessage}</span>
+                {orderNumber && <Link className="vd-focus mt-2 block min-h-11 rounded-sm font-extrabold underline"
+                  href={withLocalePath(`/order/${encodeURIComponent(orderNumber)}`, locale)}>
+                  {isFa ? "مشاهدهٔ سفارش و وضعیت پرداخت" : "View order and payment status"}
+                </Link>}
                 <button type="button" onClick={() => void submit()} className="vd-focus mt-2 block min-h-11 rounded-sm font-extrabold underline">
                   {isFa ? "تلاش دوباره" : "Try again"}
                 </button>
@@ -199,6 +207,7 @@ function PaymentCheckoutContent() {
               totals={totals}
               shippingMethodTitle={shippingTitle}
               provider={provider}
+              unavailable={!availability?.available}
               phase={phase}
               onSubmit={() => void submit()}
               className="hidden lg:sticky lg:top-5 lg:block"
@@ -208,6 +217,7 @@ function PaymentCheckoutContent() {
               totals={totals}
               shippingMethodTitle={shippingTitle}
               provider={provider}
+              unavailable={!availability?.available}
               phase={phase}
               onSubmit={() => void submit()}
               className="lg:hidden"
@@ -220,7 +230,7 @@ function PaymentCheckoutContent() {
         label={isFa ? "مبلغ قابل پرداخت" : "Payable now"}
         value={formatPrice(totals.payable, locale)}
         action={(
-          <VendoraButton type="button" size="lg" className="min-w-[166px]" disabled={busy || !provider} onClick={() => void submit()}>
+          <VendoraButton type="button" size="lg" className="min-w-[166px]" disabled={busy || !availability?.available} onClick={() => void submit()}>
             {phase === "submitting" ? (isFa ? "در حال ثبت…" : "Submitting…") : phase === "redirecting" ? (isFa ? "در حال انتقال…" : "Redirecting…") : phase === "error" ? (isFa ? "تلاش دوباره" : "Try again") : (isFa ? "پرداخت و ثبت" : "Pay and place order")}
           </VendoraButton>
         )}

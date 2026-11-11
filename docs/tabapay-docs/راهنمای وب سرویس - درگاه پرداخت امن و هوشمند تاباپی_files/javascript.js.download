@@ -1,0 +1,493 @@
+function convertPersianNumberToEnglish(text) {
+    var input = text;
+    input = input.replace(/۰/g, '0');
+    input = input.replace(/۱/g, '1');
+    input = input.replace(/۲/g, '2');
+    input = input.replace(/۳/g, '3');
+    input = input.replace(/۴/g, '4');
+    input = input.replace(/۵/g, '5');
+    input = input.replace(/۶/g, '6');
+    input = input.replace(/۷/g, '7');
+    input = input.replace(/۸/g, '8');
+    input = input.replace(/۹/g, '9');
+    input = input.replace(/ /g, '');
+    return input;
+}
+// const g_detectBank= [
+//     [['991975','610433'],'ملت','/assets/images/banks/mellat.png'],
+//     [['621986'],'سامان','/assets/images/banks/saman.png'],
+//     [['502938'],'دی','/assets/images/banks/day.png'],
+//     [['627412'],'اقتصاد نوین','/assets/images/banks/eghtesad_novin.png'],
+//     [['627381'],'انصار','/assets/images/banks/ansar.png'],
+//     [['639217', '603770'],'کشاورزی','/assets/images/banks/keshavarzi.png'],
+//     [['636214'],'آینده','/assets/images/banks/ayandeh.png'],
+//     [['505416'],'گردشگری','/assets/images/banks/gardeshgari.png'],
+//     [['636949'],'حکمت ایرانیان','/assets/images/banks/hekmat_iranian.png'],
+//     [['502910', '627488'],'کارآفرین','/assets/images/banks/karafarin.png'],
+//     [['636795'],'بانک مرکزی جمهوری اسلامی ایران','/assets/images/banks/markazi.png'],
+//     [['628023'],'مسکن','/assets/images/banks/maskan.png'],
+//     [['639370'],'مهراقتصاد','/assets/images/banks/mehr_eghtesad.png'],
+//     [['606373'],'قرض الحسنه ی مهر ایران','/assets/images/banks/mehr_iran.png'],
+//     [['603799'],'ملی ایران','/assets/images/banks/melli.png'],
+//     [['627884','639194','622106'],'پارسیان','/assets/images/banks/parsian.png'],
+//     [['639607'],'سرمایه','/assets/images/banks/sarmayeh.png'],
+//     [['502229', '639347'],'پاسارگاد','/assets/images/banks/pasargad.png'],
+//     [['589463'],'رفاه کارگران','/assets/images/banks/refah_kargharan.png'],
+//     [['504172'],'قرض الحسنه ی رسالت','/assets/images/banks/resalat.png'],
+//     [['603769'],'صادرات','/assets/images/banks/saderat.png'],
+//     [['505785'],'ایران زمین','/assets/images/banks/iranzamin.png'],
+//     [['589210'],'سپه','/assets/images/banks/sepah.png'],
+//     [['504706','504706'],'شهر','/assets/images/banks/shahr.png'],
+//     [['639346'],'سینا','/assets/images/banks/sina.png'],
+//     [['585983','627353'],'تجارت','/assets/images/banks/tejarat.png'],
+//     [['627961'],'صنعت و معدن','/assets/images/banks/sanaat_maadan.png'],
+//     [['505809'],'خاورمیانه','/assets/images/banks/khavarmianeh.png'],
+//     [['505801'],'موسسه مالی و اعتباری کوثر','/assets/images/banks/kosar.png'],
+//     [['207177','627648'],'توسعه صادرات','/assets/images/banks/tosee_saderat.png'],
+//     [['502908'],'توسعه تعاون','/assets/images/banks/tosee_taavon.png'],
+//     [['639599'],'قوامبن','/assets/images/banks/ghavamin.png'],
+//     // [['627760'],'پست بانک ایرانیان','/img/cards/36.png'],
+//     // [['628157'],'موسسه اعتباری توسعه','/img/cards/37.png'],
+//     // [['606256'],'موسسه ی اعتباری ملل','/img/cards/38.png']
+// ];
+
+
+// function passshow(id) {
+//     var inputtype = $("#"+id).attr("type");
+//     if(inputtype=="password") {
+//         $("#"+id).attr("type", "text");
+//     }else {
+//         $("#"+id).attr("type", "password");
+//     }
+// }
+
+$(document).on('change', 'input[type=file]', function () {
+
+    if (this.files[0]) {
+        let reader = new FileReader();
+
+        reader.onload = (e) => {
+            var dataimg=$(this).attr("data-img");
+            $('#'+dataimg).attr('src', e.target.result);
+        }
+
+        reader.readAsDataURL(this.files[0]);
+    }
+})
+$(document).ready(function () {
+
+
+    // function readURL(input) {
+    //     // if (input.target.files[0]) {
+    //         var reader = new FileReader();
+    //
+    //         reader.onload = function (e) {
+    //             $('#previmg').attr('src', e.target.result);
+    //             $('#preview_modal #confirm_btn').onclick(input.click())
+    //         }
+    //         reader.readAsDataURL(input.target.files[0]);
+    //     // }
+    // }
+    //
+    // $("input[type=file]").change(function(){
+    //     console.log(this)
+    //     readURL(this);
+    // });
+
+    $('.passshow').on('click', function () {
+        var input = $('#' + $(this).attr('inputID'));
+        if (input.attr('type') === 'password' || input.attr('type') === undefined) {
+            input.attr('type', 'text');
+            $(this).css('background-image', 'url(' + window.location.origin + '/assets/icons/eye-crossed.svg)');
+        } else {
+            input.attr('type', 'password');
+            $(this).css('background-image', 'url(' + window.location.origin + '/assets/icons/showpassword.svg)');
+        }
+    });
+
+    $("body").on("click", ".frmtext", function (event) {
+        $(this).prev("label").children("img").toggleClass('animation').toggleClass('animation2');
+    });
+
+    //close pop up
+        $(document).on('click', 'div.popup:not(.popup-rules-mandatory) .closePopUp .popUpClose_button, div.popup:not(.popup-rules-mandatory) .closePopUp2', function() {
+    // $('div.popup .closePopUp, div.popup .closePopUp2').click(function () {
+        $(this).parent('div.popup').css('display', 'none');
+        $(this).closest('div.popup').css('display', 'none');
+    });//close popup
+
+
+
+    // *******************************************************************************************
+    //******************************************* validation formdata ****************************
+    // *******************************************************************************************
+    // $('input').focusin(function (e) {
+    //     $(e.target).removeClass('Error');
+    //     if ($(e.target).parent().hasClass('authInput')) {
+    //         $(e.target).parent().removeClass('Error');
+    //     }
+    // });//input focusin
+
+    //_____________email validation
+    // $('input[type=email]').change(function (e) {
+    //     let EmailRegex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+    //     if (!EmailRegex.test(e.target.value)) {
+    //         $(e.target).addClass('Error');
+    //         if ($(e.target).parent().hasClass('authInput')) {
+    //             $(e.target).parent().addClass('Error');
+    //         }
+    //     } else {
+    //         $(e.target).removeClass('Error');
+    //         if ($(e.target).parent().hasClass('authInput')) {
+    //             $(e.target).parent().removeClass('Error');
+    //         }//check validate
+    //     }
+    // })//change email input
+    //
+    // $('input[name=email]').keyup(function (e) {
+    //     let EmailRegex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+    //     if (!EmailRegex.test(e.target.value)) {
+    //         $(e.target).addClass('Error');
+    //         if ($(e.target).parent().hasClass('authInput')) {
+    //             $(e.target).parent().addClass('Error');
+    //         }
+    //
+    //     } else {
+    //         $(e.target).removeClass('Error');
+    //         if ($(e.target).parent().hasClass('authInput')) {
+    //             $(e.target).parent().removeClass('Error');
+    //         }
+    //
+    //
+    //     }//check validate
+    // })//change email input
+    //_____________tell validation
+    // $('input[type=number]').keyup(function (e) {
+    //     if ($(this).attr('name') === 'mobile' && !isNaN(e.key)) {
+    //         if ($(this).val().length < 1 && e.key !== '0') { //first character should be 0
+    //             $(this).addClass('Error');
+    //         } else if ($(this).val().length === 1 && e.key !== '9') { //secound character should be 9
+    //             $(this).addClass('Error');
+    //         } else {
+    //             $(this).removeClass('Error');
+    //         }//if, elseif
+    //     }//chek numeric
+    // });//change
+
+    //_____________blur of all input
+    // $('input').blur(function (e) {
+    //     if ($(this).attr('data_required') && $(this).val() === "") {
+    //         // $(e.target).addClass('Error');
+    //         if ($(this).parent().hasClass('authInput')) {
+    //             $(this).parent().addClass('Error');
+    //         }
+    //     }//empty
+    //     else {
+    //         $(e.target).removeClass('Error');
+    //
+    //     }
+    // });//blur
+    // $('textarea').blur(function (e) {
+    //     if ($(this).attr('data_required') && $(this).val() === "") {
+    //         $(e.target).addClass('Error');
+    //     }//empty
+    //     else {
+    //         $(e.target).removeClass('Error');
+    //     }
+    // });//blur
+    // $('textarea').on('keyup', function (e) {
+    //     if ($(this).attr('data_required') && $(this).val() !== "") {
+    //         $(e.target).removeClass('Error');
+    //     } else if ($(this).attr('data_required') && $(this).val() === "") {
+    //         $(e.target).addClass('Error');
+    //     }
+    // });
+    // $('input').on('keyup', function (e) {
+    //     if ($(this).attr('data_required') && $(this).val() !== "") {
+    //         $(e.target).removeClass('Error');
+    //     } else if ($(this).attr('data_required') && $(this).val() === "") {
+    //         $(e.target).addClass('Error');
+    //     }
+    // })
+
+    //!!!! this part should right be here ( $('input').blur -> Previous code lines exactly ) to Run the program properly
+    // $("input[name=end_discount_time], input[name=discounted_price]").blur(function (e) {
+    //     let otherInput;
+    //     $(this).attr('name') === 'end_discount_time' ? otherInput = 'discounted_price' : otherInput = 'end_discount_time';
+    //     if ($(this).val() !== '' || $('input[name=' + otherInput + ']').val() !== '') {
+    //         $('input[name=end_discount_time]').parent().children('span').removeClass('hiddenClass');
+    //         $('input[name=discounted_price]').parent().children('span').removeClass('hiddenClass');
+    //     } else {
+    //         $(this).removeClass('Error');
+    //         $('input[name=' + otherInput + ']').removeClass('Error');
+    //     }//end if
+    // });//end blur discount inputs
+
+    //_____________nationalcode validation
+    // $('input[name=nationalcode]').keyup(function (e) {
+    //     let meli_code = e.target.value;
+    //     if (meli_code.length === 10) {
+    //         if (meli_code === '1111111111' || meli_code === '2222222222' || meli_code === '3333333333' || meli_code === '4444444444' || meli_code === '5555555555' || meli_code === '6666666666' || meli_code === '7777777777' || meli_code === '8888888888' || meli_code === '9999999999') {
+    //             $(this).addClass('Error');
+    //         } else {
+    //             let c = parseInt(meli_code.charAt(9));
+    //             let n = parseInt(meli_code.charAt(0)) * 10 + parseInt(meli_code.charAt(1)) * 9 + parseInt(meli_code.charAt(2)) * 8 + parseInt(meli_code.charAt(3)) * 7 + parseInt(meli_code.charAt(4)) * 6 + parseInt(meli_code.charAt(5)) * 5 + parseInt(meli_code.charAt(6)) * 4 + parseInt(meli_code.charAt(7)) * 3 + parseInt(meli_code.charAt(8)) * 2;
+    //             let r = n - parseInt(n / 11) * 11;
+    //             if ((r === 0 && r === c) || (r === 1 && c === 1) || (r > 1 && c === 11 - r)) {
+    //                 $(this).removeClass('Error');
+    //             } else {
+    //                 $(this).addClass('Error');
+    //             }//validation if
+    //         }//111111111 or other
+    //     }//chek length
+    // });//nationalcode blur
+    //numeric valiator
+    // $('input[data-numericTaba= true]').keyup(function (e) {
+    //     if (isNaN(e.key)) {
+    //         if (!checkControlkeys(e)) {
+    //             e.preventDefault();
+    //         }//checkControlkeys
+    //     }//is nan?
+    // });//keydown numeric input
+
+    //_____________postalcode validator
+    // $('input[name=postalcode]').keyup(function (e) {
+    //     if ($(this).val().length == 10) {
+    //         let val = e.target.value;
+    //         let validP = new RegExp('\\b(?!(\\d)\\1{3})[13-9]{4}[1346-9][013-9]{5}\\b');
+    //         if (!validP.test(val)) {
+    //             $(this).addClass('Error');
+    //         } else {
+    //             $(this).removeClass('Error');
+    //
+    //         }
+    //     } else {
+    //         $(this).addClass('Error');
+    //     }//check length
+    // });//postalcode blur
+
+    //_____________phone validator
+    // $('input[name=phonenumber]').keyup(function (e) {
+    //     let val = e.target.value;
+    //     if (parseInt(val[0]) !== 0) {
+    //         $(this).addClass('Error');
+    //         if ($(this).parent().hasClass('authInput')) {
+    //             $(this).parent().addClass('Error');
+    //         }
+    //
+    //     }
+    //     if ($(this).val().length <= 7) {
+    //         $(this).addClass('Error');
+    //         if ($(this).parent().hasClass('authInput')) {
+    //             $(this).parent().addClass('Error');
+    //         }
+    //     } else {
+    //         $(this).removeClass('Error');
+    //         if ($(this).parent().hasClass('authInput')) {
+    //             $(this).parent().removeClass('Error');
+    //         }
+    //     }
+    //     // if($(this).val().length == 11){
+    //     //     let val= e.target.value;
+    //     //     if(parseInt(val[0]) !== 0){$(this).addClass('Error');}//first character
+    //     // }else{$(this).addClass('Error');}//check length
+    // });
+    // $('input[name=mobile]').keyup(function (e) {
+    //     let val = e.target.value;
+    //     val = val.replace(/ /g, '');
+    //     val = val.replace(/[^\d\+]/g,'');
+    //     e.target.value = val;
+    //     // if (parseInt(val[0]) !== 0) {
+    //     //     $(this).addClass('Error');
+    //     //     if ($(this).parent().hasClass('authInput')) {
+    //     //         $(this).parent().addClass('Error');
+    //     //     }
+    //     // }
+    //     if ($(this).val().length !== 11 || parseInt(val[0]) !== 0) {
+    //         $(this).addClass('Error');
+    //         if ($(this).parent().hasClass('authInput')) {
+    //             $(this).parent().addClass('Error');
+    //         }
+    //     } else {
+    //         $(this).removeClass('Error');
+    //         if ($(e.target).parent().hasClass('authInput')) {
+    //             $(e.target).parent().removeClass('Error');
+    //         }
+    //     }
+    //     // console.log(parseInt(val[0]) !== 0)
+    //     // if($(this).val().length == 11){
+    //     //     let val= e.target.value;
+    //     //     if(parseInt(val[0]) !== 0){$(this).addClass('Error');}//first character
+    //     // }else{$(this).addClass('Error');}//check length
+    // });
+
+    //______________validate cardNumber and add -
+    // $('.popup-edit-account input[name=number], .popup-add-account input[name=number], #debitcard .inputBox input[name=number]').keydown(function (e) {
+    //     let input = $(this);
+    //     if (!checkControlkeys(e)) {
+    //         let len = $(this).val().length;
+    //         if (!isNaN(e.key) && len < 20) {
+    //
+    //             if (len === 4 || len === 9 || len === 14) {
+    //                 $(this).val($(this).val() + '-')
+    //             }//check length for add -
+    //             if (len === 7) { //
+    //                 let val = $(this).val().replace('-', '');
+    //                 // $.each(g_detectBank, function(i, v){
+    //                 //     if($.inArray( val, $(this)[0]) !== -1) {
+    //                 //         $(input).parent('.getCardNumber').children('.bankLogo').css('background-image', 'url('+$(this)[2]+')');
+    //                 //         return false;
+    //                 //     }//find bank
+    //                 // });//end of each
+    //             }//check length size
+    //         } else {
+    //             e.preventDefault();
+    //         }//check numeric
+    //     }//check ctr key
+    // })//keyup
+
+    //------------- validate card number
+    $('input[name=number]').keyup(function (e) {
+        if (!checkControlkeys(e)) {
+            // if( !isNaN(e.key)){
+            //     console.log('ente 1')
+            let code = e.target.value.replace(/-/g, '');
+            let L = code.length;
+            if (L < 16 || parseInt(code.substr(1, 10), 10) == 0 || parseInt(code.substr(10, 6), 10) == 0) {
+                return false;
+            }
+            let c = parseInt(code.substr(15, 1), 10);
+            let s = 0;
+            let k, d;
+            for (let i = 0; i < 16; i++) {
+                k = (i % 2 == 0) ? 2 : 1;
+                d = parseInt(code.substr(i, 1), 10) * k;
+                s += (d > 9) ? d - 9 : d;
+            }//end for
+            if ((s % 10) != 0) $(this).addClass('Error');
+            else $(this).removeClass('Error');
+        }
+
+    });//card number blur
+    //______________validate iban_number
+    //     $('input[name=iban_number]').blur(function(e){
+    //         let sheba= $(this).val();
+    //         console.log('sheba1', sheba, sheba.length);
+    //         if(sheba.length === 24){
+    //             console.log('sheba2', sheba.substr(0,2));
+    //             let firstPart= '1827' + sheba.substr(0,2);
+    //             console.log('sheba3', firstPart);
+    //             let newSheba= parseInt(sheba.substring(3).concat(firstPart));
+    //             console.log('sheba4', tonumber(sheba.substring(3).concat(firstPart)) );
+    //             if( parseInt(newSheba % 97) !== 1){$(this).addClass('Error');}//check validate sheba
+    //         }else{$(this).addClass('Error')}//check length
+    //     });//iban_number blur
+
+    //-------------- preview image
+    $(document).on('change', 'input[data-getImg=true]', function () {
+        let inputEle = $(this);
+        if ($(this).attr('class') !== 'ticketUpload') {
+            var file = this.files[0];
+
+            if (file) {
+                var fileName = file.name;
+                var fileExt = fileName.split('.').pop().toLowerCase();
+                var fileSize = file.size;
+                var fileType = file.type;
+
+                // فرمت‌های تصویری و دیگر فرمت‌های مجاز
+                var validImageTypes = ["gif", "jpeg", "png", "jpg"];
+                var validFileTypes = {
+                    "pdf": "assets/images/default/pdf.png",
+                    "doc": "assets/images/default/doc.png",
+                    "docx": "assets/images/default/doc.png",
+                    "xls": "assets/images/default/xls.png",
+                    "zip": "assets/images/default/zip.png",
+                    "rar": "assets/images/default/rar.png",
+                    "ppt": "assets/images/default/ppt.png",
+                    "txt": "assets/images/default/txt.png",
+                    "php": "assets/images/default/php.png"
+                };
+
+                var isImage = validImageTypes.includes(fileExt);
+                var maxSize = isImage ? 524288 : 2097152; // 500KB برای تصاویر و 2MB برای بقیه فایل‌ها
+
+                let errorText = inputEle.closest('.uploadWrapper').find('.errorText'); // نمایش خطا نزدیک به ورودی
+
+                if (fileSize > maxSize) {
+                    errorText.removeClass('hiddenClass').html('حجم فایل انتخابی بیشتر از حد مجاز است!');
+                    return;
+                } else {
+                    errorText.addClass('hiddenClass').html('');
+                }
+
+                // نمایش نام فایل
+                let displayName = fileName.length > 15 ? fileName.substring(0, 12) + '...' + fileExt : fileName;
+                inputEle.parent('label').children('span.uploadName').html(displayName);
+
+                let previewEle = $('#' + inputEle.data('img'));
+
+                if (isImage) {
+                    // پیش‌نمایش تصویر
+                    let reader = new FileReader();
+                    reader.onload = function () {
+                        previewEle.attr('src', reader.result);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    // نمایش آیکون متناسب با نوع فایل
+                    let fileIcon = validFileTypes[fileExt] ? `{{ asset('${validFileTypes[fileExt]}') }}` : `{{ asset('assets/images/default/file.png') }}`;
+                    previewEle.attr('src', fileIcon);
+                }
+            }
+        }
+    });
+
+//    transaction page
+
+    //*****************persianDatepicker and shop page
+    $("#from_date, #to_date,#product_start_time, #product_end_time, #addProduct_date,#editProduct_date, #expired_commission").persianDatepicker({
+        prevArrow: '&#62;',
+        nextArrow: '&#60;',
+        format: 'YYYY/MM/DD',
+        cellWidth: 27,
+        cellHeight: 22,
+        calendar: {
+            persian: {
+                locale: 'en'
+            }
+        }
+    });//datat picker
+
+
+});//dom is ready
+
+function checkControlkeys(event) {
+    let res = true;
+    // Allow: backspace, delete, tab, escape, enter
+    if ($.inArray(event.keyCode, [46, 8, 9, 27, 13]) === -1 &&
+        // Allow: Ctrl+A
+        (event.keyCode !== 65 && event.ctrlKey !== true) &&
+        // Allow: home, end, left, right
+        !(event.keyCode < 35 && event.keyCode > 39)) {
+        res = false;
+    }//checkctr key
+    return res;
+}//checkControlkeys
+
+function number_format(amount) {
+    return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+//************************** change by mitra
+// function passshow(id) {
+//     if($("#"+id+' input').attr("type") === "password") {
+//         $("#"+id+' input').attr("type", "text");
+//         $("#"+id+' div').css('background-image', 'url(../assets/icons/eye-crossed.svg)');
+//     }else {
+//         $("#"+id+' input').attr("type", "password");
+//         $("#"+id+' div').css('background-image', 'url(../assets/icons/showpassword.svg)');
+//     }//check type
+// }//pass show
+
+

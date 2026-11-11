@@ -1,0 +1,24 @@
+$(document).ready(function() {
+	$(".btntab").click(function() {
+		var tclass = $(this).attr("data-class");
+		$(".tabs").hide();
+		$("."+tclass).fadeIn();
+		$(".btntab").removeClass("tactive");
+		$(this).addClass("tactive");
+	});
+
+	$(".btnnavbar").click(function() {
+		$(".popup-menus-bg").fadeIn();
+		$(".part2-right > div").animate({"right": "0px"},{queue: false, ducration: 300});
+		$(".part2 div.part2-right button.part2-right-tel").fadeIn();
+		// $(".part2 div.part2-right button.part2-right-tel").css({"display": "block"});
+
+
+		$(".popup-menus-bg").click(function() {
+			$(".part2-right > div").animate({"right": "-100%"},{queue: false, ducration: 300});
+			$(".part2 div.part2-right button.part2-right-tel").fadeOut();
+			// $(".part2 div.part2-right button.part2-right-tel").css({"display": "none"});
+			$(".popup-menus-bg").fadeOut();
+		});
+	});
+});

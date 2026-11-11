@@ -1,104 +1,57 @@
 "use client";
-import React, { useRef } from "react";
+
+import { useRef } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useSelector } from "react-redux";
 import { useReactToPrint } from "react-to-print";
-// internal
 import Loader from "@components/loader/loader";
-import Wrapper from "@layout/wrapper";
-import Header from "@layout/header";
-import Footer from "@layout/footer";
-import { useGetUserOrderByIdQuery } from "src/redux/features/orderApi";
 import ErrorMessage from "@components/error-message/error";
+import { accountToken } from "@/lib/auth/customer-profile";
+import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
+import { useGetUserOrderByIdQuery } from "@/redux/features/orderApi";
+import { CheckoutFlowLayout } from "@/components/vendora/checkout/checkout-shell";
+import { PaymentResultPanel } from "@/components/vendora/checkout/payment-result";
+import { VendoraButton } from "@/components/vendora/ui/button";
 import InvoiceArea from "./invoice-area";
 
-const SingleOrderArea = ({ orderId }) => {
+/** Shows the owner the saved order, real payment state and printable summary. */
+export default function SingleOrderArea({ orderId }) {
   const contentRef = useRef(null);
   const handlePrint = useReactToPrint({ contentRef });
-  const { data: order, isError, isLoading } = useGetUserOrderByIdQuery(orderId);
-  let content = null;
+  const token = accountToken();
+  const locale = getLocaleFromPathname(usePathname());
+  const fa = locale === "fa";
+  const userId = useSelector(state => state.auth.user?.id ?? state.auth.user?._id);
+  const { currentData, isError, isLoading, error } = useGetUserOrderByIdQuery({ orderNumber: orderId, userId }, {
+    skip: !token || !userId, refetchOnMountOrArgChange: true,
+  });
+  let content;
   if (isLoading) {
-    content = (
-      <div
-        className="d-flex align-items-center justify-content-center"
-        style={{ height: "100vh" }}
-      >
-        <Loader loading={isLoading} />
+    content = <div className="flex min-h-[220px] items-center justify-center"><Loader loading /></div>;
+  } else if (!token || !userId || error?.status === 401) {
+    const returnTo = withLocalePath(`/order/${encodeURIComponent(orderId)}`, locale);
+    const login = `${withLocalePath("/login", locale)}?returnTo=${encodeURIComponent(returnTo)}`;
+    content = <Link className="font-bold text-jade underline" href={login}>
+      {fa ? "برای مشاهدهٔ سفارش وارد شوید" : "Sign in to view your order"}
+    </Link>;
+  } else if (isError) {
+    content = <ErrorMessage message={fa ? "دریافت سفارش انجام نشد." : "Unable to load the order."} />;
+  } else if (currentData?.order) {
+    content = <>
+      <PaymentResultPanel orderNumber={orderId} locale={locale} />
+      <InvoiceArea innerRef={contentRef} locale={locale} info={currentData.order} />
+      <div className="mt-5 flex flex-wrap gap-3">
+        <VendoraButton type="button" variant="outline" onClick={handlePrint}>
+          {fa ? "چاپ خلاصهٔ سفارش" : "Print order summary"}
+        </VendoraButton>
+        <VendoraButton variant="ghost" href={withLocalePath("/account/orders", locale)}>
+          {fa ? "سفارش‌های من" : "My orders"}
+        </VendoraButton>
       </div>
-    );
+    </>;
   }
-  if (isError) {
-    content = <ErrorMessage message="There was an error" />;
-  }
-  if (!isLoading && !isError) {
-    const {
-      name,
-      country,
-      city,
-      contact,
-      invoice,
-      createdAt,
-      cart,
-      cardInfo,
-      shippingCost,
-      discount,
-      totalAmount,
-    } = order.order;
-    console.log("order.order", order.order);
-    content = (
-      <section className="invoice__area pt-120 pb-120">
-        <div className="container">
-          {/* <!-- invoice msg --> */}
-          <div className="invoice__msg-wrapper">
-            <div className="row">
-              <div className="col-xl-12">
-                <div className="invoice_msg mb-40">
-                  <p className="text-black alert alert-success">
-                    Thank you <strong>{name}</strong> Your order have been
-                    received !
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* invoice area start */}
-          <InvoiceArea innerRef={contentRef} info={{name,country,city,contact,invoice,createdAt,cart,cardInfo,shippingCost,discount,totalAmount}} />
-          {/* invoice area end */}
-
-          {/* invoice print  */}
-          <div className="invoice__print text-end mt-10">
-            <div className="row">
-              <div className="col-xl-12">
-                <button
-                  onClick={handlePrint}
-                  type="button"
-                  className="tp-invoice-print tp-btn tp-btn-black"
-                >
-                  <span className="mr-5">
-                    <i className="fa-regular fa-print"></i>
-                  </span>{" "}
-                  Print
-                </button>
-              </div>
-            </div>
-            {/* invoice print */}
-          </div>
-        </div>
-      </section>
-    );
-  }
-  return (
-    <>
-      <Wrapper>
-        <Header style_2={true} />
-        {/* content */}
-        {content}
-        {/* content */}
-        {/* footer start */}
-        <Footer />
-        {/* footer end */}
-      </Wrapper>
-    </>
-  );
-};
-
-export default SingleOrderArea;
+  return <CheckoutFlowLayout locale={locale}>
+    <main className="vd-container pt-6 pb-12 md:pt-9">{content}</main>
+  </CheckoutFlowLayout>;
+}

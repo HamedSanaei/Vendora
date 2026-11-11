@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
+import { useId, useState, type ComponentPropsWithRef, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
 
 /**
  * Form field family from the Penpot account components:
@@ -47,7 +47,7 @@ export function SelectField({
   className,
   children,
   ...select
-}: BaseFieldProps & SelectHTMLAttributes<HTMLSelectElement> & { children: ReactNode }) {
+}: BaseFieldProps & ComponentPropsWithRef<"select"> & { children: ReactNode }) {
   const id = useId();
   return (
     <div className={className}>
@@ -56,7 +56,8 @@ export function SelectField({
       </label>
       <select
         id={id}
-        className={`${controlClasses} appearance-none bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")] bg-no-repeat [background-position:left_1rem_center] rtl:[background-position:right_1rem_center]`}
+        aria-invalid={error ? true : undefined}
+        className={`${controlClasses} appearance-none pe-10 bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")] bg-no-repeat [background-position:right_1rem_center] rtl:[background-position:left_1rem_center] ${error ? "border-vd-danger" : ""}`}
         {...select}
       >
         {children}

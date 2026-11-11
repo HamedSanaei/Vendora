@@ -51,9 +51,10 @@ export const orderApi = apiSlice.injectEndpoints({
       keepUnusedDataFor: 600,
     }),
     getUserOrderById: builder.query({
-      async queryFn(orderNumber) {
+      async queryFn(input) {
+        const orderNumber = typeof input === "string" ? input : input.orderNumber;
         const localAuth = JSON.parse(localStorage.getItem("auth") || "{}");
-        const result = await orderRequest(`/api/Orders/${orderNumber}`, localAuth?.accessToken);
+        const result = await orderRequest(`/api/Orders/${encodeURIComponent(orderNumber)}`, localAuth?.accessToken);
         return result.data ? { data: { success: true, order: mapOrder(result.data) } } : result;
       },
       keepUnusedDataFor: 600,

@@ -7,12 +7,15 @@ import Link from "next/link";
 import { mockOrderDetail, mockOrders } from "@/lib/vendora/account-data";
 import { getDict } from "@/lib/vendora/i18n";
 import type { Locale, OrderSummary } from "@/lib/vendora/types";
-import { formatPrice, localizeDigits } from "@/lib/vendora/format";
+import { formatDate, formatPrice, localizeDigits } from "@/lib/vendora/format";
 import { withLocalePath } from "@/lib/locale-path";
 import { OrderStatusBadge, StatusBadge } from "@/components/vendora/ui/status-badge";
 import { EmptyState } from "@/components/vendora/ui/empty-state";
 import { VendoraButton } from "@/components/vendora/ui/button";
 import { BagArtwork, type ArtworkColor } from "@/components/vendora/product/bag-artwork";
+import useAuthCheck from "@/hooks/use-auth-check";
+import { useSelector } from "react-redux";
+import { useGetUserOrdersQuery } from "@/redux/features/orderApi";
 import {
   CheckIcon,
   ChevronIcon,
@@ -21,6 +24,30 @@ import {
 } from "@/components/vendora/icons";
 
 type StatusFilter = "all" | "processing" | "shipped";
+type ListedOrder = OrderSummary & { customer: string; detailPath: string };
+interface SavedOrderRow {
+  orderNumber: string;
+  name: string;
+  status: string;
+  totalAmount: number;
+  createdAt: string;
+  cart: { orderQuantity: number }[];
+}
+
+/** Maps order lifecycle labels while keeping real orders linked to their payment result. */
+function savedOrderRow(order: SavedOrderRow): ListedOrder {
+  const statuses: Record<string, OrderSummary["status"]> = {
+    pendingpayment: "awaiting_payment", paid: "processing", processing: "processing", packed: "processing",
+    shipped: "shipped", delivered: "delivered", cancelled: "cancelled", refunded: "cancelled",
+  };
+  return {
+    id: order.orderNumber, code: order.orderNumber, customer: order.name,
+    status: statuses[order.status] ?? "awaiting_payment",
+    itemCount: order.cart.reduce((count, item) => count + item.orderQuantity, 0), total: order.totalAmount,
+    dateLabel: formatDate(order.createdAt, "fa"), dateLabelEn: formatDate(order.createdAt, "en"),
+    detailPath: `/order/${encodeURIComponent(order.orderNumber)}`,
+  };
+}
 
 /**
  * Order history (Penpot "Order History / Desktop|Mobile"):
@@ -31,8 +58,19 @@ export function OrdersListContent({ locale }: { locale: Locale }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<StatusFilter>("all");
 
-  const customerName = locale === "fa" ? "کاربر وندورا" : "Vendora user";
-  const filtered = (useSeedDataEnabled() ? mockOrders : [])
+  const authChecked = useAuthCheck();
+  const userId = useSelector((state: { auth: { user?: { id?: string; _id?: string } } }) =>
+    state.auth.user?.id ?? state.auth.user?._id);
+  const { currentData, isFetching, isError, refetch } = useGetUserOrdersQuery(userId, {
+    skip: !authChecked || !userId, refetchOnMountOrArgChange: true,
+  });
+  const seed = useSeedDataEnabled();
+  const fa = locale === "fa";
+  const real = ((currentData?.orders ?? []) as SavedOrderRow[]).map(savedOrderRow);
+  const orders = real.length ? real : seed && !isError && !isFetching
+    ? mockOrders.map(order => ({ ...order, customer: fa ? "کاربر وندورا" : "Vendora user", detailPath: `/account/orders/${order.id}` }))
+    : [];
+  const filtered = orders
     .filter((order) => (filter === "all" ? true : order.status === filter))
     .filter((order) =>
       query.trim() ? localizeDigits(order.code, locale).includes(localizeDigits(query.trim(), locale)) : true,
@@ -78,7 +116,14 @@ export function OrdersListContent({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {isFetching && !currentData ? (
+        <p role="status" className="text-sm text-vd-muted">{fa ? "در حال دریافت سفارش‌ها…" : "Loading orders…"}</p>
+      ) : isError ? (
+        <div className="flex items-center gap-3" role="alert">
+          <p className="text-sm text-vd-danger">{fa ? "دریافت سفارش‌ها انجام نشد." : "Unable to load orders."}</p>
+          <VendoraButton type="button" variant="outline" onClick={() => void refetch()}>{fa ? "تلاش دوباره" : "Try again"}</VendoraButton>
+        </div>
+      ) : filtered.length === 0 ? (
         <EmptyState icon={<OrdersIcon size={44} />} title={t.account.orders.emptyFiltered} body="" />
       ) : (
         <>
@@ -100,14 +145,14 @@ export function OrdersListContent({ locale }: { locale: Locale }) {
                 {filtered.map((order) => (
                   <tr key={order.id} className="transition-colors hover:bg-surface-soft">
                     <td className="px-5 py-3.5 font-bold text-ink">{localizeDigits(order.code, locale)}</td>
-                    <td className="px-5 py-3.5 text-vd-muted">{customerName}</td>
+                    <td className="px-5 py-3.5 text-vd-muted">{order.customer}</td>
                     <td className="px-5 py-3.5 text-ink">{localizeDigits(String(order.itemCount), locale)}</td>
                     <td className="px-5 py-3.5"><OrderStatusBadge status={order.status} labels={t.account.statusLabels} /></td>
                     <td className="px-5 py-3.5 font-bold text-ink">{formatPrice(order.total, locale)}</td>
                     <td className="px-5 py-3.5 text-vd-muted">{locale === "fa" ? order.dateLabel : order.dateLabelEn}</td>
                     <td className="px-5 py-3.5">
                       <Link
-                        href={withLocalePath(`/account/orders/${order.id}`, locale)}
+                        href={withLocalePath(order.detailPath, locale)}
                         aria-label={`${t.common.details}: ${order.code}`}
                         className="vd-focus inline-flex h-9 w-9 items-center justify-center rounded-full border border-vd-line text-jade hover:border-jade"
                       >
@@ -123,7 +168,7 @@ export function OrdersListContent({ locale }: { locale: Locale }) {
           {/* Mobile cards */}
           <ul className="space-y-4 md:hidden">
             {filtered.map((order) => (
-              <MobileOrderCard key={order.id} order={order} locale={locale} customerName={customerName} />
+              <MobileOrderCard key={order.id} order={order} locale={locale} />
             ))}
           </ul>
         </>
@@ -135,17 +180,15 @@ export function OrdersListContent({ locale }: { locale: Locale }) {
 function MobileOrderCard({
   order,
   locale,
-  customerName,
 }: {
-  order: OrderSummary;
+  order: ListedOrder;
   locale: Locale;
-  customerName: string;
 }) {
   const t = getDict(locale);
   return (
     <li>
       <Link
-        href={withLocalePath(`/account/orders/${order.id}`, locale)}
+        href={withLocalePath(order.detailPath, locale)}
         className="vd-focus block rounded-card border border-vd-line bg-white p-4 hover:border-jade"
       >
         <div className="flex items-center justify-between gap-2">
@@ -153,7 +196,7 @@ function MobileOrderCard({
           <ChevronIcon size={16} className="text-vd-muted" />
         </div>
         <p className="vd-text-caption mt-1 text-vd-muted">
-          {locale === "fa" ? order.dateLabel : order.dateLabelEn} · {customerName}
+          {locale === "fa" ? order.dateLabel : order.dateLabelEn} · {order.customer}
         </p>
         <div className="mt-3 flex items-center justify-between gap-3">
           <OrderStatusBadge status={order.status} labels={t.account.statusLabels} />

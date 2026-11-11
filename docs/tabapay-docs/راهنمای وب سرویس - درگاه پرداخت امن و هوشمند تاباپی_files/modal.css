@@ -1,0 +1,142 @@
+html{
+    direction: rtl;
+}
+body{
+    margin: 0;
+    padding: 0;
+}
+.mail_Vrf, .sucessChange_modal, .unsucessChange_modal{
+    position: absolute;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    margin: auto;
+}
+.modal_sandbox {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    background-color: rgba(67, 76, 131, 0.5);
+    z-index: -1;
+}
+
+.modal_box{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background-color: white;
+    border-radius: 10px;
+    margin: auto;
+}
+#mail_modal .modal_box {
+    width: 33%;
+    height: 220px;
+    padding: 20px;
+    justify-content: center;
+}
+#mail_modal label {
+    color: #434C83;
+    padding: 10px 0;
+}
+
+#sucess_Changes{
+    display: none;
+}
+
+#sucess_Changes .modal_box {
+    width: 310px;
+    height: 288px;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    justify-content: space-between
+}
+#sucess_Changes .modal_box .icon_wrapper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+#sucess_Changes .modal_box .icon_wrapper .empty {
+    width: 48px;
+    height: 48px;
+}
+#sucess_Changes .modal_box .icon_wrapper .changing_alarm {
+    margin: 0 40px;
+}
+#sucess_Changes .modal_box .changeMsg_wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#sucess_Changes .modal_box .changeMsg_wrapper .changeMsg {
+    padding-right: 5px;
+}
+.unsucsessful {
+    color: #ff6085;
+}
+.sucsessful{
+    color: #65c86f;
+}
+#ip_inaccessibility .exit_button {
+    border: 1px solid #ff6085!important;
+    background-color: #FFFFFF!important;
+    color: #ff6085!important;
+}
+#ip_inaccessibility .exit_button:hover {
+    background-color: #ffd5e1!important;
+}
+
+/******************************************************** Responsive 992px*****************************************************/
+@media screen and (max-width: 992px){
+    #mail_modal .modal_box {
+        width: 40%;
+    }
+}
+/******************************************************** Responsive 768px*****************************************************/
+@media screen and (max-width: 768px){
+    #mail_modal .modal_box {
+        width: 50%;
+    }
+}
+
+/******************************************************** Responsive 576px*****************************************************/
+@media screen and (max-width: 576px){
+    #mail_modal .modal_box {
+        width: 65%;
+    }
+}
+/******************************************************** Responsive 460px*****************************************************/
+@media screen and (max-width: 460px){
+    #mail_modal .modal_box {
+        width: 75%;
+        height: 250px;
+    }
+}
+/******************************************************** Responsive 400px*****************************************************/
+@media screen and (max-width: 400px){
+    #sucess_Changes .modal_box {
+        width: 280px;
+        height: 250px;
+        padding: 20px 10px;
+    }
+    #sucess_Changes .modal_box .icon_wrapper .close_btn{
+        width: 38px;
+    }
+    #sucess_Changes .modal_box .icon_wrapper .changing_alarm{
+        margin: 0 30px;
+    }
+}
+/******************************************************** Responsive 400px*****************************************************/
+@media screen and (max-width: 300px){
+    #sucess_Changes .modal_box {
+        width: 250px;
+        height: 230px;
+        padding: 20px 15px;
+    }
+}

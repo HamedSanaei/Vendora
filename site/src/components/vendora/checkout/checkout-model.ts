@@ -1,7 +1,7 @@
 import { getCartUnitPrice, type CartLine } from "@/components/vendora/cart/cart-model";
 import type { ShippingPaymentMode } from "@/lib/vendora/shipping";
 
-export type PaymentProviderId = "zarinpal" | "bankMelli";
+export type PaymentProviderId = "tabapay" | "zarinpal" | "bankMelli";
 export type PaymentCheckoutPhase = "idle" | "submitting" | "redirecting" | "error";
 export type CheckoutComponentState = "default" | "selected" | "focus" | "disabled" | "error";
 export type CheckoutComponentSize = "regular" | "compact";

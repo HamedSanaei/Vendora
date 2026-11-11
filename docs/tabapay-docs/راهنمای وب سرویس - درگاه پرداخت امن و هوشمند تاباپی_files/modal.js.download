@@ -1,0 +1,105 @@
+
+
+function ShowModal(text, status, buttonText, time) {
+
+    time=$('#htimer').html();
+
+    if (time===undefined){
+        time='';
+    }
+
+    var div1 = document.createElement('div');
+     if (status==='success'){
+    div1.setAttribute('class', 'sucessChange_modal');
+     }else{
+         div1.setAttribute('class', 'unsucessChange_modal');
+     }
+    div1.setAttribute('id', 'sucess_Changes');
+
+    var div2 = document.createElement('div');
+    div2.setAttribute('class', 'modal_sandbox')
+
+    var div3 = document.createElement('div');
+    div3.setAttribute('class', 'modal_box');
+
+    var div4=document.createElement('div');
+    div4.setAttribute('class', 'icon_wrapper');
+
+    var div5 = document.createElement('div');
+    div5.setAttribute('class', 'empty');
+
+    var alarmImage = document.createElement('img');
+    if (status==='success'){
+    alarmImage.setAttribute('src', '../../assets/images/modals/sucessful_alarm.png');
+    }else{
+        alarmImage.setAttribute('src', '../../assets/images/modals/unsucessful_alarm.png');
+    }
+    alarmImage.setAttribute('alt', text);
+    alarmImage.setAttribute('class', 'changing_alarm');
+
+    var closeButton = document.createElement('img');
+        closeButton.setAttribute('src', '../../assets/images/modals/close.svg');
+    closeButton.setAttribute('alt', buttonText);
+    closeButton.setAttribute('class', 'close_btn');
+
+    var timeDiv = document.createElement('div');
+    if (status==='success'){
+    timeDiv.setAttribute('class', 'changeTime sucsessful');
+    }else{
+        timeDiv.setAttribute('class', 'changeTime unsucsessful');
+    }
+    timeDiv.innerHTML = time;
+
+    var messageDiv = document.createElement('div');
+    messageDiv.setAttribute('class', 'changeMsg_wrapper');
+
+    var messageImage = document.createElement('img');
+    if (status==='success'){
+        messageImage.setAttribute('src', '../../assets/images/modals/confirmation.svg');
+    }else{
+        messageImage.setAttribute('src', '../../assets/images/modals/error.svg');
+    }
+    messageImage.setAttribute('alt',text);
+
+    var messageLabel = document.createElement('label');
+    if (status==='success'){
+        messageLabel.setAttribute('class', 'changeMsg sucsessful fs_caption');
+    }else{
+        messageLabel.setAttribute('class', 'changeMsg unsucsessful fs_caption');
+    }
+    messageLabel.innerHTML = text;
+
+    window.scrollTo(0, 0)
+
+
+
+    $('body').find('#sucess_Changes').remove();
+
+    $('body').append(div1);
+    div1.append(div2);
+    div1.append(div3);
+    div3.append(div4);
+    div4.append(div5);
+    div4.append(alarmImage);
+    div4.append(closeButton);
+    div4.append(closeButton);
+    div3.append(timeDiv);
+    div3.append(messageDiv);
+    messageDiv.append(messageImage);
+    messageDiv.append(messageLabel);
+
+    $('#sucess_Changes').slideDown();
+    $('#sucess_Changes').removeAttr('style');
+    $('#sucess_Changes').css('display','flex');
+    $('#sucess_Changes').css('justify-content','center');
+    $('#sucess_Changes').css('align-items','center');
+
+    $('.close_btn').on('click',function () {
+        $('#sucess_Changes').slideUp();
+        $('body').find('#sucess_Changes').remove();
+
+    });
+}
+
+
+

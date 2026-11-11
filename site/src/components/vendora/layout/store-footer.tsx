@@ -10,11 +10,12 @@ import type { Locale } from "@/lib/vendora/types";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
 import { BagArtwork } from "@/components/vendora/product/bag-artwork";
 
-const officialEnamadHref = "https://trustseal.enamad.ir/?id=8380573&Code=UiH46UWJfvaEBVduFEdA9IxWc9uXcYQu";
-const officialEnamadImageUrl = "https://trustseal.enamad.ir/logo.aspx?id=8380573&Code=UiH46UWJfvaEBVduFEdA9IxWc9uXcYQu";
+const officialEnamadHref = "https://trustseal.enamad.ir/?id=8506458&Code=qJ9ggHzmYAAUK8yioOtT0K1QaKKuOf7s";
+const officialEnamadImageUrl = "https://trustseal.enamad.ir/logo.aspx?id=8506458&Code=qJ9ggHzmYAAUK8yioOtT0K1QaKKuOf7s";
 // Exact, unchanged seal markup provided by eNamad for vendorashop.ir.
-const officialEnamadHtml = `<a referrerpolicy='origin' target='_blank' href='https://trustseal.enamad.ir/?id=8380573&Code=UiH46UWJfvaEBVduFEdA9IxWc9uXcYQu'><img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=8380573&Code=UiH46UWJfvaEBVduFEdA9IxWc9uXcYQu' alt='' style='cursor:pointer' code='UiH46UWJfvaEBVduFEdA9IxWc9uXcYQu'></a>`;
-
+const officialEnamadHtml = `<a referrerpolicy='origin' target='_blank' href='https://trustseal.enamad.ir/?id=8506458&Code=qJ9ggHzmYAAUK8yioOtT0K1QaKKuOf7s'><img referrerpolicy='origin' src='https://trustseal.enamad.ir/logo.aspx?id=8506458&Code=qJ9ggHzmYAAUK8yioOtT0K1QaKKuOf7s' alt='' style='cursor:pointer' code='qJ9ggHzmYAAUK8yioOtT0K1QaKKuOf7s'></a>`;
+const tabaPayTrustUrl = "https://tabapay.ir/payments/trust/vendorashop.ir";
+const tabaPaySealImageUrl = "https://tabapay.ir/assets/images/payment_logo/Namad.png";
 
 /**
  * Storefront footer (Penpot "Layout / Footer"): soft background, brand block
@@ -30,9 +31,9 @@ export function StoreFooter() {
   const showEnamad = Boolean(profile.enamadEnabled && profile.enamad);
   const expanded = Boolean(profile.logoUrl || profile.nameFa || profile.nameEn || profile.taglineFa || profile.taglineEn || profile.introFa || profile.introEn || profile.phone || profile.email || brand.address || brand.hours || profile.socialProfiles || profile.enamadEnabled || profile.copyrightFa || profile.copyrightEn);
   return (
-    <footer className={`mt-[40px] bg-surface-soft md:mt-[50px] lg:mt-[72px] ${expanded ? 'min-h-[120px]' : 'h-[120px] overflow-hidden md:h-[220px] lg:h-[300px]'}`}>
+    <footer className="mt-[40px] min-h-[120px] bg-surface-soft md:mt-[50px] lg:mt-[72px]">
       <div className="vd-container py-[16px] md:py-14">
-        <div className={`grid gap-10 ${showEnamad ? 'md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))_max-content] md:gap-5 lg:gap-10' : 'md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]'}`}>
+        <div className="grid gap-10 md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))] md:gap-5 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))_max-content] lg:gap-10">
           <div className="min-w-0">
             {profile.logoUrl ? <Image unoptimized width={180} height={48} src={resolveApiImageUrl(profile.logoUrl)} alt={brand.name} className="mx-auto h-12 max-w-[180px] object-contain md:mx-0" /> : <p className="break-words text-center text-[22px] font-extrabold tracking-tight text-ink md:text-start md:text-3xl">{brand.wordmark}</p>}
             <p className={`${expanded ? '' : 'hidden md:block'} mt-2 text-sm font-medium text-vd-muted`}>{brand.intro || t.footer.tagline}</p>
@@ -68,11 +69,12 @@ export function StoreFooter() {
               </ul>
             </nav>
           ))}
-          {showEnamad && profile.enamad && (
-            <div className="flex justify-center md:justify-end" role="group" aria-label={locale === 'fa' ? 'نماد اعتماد الکترونیکی' : 'eNamad trust seal'}>
+          <div className="flex flex-wrap items-start justify-center gap-3 md:col-span-full md:justify-end lg:col-span-1" role="group" aria-label={locale === 'fa' ? 'نشان‌های اعتماد فروشگاه' : 'Store trust seals'}>
+            {showEnamad && profile.enamad && (
               <EnamadSeal key={`${profile.enamad.href}|${profile.enamad.imageUrl}`} badge={profile.enamad} locale={locale} />
-            </div>
-          )}
+            )}
+            <TabaPaySeal locale={locale} />
+          </div>
         </div>
         <p className="mt-[2px] text-center text-[12px] text-vd-muted md:hidden">{t.footer.columns.map(c=>c.title).join(" · ")}</p>
         <hr className="mt-[4px] border-vd-line md:mt-10" />
@@ -82,6 +84,20 @@ export function StoreFooter() {
         </div>
       </div>
     </footer>
+  );
+}
+
+/** Displays the issuer's seal and verification link without loading its document.write script into the storefront. */
+function TabaPaySeal({ locale }: { locale: Locale }) {
+  const [imageUnavailable, setImageUnavailable] = useState(false);
+  const label = locale === 'fa' ? 'بررسی اعتبار درگاه تاباپی' : 'Verify with TabaPay';
+
+  return (
+    <a className="vd-focus flex h-[136px] w-[125px] items-center justify-center rounded-control text-center text-sm font-bold text-jade" href={tabaPayTrustUrl} target="_blank" rel="noopener noreferrer" aria-label={label}>
+      {imageUnavailable ? <span className="underline underline-offset-4">{label}</span> : (
+        <Image unoptimized src={tabaPaySealImageUrl} alt="" width={125} height={136} className="h-full w-full object-contain" onError={() => setImageUnavailable(true)} />
+      )}
+    </a>
   );
 }
 

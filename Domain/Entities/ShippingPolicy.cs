@@ -23,7 +23,7 @@ public sealed class ShippingPolicy
 
 /// <summary>An administrator-confirmed parcel profile for a non-overlapping inclusive quantity range.</summary>
 public sealed record ShippingPackage(int MinQuantity, int MaxQuantity, int EmptyWeightGrams,
-    int LengthCm, int WidthCm, int HeightCm, int BoxTypeId);
+    int LengthCm, int WidthCm, int HeightCm, int BoxTypeId, int DefaultUnitWeightGrams = 0);
 
 /// <summary>A short-lived, user-bound server quote; no credentials or carrier response bodies are persisted.</summary>
 public sealed class ShippingQuote

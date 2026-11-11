@@ -18,6 +18,12 @@ public static class DependencyInjection
     /// <returns>The same service collection.</returns>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
+        services.AddHttpClient<ITabaPayGateway, Payments.TabaPayGateway>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(12);
+            client.MaxResponseContentBufferSize = 32 * 1024;
+        }).RemoveAllLoggers()
+          .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.AddHttpClient<ISmsGateway, Infrastructure.Auth.ParsGreenSmsGateway>(client => { client.Timeout = TimeSpan.FromSeconds(15); client.MaxResponseContentBufferSize = 32768; })
             .RedactLoggedHeaders(new[] { "Authorization" })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });

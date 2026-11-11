@@ -1,10 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { FieldErrors, UseFormRegister } from "react-hook-form";
+import { useController, type Control, type FieldErrors, type UseFormRegister } from "react-hook-form";
+import { AddressRegionFields } from "@/components/vendora/account/address-region-fields";
 import { CheckIcon, ClockIcon, PinIcon, TruckIcon, WarningIcon } from "@/components/vendora/icons";
-import { SelectField, TextField, TextareaField } from "@/components/vendora/ui/form-field";
+import { TextField, TextareaField } from "@/components/vendora/ui/form-field";
 import { formatPrice } from "@/lib/vendora/format";
+import { getDict } from "@/lib/vendora/i18n";
 import { getShippingDeliveryTime, getShippingMethodTitle, type ShippingMethod } from "@/lib/vendora/shipping";
 import type { Locale } from "@/lib/vendora/types";
 
@@ -138,13 +140,17 @@ export function OrderSummary({ locale, subtotal, discount = 0, shippingMethod, a
 
 interface NewAddressPanelProps {
   locale: Locale;
+  control: Control<ShippingAddressFormValues>;
   register: UseFormRegister<ShippingAddressFormValues>;
   errors: FieldErrors<ShippingAddressFormValues>;
 }
 
 /** Expandable shipping-address form shared by empty and explicit new-address states. */
-export function NewAddressPanel({ locale, register, errors }: NewAddressPanelProps) {
+export function NewAddressPanel({ locale, control, register, errors }: NewAddressPanelProps) {
   const isFa = locale === "fa";
+  const { requiredError } = getDict(locale).account.addresses.form;
+  const { field: provinceField } = useController({ control, name: "province", rules: { required: requiredError } });
+  const { field: cityField } = useController({ control, name: "city", rules: { validate: (value) => Boolean(value.trim()) || requiredError } });
   return (
     <div className="mt-6 border-t border-vd-line pt-6">
       <div className="flex items-center justify-between gap-3">
@@ -159,13 +165,7 @@ export function NewAddressPanel({ locale, register, errors }: NewAddressPanelPro
         <TextField label={isFa ? "نام گیرنده" : "Recipient name"} placeholder={isFa ? "نام و نام خانوادگی" : "Full name"} error={errors.recipientName?.message as string | undefined} {...register("recipientName", { required: isFa ? "نام گیرنده الزامی است." : "Recipient name is required." })} />
         <TextField label={isFa ? "شماره موبایل" : "Mobile number"} placeholder="0912…" dir="ltr" error={errors.phoneNumber?.message as string | undefined} {...register("phoneNumber", { required: isFa ? "شماره موبایل الزامی است." : "Mobile number is required.", pattern: { value: /^(09|۰۹)[0-9۰-۹]{9}$/, message: isFa ? "شماره موبایل معتبر نیست." : "Enter a valid Iranian mobile number." } })} />
         <TextField label={isFa ? "ایمیل" : "Email"} type="email" placeholder="name@example.com" dir="ltr" error={errors.email?.message as string | undefined} {...register("email", { required: isFa ? "ایمیل الزامی است." : "Email is required.", pattern: { value: /^\S+@\S+\.\S+$/, message: isFa ? "ایمیل معتبر نیست." : "Enter a valid email." } })} />
-        <SelectField label={isFa ? "استان" : "Province"} error={errors.province?.message as string | undefined} {...register("province", { required: isFa ? "استان را انتخاب کنید." : "Province is required." })}>
-          <option value="">{isFa ? "انتخاب استان" : "Select province"}</option>
-          <option value={isFa ? "تهران" : "Tehran"}>{isFa ? "تهران" : "Tehran"}</option>
-          <option value={isFa ? "البرز" : "Alborz"}>{isFa ? "البرز" : "Alborz"}</option>
-          <option value={isFa ? "اصفهان" : "Isfahan"}>{isFa ? "اصفهان" : "Isfahan"}</option>
-        </SelectField>
-        <TextField label={isFa ? "شهر" : "City"} placeholder={isFa ? "شهر" : "City"} error={errors.city?.message as string | undefined} {...register("city", { required: isFa ? "شهر الزامی است." : "City is required." })} />
+        <AddressRegionFields locale={locale} province={provinceField} city={cityField} provinceError={errors.province?.message} cityError={errors.city?.message} />
         <TextField label={isFa ? "کد پستی" : "Postal code"} placeholder="۱۰ رقم" dir="ltr" error={errors.postalCode?.message as string | undefined} {...register("postalCode", { required: isFa ? "کد پستی الزامی است." : "Postal code is required.", pattern: { value: /^[0-9۰-۹]{10}$/, message: isFa ? "کد پستی باید ۱۰ رقم باشد." : "Postal code must contain 10 digits." } })} />
         <TextField label={isFa ? "پلاک" : "Plaque"} placeholder="—" {...register("plaque")} />
         <TextField label={isFa ? "واحد" : "Unit"} placeholder="—" {...register("unit")} />

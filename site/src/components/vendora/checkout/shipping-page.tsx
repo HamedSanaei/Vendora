@@ -54,7 +54,7 @@ function ShippingContent() {
   const [selectedMethodId, setSelectedMethodId] = useState<ShippingMethodId | "">(() => findShippingMethod(String(shippingInfo.shippingMethodId ?? "post")).id);
   const [addressError, setAddressError] = useState("");
   const [methodError, setMethodError] = useState("");
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<ShippingAddressFormValues>({
+  const { control, register, handleSubmit, formState: { errors }, setValue } = useForm<ShippingAddressFormValues>({
     defaultValues: {
       title: "",
       recipientName: user?.name ?? "",
@@ -219,7 +219,7 @@ function ShippingContent() {
               {addressesError ? <p role="alert" className="mt-5 rounded-control bg-vd-danger-tint p-3 text-sm text-vd-danger">{isFa ? "دریافت آدرس‌ها با خطا روبه‌رو شد." : "Saved addresses could not be loaded."}</p> : null}
               {!addressesLoading && addresses.length > 0 ? <div className="mt-5 grid gap-3 md:grid-cols-2">{addresses.map((address) => <AddressOption key={address.id} address={address} locale={locale} selected={selectedAddressId === address.id} onSelect={() => { setSelectedAddressId(address.id); setAddressError(""); }} />)}<label className={`vd-focus flex min-h-[124px] cursor-pointer items-center justify-center rounded-[18px] border border-dashed p-4 text-sm font-bold ${selectedAddressId === "new" ? "border-jade bg-jade-tint text-jade" : "border-vd-line text-vd-muted hover:border-jade hover:text-jade"}`}><input type="radio" name="shipping-address" checked={selectedAddressId === "new"} onChange={() => { setSelectedAddressId("new"); setAddressError(""); }} className="sr-only" />+ {isFa ? "افزودن آدرس جدید" : "Add a new address"}</label></div> : null}
               {addressError ? <p role="alert" className="mt-4 rounded-control bg-vd-danger-tint p-3 text-xs font-semibold text-vd-danger">{addressError}</p> : null}
-              {isNewAddress ? <NewAddressPanel locale={locale} register={register} errors={errors} /> : null}
+              {isNewAddress ? <NewAddressPanel locale={locale} control={control} register={register} errors={errors} /> : null}
             </section>
 
             <section className="rounded-[20px] border border-vd-line bg-white p-4 md:p-6">

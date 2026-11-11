@@ -1,0 +1,37 @@
+$(document).ready(function() {
+	var buttondivid=0;
+	
+	$(".part42 .nav").children("div").click(function() {
+		$(".part42-bottom").css({"margin-right":$(this).data("rightpx")});
+		$(".part42 .nav").children("div").removeClass("active");
+		$(this).addClass("active");
+	});
+	
+	$(window).on('resize', function(){
+		var win = $(this);
+		if (win.width() > 650) {
+			$(".part42-bottom").css({"margin-right":"90px"});
+			
+			$(".part42 .nav").children("div").removeClass("active");
+			$(".part42 .nav").children("div:first-child").addClass("active");
+		}
+	});
+	
+	
+	$(".part44 .nav").children("div").click(function() {
+		$(".part44-bottom").css({"margin-right":$(this).data("rightpx")});
+		$(".part44 .nav").children("div").removeClass("active");
+		$(this).addClass("active");
+	});
+	
+	$(window).on('resize', function(){
+		var win = $(this);
+		if (win.width() > 650) {
+			$(".part44-bottom").css({"margin-right":"45px"});
+			
+			$(".part44 .nav").children("div").removeClass("active");
+			$(".part44 .nav").children("div:first-child").addClass("active");
+		}
+	});
+	
+});

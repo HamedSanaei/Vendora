@@ -4,8 +4,10 @@ using Domain.Entities;
 namespace Application.Interfaces;
 
 /// <summary>Read-only carrier pricing input, using grams, centimetres and a Toman declared value.</summary>
+public sealed record PostexParcel(ShippingPackage Package, int WeightGrams, decimal DeclaredValueToman);
+
 public sealed record PostexRateRequest(ShippingPolicy Policy, ShippingPackage Package, string DestinationCityCode,
-    int WeightGrams, decimal DeclaredValueToman);
+    int WeightGrams, decimal DeclaredValueToman, IReadOnlyList<PostexParcel>? Parcels = null);
 
 /// <summary>Isolates carrier HTTP and secrets from commerce; no shipment booking or wallet operations.</summary>
 public interface IPostexRates

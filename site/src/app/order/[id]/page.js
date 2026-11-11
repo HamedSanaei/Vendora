@@ -1,18 +1,14 @@
 import SingleOrderArea from "@components/order-area";
-import ProtectedRoute from "@components/auth/protected-route";
+import Wrapper from "@layout/wrapper";
 
 
 export const metadata = {
-  title: "Single Order - Harri Shop",
+  title: "Vendora",
 };
 
 const OrderPage = async ({ params }) => {
   const { id } = await params;
-  return (
-    <ProtectedRoute>
-      <SingleOrderArea orderId={id} />
-    </ProtectedRoute>
-  );
+  return <Wrapper><SingleOrderArea key={id} orderId={id} /></Wrapper>;
 };
 
 export default OrderPage;

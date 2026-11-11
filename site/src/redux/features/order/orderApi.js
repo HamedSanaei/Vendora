@@ -31,9 +31,9 @@ export const orderApi = apiSlice.injectEndpoints({
     addOrder: builder.mutation({
       async queryFn(data) {
         const localAuth = JSON.parse(localStorage.getItem("auth") || "{}");
-        const { idempotencyKey, ...payload } = data;
+        const { idempotencyKey, retainCheckout, ...payload } = data;
         const result = await orderRequest("/api/Orders", payload, localAuth?.accessToken, "POST", idempotencyKey);
-        if (result.data) {
+        if (result.data && !retainCheckout) {
           localStorage.removeItem("couponInfo");
           localStorage.removeItem("cart_products");
           localStorage.removeItem("shipping_info");

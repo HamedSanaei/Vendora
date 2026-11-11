@@ -239,6 +239,11 @@ declare const fa: {
                 country: string;
                 province: string;
                 city: string;
+                chooseProvince: string;
+                chooseCity: string;
+                chooseProvinceFirst: string;
+                unlistedCity: string;
+                cityOrVillage: string;
                 postalCode: string;
                 addressLine: string;
                 addressLookupHint: string;

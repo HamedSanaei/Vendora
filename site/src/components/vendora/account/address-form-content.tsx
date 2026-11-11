@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useController, useForm, useWatch } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import useAuthCheck from "@/hooks/use-auth-check";
@@ -15,6 +15,7 @@ import { VendoraButton } from "@/components/vendora/ui/button";
 import { Switch } from "@/components/vendora/ui/choice-controls";
 import { SelectField, TextField, TextareaField } from "@/components/vendora/ui/form-field";
 import { AddressSignInNotice } from "./addresses-content";
+import { AddressRegionFields } from "./address-region-fields";
 import { NeshanLocationPicker } from "./neshan-location-picker";
 
 const emptyAddress: AddressInput = {
@@ -45,6 +46,8 @@ export function AddressFormContent({ locale, addressId, mapApiKey, mapKeyInvalid
   const [lookupState, setLookupState] = useState<AddressLookupState>("idle");
   const lookup = useRef<{ version: number; controller: AbortController | null; timer: number | undefined }>({ version: 0, controller: null, timer: undefined });
   const { register, handleSubmit, reset, setValue, getValues, control, formState: { errors } } = useForm<AddressInput>({ defaultValues: emptyAddress });
+  const { field: provinceField } = useController({ control, name: "province", rules: { validate: required } });
+  const { field: cityField } = useController({ control, name: "city", rules: { validate: required } });
   const addresses = (data ?? []) as CustomerAddress[];
   const address = addressId ? addresses.find((item) => item.id === addressId) : undefined;
   const [latitude, longitude, isDefault] = useWatch({ control, name: ["latitude", "longitude", "isDefault"] });
@@ -159,8 +162,7 @@ export function AddressFormContent({ locale, addressId, mapApiKey, mapKeyInvalid
           <h2 className="text-[1.1875rem] font-bold text-ink">{t.sectionLocation}</h2>
           <div className="mt-5 grid gap-[20px] md:grid-cols-2">
             <SelectField label={t.country} defaultValue="ir"><option value="ir">{locale === "fa" ? "ایران" : "Iran"}</option></SelectField>
-            <TextField label={t.province} autoComplete="address-level1" maxLength={100} error={errors.province?.message} {...register("province", { validate: required })} />
-            <TextField label={t.city} autoComplete="address-level2" maxLength={100} error={errors.city?.message} {...register("city", { validate: required })} />
+            <AddressRegionFields locale={locale} province={provinceField} city={cityField} provinceError={errors.province?.message} cityError={errors.city?.message} />
             <TextField label={t.postalCode} inputMode="numeric" dir="ltr" autoComplete="postal-code" maxLength={10} error={errors.postalCode?.message} {...register("postalCode", { validate: (value) => /^\d{10}$/.test(normalizeAddressDigits(value)) || t.postalError })} />
             <TextField label={t.plaque} maxLength={50} {...register("plaque")} />
             <TextField label={t.unit} maxLength={50} {...register("unit")} />

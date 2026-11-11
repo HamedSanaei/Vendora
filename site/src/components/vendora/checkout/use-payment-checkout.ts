@@ -3,13 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { clear_cart } from "@/redux/features/cartSlice";
 import { sync_cart_prices } from "@/redux/features/cartSlice";
 import { apiSlice } from "@/redux/api/apiSlice";
 import { getCartUnitPrice } from "@/components/vendora/cart/cart-model";
-import { clear_coupon } from "@/redux/features/coupon/couponSlice";
 import { useAddOrderMutation } from "@/redux/features/order/orderApi";
-import { reset_checkout, set_payment } from "@/redux/features/order/orderSlice";
+import { set_payment } from "@/redux/features/order/orderSlice";
 import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
 import { resolveShippingMethod } from "@/lib/vendora/shipping";
 import type { Locale } from "@/lib/vendora/types";
@@ -23,6 +21,7 @@ import {
 } from "./checkout-model";
 import type { ShippingAddressView } from "./checkout-components";
 import { completeProfileHref } from '@/lib/auth/customer-profile';
+import { paymentErrorMessage, readPaymentAvailability, startTabaPay, type PaymentAvailability } from "@/lib/tabapay-client";
 
 import { useShippingPolicy, shippingCartFingerprint } from "@/lib/shipping-client";
 
@@ -35,7 +34,6 @@ interface PaymentRootState {
     payment_info?: PersistedPaymentInfo;
   };
 }
-
 interface AddOrderResult {
   data?: { orderNumber?: string };
   error?: { data?: { message?: string; code?: string; productId?: string; currentPrice?: number } };
@@ -53,11 +51,21 @@ export function usePaymentCheckout() {
   const shippingInfo = useSelector((state: PaymentRootState) => state.order.shipping_info ?? {});
   const persistedPayment = useSelector((state: PaymentRootState) => state.order.payment_info);
   const [addOrder] = useAddOrderMutation();
-  const [provider, setProviderState] = useState<PaymentProviderId>(() => normalizeProvider(persistedPayment?.provider));
+  const [provider, setProviderState] = useState<PaymentProviderId>("tabapay");
   const [notes, setNotesState] = useState(() => persistedPayment?.notes ?? String(shippingInfo.notes ?? ""));
   const [phase, setPhase] = useState<PaymentCheckoutPhase>("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  const redirectTimer = useRef<number | null>(null);
+  const [availability, setAvailability] = useState<PaymentAvailability | null>(null);
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const submitting = useRef(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    readPaymentAvailability(controller.signal).then(setAvailability).catch(() => {
+      if (!controller.signal.aborted) setAvailability({ available: false, sandbox: false });
+    });
+    return () => controller.abort();
+  }, []);
 
   const policy = useShippingPolicy();
   const shippingMethod = useMemo(
@@ -85,10 +93,6 @@ export function usePaymentCheckout() {
     (shippingInfo.shippingMethodId !== "freight" || items.reduce((sum, item) => sum + item.orderQuantity, 0) > 10) &&
     (!shippingMethod.requiresQuote || (shippingInfo.shippingQuoteId && Date.parse(String(shippingInfo.shippingQuoteExpiresAtUtc)) > quoteNow)));
 
-  useEffect(() => () => {
-    if (redirectTimer.current !== null) window.clearTimeout(redirectTimer.current);
-  }, []);
-
   const setProvider = useCallback((value: PaymentProviderId) => {
     setProviderState(value);
     setPhase("idle");
@@ -101,9 +105,8 @@ export function usePaymentCheckout() {
     dispatch(set_payment({ provider, notes: value }));
   }, [dispatch, provider]);
 
-  const submit = useCallback(async () => {
-    if (!policy.ready || policy.failed) return;
-    if (phase === "submitting" || phase === "redirecting") return;
+  async function submit() {
+    if (!policy.ready || policy.failed || !availability?.available || submitting.current || phase === "redirecting") return;
     if (!user?._id && !user?.id) {
       router.push(`${withLocalePath("/login", locale)}?returnTo=${encodeURIComponent(withLocalePath("/checkout", locale))}`);
       return;
@@ -112,8 +115,8 @@ export function usePaymentCheckout() {
       router.push(withLocalePath("/shipping", locale));
       return;
     }
-    if (!provider) {
-      setErrorMessage(locale === "fa" ? "لطفاً یک درگاه پرداخت انتخاب کنید." : "Choose a payment gateway.");
+    if (totals.payable < 10_000 || totals.payable > 50_000_000) {
+      setErrorMessage(locale === "fa" ? "مبلغ قابل پرداخت با تاباپی باید بین ۱۰ هزار و ۵۰ میلیون تومان باشد." : "TabaPay supports totals between 10,000 and 50,000,000 toman.");
       setPhase("error");
       return;
     }
@@ -136,41 +139,49 @@ export function usePaymentCheckout() {
         expectedUnitPrice: getCartUnitPrice(item),
       })),
     };
-    // Retain the key across network failures and refresh; changed checkout input creates a new operation.
-    const fingerprint = JSON.stringify({ payload, user: user?.id ?? user?._id });
-    let attempt: { fingerprint: string; key: string } | null = null;
-    try { attempt = JSON.parse(sessionStorage.getItem("vendora-order-attempt") ?? "null"); } catch { /* Invalid local metadata is not trusted. */ }
-    const key = attempt?.fingerprint === fingerprint ? attempt.key : crypto.randomUUID();
-    sessionStorage.setItem("vendora-order-attempt", JSON.stringify({ fingerprint, key }));
-    const result = await addOrder({ ...payload, idempotencyKey: key }) as AddOrderResult;
+    submitting.current = true;
+    try {
+      // Retain the key across network failures and refresh; changed checkout input creates a new operation.
+      const fingerprint = JSON.stringify({ payload, user: user?.id ?? user?._id });
+      let attempt: { fingerprint: string; key: string } | null = null;
+      try { attempt = JSON.parse(sessionStorage.getItem("vendora-order-attempt") ?? "null"); } catch { /* Invalid local metadata is not trusted. */ }
+      const key = attempt?.fingerprint === fingerprint ? attempt.key : crypto.randomUUID();
+      sessionStorage.setItem("vendora-order-attempt", JSON.stringify({ fingerprint, key }));
+      const result = await addOrder({ ...payload, idempotencyKey: key, retainCheckout: true }) as AddOrderResult;
 
-    if (result.error || !result.data?.orderNumber) {
-      if (result.error?.data?.code === 'PROFILE_INCOMPLETE') {
-        setPhase('idle'); router.push(completeProfileHref(locale, withLocalePath('/checkout', locale))); return;
-      }
-      if (result.error?.data?.code === "PRICE_CHANGED") {
-        const { productId, currentPrice } = result.error.data;
-        if (productId && currentPrice) dispatch(sync_cart_prices([{ _id: productId, originalPrice: currentPrice, price: currentPrice, discount: 0 }]));
-        dispatch(apiSlice.util.invalidateTags(["Products", "Discount", "Product", "RelatedProducts"]));
-        setErrorMessage(locale === "fa" ? "قیمت محصول به‌روز شد. مبلغ سفارش را بررسی و دوباره تأیید کنید." : "Product prices were updated. Review the new total and confirm again.");
+      if (result.error || !result.data?.orderNumber) {
+        if (result.error?.data?.code === 'PROFILE_INCOMPLETE') {
+          setPhase('idle'); router.push(completeProfileHref(locale, withLocalePath('/checkout', locale))); return;
+        }
+        if (result.error?.data?.code === "PRICE_CHANGED") {
+          const { productId, currentPrice } = result.error.data;
+          if (productId && currentPrice) dispatch(sync_cart_prices([{ _id: productId, originalPrice: currentPrice, price: currentPrice, discount: 0 }]));
+          dispatch(apiSlice.util.invalidateTags(["Products", "Discount", "Product", "RelatedProducts"]));
+          setErrorMessage(locale === "fa" ? "قیمت محصول به‌روز شد. مبلغ سفارش را بررسی و دوباره تأیید کنید." : "Product prices were updated. Review the new total and confirm again.");
+          setPhase("error");
+          return;
+        }
+        setErrorMessage(result.error?.data?.message ?? (locale === "fa" ? "ثبت سفارش انجام نشد. دوباره تلاش کنید." : "The order could not be created. Try again."));
         setPhase("error");
         return;
       }
-      setErrorMessage(result.error?.data?.message ?? (locale === "fa" ? "ثبت سفارش انجام نشد. دوباره تلاش کنید." : "The order could not be created. Try again."));
-      setPhase("error");
-      return;
-    }
 
-    const orderNumber = result.data.orderNumber;
-    sessionStorage.removeItem("vendora-order-attempt");
-    setPhase("redirecting");
-    dispatch(clear_cart());
-    dispatch(clear_coupon());
-    dispatch(reset_checkout());
-    redirectTimer.current = window.setTimeout(() => {
-      router.push(withLocalePath(`/order/${orderNumber}`, locale));
-    }, 900);
-  }, [addOrder, dispatch, items, locale, notes, phase, provider, router, shippingCompleted, shippingInfo.shippingAddressId, shippingInfo.shippingQuoteId, shippingInfo.shippingQuoteExpiresAtUtc, shippingMethod.id, shippingMethod.requiresQuote, policy.ready, policy.failed, coupon?.couponCode, totals.discount, totals.shippingCost, user]);
+      setOrderNumber(result.data.orderNumber);
+      sessionStorage.setItem("vendora-payment-cart", JSON.stringify({
+        orderNumber: result.data.orderNumber,
+        user: user.id ?? user._id,
+        fingerprint: shippingCartFingerprint(items, coupon?.couponCode),
+      }));
+      const url = await startTabaPay(result.data.orderNumber, locale);
+      setPhase("redirecting");
+      window.location.assign(url);
+    } catch (error) {
+      setErrorMessage(paymentErrorMessage(error, locale));
+      setPhase("error");
+    } finally {
+      submitting.current = false;
+    }
+  }
 
   return {
     locale,
@@ -184,6 +195,8 @@ export function usePaymentCheckout() {
     shippingPolicyFailed: policy.failed,
     totals,
     provider,
+    availability,
+    orderNumber,
     setProvider,
     notes,
     setNotes,
@@ -191,9 +204,4 @@ export function usePaymentCheckout() {
     errorMessage,
     submit,
   };
-}
-
-/** Restores a safe payment provider from persisted client state. */
-function normalizeProvider(value?: string): PaymentProviderId {
-  return value === "bankMelli" ? "bankMelli" : "zarinpal";
 }

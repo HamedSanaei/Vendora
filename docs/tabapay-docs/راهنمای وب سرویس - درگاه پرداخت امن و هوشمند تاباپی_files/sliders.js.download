@@ -1,0 +1,180 @@
+$(document).ready(function() {
+
+    //******************************************** Sliders ***********************************************//
+
+    //******************************** comment_Swiper ***********************************//
+    var topBannerSwiper = new Swiper(".comment_Swiper", {
+        loop: true,
+        keyboard: {
+            enabled: true,
+        },
+        navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+        },
+        autoplay: {
+            delay: 5500,
+            disableOnInteraction: false,
+        },
+        slidesPerView: 1,
+        spaceBetween: 33,
+        breakpoints: {
+            // when window width is <= 400px
+            400: {
+                slidesPerView: 1,
+                spaceBetweenSlides: 20
+            },
+            // when window width is <= 630px
+            630: {
+                slidesPerView: 2,
+                spaceBetweenSlides: 20
+            },
+            // when window width is <= 1100px
+            1100: {
+                slidesPerView: 3,
+                spaceBetweenSlides: 20
+            },
+
+            // when window width is <= 1360px
+            1700: {
+                slidesPerView: 3,
+                spaceBetweenSlides: 20
+            }
+        },
+        pagination: {
+            el: ".swiper-pagination",
+            clickable: true,
+        },
+    });
+
+    //******************************** comment_Swiper ***********************************//
+    var topBannerSwiper = new Swiper(".blog_Swiper", {
+        loop: true,
+        keyboard: {
+            enabled: true,
+        },
+        navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+        },
+        autoplay: {
+            delay: 5500,
+            disableOnInteraction: false,
+        },
+        slidesPerView: 1,
+        spaceBetween: 40,
+        breakpoints: {
+            // when window width is <= 400px
+            400: {
+                slidesPerView: 1,
+                spaceBetweenSlides: 20
+            },
+            // when window width is <= 630px
+            630: {
+                slidesPerView: 2,
+                spaceBetweenSlides: 20
+            },
+            // when window width is <= 1100px
+            1100: {
+                slidesPerView: 3,
+                spaceBetweenSlides: 20
+            },
+
+            // when window width is <= 1360px
+            1700: {
+                slidesPerView: 3,
+                spaceBetweenSlides: 20
+            }
+        },
+        pagination: {
+            el: ".swiper-pagination",
+            clickable: true,
+        },
+    });
+
+    //******************************** services_Swiper ***********************************//
+    var topBannerWwiper = new Swiper(".services_Swiper", {
+        loop: true,
+        keyboard: {
+            enabled: true,
+        },
+        autoplay: {
+            delay: 2500,
+            disableOnInteraction: false,
+        },
+        slidesPerView: 1,
+        spaceBetween: 10,
+        breakpoints: {
+            // when window width is <= 400px
+            400: {
+                slidesPerView: 1,
+                spaceBetweenSlides: 20
+            },
+            // when window width is <= 576px
+            576: {
+                slidesPerView: 2,
+                spaceBetweenSlides: 20
+            },
+            // when window width is <= 999px
+            999: {
+                slidesPerView: 3,
+                spaceBetweenSlides: 20
+            },
+            // when window width is <= 1210px
+            1210: {
+                slidesPerView: 3,
+                spaceBetweenSlides: 20
+            },
+
+        },
+        pagination: {
+            el: ".swiper-pagination",
+            clickable: true,
+        },
+    });
+
+    //******************************** priceBottomRes_Swiper ***********************************//
+    var topBannerSwiper = new Swiper(".general_swiper", {
+        loop: true,
+        keyboard: {
+            enabled: true,
+        },
+        autoplay: {
+            delay: 2500,
+            disableOnInteraction: false,
+        },
+        slidesPerView: 1,
+        spaceBetween: 10,
+        breakpoints: {
+            // when window width is <= 400px
+            400: {
+                slidesPerView: 1,
+                spaceBetweenSlides: 20
+            },
+            // when window width is <= 576px
+            768: {
+                slidesPerView: 2,
+                spaceBetweenSlides: 20
+            },
+            // when window width is <= 999px
+            999: {
+                slidesPerView: 3,
+                spaceBetweenSlides: 20
+            },
+            // when window width is <= 1210px
+            1210: {
+                slidesPerView: 3,
+                spaceBetweenSlides: 20
+            },
+            // when window width is <= 1360px
+            1700: {
+                slidesPerView: 4,
+                spaceBetweenSlides: 20
+            }
+        },
+        pagination: {
+            el: ".swiper-pagination",
+            clickable: true,
+        },
+    });
+});//doc is ready

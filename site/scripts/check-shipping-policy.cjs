@@ -10,12 +10,41 @@ const output = path.resolve(root, '../artifacts/shipping-ui');
 const id = '10000000-0000-0000-0000-000000000100', addressId = '20000000-0000-0000-0000-000000000100';
 const user = { id: '30000000-0000-0000-0000-000000000100', _id: '30000000-0000-0000-0000-000000000100', name: 'خریدار آزمایشی', email: 'shipping@example.invalid', phone: '09121111111', role: 'Customer' };
 let included = true, postalError = false, ambiguous = false;
+let paymentState = 'pending', ordersCreated = 0, paymentStarts = 0;
+const orderNumber = 'ORD-TABAPAY-BROWSER';
+const gatewayUrl = 'https://api.tabapay.ir/sandbox/pay/67649ac7-acda-487c-9a0e-62703e0724a6';
 const calls = [], logs = [];
 /** Produces current public prices, keeping the fixture's persisted base price unchanged. */
 function product() { return { id, productCode: 100, title: 'کیف آزمایشی ارسال', slug: 'shipping-fixture', price: 1000000 + (included ? 250000 : 0), basePrice: 1000000, embeddedShippingUnitAmount: included ? 250000 : 0, freeShipping: included, shippingPolicyVersion: included ? 2 : 3, stockQuantity: 100, images: [], categories: [], colors: [] }; }
 /** Returns the real endpoint shapes without performing writes outside the ephemeral fixture. */
 function answer(url, body, authorization) {
   const p = url.pathname;
+  const savedOrder = { id: orderNumber, orderNumber, createdAtUtc: '2026-11-10T09:00:00Z',
+    status: paymentState === 'paid' ? 'Paid' : 'PendingPayment',
+    paymentStatus: paymentState === 'paid' ? 'Verified' : 'Pending', totalAmount: 2300000,
+    subtotal: 2500000, shippingCost: 0, discountAmount: 200000, shippingPaymentMode: 'free',
+    shippingAddress: { recipientName: user.name, province: 'تهران', city: 'تهران', phoneNumber: user.phone },
+    items: [{ productId: id, productTitle: product().title, quantity: 2, unitPrice: 1250000, lineTotal: 2500000 }] };
+  if (p === '/api/payments/tabapay/availability') return { available: true, sandbox: true };
+  if (p.toLowerCase() === '/api/orders' && body) {
+    assert.equal(authorization, 'Bearer local-shipping-session');
+    assert.equal(body.items[0].expectedUnitPrice, 1250000);
+    ordersCreated++;
+    return savedOrder;
+  }
+  if (p === `/api/payments/tabapay/orders/${orderNumber}/start`) {
+    assert.equal(authorization, 'Bearer local-shipping-session');
+    assert.equal(body.locale, 'fa');
+    paymentStarts++;
+    return { url: gatewayUrl };
+  }
+  if (p === `/api/payments/tabapay/orders/${orderNumber}`) {
+    assert.equal(authorization, 'Bearer local-shipping-session');
+    return { orderNumber, amount: savedOrder.totalAmount, state: paymentState, canRetry: paymentState !== 'paid',
+      reference: paymentState === 'paid' ? '111122223333' : null };
+  }
+  if (p.toLowerCase() === `/api/orders/${orderNumber.toLowerCase()}`) return savedOrder;
+  if (p.toLowerCase() === '/api/orders/me') return [savedOrder];
   if (p === '/api/shipping/policy') return { includedInPrice: included, unitAmount: 250000, version: included ? 2 : 3 };
   if (p === '/api/account/me') return { ...user, fullName: user.name, completion: { isComplete: true, phoneNumberConfirmed: true } };
   if (p === '/api/account/addresses') return [{ id: addressId, title: 'خانه', recipientName: user.name, phoneNumber: user.phone, province: 'تهران', city: 'تهران', streetAddress: 'خیابان آزمایشی، پلاک ۲', plaque: '2', postalCode: '1234567890', isDefault: true }];
@@ -45,7 +74,7 @@ const api = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return res.writeHead(204).end();
   let raw = ''; for await (const chunk of req) raw += chunk;
   const data = answer(new URL(req.url, apiOrigin), raw ? JSON.parse(raw) : null, req.headers.authorization);
-  res.writeHead(data.status || 200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(data));
+  res.writeHead(typeof data.status === 'number' ? data.status : 200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(data));
 });
 /** Waits for the production build's local web server. */
 async function ready() {
@@ -62,7 +91,11 @@ async function open(browser, width, quantity = 2, locale = 'fa', coupon = true) 
   const context = await browser.newContext({ viewport: { width, height: 1000 } });
   await context.route('**/api/**', async route => {
     const req = route.request(), data = answer(new URL(req.url()), req.postDataJSON(), req.headers().authorization);
-    await route.fulfill({ status: data.status || 200, contentType: 'application/json', body: JSON.stringify(data) });
+    await route.fulfill({ status: typeof data.status === 'number' ? data.status : 200, contentType: 'application/json', body: JSON.stringify(data) });
+  });
+  await context.route('https://api.tabapay.ir/**', async route => {
+    assert.equal(route.request().url(), gatewayUrl);
+    await route.fulfill({ contentType: 'text/html', body: `<a href="${origin}/fa/order/${orderNumber}">Return to store</a>` });
   });
   await context.addInitScript(({ user, item, quantity, coupon }) => {
     if (sessionStorage.getItem('shipping-fixture')) return;
@@ -105,6 +138,27 @@ async function main() {
       assert.equal(saved.shippingPaymentMode, 'free'); assert.equal(saved.shippingCost, 0); assert.equal(saved.shippingPolicyVersion, 2);
       assert.equal(saved.shippingServerTotals.payable, 2300000);
       await capture(page, `free-payment-${width}`);
+      if (width === 390) {
+        await page.getByRole('button', { name: 'پرداخت و ثبت', exact: true }).filter({ visible: true }).click();
+        await page.waitForURL(gatewayUrl);
+        paymentState = 'failed';
+        await page.getByRole('link', { name: 'Return to store' }).click();
+        await page.getByText('پرداخت سفارش تکمیل نشد.', { exact: true }).waitFor();
+        assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('cart_products')).length), 1);
+        await page.getByRole('button', { name: 'ادامهٔ پرداخت', exact: true }).click();
+        await page.waitForURL(gatewayUrl);
+        paymentState = 'paid';
+        await page.getByRole('link', { name: 'Return to store' }).click();
+        await page.getByText('پرداخت سفارش تأیید شد.', { exact: true }).waitFor();
+        await page.waitForFunction(() => JSON.parse(localStorage.getItem('cart_products') ?? '[]').length === 0);
+        assert.equal(ordersCreated, 1);
+        assert.equal(paymentStarts, 2);
+        await capture(page, 'tabapay-paid-390');
+        await page.goto(`${origin}/en/order/${orderNumber}`);
+        await page.getByText('Order payment verified.', { exact: true }).waitFor();
+        await context.close();
+        continue;
+      }
       const cartPreview = page.waitForResponse(response => response.url().endsWith('/shipping/cart-pricing'));
       await page.goto(`${origin}/fa/cart`); await cartPreview;
       await page.getByText('۲٬۳۰۰٬۰۰۰ تومان', { exact: true }).filter({ visible: true }).first().waitFor();

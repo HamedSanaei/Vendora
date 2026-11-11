@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<!-- saved from url=(0027)https://tabapay.ir/docs/api -->
+<html lang="fa"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <link rel="icon" href="https://tabapay.ir/favicon.ico">
+    <title>راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی</title>
+    
+    <meta name="theme-color" content="#434C83">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+            <meta name="keywords" content="تاباپی, API, وب سرویس, پرداخت آنلاین, احراز هویت, تراکنش, برنامه نویسی, درگاه پرداخت, کدهای پاسخ, sandbox, محیط عملیاتی, ایجاد تراکنش, تایید تراکنش, مستندات">
+<meta name="description" content="تاباپی - راهنمای اتصال برنامه نویسان به درگاه های پرداخت تاباپی از طریق API. شامل نمونه کدها و توضیحات پارامترها و نحوه احراز هویت.">
+<meta name="robots" content="follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large">
+<link rel="canonical" href="https://tabapay.ir/docs/api">
+
+<meta property="og:locale" content="fa-IR">
+<meta property="og:type" content="website">
+<meta property="og:title" content="راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی">
+<meta property="og:description" content="تاباپی - راهنمای اتصال برنامه نویسان به درگاه های پرداخت تاباپی از طریق API. شامل نمونه کدها و توضیحات پارامترها و نحوه احراز هویت.">
+<meta property="og:url" content="https://tabapay.ir/docs/api">
+<meta property="og:site_name" content="تاباپی">
+<meta property="og:updated_time" content="2024-07-24T18:30:00Z">
+<meta property="og:determiner" content="auto">
+<meta property="article:published_time" content="2024-07-24T18:30:00Z">
+<meta property="article:modified_time" content="2024-07-24T18:30:00Z">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی">
+<meta name="twitter:description" content="تاباپی - راهنمای اتصال برنامه نویسان به درگاه های پرداخت تاباپی از طریق API. شامل نمونه کدها و توضیحات پارامترها و نحوه احراز هویت.">
+<meta name="twitter:image" content="https://tabapay.ir/assets/images/main_pages/home/section9.png">
+
+<meta name="DC.Title" content="راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی">
+<meta name="DC.Publisher" content="تاباپی">
+<meta name="DC.Language" scheme="UTF-8" content="fa-IR">
+<meta name="DC.Creator" content="تاباپی">
+<meta name="DC.Type" scheme="DCMIType" content="Text">
+<meta name="DC.Format" scheme="IMT" content="text/html">
+<meta name="DC.Format.MIME" content="text/html">
+<meta name="DC.Format.SysReq" content="Internet browser">
+<meta name="DC.Description" content="System Requirements: Internet browser">
+<meta name="DC.Source" content="https://tabapay.ir">
+<meta name="DC.Coverage" content="World">
+<meta name="DC.Identifier" content="https://tabapay.ir">
+<script async="" src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/clarity.js.download"></script><script async="" src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/m6oeascj6t"></script><script async="" src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/matomo.js.download"></script><script async="" src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/container_Gc9Yuen9.js.download"></script><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","name":"\u0634\u0631\u06a9\u062a \u0633\u0627\u0632\u0647 \u062a\u0627\u0628\u0627\u0646 \u0633\u067e\u0627\u0647\u0627\u0646 - \u062a\u0627\u0628\u0627\u067e\u06cc","url":"https://tabapay.ir","logo":"https://tabapay.ir/assets/images/logo.png","contactPoint":{"@type":"ContactPoint","contactType":"Customer Service","telephone":"+983142928","email":"info@tabapay.ir","areaServed":"IR"},"address":{"@type":"PostalAddress","addressLocality":"\u0627\u0635\u0641\u0647\u0627\u0646","addressRegion":"\u0627\u0635\u0641\u0647\u0627\u0646","addressCountry":"IR"}},{"@type":"WebPage","name":"\u0631\u0627\u0647\u0646\u0645\u0627\u06cc \u0648\u0628 \u0633\u0631\u0648\u06cc\u0633 - \u062f\u0631\u06af\u0627\u0647 \u067e\u0631\u062f\u0627\u062e\u062a \u0627\u0645\u0646 \u0648 \u0647\u0648\u0634\u0645\u0646\u062f \u062a\u0627\u0628\u0627\u067e\u06cc","url":"https://tabapay.ir/docs/api","logo":"https://tabapay.ir/assets/images/logo.png"}]}</script>
+        <meta name="csrf-token" content="4rl61xNP5S37xYKS5chLuzrGXmuQujzk3aSPT0gz">
+    <link href="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/style.css" rel="stylesheet" type="text/css">
+<link href="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/design_style.css" rel="stylesheet" type="text/css">
+<link href="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/uicons-regular-rounded.css" rel="stylesheet" type="text/css">
+<link href="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/vanillatoasts.css" rel="stylesheet" type="text/css">
+<link href="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/jquery-ui.1.11.2.min.css" rel="stylesheet" type="text/css">
+
+
+<link href="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/persianDatepicker-default.css" rel="stylesheet" type="text/css">
+
+<link href="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/swiper.css" rel="stylesheet" type="text/css">
+
+<link href="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/modal.css" rel="stylesheet" type="text/css">
+
+<!-- Include css By page url -->
+    <link href="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/api.css" rel="stylesheet" type="text/css">
+
+<!--End include-->
+    <!-- Matomo Tag Manager -->
+    <script>
+        var _mtm = window._mtm = window._mtm || [];
+        _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
+        (function() {
+            var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+            g.async=true; g.src='https://analytics.tabapay.ir/js/container_Gc9Yuen9.js'; s.parentNode.insertBefore(g,s);
+        })();
+    </script><script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/js" async=""></script><script>
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-B5P627P7NZ');
+            </script>
+    <!-- End Matomo Tag Manager -->
+<style id="tabapay-contact-css">.tabapay_holder{font:12px/14px Tahoma,Arial,sans-serif;position:fixed;bottom:0;left:0;z-index:99998;direction:rtl}.tabapay_holder .tabapay_btn{display:flex;width:56px;height:56px;border-radius:50%;border:none;box-shadow:0 2px 12px rgba(0,0,0,.2);position:absolute;left:20px;bottom:20px;transition-duration: .3s;transition-timing-function: cubic-bezier(.17, .67, .46, 1.49);cursor:pointer;align-items:center;justify-content:center;color:#fff;text-decoration:none;font-size:11px;font-weight:bold;flex-direction:column;gap:2px}.tabapay_holder .tabapay_btn svg{width:26px;height:26px;flex-shrink:0}.tabapay_holder .tabapay_btn_main{z-index:2;background:#434C83;overflow:hidden}.tabapay_holder .tabapay_btn_main img{width:100%;height:100%;object-fit:cover}.tabapay_holder .tabapay_btn_main:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(67,76,131,.4)}.tabapay_holder .tabapay_btn_sub{z-index:1;opacity:0;pointer-events:none;background:#159BD5}.tabapay_holder.active .tabapay_btn_main{opacity:.5;transform:scale(0.72)}.tabapay_holder.active .tabapay_btn_sub{opacity:1;pointer-events:auto}.tabapay_holder.active .tabapay_btn_sub[data-type="chat"]{left:20px;bottom:80px;background:#159BD5}.tabapay_holder.active .tabapay_btn_sub[data-type="webphone"]{left:80px;bottom:45px;background:#159BD5}.tabapay_holder.active.chat-open .tabapay_btn_sub,.tabapay_holder.active.phone-open .tabapay_btn_sub{opacity:0;pointer-events:none}.tabapay_holder .tabapay_btn_sub:hover{transform:scale(1.08);filter:brightness(1.1)}.tabapay_holder .webphone{position:absolute!important;left:0!important;bottom:20px!important;right:auto!important;z-index:3;display:none}.tabapay_holder.phone-open .webphone{display:block}.tabapay_holder .webphone__fab{display:none!important}.tabapay_holder .webphone .webphone__header{padding-right:42px;min-height:26px;box-sizing:border-box}.tabapay_webphone_close{position:absolute;top:12px;right:12px;z-index:10;width:26px;height:26px;border:none;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0}.tabapay_webphone_close:hover{background:rgba(0,0,0,.7)}.tabapay_holder.phone-open .tabapay_btn_main{pointer-events:none;cursor:default;opacity:.7}.tabapay_holder.chat-open .tabapay_btn_main{opacity:0;pointer-events:none;visibility:hidden}#box-widget-icon,.box-widget-icon,[class*="box-widget-icon"],[class*="goftino-button"],[class*="goftino-widget"]{display:none!important;visibility:hidden!important;opacity:0!important;position:absolute!important;left:-9999px!important;width:0!important;height:0!important;overflow:hidden!important}</style></head>
+<body class="page_body">
+
+
+
+
+
+
+
+
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/jquery-3.6.0.min.js.download" type="text/javascript"></script>
+
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/jquery.canvasjs.min.js.download" type="text/javascript"></script>
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/general.js.download" type="text/javascript"></script>
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/javascript.js.download" type="text/javascript"></script>
+
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/chart.min.js.download" type="text/javascript"></script>
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/swiper.js.download" type="text/javascript"></script>
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/sliders.js.download" type="text/javascript"></script>
+<script type="text/javascript" src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/jsvalidation.js.download"></script>
+
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/persianDate.js.download" type="text/javascript"></script>
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/persianDatepicker.min.js.download" type="text/javascript"></script>
+
+
+<div class="popup loading" id="loading">
+    <img class="loadingImg" src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/tail-spin.svg" width="50" alt="">
+
+
+</div>
+
+
+<!-- Include css By page url -->
+    <script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/api.js.download" type="text/javascript"></script>
+    <script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/about_us.js.download" type="text/javascript"></script>
+
+
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/modal.js.download" type="text/javascript"></script>
+
+    <div class="part1">
+        <div class="popup-menus-bg"></div>
+        <div>
+            <a href="https://tabapay.ir/" class="logo-link"><img src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/rightbar-logo.png" id="logo"></a>
+            <ul>
+                <li id="menu-item1" class="introduction menuItem"><a href="https://tabapay.ir/docs/api#introduction">مقدمه</a></li>
+                <li id="menu-item2" class="authentication menuItem"><a href="https://tabapay.ir/docs/api#authentication">احراز هویت</a>
+                </li>
+                <li id="menu-item3" class="create_transaction menuItem"><a href="https://tabapay.ir/docs/api#create_transaction">ایجاد تراکنش</a></li>
+                <li id="menu-item3" class="create_transaction menuItem"><a href="https://tabapay.ir/docs/api#create_transaction_with_invoice">ایجاد تراکنش به همراه صدور فاکتور</a></li>
+                <li id="menu-item4" class="return_to_site menuItem"><a href="https://tabapay.ir/docs/api#return_to_site">بازگشت به سایت پذیرنده</a>
+                </li>
+                <li id="menu-item5" class="verify_transaction menuItem"><a href="https://tabapay.ir/docs/api#verify_transaction">تایید تراکنش</a></li>
+                <li id="menu-item5" class="verify_transaction menuItem"><a href="https://tabapay.ir/docs/api#auto_verify_transaction">تایید خودکار تراکنش</a></li>
+                <li id="menu-item6" class="list_of_errors menuItem mactive"><a href="https://tabapay.ir/docs/api#list_of_errors">لیست کدهای پاسخ</a>
+                </li>
+                <li id="menu-item7" class="postman menuItem"><a href="https://tabapay.ir/docs/api#postman">Postman</a>
+                </li>
+                <li id="menu-item7" class="insomnia menuItem"><a href="https://tabapay.ir/docs/api#insomnia">Insomnia</a>
+                </li>
+            </ul>
+            <a href="https://tabapay.ir/" class="btnback">
+                <button class="btn btn7">صفحه اصلی سایت</button>
+            </a>
+        </div>
+    </div>
+    <div class="part2">
+        <div class="navbar">
+            <button class="btnnavbar"></button>
+        </div>
+
+        <section class="section1" id="introduction">
+            <div><h1 class="heading-title1">راهنمای وب سرویس</h1></div>
+            <div class="part_desc">
+                <h2 class="title">مقدمه</h2>
+                <span>این راهنما نحوه اتصال برنامه نویسان به درگاه های پرداخت از طریق API تاباپی را توضیح میدهد.<br>شما می‌توانید نمونه کدها را در ستون سمت چپ صفحه مشاهده کنید و درصورت تمایل می‌توانید از طریق تب های بالای صفحه،<br> نمونه کدهای زبان های برنامه نویسی مختلف را انتخاب کنید.</span>
+            </div><!--part_desc-->
+        </section>
+
+        <section class="section1" id="authentication">
+            <div class="part_desc">
+                <h2 class="title">احراز هویت</h2>
+                <span>برای استفاده از API های تاباپی نیاز به یک merchant است.<br> شما می‌توانید به داشبورد خود در تاباپی رفته و در بخش درگاه پرداخت، مرچنت درگاه ایجاد شده خود را مشاهده و آن را تحت عنوان Authorization در header، برای ما ارسال نمایید:<br><br>Authorization: Bearer aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</span>
+                <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                    <tbody><tr>
+                        <th>توضیحات</th>
+                        <th width="100px">ضروری</th>
+                        <th width="100px">نوع</th>
+                        <th width="100px">پارامتر</th>
+                    </tr>
+                    <tr>
+                        <td>کلید منحصر بفرد جهت احراز هویت به طول 36 کاراکتر</td>
+                        <td>بله</td>
+                        <td>string</td>
+                        <td>Authorization</td>
+                    </tr>
+                </tbody></table>
+            </div><!--part_desc-->
+
+        </section>
+
+
+        <section class="section1" id="create_transaction">
+
+
+            <div class="section-wrapper">
+                <div class="part_desc">
+
+                    <h2 class="title">ایجاد تراکنش</h2>
+                    <span>با استفاده از آدرس زیر می‌توانید یک تراکنش در محیط تست ایجاد کنید.</span>
+                    <div class="content">
+                        <span class="title_1">محیط تست</span>
+                        <span class="content-span">
+                             https://api.tabapay.ir/v1/sandbox/create
+                        </span>
+
+                    </div>
+
+
+                    <span>با استفاده از آدرس زیر می‌توانید یک تراکنش در محیط عملیاتی ایجاد کنید.</span>
+                    
+                    <div class="content">
+
+                        <span class="title_1">محیط عملیاتی</span>
+                        <span class="content-span">
+                             https://api.tabapay.ir/v1/create
+                        </span>
+                    </div>
+                    <div class="title_1">پارامترهای مورد نیاز</div>
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                        <tbody><tr>
+                            <th>توضیحات</th>
+                            <th width="100px">ضروری</th>
+                            <th width="100px">نوع</th>
+                            <th width="100px">پارامتر</th>
+                        </tr>
+                        
+                        
+                        
+                        
+                        
+                        
+                        <tr>
+                            <td>مبلغ مورد نظر بین 100,000 ریال تا 500,000,000 ریال باشد</td>
+                            <td>بله</td>
+                            <td>number</td>
+                            <td>amount</td>
+                        </tr>
+                        <tr>
+                            <td>آدرس بازگشت به سایت پذیرنده به طول حداکثر 2048 کاراکتر</td>
+                            <td>بله</td>
+                            <td>string</td>
+                            <td>callbackURL</td>
+                        </tr>
+                        <tr>
+                            <td>تلفن همراه پرداخت کننده به طول 11 کاراکتر مانند 09123456789</td>
+                            <td>خیر</td>
+                            <td>string</td>
+                            <td>mobile</td>
+                        </tr>
+                        <tr>
+                            <td>پست الکترونیک پرداخت کننده به طول حداکثر 255 کاراکتر</td>
+                            <td>خیر</td>
+                            <td>string</td>
+                            <td>email</td>
+                        </tr>
+                        <tr>
+                            <td>نام و نام خانوادگی پرداخت کننده به طول حداکثر 255 کاراکتر</td>
+                            <td>خیر</td>
+                            <td>string</td>
+                            <td>name</td>
+                        </tr>
+                        <tr>
+                            <td>ارسال پیامک به پرداخت کننده در صورتی که مقدار 1 ارسال شود</td>
+                            <td>خیر</td>
+                            <td>number</td>
+                            <td>sms</td>
+                        </tr>
+                        <tr>
+                            <td>شماره کارت مشتری به طول 16 کارکتر که در صورت ارسال با شماره کارت پرداخت کننده تطابق داده می شود</td>
+                            <td>خیر</td>
+                            <td>number</td>
+                            <td>cardNumber</td>
+                        </tr>
+                        <tr>
+                            <td>مقادیر ارسالی دلخواه تراکنش به طول حداکثر 500 کاراکتر به صورت جیسون</td>
+                            <td>خیر</td>
+                            <td>string</td>
+                            <td>additionalData</td>
+                        </tr>
+                        <tr>
+                            <td>کد ملی پرداخت کننده به طول حداکثر 10 کاراکتر</td>
+                            <td>خیر</td>
+                            <td>number</td>
+                            <td>nationalCode</td>
+                        </tr>
+                        <tr>
+                            <td>توضیح تراکنش به طول حداکثر 300 کاراکتر</td>
+                            <td>خیر</td>
+                            <td>string</td>
+                            <td>description</td>
+                        </tr>
+                    </tbody></table>
+
+                    
+                    <div class="content">
+                        <span class="title_1">پاسخ موفق</span>
+                        <span class="content-span">
+                        { <br>
+                        "responseCode" : 1,<br>
+                        "status": "success", <br>
+                        "token": "05d3f1d4-82e1-11ee-8f0e-d82429616d01", <br>
+                        "url": "https://api.tabapay.ir/pay/05d3f1d4-82e1-11ee-8f0e-d82429616d01" <br>
+                        } <br>
+                        </span>
+
+                    </div>
+                    <div class="content">
+                        <span class="title_1">پاسخ موفق (محیط تست)</span>
+                        <span class="content-span">
+                        { <br>
+                        "responseCode" : 1,<br>
+                        "status": "success", <br>
+                        "token": "05d3f1d4-82e1-11ee-8f0e-d82429616d01", <br>
+                        "url": "https://api.tabapay.ir/sandbox/pay/05d3f1d4-82e1-11ee-8f0e-d82429616d01" <br>
+                        } <br>
+                        </span>
+
+                    </div>
+
+                    <div class="content">
+                        <span class="title_1">پاسخ ناموفق</span>
+                        <span class="content-span">
+                        { <br>
+                        "status": "error", <br>
+                        "responseCode": -33, <br>
+                        "message": "درگاه پرداخت پیدا نشد" <br>
+                        } <br>
+                        </span>
+                    </div>
+
+                    <div class="see-error">برای مشاهده تمامی خطاها به بخش لیست خطاها مراجعه کنید : <a href="https://tabapay.ir/docs/api/#list_of_errors">لیست کدهای پاسخ</a>
+                    </div>
+                </div><!--part_desc-->
+                <div class="codes-wrapper">
+                    <ul class="tabs">
+                        <li class="tab-active" data-cont=".one"><span>PHP</span></li>
+                        <li data-cont=".two"><span>Python</span></li>
+                        <li data-cont=".three"><span>NodeJS</span></li>
+                        <li data-cont=".four"><span>C#</span></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="one">
+
+                            $curl = curl_init();
+                            <br>
+                            curl_setopt_array($curl, array(<br>
+                            CURLOPT_URL =&gt; 'https://api.tabapay.ir/v1/create',<br>
+                            CURLOPT_RETURNTRANSFER =&gt; true,<br>
+                            CURLOPT_ENCODING =&gt; '',<br>
+                            CURLOPT_MAXREDIRS =&gt; 10,<br>
+                            CURLOPT_TIMEOUT =&gt; 0,<br>
+                            CURLOPT_FOLLOWLOCATION =&gt; true,<br>
+                            CURLOPT_HTTP_VERSION =&gt; CURL_HTTP_VERSION_1_1,<br>
+                            CURLOPT_CUSTOMREQUEST =&gt; 'POST',<br>
+                            CURLOPT_POSTFIELDS =&gt; array('amount' =&gt; '10000','callbackURL' =&gt; 'https://test.ir','mobile'
+                            =&gt; '09900000000','email' =&gt; 'info@test.ir'),<br>
+                            CURLOPT_HTTPHEADER =&gt; array(<br>
+                            'Authorization: Bearer aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'<br>
+                            ),<br>
+                            ));<br>
+                            $response = curl_exec($curl);<br>
+                            curl_close($curl);<br>
+                            echo $response;<br>
+
+
+                        </div>
+                        <div class="two">
+                            import requests<br>
+
+                            url = "https://api.tabapay.ir/v1/create"<br>
+
+                            payload = {'amount': '10000',<br>
+                            'callbackURL': 'https://test.ir',<br>
+                            'mobile': '09900000000',<br>
+                            'email': 'info@test.ir'}<br>
+                            files=[<br>
+
+                            ]<br>
+                            headers = {<br>
+                            'Authorization': 'Bearer aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'<br>
+                            }<br>
+
+                            response = requests.request("POST", url, headers=headers, data=payload, files=files)<br>
+
+                            print(response.text)<br>
+                        </div>
+                        <div class="three">
+                            var request = require('request');<br>
+                            var options = {<br>
+                            'method': 'POST',<br>
+                            'url': 'https://api.tabapay.ir/v1/create',<br>
+                            'headers': {<br>
+                            'Authorization': 'Bearer aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'<br>
+                            },<br>
+                            formData: {<br>
+                            'amount': '10000',<br>
+                            'callbackURL': 'https://test.ir',<br>
+                            'mobile': '09900000000',<br>
+                            'email': 'info@test.ir'<br>
+                            }<br>
+                            };<br>
+                            request(options, function (error, response) {<br>
+                            if (error) throw new Error(error);<br>
+                            console.log(response.body);<br>
+                            });<br>
+
+                        </div>
+                        <div class="four">
+                            var client = new HttpClient();<br>
+                            var request = new HttpRequestMessage(HttpMethod.Post,
+                            "https://api.tabapay.ir/v1/create");<br>
+                            request.Headers.Add("Authorization", "Bearer aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");<br>
+                            var content = new MultipartFormDataContent();<br>
+                            content.Add(new StringContent("10000"), "amount");<br>
+                            content.Add(new StringContent("https://test.ir"), "callbackURL");<br>
+                            content.Add(new StringContent("09900000000"), "mobile");<br>
+                            content.Add(new StringContent("info@test.ir"), "email");<br>
+                            request.Content = content;<br>
+                            var response = await client.SendAsync(request);<br>
+                            response.EnsureSuccessStatusCode();<br>
+                            Console.WriteLine(await response.Content.ReadAsStringAsync());<br>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </section>
+        <section class="section1" id="create_transaction_with_invoice">
+
+
+            <div class="section-wrapper">
+                <div class="part_desc">
+
+                    <h2 class="title">ایجاد تراکنش به همراه صدور فاکتور</h2>
+                    <span>با استفاده از آدرس زیر می‌توانید یک تراکنش در محیط تست ایجاد کنید.</span>
+                    <div class="content">
+                        <span class="title_1">محیط تست</span>
+                        <span class="content-span">
+                             https://api.tabapay.ir/v1/sandbox/create
+                        </span>
+
+                    </div>
+
+
+                    <span>با استفاده از آدرس زیر می‌توانید یک تراکنش در محیط عملیاتی ایجاد کنید.</span>
+                    
+                    <div class="content">
+
+                        <span class="title_1">محیط عملیاتی</span>
+                        <span class="content-span">
+                             https://api.tabapay.ir/v1/create
+                        </span>
+                    </div>
+                    <div class="title_1">پارامترهای مورد نیاز</div>
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                        <tbody><tr>
+                            <th>توضیحات</th>
+                            <th width="100px">ضروری</th>
+                            <th width="100px">نوع</th>
+                            <th width="100px">پارامتر</th>
+                        </tr>
+                        
+                        
+                        
+                        
+                        
+                        
+                        <tr>
+                            <td>مبلغ مورد نظر بین 100,000 ریال تا 500,000,000 ریال باشد</td>
+                            <td>بله</td>
+                            <td>number</td>
+                            <td>amount</td>
+                        </tr>
+                        <tr>
+                            <td>آدرس بازگشت به سایت پذیرنده به طول حداکثر 2048 کاراکتر</td>
+                            <td>بله</td>
+                            <td>string</td>
+                            <td>callbackURL</td>
+                        </tr>
+                        <tr>
+                            <td>تلفن همراه پرداخت کننده به طول 11 کاراکتر مانند 09123456789</td>
+                            <td>بله</td>
+                            <td>string</td>
+                            <td>mobile</td>
+                        </tr>
+                        <tr>
+                            <td>پست الکترونیک پرداخت کننده به طول حداکثر 255 کاراکتر</td>
+                            <td>خیر</td>
+                            <td>string</td>
+                            <td>email</td>
+                        </tr>
+                        <tr>
+                            <td>نام و نام خانوادگی پرداخت کننده به طول حداکثر 255 کاراکتر</td>
+                            <td>بله</td>
+                            <td>string</td>
+                            <td>name</td>
+                        </tr>
+                        <tr>
+                            <td>آدرس پرداخت کننده به طول حداکثر 255 کاراکتر</td>
+                            <td>بله</td>
+                            <td>string</td>
+                            <td>address</td>
+                        </tr>
+                        <tr>
+                            <td>شماره اقتصادی پرداخت کننده به طول 11 کاراکتر برای مشتری حقوقی، 14 کاراکتر برای مشتری حقیقی و 15 کاراکتر برای مشتری اتباع</td>
+                            <td>بله</td>
+                            <td>string</td>
+                            <td>economicCode</td>
+                        </tr>
+                        <tr>
+                            <td>نوع پرداخت کننده حقیقی/حقوقی/اتباع شامل [Natural, Legal, Foreigners]</td>
+                            <td>بله</td>
+                            <td>string</td>
+                            <td>buyerType</td>
+                        </tr>
+                        <tr>
+                            <td>شناسه محصول در پروفایل مؤدیان متصل به درگاه حداکثر 255 کاراکتر</td>
+                            <td>بله</td>
+                            <td>json</td>
+                            <td>invoiceProductId</td>
+                        </tr>
+                        <tr>
+                            <td>ارسال پیامک به پرداخت کننده در صورتی که مقدار 1 ارسال شود</td>
+                            <td>خیر</td>
+                            <td>number</td>
+                            <td>sms</td>
+                        </tr>
+                        <tr>
+                            <td>شماره کارت مشتری به طول 16 کارکتر که در صورت ارسال با شماره کارت پرداخت کننده تطابق داده می شود</td>
+                            <td>خیر</td>
+                            <td>number</td>
+                            <td>cardNumber</td>
+                        </tr>
+                        <tr>
+                            <td>مقادیر ارسالی دلخواه تراکنش به طول حداکثر 500 کاراکتر به صورت جیسون</td>
+                            <td>خیر</td>
+                            <td>string</td>
+                            <td>additionalData</td>
+                        </tr>
+                        <tr>
+                            <td>کد ملی پرداخت کننده به طول حداکثر 10 کاراکتر</td>
+                            <td>بله</td>
+                            <td>number</td>
+                            <td>nationalCode</td>
+                        </tr>
+                        <tr>
+                            <td>توضیح تراکنش به طول حداکثر 300 کاراکتر</td>
+                            <td>خیر</td>
+                            <td>string</td>
+                            <td>description</td>
+                        </tr>
+                    </tbody></table>
+
+                    
+                    <div class="content-invoice">
+                        <span class="title_1">توضیحات اضافه</span>
+                        <br>
+
+                        <span class="content-span invoice" style="text-align: right; direction: rtl">
+                            
+جهت استفاده از قابلیت <b>صدور خودکار فاکتور مؤدیان</b> لازم است اطلاعات کالا یا خدمات فروخته شده را در فیلد <b>invoiceProductId</b> ارسال نمایید.
+<br><br>
+
+ساختار این فیلد به صورت زیر می‌باشد:
+<br>
+invoiceProductId =&gt; {مجموع مبلغ مربوط به هر شناسه کالا : "شناسه کالا یا خدمت"}
+<br><br>
+
+توجه داشته باشید که در بسیاری از موارد ممکن است چندین محصول در سایت شما به یک شناسه کالا در سامانه مؤدیان متصل باشند. در این حالت لازم است مجموع مبلغ تمام محصولاتی که به یک شناسه کالا مربوط هستند محاسبه شده و در قالب یک مقدار در این فیلد ارسال گردد.
+<br><br>
+
+<b>مثال:</b>
+<br>
+فرض کنید در سایت شما دو شناسه کالا در سامانه مؤدیان تعریف شده است:
+<br>
+شناسه 1234 برای «پوشاک»
+<br>
+شناسه 5678 برای «کالای دیجیتال»
+<br><br>
+
+ممکن است در سایت شما چندین محصول مختلف به هر یک از این شناسه‌ها متصل باشند. برای مثال:
+<br>
+چند محصول پوشاک → متصل به شناسه 1234
+<br>
+چند محصول کالای دیجیتال → متصل به شناسه 5678
+<br><br>
+
+حال اگر سبد خرید مشتری شامل 5 محصول مختلف باشد و مجموع مبالغ آن‌ها به صورت زیر باشد:
+<br>
+محصولات مربوط به پوشاک: 100,000 ریال
+<br>
+محصولات مربوط به کالای دیجیتال: 50,000 ریال
+<br><br>
+
+در این حالت مقدار ارسالی باید به شکل زیر باشد:
+<br>
+{100000 : "1234", 50000 : "5678"}
+<br><br>
+
+به عبارت دیگر، ابتدا باید مبلغ محصولات بر اساس شناسه کالا تجمیع شده و سپس در قالب ساختار فوق ارسال گردد.
+<br><br>
+
+همچنین در صورتی که در لیست شناسه‌های ارسال شده، کالا یا خدمتی به صورت <b>نوع یک</b> تعریف شده باشد، ارسال اطلاعات مشتری شامل فیلدهای زیر <b>الزامی</b> خواهد بود در غیر این صورت اختیاری می‌باشد:
+<br>
+mobile ، name ، address ، economicCode ، nationalCode
+<br><br>
+                        </span>
+
+                    </div>
+                    <div class="content">
+                        <span class="title_1">پاسخ موفق</span>
+                        <span class="content-span">
+                        { <br>
+                        "responseCode" : 1,<br>
+                        "status": "success", <br>
+                        "token": "05d3f1d4-82e1-11ee-8f0e-d82429616d01", <br>
+                        "url": "https://api.tabapay.ir/pay/05d3f1d4-82e1-11ee-8f0e-d82429616d01" <br>
+                        } <br>
+                        </span>
+
+                    </div>
+                    <div class="content">
+                        <span class="title_1">پاسخ موفق (محیط تست)</span>
+                        <span class="content-span">
+                        { <br>
+                        "responseCode" : 1,<br>
+                        "status": "success", <br>
+                        "token": "05d3f1d4-82e1-11ee-8f0e-d82429616d01", <br>
+                        "url": "https://api.tabapay.ir/sandbox/pay/05d3f1d4-82e1-11ee-8f0e-d82429616d01" <br>
+                        } <br>
+                        </span>
+
+                    </div>
+
+                    <div class="content">
+                        <span class="title_1">پاسخ ناموفق</span>
+                        <span class="content-span">
+                        { <br>
+                        "status": "error", <br>
+                        "responseCode": -33, <br>
+                        "message": "درگاه پرداخت پیدا نشد" <br>
+                        } <br>
+                        </span>
+                    </div>
+
+                    <div class="see-error">برای مشاهده تمامی خطاها به بخش لیست خطاها مراجعه کنید : <a href="https://tabapay.ir/docs/api/#list_of_errors">لیست کدهای پاسخ</a>
+                    </div>
+                </div><!--part_desc-->
+                <div class="codes-wrapper">
+                    <ul class="tabs">
+                        <li class="tab-active" data-cont=".invoice-one"><span>PHP</span></li>
+                        <li data-cont=".invoice-two"><span>Python</span></li>
+                        <li data-cont=".invoice-three"><span>NodeJS</span></li>
+                        <li data-cont=".invoice-four"><span>C#</span></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="invoice-one">
+                            $curl = curl_init();
+                            <br>
+                            curl_setopt_array($curl, array(<br>
+                            CURLOPT_URL =&gt; 'https://api.tabapay.ir/v1/create',<br>
+                            CURLOPT_RETURNTRANSFER =&gt; true,<br>
+                            CURLOPT_ENCODING =&gt; '',<br>
+                            CURLOPT_MAXREDIRS =&gt; 10,<br>
+                            CURLOPT_TIMEOUT =&gt; 0,<br>
+                            CURLOPT_FOLLOWLOCATION =&gt; true,<br>
+                            CURLOPT_HTTP_VERSION =&gt; CURL_HTTP_VERSION_1_1,<br>
+                            CURLOPT_CUSTOMREQUEST =&gt; 'POST',<br>
+                            CURLOPT_POSTFIELDS =&gt; array('amount' =&gt; '100000',<br>
+                            'callbackURL' =&gt; 'https://test.ir',<br>
+                            'mobile' =&gt; '09900000000',<br>
+                            'email' =&gt; 'info@test.ir',<br>
+                            'invoiceProductId' =&gt; {"1234":10000,"5678":90000},<br>
+                            'buyerType' =&gt; 'Natural',<br>
+                            'economicCode' =&gt; '10802463540001',<br>
+                            'address' =&gt; 'آدرس پذیرنده',<br>
+                            'name'    =&gt; 'نام و نام خانوادگی پذیرنده',<br>
+                            'nationalCode' =&gt; '1080246354')<br>
+                            CURLOPT_HTTPHEADER =&gt; array(<br>
+                            'Authorization: Bearer aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'<br>
+                            ),<br>
+                            ));<br>
+                            $response = curl_exec($curl);<br>
+                            curl_close($curl);<br>
+                            echo $response;<br>
+
+
+                        </div>
+                        <div class="invoice-two">
+                            import requests<br>
+
+                            url = "https://api.tabapay.ir/v1/create"<br>
+
+                            payload = {'amount': '10000',<br>
+                            'callbackURL': 'https://test.ir',<br>
+                            'mobile' : '09900000000',<br>
+                            'email' : 'info@test.ir',<br>
+                            'invoiceProductId' : {"1234":10000,"5678":90000},<br>
+                            'buyerType' : 'Natural',<br>
+                            'economicCode' : '10802463540001',<br>
+                            'address' : 'آدرس پذیرنده',<br>
+                            'name'    : 'نام و نام خانوادگی پذیرنده',<br>
+                            'nationalCode' : '1080246354'<br>
+                            'email': 'info@test.ir'}<br>
+                            files=[<br>
+
+                            ]<br>
+                            headers = {<br>
+                            'Authorization': 'Bearer aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'<br>
+                            }<br>
+
+                            response = requests.request("POST", url, headers=headers, data=payload, files=files)<br>
+
+                            print(response.text)<br>
+                        </div>
+                        <div class="invoice-three">
+                            var request = require('request');<br>
+                            var options = {<br>
+                            'method': 'POST',<br>
+                            'url': 'https://api.tabapay.ir/v1/create',<br>
+                            'headers': {<br>
+                            'Authorization': 'Bearer aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'<br>
+                            },<br>
+                            formData: {<br>
+                            'amount': '10000',<br>
+                            'callbackURL': 'https://test.ir',<br>
+                            'mobile': '09900000000',<br>
+                            'invoiceProductId' : {"1234":10000,"5678":90000},<br>
+                            'buyerType' : 'Natural',<br>
+                            'economicCode' : '10802463540001',<br>
+                            'address' : 'آدرس پذیرنده',<br>
+                            'name'    : 'نام و نام خانوادگی پذیرنده',<br>
+                            'nationalCode' : '1080246354'<br>
+                            'email': 'info@test.ir'<br>
+                            }<br>
+                            };<br>
+                            request(options, function (error, response) {<br>
+                            if (error) throw new Error(error);<br>
+                            console.log(response.body);<br>
+                            });<br>
+
+                        </div>
+                        <div class="invoice-four">
+                            var client = new HttpClient();<br>
+                            var request = new HttpRequestMessage(HttpMethod.Post,
+                            "https://api.tabapay.ir/v1/create");<br>
+                            request.Headers.Add("Authorization", "Bearer aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");<br>
+                            var content = new MultipartFormDataContent();<br>
+                            content.Add(new StringContent("10000"), "amount");<br>
+                            content.Add(new StringContent("https://test.ir"), "callbackURL");<br>
+                            content.Add(new StringContent("09900000000"), "mobile");<br>
+                            content.Add(new StringContent("{"1234":10000,"5678":90000}"), "invoiceProductId");<br>
+                            content.Add(new StringContent("Natural"), "buyerType");<br>
+                            content.Add(new StringContent("10802463540001"), "economicCode");<br>
+                            content.Add(new StringContent("آدرس پذیرنده"), "address");<br>
+                            content.Add(new StringContent("نام و نام خانوادگی پذیرنده"), "name");<br>
+                            content.Add(new StringContent("1080246354"), "nationalCode");<br>
+                            content.Add(new StringContent("info@test.ir"), "email");<br>
+                            request.Content = content;<br>
+                            var response = await client.SendAsync(request);<br>
+                            response.EnsureSuccessStatusCode();<br>
+                            Console.WriteLine(await response.Content.ReadAsStringAsync());<br>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </section>
+
+
+        <section class="section1" id="return_to_site">
+            <div class="part_desc">
+                <h2 class="title">بازگشت به سایت پذیرنده</h2>
+                <span>بعد از اتمام عملیات پرداخت، پرداخت کننده به آدرسی که پذیرنده در callbackURL مشخص کرده بود، با متد GET، منتقل می‌شود.</span>
+                <div class="content">
+                    <span class="title_1">پاسخ موفق</span>
+                    <span class="content-span">
+                        { <br>
+                        "responseCode": 1, <br>
+                        "status": "success", <br>
+
+                        "token": "05d3f1d4-82e1-11ee-8f0e-d82429616d01", <br>
+
+
+                        "amount": 10000 <br>
+
+
+
+
+
+                        } <br>
+                        </span>
+
+                </div>
+
+                <div class="content">
+                    <span class="title_1">پاسخ ناموفق</span>
+                    <span class="content-span">
+                        { <br>
+                        "responseCode": -1, <br>
+                        "status": "error", <br>
+
+                        "token": "05d3f1d4-82e1-11ee-8f0e-d82429616d01", <br>
+
+                        "amount": 10000 <br>
+
+
+
+
+                        } <br>
+                        </span>
+
+                </div>
+            </div><!--part_desc-->
+            
+            
+            
+        </section>
+
+        <section class="section1" id="verify_transaction">
+            <div class="section-wrapper">
+                <div class="part_desc">
+                    <h2 class="title">تایید تراکنش</h2>
+
+                    <span> با استفاده از آدرس زیر می‌توانید تراکنش ایجاد شده در محیط تست را تایید کنید.</span>
+                    <div class="content">
+                        <span class="title_1">محیط تست</span>
+                        <span class="content-span">
+                             https://api.tabapay.ir/v1/sandbox/verify
+                        </span>
+
+                    </div>
+
+                    <span> با استفاده از آدرس زیر می‌توانید تراکنش ایجاد شده در محیط عملیاتی را تایید کنید.</span>
+                    <div class="content">
+                        <span class="title_1">محیط عملیاتی</span>
+                        <span class="content-span">
+                             https://api.tabapay.ir/v1/verify
+                        </span>
+
+                    </div>
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                        <tbody><tr>
+                            <th>توضیحات</th>
+                            <th width="100px">نوع</th>
+                            <th width="100px">پارامتر</th>
+                        </tr>
+                        <tr>
+                            <td>کلید منحصر بفرد تراکنش</td>
+                            <td>string</td>
+                            <td>token</td>
+                        </tr>
+                        <tr>
+                            <td>مبلغ مورد نظر بین 100,000 ریال تا 500,000,000 ریال باشد</td>
+                            <td>number</td>
+                            <td>amount</td>
+                        </tr>
+                    </tbody></table>
+                    <div class="content">
+                        <span class="title_1">پاسخ موفق</span>
+                        <span class="content-span">
+                        { <br>
+                        "responseCode": 1, <br>
+                        "status": "success", <br>
+                        "message": "تراکنش باموفقیت تایید شد", <br>
+                        "token": "05d3f1d4-82e1-11ee-8f0e-d82429616d01", <br>
+                        "shaparakRefNumber": "111122223333", <br>
+                        "trackingCode": 40, <br>
+                        "amount": 10000, <br>
+                        "finalAmount": 8700, <br>
+                        "cardNumber": "1234-56**-****-7890", <br>
+                        "hashedCardNumber": "23ab2fbc4074a49874ca7a8349ad9a11b8d845c2451f7c289d8f08181c6b8123", <br>
+                        "ip": "127.0.0.1", <br>
+                        "date":"1402/01/01 12:10" <br>
+                        } <br>
+                        </span>
+
+                    </div>
+
+                    <div class="content">
+                        <span class="title_1">پاسخ ناموفق</span>
+                        <span class="content-span">
+                        { <br>
+                        "responseCode": -101, <br>
+                        "status": "error", <br>
+                        "message": "تراکنش انجام نشد", <br>
+                        "token": "05d3f1d4-82e1-11ee-8f0e-d82429616d01", <br>
+                        "trackingCode": 40, <br>
+                        "amount": "10000", <br>
+                        "finalAmount": 8700, <br>
+                        "additionalData": null, <br>
+                        "ip": "127.0.0.1", <br>
+                        "date":"1402/01/01 12:10" <br>
+                        } <br>
+                        </span>
+
+                    </div>
+
+                </div><!--part_desc-->
+                <div class="codes-wrapper">
+                    <ul class="tabs">
+                        <li class="tab-active" data-cont=".five"><span>PHP</span></li>
+                        <li data-cont=".six"><span>Python</span></li>
+                        <li data-cont=".seven"><span>NodeJS</span></li>
+                        <li data-cont=".eight"><span>C#</span></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="five">
+
+                            $curl = curl_init();<br>
+
+                            curl_setopt_array($curl, array(<br>
+                            CURLOPT_URL =&gt; 'https://api.tabapay.ir/v1/verify',<br>
+                            CURLOPT_RETURNTRANSFER =&gt; true,<br>
+                            CURLOPT_ENCODING =&gt; '',<br>
+                            CURLOPT_MAXREDIRS =&gt; 10,<br>
+                            CURLOPT_TIMEOUT =&gt; 0,<br>
+                            CURLOPT_FOLLOWLOCATION =&gt; true,<br>
+                            CURLOPT_HTTP_VERSION =&gt; CURL_HTTP_VERSION_1_1,<br>
+                            CURLOPT_CUSTOMREQUEST =&gt; 'POST',<br>
+                            CURLOPT_POSTFIELDS =&gt; array('token' =&gt; '05d3f1d4-82e1-11ee-8f0e-d82429616d01','amount' =&gt;
+                            '10000'),<br>
+                            CURLOPT_HTTPHEADER =&gt; array(<br>
+                            'Authorization: Bearer aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'<br>
+                            ),<br>
+                            ));<br>
+
+                            $response = curl_exec($curl);<br>
+
+                            curl_close($curl);<br>
+                            echo $response;<br>
+
+
+                        </div>
+                        <div class="six">
+                            import requests<br>
+
+                            url = "https://api.tabapay.ir/v1/verify"<br>
+
+                            payload = {'token': '05d3f1d4-82e1-11ee-8f0e-d82429616d01',<br>
+                            'amount': '10000'}<br>
+                            files=[<br>
+
+                            ]<br>
+                            headers = {<br>
+                            'Authorization': 'Bearer aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'<br>
+                            }<br>
+
+                            response = requests.request("POST", url, headers=headers, data=payload, files=files)<br>
+
+                            print(response.text)<br>
+
+                        </div>
+                        <div class="seven">
+                            var request = require('request');<br>
+                            var options = {<br>
+                            'method': 'POST',<br>
+                            'url': 'https://api.tabapay.ir/v1/create',<br>
+                            'headers': {<br>
+                            'Authorization': 'Bearer aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'<br>
+                            },<br>
+                            formData: {<br>
+                            'amount': '10000',<br>
+                            'callbackURL': 'https://test.ir',<br>
+                            'mobile': '09900000000',<br>
+                            'email': 'info@test.ir'<br>
+                            }<br>
+                            };<br>
+                            request(options, function (error, response) {<br>
+                            if (error) throw new Error(error);<br>
+                            console.log(response.body);<br>
+                            });<br>
+
+
+                        </div>
+                        <div class="eight">
+                            var client = new HttpClient();<br>
+                            var request = new HttpRequestMessage(HttpMethod.Post,
+                            "https://api.tabapay.ir/v1/verify");<br>
+                            request.Headers.Add("Authorization", "Bearer aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");<br>
+                            var content = new MultipartFormDataContent();<br>
+                            content.Add(new StringContent("05d3f1d4-82e1-11ee-8f0e-d82429616d01"), "token");<br>
+                            content.Add(new StringContent("10000"), "amount");<br>
+                            request.Content = content;<br>
+                            var response = await client.SendAsync(request);<br>
+                            response.EnsureSuccessStatusCode();<br>
+                            Console.WriteLine(await response.Content.ReadAsStringAsync());<br>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </section>
+
+<section class="section1" id="auto_verify_transaction">
+                <div class="part_desc">
+                    <h2 class="title">تایید خودکار تراکنش</h2>
+
+                    <span> با استفاده از قابلیت تایید خودکار تراکنش، در صورتی که تراکنش توسط وبسایت پذیرنده تایید نشود،<br> تاباپی بین 2 تا 10 دقیقه پس از انجام تراکنش اطلاعات مربوط به تایید و پردازش تراکنش را با متد POST به همان آدرس ارسالی CallbackURL ارسال خواهد کرد.</span><br>
+                    <span>همچنین قابل ذکر است پس از دریافت و پردازش اطلاعات تراکنش از طریق این سرویس، می بایست پاسخ مورد انتظار تاباپی را در قالب ریسپانس درخواست ارسال کنید تا از طریق سیستم تاباپی نیز تایید تراکنش ثبت شود.</span>
+
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                        <tbody><tr>
+                            <th>توضیحات امنیتی</th>
+                            <th width="100px">نوع</th>
+                            <th width="100px">پارامتر</th>
+                        </tr>
+                        <tr>
+                            <td>کد مرچنت هش شده (MD5) در هدر</td>
+                            <td>string</td>
+                            <td>HTTP_AUTHORIZE</td>
+                        </tr>
+                    </tbody></table>
+                    <div class="content">
+                        <span class="title_1">درخواست ارسالی</span>
+                        <span class="content-span">
+                        { <br>
+                        "responseCode": 1, <br>
+                        "status": "success", <br>
+                        "message": "تراکنش باموفقیت تایید شد", <br>
+                        "token": "05d3f1d4-82e1-11ee-8f0e-d82429616d01", <br>
+                        "shaparakRefNumber": "111122223333", <br>
+                        "trackingCode": 40, <br>
+                        "amount": 10000, <br>
+                        "finalAmount": 8700, <br>
+                        "cardNumber": "1234-56**-****-7890", <br>
+                        "hashedCardNumber": "23ab2fbc4074a49874ca7a8349ad9a11b8d845c2451f7c289d8f08181c6b8123", <br>
+                        "ip": "127.0.0.1", <br>
+                        "date":"1402/01/01 12:10", <br>
+                        "additionalData":"{your additional data}" <br>
+                        } <br>
+                        </span>
+
+                    </div>
+
+                    <div class="content">
+                        <span class="title_1">پاسخ مورد انتظار تاباپی جهت ثبت تایید تراکنش</span>
+                        <span class="content-span">
+                        { <br>
+                        "status": 'success' <br>
+                        } <br>
+                        </span>
+
+                    </div>
+
+                </div><!--part_desc-->
+
+
+        </section>
+
+
+        <section class="section1" id="list_of_errors">
+            <div class="part_desc">
+                <h2 class="title">لیست کدهای پاسخ</h2>
+                <div class="error-wrapper">
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                        <tbody><tr>
+                            <th>توضیحات</th>
+                            <th width="100px">کد پاسخ</th>
+                        </tr>
+                        <tr>
+                            <td>موفق</td>
+                            <td>1</td>
+                        </tr>
+                        <tr>
+                            <td>تایید شده</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td>خطای سیستمی</td>
+                            <td>1-</td>
+                        </tr>
+                        
+                        
+                        
+
+                        
+                        <tr>
+                            <td>ارسال پارامتر نامعتبر</td>
+                            <td>9-</td>
+
+                        </tr>
+                        <tr>
+                            <td>کد مرچنت اجباری است</td>
+                            <td>10-</td>
+
+                        </tr>
+                        <tr>
+                            <td>کد مرچنت نامعتبر است</td>
+                            <td>11-</td>
+
+                        </tr>
+                        <tr>
+                            <td>مبلغ اجباری است</td>
+                            <td>12-</td>
+
+                        </tr>
+                        <tr>
+                            <td>حداقل مبلغ : 100,000ریال</td>
+                            <td>13-</td>
+
+                        </tr>
+                        <tr>
+                            <td>حداکثر مبلغ : 500,000,000ریال</td>
+                            <td>14-</td>
+
+                        </tr>
+                        <tr>
+                            <td>لینک بازگشت اجباری است</td>
+                            <td>15-</td>
+
+                        </tr>
+                        <tr>
+                            <td>لینک بازگشت  نامعتبر است</td>
+                            <td>16-</td>
+
+                        </tr>
+                        <tr>
+                            <td>شماره موبایل  نامعتبر است</td>
+                            <td>17-</td>
+
+                        </tr>
+                        <tr>
+                            <td>ایمیل  نامعتبر است</td>
+                            <td>18-</td>
+
+
+                        </tr>
+                        <tr>
+                            <td>پارامتر ورودی برای کد ملی نامعتبر است</td>
+                            <td>19-</td>
+
+
+                        </tr>
+                        <tr>
+                            <td>پارامتر ورودی برای شماره کارت بانکی نامعتبر است</td>
+                            <td>20-</td>
+
+
+                        </tr>
+
+                    </tbody></table>
+                    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                        <tbody><tr>
+                            <th>توضیحات</th>
+                            <th width="100px">کد پاسخ</th>
+                        </tr>
+
+
+                        <tr>
+                            <td>حداکثر طول مجاز توضیحات 300 کاراکتر است</td>
+                            <td>21-</td>
+
+
+                        </tr>
+                        <tr>
+                            <td>فرمت پارامتر دیتا اختیاری باید Json باشد</td>
+                            <td>22-</td>
+
+
+                        </tr>
+                        <tr>
+                            <td>حداکثر طول مجاز برای دیتا اختیاری 500 کاراکتر است</td>
+                            <td>23-</td>
+
+
+                        </tr>
+                        <tr>
+                            <td>پارامتر ورودی ارسال پیامک  نامعتبر است</td>
+                            <td>24-</td>
+
+
+                        </tr>
+                        <tr>
+                            <td>نام  نامعتبر است</td>
+                            <td>25-</td>
+
+                        </tr>
+                        <tr>
+                            <td>در صورتی که ارسال پیامک فعال باشد، پارامتر شماره موبایل نمی تواند خالی باشد</td>
+                            <td>26-</td>
+
+
+                        </tr>
+                        <tr>
+                            <td>دامنه فعلی با دامنه تایید شده تطابق ندارد</td>
+                            <td>27-</td>
+
+                        </tr>
+                        <tr>
+                            <td>پذیرنده درگاه غیر فعال شده است</td>
+                            <td>28-</td>
+
+                        </tr>
+                        <tr>
+                            <td>درگاه پرداخت غیر فعال شده است</td>
+                            <td>29-</td>
+
+                        </tr>
+                        <tr>
+                            <td>درگاه پرداخت پیدا نشد</td>
+                            <td>30-</td>
+
+                        </tr>
+                        <tr>
+                            <td>تراکنش نامعتبر</td>
+                            <td>31-</td>
+
+                        </tr>
+                        <tr>
+                            <td>شناسه محصول های ارسال شده در پرونده مالیاتی یافت نشد</td>
+                            <td>32-</td>
+
+                        </tr>
+                        <tr>
+                            <td>پرونده مالیاتی به این درگاه متصل نمی باشد</td>
+                            <td>33-</td>
+
+                        </tr>
+                        <tr>
+                            <td>فیلد نوع خریدار در فاکتور نوع یک اجباری می باشد</td>
+                            <td>34-</td>
+
+                        </tr>
+                        <tr>
+                            <td>فیلد نوع خریدار در فاکتور نوع یک باید یکی از مقادیر [Natural, Legal, Civic, Foreigners, FinalConsumer] باشد</td>
+                            <td>35-</td>
+
+                        </tr>
+                        <tr>
+                            <td>فیلد (شناسه ملی/شماره ملی/کد فیدا) در فاکتور نوع یک برای شناسه 1234 اجباری می باشد</td>
+                            <td>36-</td>
+
+                        </tr>
+                        <tr>
+                            <td>فیلد شماره اقتصادی در فاکتور نوع یک برای شناسه 1234 اجباری می باشد</td>
+                            <td>37-</td>
+
+                        </tr>
+                        <tr>
+                            <td>فیلد نام خریدار در فاکتور نوع یک برای شناسه 1234 اجباری می باشد</td>
+                            <td>38-</td>
+
+                        </tr>
+                        <tr>
+                            <td>فیلد آدرس خریدار در فاکتور نوع یک برای شناسه 1234 اجباری می باشد</td>
+                            <td>39-</td>
+
+                        </tr>
+                        <tr>
+                            <td>فیلد موبایل خریدار در فاکتور نوع یک برای شناسه 1234 اجباری می باشد</td>
+                            <td>40-</td>
+
+                        </tr>
+                        <tr>
+                            <td>فرمت ارسالی شناسه محصول معتبر نمی باشد</td>
+                            <td>41-</td>
+
+                        </tr>
+                        <tr>
+                            <td>شناسه محصول 1234 در پرونده مالیاتی یافت نشد</td>
+                            <td>42-</td>
+
+                        </tr>
+                        <tr>
+                            <td>مجموع مبالغ فاکتور ها از مبلغ تراکنش بیشتر است</td>
+                            <td>43-</td>
+                        </tr>
+                        <tr>
+                            <td>شماره کارت پرداختی با شماره کارت درخواستی تطابق ندارد</td>
+                            <td>100-</td>
+
+                        </tr>
+                        <tr>
+                            <td>تراکنش ناموفق</td>
+                            <td>101-</td>
+
+                        </tr>
+                        <tr>
+                            <td>تراکنش منقضی شده است</td>
+                            <td>102-</td>
+
+                        </tr>
+                    </tbody></table>
+                </div>
+
+            </div><!--part_desc-->
+
+        </section>
+        <section class="section1" id="postman">
+            <div class="part_desc">
+                <h2 class="title">Postman</h2>
+                <span>برای راحتی کار و بررسی سریعتر API تاباپی می‌توانید فایل زیر را دریافت کنید و آن را در برنامه Insomnia استفاده نمایید.                <br>
+                                                                                                        <a href="https://cdn.tabapay.ir/downloads/plugins/postman/TabaPay-v1.postman_collection.zip">
+                                    دانلود : Postman - API V1
+                                </a>
+                                                                        
+                </span>
+
+            </div><!--part_desc-->
+
+        </section>
+        <section class="section1" id="insomnia">
+            <div class="part_desc">
+                <h2 class="title">Insomnia</h2>
+                <span>برای راحتی کار و بررسی سریعتر API تاباپی می‌توانید فایل زیر را دریافت کنید و آن را در برنامه Insomnia استفاده نمایید.                <br>
+                                                                                                        <a href="https://cdn.tabapay.ir/downloads/plugins/insomnia/TabaPay-v1.Insomnia.zip">
+                                    دانلود : Insomnia - API - V1
+                                </a>
+                                                                        
+                </span>
+
+            </div><!--part_desc-->
+
+        </section>
+        <br>
+    </div>
+
+
+    <script>
+        $('.menuItem').on('click', (e) => {
+            $('.menuItem').removeClass('mactive');
+            $('.' + e.currentTarget.classList[0]).addClass('mactive');
+            // $('html, body').animate({
+            //     scrollTop: $($.attr(this, 'href')).offset().top
+            // }, 500);
+        });
+
+    </script>
+    <script>
+        let tabs = document.querySelectorAll("#create_transaction .tabs li");
+        let tabsArray = Array.from(tabs);
+        let divs = document.querySelectorAll("#create_transaction .tab-content > div");
+        let divsArray = Array.from(divs);
+
+        // console.log(tabsArray);
+
+        tabsArray.forEach((ele) => {
+            ele.addEventListener("click", function (e) {
+                // console.log(ele);
+                tabsArray.forEach((ele) => {
+                    ele.classList.remove("tab-active");
+                });
+                e.currentTarget.classList.add("tab-active");
+                divsArray.forEach((div) => {
+                    div.style.display = "none";
+                });
+                // console.log(e.currentTarget.dataset.cont);
+                document.querySelector(e.currentTarget.dataset.cont).style.display = "block";
+            });
+        });
+
+
+        let tabsInvoice = document.querySelectorAll("#create_transaction_with_invoice .tabs li");
+        let tabsArrayInvoice = Array.from(tabsInvoice);
+        let divsInvoice = document.querySelectorAll("#create_transaction_with_invoice .tab-content > div");
+        let divsArrayInvoice = Array.from(divsInvoice);
+
+        tabsArrayInvoice.forEach((ele) => {
+            ele.addEventListener("click", function (e) {
+                // console.log(ele);
+                tabsArrayInvoice.forEach((ele) => {
+                    ele.classList.remove("tab-active");
+                });
+                e.currentTarget.classList.add("tab-active");
+                divsArrayInvoice.forEach((div) => {
+                    div.style.display = "none";
+                });
+                // console.log(e.currentTarget.dataset.cont);
+                document.querySelector(e.currentTarget.dataset.cont).style.display = "block";
+            });
+        });
+
+        let tabs1 = document.querySelectorAll("#verify_transaction .tabs li");
+        let tabsArray1 = Array.from(tabs1);
+        let divs1 = document.querySelectorAll("#verify_transaction .tab-content > div");
+        let divsArray1 = Array.from(divs1);
+
+        // console.log(tabsArray);
+
+        tabsArray1.forEach((ele) => {
+            ele.addEventListener("click", function (e) {
+                // console.log(ele);
+                tabsArray1.forEach((ele) => {
+                    ele.classList.remove("tab-active");
+                });
+                e.currentTarget.classList.add("tab-active");
+                divsArray1.forEach((div) => {
+                    div.style.display = "none";
+                });
+                // console.log(e.currentTarget.dataset.cont);
+                document.querySelector(e.currentTarget.dataset.cont).style.display = "block";
+            });
+        });
+    </script>
+
+
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+
+        // Select all menu items and sections
+        const menuItems = document.querySelectorAll('.menuItem');
+        const sections = document.querySelectorAll('.section1');
+
+        // Function to handle scroll event
+        function handleScroll() {
+            const scrollPosition = window.scrollY;
+
+            // Loop through each section
+            sections.forEach((section, index) => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+
+                // Check if section is in view
+                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                    // Add 'active' class to the corresponding menu item
+                    menuItems.forEach(item => item.classList.remove('mactive'));
+                    menuItems[index].classList.add('mactive');
+                }
+            });
+        }
+
+        // Add scroll event listener
+        window.addEventListener('scroll', handleScroll);
+
+
+    </script>
+<link rel="stylesheet" href="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/phone.min.css">
+<script>
+    window.TabaPayContact = {
+        showMainIcon: true,
+        enableChat: true,
+        enableWebPhone: true,
+        chatId: 'EdbB7n',
+        baseUrl: 'https://tabapay.ir/',
+    };
+</script>
+
+
+
+<!-- تگ ۲ - چت آنلاین -->
+
+<!-- تگ ۳ - تماس پشتیبانی -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/vanillatoasts.js.download" type="text/javascript"></script>
+
+<script>
+
+    $(".sbtn1").click(function () {
+        $(".sbtn").removeClass("hbactive");
+        $(this).addClass("hbactive");
+        $(".form1").hide();
+        $(".form2").fadeIn();
+    });
+    $(".sbtn2").click(function () {
+        $(".sbtn").removeClass("hbactive");
+        $(this).addClass("hbactive");
+        $(".form2").hide();
+        $(".form1").fadeIn();
+    });
+
+    $(".abtn1").click(function () {
+        $(".abtn").removeClass("hbactive");
+        $(this).addClass("hbactive");
+        $(".content1").hide();
+        $(".content2").fadeIn();
+    });
+    $(".abtn2").click(function () {
+        $(".abtn").removeClass("hbactive");
+        $(this).addClass("hbactive");
+        $(".content2").hide();
+        $(".content1").fadeIn();
+    });
+
+    $(document).ajaxError(function (event, jqXHR, settings, thrownError) {
+        if (thrownError !== 'unknown status') {
+            if (jqXHR.status === 500 || jqXHR.status === 405) {
+                // $('.popup').slideUp();
+                VanillaToasts.create({
+                    positionClass: 'topCenter',
+                    timeout: 3000,
+                    type: 'error',
+                    title: 'تاباپی',
+                    text: 'خطای سیستمی رخ داده است',
+                    icon: 'https://tabapay.ir/assets/icons/close.svg'
+                });
+                
+
+                
+                
+                
+            } else if (jqXHR.status === 419) {
+                // $('.popup').slideUp();
+                VanillaToasts.create({
+                    positionClass: 'topCenter',
+                    timeout: 3000,
+                    type: 'error',
+                    title: 'تاباپی',
+                    text: 'اعتبار فرم شما منقضی شده است، لطفا صفحه را  مجددا بارگذاری کنید',
+                    icon: 'https://tabapay.ir/assets/icons/close.svg'
+                });
+                
+
+                
+                
+                
+            } else {
+                // $('.inputStatus').css('visibility', 'hidden');
+                // $.each(jqXHR.responseJSON.errors, function (key, value) {
+                //     $(`span.${key}_span`).css("visibility", "visible");
+                //     $(`span.${key}_span`).css('color', '#FF6085');
+                //     $(`span.${key}_span`).html(value[0]);
+                // });
+            }
+        }
+    });
+    $(document).ajaxSuccess(function (event, jqXHR, settings, thrownError) {
+        if (thrownError.status !== undefined && thrownError.status !== 'readPublicNotification' && thrownError.message !== undefined && thrownError.operation !== 'IpDetection') {
+            if (thrownError.status === 'login_required') {
+                window.location.replace('https://tabapay.ir/auth/login');
+            } else {
+                VanillaToasts.create({
+                    positionClass: 'topCenter',
+                    timeout: 3000,
+                    type: thrownError.status,
+                    title: 'تاباپی',
+                    text: thrownError.message,
+                    icon: thrownError.status === 'error' ? 'https://tabapay.ir/assets/icons/close.svg' : 'https://tabapay.ir/assets/icons/tik-green.svg'
+                });
+            }
+            
+
+            
+            
+            
+        }
+    });
+
+</script>
+<script>
+    $('.inputStatus').css("visibility", "hidden");
+</script>
+
+
+
+
+
+
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/gtm-part1-main-icon.js.download"></script>
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/gtm-part2.js.download"></script>
+<script src="./راهنمای وب سرویس - درگاه پرداخت امن و هوشمند تاباپی_files/gtm-part3.js.download"></script><script>
+  var _paq = window._paq = window._paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="https://analytics.tabapay.ir/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '1']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script><script type="text/javascript">(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=gtm2";y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","m6oeascj6t");</script>
+<script>
+var container = document.getElementById('footer-logos');
+
+if (container) {
+  container.innerHTML += 
+    '<div>' +
+      '<img ' +
+        'src="https://logo.samandehi.ir/logo.aspx?id=343756&p=qftishwlqftiyndtujynwlbq" ' +
+        'alt="نماد ساماندهی" ' +
+        'style="cursor:pointer" ' +
+        'id="samandehi-logo"' +
+      '>' +
+    '</div>';
+}
+
+var samandehi = document.getElementById('samandehi-logo');
+if (samandehi) {
+  samandehi.addEventListener('click', function () {
+    window.open(
+      'https://logo.samandehi.ir/Verify.aspx?id=343756&p=xlaoaodsxlaojyoedshwgvka',
+      'Popup',
+      'toolbar=no,scrollbars=no,location=no,statusbar=no,menubar=no,resizable=0,width=450,height=630,top=30'
+    );
+  });
+}
+</script><script>
+var container = document.getElementById('footer-logos');
+
+if (container) {
+  container.innerHTML += 
+    '<div>' +
+      '<a referrerpolicy="origin" ' +
+         'target="_blank" ' +
+         'rel="noopener" ' +
+         'href="https://trustseal.enamad.ir/?id=197562&Code=mDnFa7ONOevEdo2pEnn8">' +
+        '<img ' +
+          'src="https://Trustseal.eNamad.ir/logo.aspx?id=197562&Code=mDnFa7ONOevEdo2pEnn8" ' +
+          'alt="نماد اینماد" ' +
+          'style="cursor:pointer"' +
+        '>' +
+      '</a>' +
+    '</div>';
+}
+</script><div id="vanillatoasts-container"></div><div id="tabapay-contact-holder" class="tabapay_holder"><span class="tabapay_btn tabapay_btn_main" id="tabapay-btn-main" title="پشتیبانی" aria-label="پشتیبانی"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 4-6 8-6s8 2 8 6"></path></svg></span><span id="tabapay-btn-chat" class="tabapay_btn tabapay_btn_sub" data-type="chat" title="چت آنلاین" aria-label="چت آنلاین"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span><span id="tabapay-btn-webphone" class="tabapay_btn tabapay_btn_sub" data-type="webphone" title="تماس با پشتیبانی" aria-label="تماس با پشتیبانی"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2z"></path></svg></span></div></body></html>

@@ -7,5 +7,6 @@ public enum PaymentProvider
 {
     Unknown = 0,
     Zarinpal = 1,
-    BankMelli = 2
+    BankMelli = 2,
+    TabaPay = 3
 }

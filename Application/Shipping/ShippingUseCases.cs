@@ -53,13 +53,22 @@ public static class ShippingUseCases
             var value = request.Policy;
             if (value.UnitAmount < 0 || value.UnitAmount > 1_000_000_000m || decimal.Truncate(value.UnitAmount) != value.UnitAmount || request.Packages.Count > 100)
                 throw new AccountingException("INVALID_SHIPPING_SETTINGS", 400);
+            // A single (0,0) entry is the default per-unit parcel, not a quantity range.
+            // Legacy quantity-based profiles remain optional overrides for combined packing.
             var packages = request.Packages.OrderBy(x => x.MinQuantity).ToList();
-            for (int i = 0; i < packages.Count; i++)
+            if (packages.Count(x => x.MinQuantity == 0 && x.MaxQuantity == 0) > 1)
+                throw new AccountingException("INVALID_PACKAGE_RANGE", 400);
+            ShippingPackage? previousRange = null;
+            foreach (var p in packages)
             {
-                var p = packages[i];
-                if (p.MinQuantity < 1 || p.MaxQuantity < p.MinQuantity || p.MaxQuantity > 100000 || p.EmptyWeightGrams < 0 || p.EmptyWeightGrams > 100000 ||
-                    p.LengthCm is < 1 or > 300 || p.WidthCm is < 1 or > 300 || p.HeightCm is < 1 or > 300 || p.BoxTypeId < 0 ||
-                    (i > 0 && packages[i - 1].MaxQuantity >= p.MinQuantity)) throw new AccountingException("INVALID_PACKAGE_RANGE", 400);
+                var isDefault = p.MinQuantity == 0 && p.MaxQuantity == 0;
+                if ((!isDefault && (p.MinQuantity < 1 || p.MaxQuantity < p.MinQuantity || p.MaxQuantity > 100000 ||
+                    (previousRange is not null && previousRange.MaxQuantity >= p.MinQuantity))) ||
+                    p.EmptyWeightGrams < 0 || p.EmptyWeightGrams > 100000 ||
+                    p.LengthCm is < 1 or > 300 || p.WidthCm is < 1 or > 300 || p.HeightCm is < 1 or > 300 ||
+                    p.BoxTypeId < 0 || p.DefaultUnitWeightGrams is < 0 or > 1000000)
+                    throw new AccountingException("INVALID_PACKAGE_RANGE", 400);
+                if (!isDefault) previousRange = p;
             }
             if (new[] { value.OriginCityCode, value.CourierCode, value.ServiceType, value.PaymentType, value.CollectionType }.Any(x => x is null || x.Length > 100 || x.Any(char.IsControl)) ||
                 value.OriginLatitude is < -90 or > 90 || value.OriginLongitude is < -180 or > 180)
@@ -118,9 +127,16 @@ public static class ShippingUseCases
             var methods = PostexReferences.Items("methods", await carrier.ReferenceAsync("methods", ct));
             if (!methods.Any(x => x.Code == policy.ServiceType)) throw new AccountingException("POSTEX_NOT_CONFIGURED", 503);
             var count = quote.Lines.Sum(x => x.Quantity);
-            var package = (JsonSerializer.Deserialize<List<ShippingPackage>>(policy.PackagesJson) ?? []).SingleOrDefault(x => count >= x.MinQuantity && count <= x.MaxQuantity)
-                ?? throw new AccountingException("PACKAGE_NOT_CONFIGURED", 422);
-            if (quote.Lines.Any(x => x.Product.WeightGrams is null or <= 0)) throw new AccountingException("PRODUCT_WEIGHT_MISSING", 422);
+            var packages = JsonSerializer.Deserialize<List<ShippingPackage>>(policy.PackagesJson) ?? [];
+            var combinedPackage = packages.SingleOrDefault(x => x.MinQuantity >= 1 && count >= x.MinQuantity && count <= x.MaxQuantity);
+            var defaultPackage = packages.SingleOrDefault(x => x.MinQuantity == 0 && x.MaxQuantity == 0);
+            if (combinedPackage is null && defaultPackage is null)
+                throw new AccountingException("DEFAULT_PACKAGE_NOT_CONFIGURED", 422);
+            int ProductWeight(QuotedLine line) => line.Product.WeightGrams is > 0
+                ? line.Product.WeightGrams.Value
+                : defaultPackage?.DefaultUnitWeightGrams ?? 0;
+            if (quote.Lines.Any(x => ProductWeight(x) <= 0))
+                throw new AccountingException("PRODUCT_WEIGHT_MISSING", 422);
             // City codes come only from the carrier catalog, with province included in unambiguous legacy name matching.
             var cities = await carrier.ReferenceAsync("cities", ct);
             if (!PostexReferences.Items("cities", cities).Any(x => x.Code == policy.OriginCityCode)) throw new AccountingException("POSTEX_NOT_CONFIGURED", 503);
@@ -129,10 +145,28 @@ public static class ShippingUseCases
             var now = time.GetUtcNow().UtcDateTime;
             var existing = await db.ShippingQuotes.AsNoTracking().Where(x => x.UserId == request.UserId && x.Fingerprint == fingerprint && x.ExpiresAtUtc > now).FirstOrDefaultAsync(ct);
             if (existing is not null) return new(existing.Id, existing.CostToman, "prepaid", DateTime.SpecifyKind(existing.ExpiresAtUtc, DateTimeKind.Utc), policy.Version, quote.Net + quote.Discount, quote.Discount, quote.Net + existing.CostToman);
-            long measuredWeight = quote.Lines.Sum(x => (long)x.Product.WeightGrams!.Value * x.Quantity) + package.EmptyWeightGrams;
-            if (measuredWeight > int.MaxValue) throw new AccountingException("PACKAGE_TOO_HEAVY", 422);
-            int weight = (int)measuredWeight;
-            var cost = await carrier.QuoteAsync(new(policy, package, city, weight, quote.Net), ct);
+            // When no combined-package override exists, rate one physical parcel per
+            // unit using the default dimensions. Never assume multiple bags fit one box.
+            List<PostexParcel>? parcels = null;
+            var activePackage = combinedPackage ?? defaultPackage!;
+            if (combinedPackage is null)
+            {
+                if (count > 100) throw new AccountingException("TOO_MANY_POSTAL_PARCELS", 422);
+                parcels = [];
+                foreach (var line in quote.Lines.OrderBy(x => x.Product.Id))
+                {
+                    var unitWeight = (long)ProductWeight(line) + defaultPackage!.EmptyWeightGrams;
+                    if (unitWeight is <= 0 or > int.MaxValue) throw new AccountingException("PACKAGE_TOO_HEAVY", 422);
+                    var unitValue = line.UnitPrice - line.Discount / line.Quantity;
+                    for (var i = 0; i < line.Quantity; i++)
+                        parcels.Add(new PostexParcel(defaultPackage!, (int)unitWeight, unitValue));
+                }
+            }
+            long measuredWeight = parcels is null
+                ? quote.Lines.Sum(x => (long)ProductWeight(x) * x.Quantity) + combinedPackage!.EmptyWeightGrams
+                : parcels.Sum(x => (long)x.WeightGrams);
+            if (measuredWeight is <= 0 or > int.MaxValue) throw new AccountingException("PACKAGE_TOO_HEAVY", 422);
+            var cost = await carrier.QuoteAsync(new(policy, activePackage, city, (int)measuredWeight, quote.Net, parcels), ct);
             if (cost <= 0) throw new AccountingException("POSTEX_INVALID_QUOTE", 503);
             var row = new ShippingQuote { UserId = request.UserId, AddressId = address.Id, Fingerprint = fingerprint, DestinationCityCode = city, PolicyVersion = policy.Version,
                 CostToman = cost, ExpiresAtUtc = time.GetUtcNow().UtcDateTime.AddMinutes(10) };

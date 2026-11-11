@@ -1,132 +1,41 @@
 "use client";
-import Image from "next/image";
-import dayjs from "dayjs";
+
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table';
 import 'react-super-responsive-table/dist/SuperResponsiveTableStyle.css';
+import { formatDate, formatNumber, formatPrice } from '@/lib/vendora/format';
+import { storePresentation, useStoreSettings } from '@/components/vendora/layout/store-settings-provider';
 
-export default function InvoiceArea({innerRef,info}) {
-    const { name, country, city, contact, invoice, createdAt, cart, cardInfo, shippingCost, discount,totalAmount } = info || {};
+/** Printable order summary using the original server prices and the current storefront identity. */
+export default function InvoiceArea({ innerRef, info, locale }) {
+  const fa = locale === 'fa';
+  const brand = storePresentation(useStoreSettings(), locale);
+  const { name, country, city, contact, invoice, createdAt, cart, shippingCost, shippingPaymentMode, discount, totalAmount } = info;
+  const columns = fa ? ['ردیف', 'محصول', 'تعداد', 'قیمت واحد', 'مبلغ'] : ['No.', 'Product', 'Quantity', 'Unit price', 'Amount'];
+  const totals = [
+    [fa ? 'هزینهٔ ارسال' : 'Shipping', shippingPaymentMode === 'collect'
+      ? (fa ? 'پرداخت هنگام تحویل' : 'Pay on delivery') : formatPrice(shippingCost, locale)],
+    [fa ? 'تخفیف' : 'Discount', formatPrice(discount, locale)],
+    [fa ? 'مبلغ سفارش' : 'Order total', formatPrice(totalAmount, locale)],
+  ];
   return (
-    <div ref={innerRef} className="invoice__wrapper grey-bg-15 pt-40 pb-40 pl-40 pr-40 tp-invoice-print-wrapper">
-      {/* <!-- invoice header --> */}
-      <div className="invoice__header-wrapper border-2 border-bottom border-white mb-40">
-        <div className="row">
-          <div className="col-xl-12">
-            <div className="invoice__header pb-20">
-              <div className="row align-items-end">
-                <div className="col-md-4 col-sm-6">
-                  <div className="invoice__left">
-                    <Image className="mb-15" priority src="/assets/img/logo/logo-black.svg" alt="logo" width={112} height={42} />
-                    <p>
-                      2879 Elk Creek Road <br /> Stone Mountain, Georgia
-                    </p>
-                  </div>
-                </div>
-                <div className="col-md-8 col-sm-6">
-                  <div className="invoice__right mt-15 mt-sm-0 text-sm-end">
-                    <h3 className="text-uppercase font-70 mb-20">Invoice</h3>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* <!-- invoice customer details --> */}
-      <div className="invoice__customer mb-30">
-        <div className="row">
-          <div className="col-md-6 col-sm-8">
-            <div className="invoice__customer-details">
-              <h4 className="mb-10 text-uppercase">{name}</h4>
-              <p className="mb-0 text-uppercase">{country}</p>
-              <p className="mb-0 text-uppercase">{city}</p>
-              <p className="mb-0">{contact}</p>
-            </div>
-          </div>
-          <div className="col-md-6 col-sm-4">
-            <div className="invoice__details mt-md-0 mt-20 text-md-end">
-              <p className="mb-0">
-                <strong>Invoice ID:</strong> #{invoice}
-              </p>
-              <p className="mb-0">
-                <strong>Date:</strong> {dayjs(createdAt).format("MMMM D, YYYY")}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* <!-- invoice order table --> */}
-      <div className="invoice__order-table pt-30 pb-30 pl-40 pr-40 bg-white  mb-30">
-        <Table className="table">
-          <Thead className="table-light">
-            <Tr>
-              <Th scope="col">SL</Th>
-              <Th scope="col">Product Name</Th>
-              <Th scope="col">Quantity</Th>
-              <Th scope="col">Item Price</Th>
-              <Th scope="col">Amount</Th>
-            </Tr>
-          </Thead>
-          <Tbody className="table-group-divider">
-            {cart.map((item, i) => (
-              <Tr key={i}>
-                <Td>{i + 1}</Td>
-                <Td>{item.title}</Td>
-                <Td>{item.orderQuantity}</Td>
-                <Td>
-                  $
-                  {item?.discount
-                    ? item.originalPrice -
-                      (item.originalPrice * item.discount) / 100
-                    : item.originalPrice}
-                </Td>
-                <Td>
-                  $
-                  {item?.discount
-                    ? (item.originalPrice -
-                        (item.originalPrice * item.discount) / 100) *
-                      item.orderQuantity
-                    : item.originalPrice * item.orderQuantity}
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </div>
-
-      {/* <!-- invoice total --> */}
-      <div className="invoice__total pt-40 pb-10 alert-success pl-40 pr-40 mb-30">
-        <div className="row">
-          <div className="col-lg-3 col-md-4">
-            <div className="invoice__payment-method mb-30">
-              <h5 className="mb-0">Payment Method</h5>
-              <p className="tp-font-medium text-uppercase">{cardInfo.type}</p>
-            </div>
-          </div>
-          <div className="col-lg-3 col-md-4">
-            <div className="invoice__shippint-cost mb-30">
-              <h5 className="mb-0">Shipping Cost</h5>
-              <p className="tp-font-medium">${shippingCost}</p>
-            </div>
-          </div>
-          <div className="col-lg-3 col-md-4">
-            <div className="invoice__discount-cost mb-30">
-              <h5 className="mb-0">Discount</h5>
-              <p className="tp-font-medium">${discount.toFixed(2)}</p>
-            </div>
-          </div>
-          <div className="col-lg-3 col-md-4">
-            <div className="invoice__total-ammount mb-30">
-              <h5 className="mb-0">Total Ammount</h5>
-              <p className="tp-font-medium text-danger">
-                <strong>${totalAmount}</strong>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div ref={innerRef} dir={fa ? 'rtl' : 'ltr'} className="rounded-card border border-vd-line bg-white p-4 md:p-7 tp-invoice-print-wrapper">
+      <header className="flex flex-wrap justify-between gap-4 border-b border-vd-line pb-4">
+        <div><p className="font-bold text-jade">{brand.name}</p><h1 className="mt-1 text-xl font-extrabold">{fa ? 'خلاصهٔ سفارش' : 'Order summary'}</h1></div>
+        <div className="text-sm text-vd-muted"><bdi className="font-bold text-ink">{invoice}</bdi><p>{formatDate(createdAt, locale)}</p></div>
+      </header>
+      <div className="my-4 space-y-1 text-sm"><p className="font-bold">{name}</p><p>{[country, city].filter(Boolean).join('، ')}</p><bdi>{contact}</bdi></div>
+      <Table className="table">
+        <Thead><Tr>{columns.map(column => <Th key={column} scope="col">{column}</Th>)}</Tr></Thead>
+        <Tbody>{cart.map((item, index) => (
+          <Tr key={item._id}>
+            <Td>{formatNumber(index + 1, locale)}</Td><Td>{item.title}</Td><Td>{formatNumber(item.orderQuantity, locale)}</Td>
+            <Td>{formatPrice(item.price, locale)}</Td><Td>{formatPrice(item.lineTotal, locale)}</Td>
+          </Tr>
+        ))}</Tbody>
+      </Table>
+      <dl className="grid gap-3 border-t border-vd-line pt-4 text-sm md:grid-cols-3">
+        {totals.map(([label, value]) => <div key={label}><dt className="text-vd-muted">{label}</dt><dd className="mt-1 font-bold text-ink">{value}</dd></div>)}
+      </dl>
     </div>
   );
 }

@@ -36,7 +36,14 @@ export function PaymentMethodCard({
   const disabled = state === "disabled";
   const error = state === "error";
   const active = selected || state === "selected" || state === "focus";
-  const copy = provider === "zarinpal"
+  const copy = provider === "tabapay"
+    ? {
+        title: isFa ? "درگاه تاباپی" : "TabaPay gateway",
+        description: isFa ? "پرداخت با کارت بانکی در صفحهٔ تاباپی" : "Pay with an Iranian bank card on TabaPay",
+        badge: isFa ? "پرداخت آنلاین" : "Online payment",
+        mark: isFa ? "تاباپی" : "TabaPay",
+      }
+    : provider === "zarinpal"
     ? {
         title: isFa ? "درگاه زرین‌پال" : "Zarinpal gateway",
         description: isFa ? "پرداخت امن با تمام کارت‌های بانکی" : "Secure payment with Iranian bank cards",
@@ -153,14 +160,15 @@ interface PaymentSummaryProps {
   provider?: PaymentProviderId | null;
   phase: PaymentCheckoutPhase;
   onSubmit: () => void;
+  unavailable?: boolean;
   className?: string;
 }
 
 /** Financial summary for prepaid and collect shipping with loading/error states. */
-export function PaymentSummary({ locale, totals, shippingMethodTitle, provider, phase, onSubmit, className = "" }: PaymentSummaryProps) {
+export function PaymentSummary({ locale, totals, shippingMethodTitle, provider, phase, onSubmit, unavailable = false, className = "" }: PaymentSummaryProps) {
   const isFa = locale === "fa";
   const busy = phase === "submitting" || phase === "redirecting";
-  const disabled = busy || !provider;
+  const disabled = busy || !provider || unavailable;
   return (
     <aside data-state={phase} className={`rounded-[20px] border bg-white p-5 shadow-[0_18px_50px_-40px_rgba(0,77,58,.85)] lg:p-6 ${phase === "error" ? "border-vd-danger" : "border-vd-line"} ${className}`}>
       <h2 className="text-xl font-extrabold text-ink">{isFa ? "خلاصه پرداخت" : "Payment summary"}</h2>
@@ -178,7 +186,7 @@ export function PaymentSummary({ locale, totals, shippingMethodTitle, provider, 
       </div>
       <p className={`mt-3 text-xs leading-6 ${phase === "error" ? "text-vd-danger" : "text-vd-muted"}`}>
         {phase === "error"
-          ? (isFa ? "سفارش ایجاد نشد؛ اطلاعات شما حفظ شده است." : "The order was not created; your checkout data is preserved.")
+          ? (isFa ? "پرداخت تکمیل نشد. اطلاعات سبد شما محفوظ است." : "Payment did not complete. Your cart is preserved.")
           : totals.shippingPayment === "collect"
             ? (isFa ? "کرایه حمل به مبلغ آنلاین اضافه نمی‌شود." : "Delivery charges are not included in the online total.")
             : (isFa ? "پس از ثبت سفارش، مرحلهٔ انتقال نمایش داده می‌شود." : "A payment handoff state appears after the order is created.")}
@@ -206,7 +214,8 @@ interface GatewayRedirectProps {
 /** Full-screen handoff state shown briefly after the existing order API succeeds. */
 export function GatewayRedirect({ locale, provider }: GatewayRedirectProps) {
   const isFa = locale === "fa";
-  const providerName = provider === "zarinpal" ? (isFa ? "زرین‌پال" : "Zarinpal") : (isFa ? "بانک ملی" : "Bank Melli");
+  const names = { tabapay: isFa ? "تاباپی" : "TabaPay", zarinpal: isFa ? "زرین‌پال" : "Zarinpal", bankMelli: isFa ? "بانک ملی" : "Bank Melli" };
+  const providerName = names[provider];
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/35 p-4" role="status" aria-live="assertive">
       <div className="w-full max-w-[440px] rounded-[20px] border border-vd-line bg-white p-8 text-center shadow-pop">

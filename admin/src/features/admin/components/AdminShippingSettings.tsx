@@ -28,6 +28,14 @@ export function AdminShippingSettings({ locale }: { locale: 'fa' | 'en' }) {
     finally { setBusy(false); }
   }
 
+  const defaultPackage = draft?.packages.find(row => row.minQuantity === 0 && row.maxQuantity === 0);
+  function changeDefaultPackage(key: keyof ShippingPackage, value: number) {
+    if (!draft || !defaultPackage) return;
+    setSaved(false);
+    setDraft({...draft, packages: draft.packages.map(row =>
+      row.minQuantity === 0 && row.maxQuantity === 0 ? {...row, [key]: value} : row)});
+  }
+
   /** Edits one package without changing other range selections. */
   function changePackage(index: number, key: keyof ShippingPackage, value: number) {
     if (draft) setDraft({...draft, packages: draft.packages.map((row, i) => i === index ? {...row, [key]: value} : row)});
@@ -48,13 +56,40 @@ export function AdminShippingSettings({ locale }: { locale: 'fa' | 'en' }) {
         <AdminSelect label={fa ? 'تحویل بسته به شرکت حمل' : 'Carrier handoff'} value={draft.policy.collectionType} onChange={event => setDraft({...draft, policy: {...draft.policy, collectionType: event.target.value}})}><option value="courier_drop_off">{fa ? 'تحویل به دفتر شرکت پست' : 'Drop off at carrier'}</option><option value="postex_drop_off">{fa ? 'تحویل به دفتر پستِکس' : 'Drop off at Postex'}</option><option value="pick_up">{fa ? 'جمع‌آوری توسط پستِکس' : 'Pickup by Postex'}</option></AdminSelect>
         {(['originLatitude', 'originLongitude'] as const).map((key, index) => <AdminField key={key} label={fa ? (index === 0 ? 'عرض جغرافیایی مبدأ' : 'طول جغرافیایی مبدأ') : key} type="number" step="any" value={draft.policy[key] ?? ''} onChange={event => setDraft({...draft, policy: {...draft.policy, [key]: event.target.value === '' ? null : Number(event.target.value)}})} />)}
       </div>
-      <h3>{fa ? 'الگوهای بسته‌بندی بر اساس تعداد واحد' : 'Parcel profiles by total unit count'}</h3>
-      {draft.packages.map((row, index) => <div key={index} className="accounting-line">
+      <h3>{fa ? 'بسته پیش‌فرض برای هر کالا' : 'Default parcel per item'}</h3>
+      <AdminFeedback>{fa
+        ? 'برای استعلام پست، یک‌بار ابعاد و وزن واقعی بسته پیش‌فرض را وارد کنید؛ دیگر نیازی به بازه تعداد کالا نیست. وزن ثبت‌شده هر محصول اولویت دارد و وزن پیش‌فرض فقط برای محصولات بدون وزن استفاده می‌شود. چند کالا در حالت پیش‌فرض به چند مرسوله تقسیم می‌شوند.'
+        : 'Configure actual default parcel dimensions once. Product weight takes priority; fallback weight is used only if missing. Multiple units become separate parcels unless a combined profile below applies.'}</AdminFeedback>
+      {!defaultPackage ? <AdminButton type="button" variant="secondary" onClick={() => setDraft({...draft, packages: [...draft.packages, {
+        minQuantity: 0, maxQuantity: 0, emptyWeightGrams: 0, lengthCm: 0, widthCm: 0, heightCm: 0, boxTypeId: 0, defaultUnitWeightGrams: 0,
+      }]})}>{fa ? 'تعریف بسته پیش‌فرض' : 'Configure default parcel'}</AdminButton> : <>
+        <div className="admin-form-grid">
+          {([
+            ['defaultUnitWeightGrams', fa ? 'وزن پیش‌فرض کالا (گرم)' : 'Fallback product weight (grams)'],
+            ['emptyWeightGrams', fa ? 'وزن بسته خالی (گرم)' : 'Empty packaging weight (grams)'],
+            ['lengthCm', fa ? 'طول بسته (سانتی‌متر)' : 'Parcel length (cm)'],
+            ['widthCm', fa ? 'عرض بسته (سانتی‌متر)' : 'Parcel width (cm)'],
+            ['heightCm', fa ? 'ارتفاع بسته (سانتی‌متر)' : 'Parcel height (cm)'],
+          ] as const).map(([key, label]) => <AdminField key={key} label={label} type="number"
+            min={key === 'emptyWeightGrams' || key === 'defaultUnitWeightGrams' ? 0 : 1} step={1} required
+            value={defaultPackage[key] ?? 0} onChange={event => changeDefaultPackage(key, Number(event.target.value))} />)}
+          <AdminSelect label={fa ? 'نوع بسته در پستکس' : 'Postex box type'} value={defaultPackage.boxTypeId}
+            onChange={event => changeDefaultPackage('boxTypeId', Number(event.target.value))}>
+            <option value={defaultPackage.boxTypeId}>{defaultPackage.boxTypeId || (fa ? 'ابعاد سفارشی' : 'Custom dimensions')}</option>
+            {refs.boxes.map(box => <option key={box.code} value={box.code}>{box.name}</option>)}
+          </AdminSelect>
+        </div>
+        <AdminButton type="button" variant="danger" onClick={() => setDraft({...draft, packages: draft.packages.filter(row => !(row.minQuantity === 0 && row.maxQuantity === 0))})}>
+          {fa ? 'حذف بسته پیش‌فرض' : 'Remove default parcel'}
+        </AdminButton>
+      </>}
+      <h3>{fa ? 'بسته‌بندی ترکیبی (اختیاری)' : 'Combined parcel overrides (optional)'}</h3>
+      {draft.packages.map((row, index) => row.minQuantity === 0 && row.maxQuantity === 0 ? null : <div key={index} className="accounting-line">
         {([['minQuantity','از تعداد'],['maxQuantity','تا تعداد'],['emptyWeightGrams','وزن بسته خالی (گرم)'],['lengthCm','طول (سانتی‌متر)'],['widthCm','عرض (سانتی‌متر)'],['heightCm','ارتفاع (سانتی‌متر)']] as const).map(([key,label]) => <AdminField key={key} label={fa ? label : key} type="number" min={key === 'emptyWeightGrams' ? 0 : 1} step={1} required value={key === 'emptyWeightGrams' ? row[key] : row[key] || ''} onChange={event => changePackage(index, key, Number(event.target.value))} />)}
         <AdminSelect label={fa ? 'نوع بسته پستِکس' : 'Carrier box'} value={row.boxTypeId} onChange={event => changePackage(index, 'boxTypeId', Number(event.target.value))}><option value={row.boxTypeId}>{row.boxTypeId || (fa ? 'ابعاد ثبت‌شده' : 'Custom dimensions')}</option>{refs.boxes.map(box => <option key={box.code} value={box.code}>{box.name}</option>)}</AdminSelect>
         <AdminButton onClick={() => setDraft({...draft, packages: draft.packages.filter((_, i) => i !== index)})} variant="danger">{fa ? 'حذف الگو' : 'Remove profile'}</AdminButton>
       </div>)}
-      <AdminButton onClick={() => setDraft({...draft, packages: [...draft.packages, {minQuantity: 1, maxQuantity: 10, emptyWeightGrams: 0, lengthCm: 0, widthCm: 0, heightCm: 0, boxTypeId: 0}]})} variant="secondary">{fa ? 'افزودن الگوی بسته' : 'Add parcel profile'}</AdminButton>
+      <AdminButton onClick={() => setDraft({...draft, packages: [...draft.packages, {minQuantity: 1, maxQuantity: 10, emptyWeightGrams: 0, lengthCm: 0, widthCm: 0, heightCm: 0, boxTypeId: 0}]})} variant="secondary">{fa ? 'افزودن بسته‌بندی ترکیبی' : 'Add combined parcel override'}</AdminButton>
       {saved && <AdminFeedback tone="success">{fa ? 'سیاست ارسال ذخیره شد؛ قیمت پایهٔ محصولات تغییر نکرد.' : 'Shipping policy saved; base prices are unchanged.'}</AdminFeedback>}
       <AdminButton type="submit" variant="brass">{busy ? (fa ? 'در حال ذخیره…' : 'Saving…') : (fa ? 'ذخیره سیاست ارسال' : 'Save shipping policy')}</AdminButton>
     </fieldset></form>}
