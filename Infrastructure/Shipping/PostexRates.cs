@@ -33,13 +33,15 @@ public sealed class PostexRates(IHttpClientFactory clients, IConfiguration confi
     public async Task<decimal> QuoteAsync(PostexRateRequest request, CancellationToken ct)
     {
         var p = request.Policy;
-        var box = request.Package;
+        var parcels = request.Parcels ?? [new PostexParcel(request.Package, request.WeightGrams, request.DeclaredValueToman)];
+        if (parcels.Count is < 1 or > 100) throw new AccountingException("TOO_MANY_POSTAL_PARCELS", 422);
         var payload = new {
             from_city_code = p.OriginCityCode, collection_type = p.CollectionType, lat = p.OriginLatitude, lon = p.OriginLongitude,
             courier = new { courier_code = p.CourierCode, service_type = p.ServiceType },
-            parcels = new[] { new { custom_parcel_id = "", to_city_code = request.DestinationCityCode, payment_type = p.PaymentType,
-                parcel_properties = new { height = box.HeightCm, width = box.WidthCm, length = box.LengthCm, box_type_id = box.BoxTypeId,
-                    is_fragile = false, is_liquid = false, total_weight = request.WeightGrams, total_value = request.DeclaredValueToman * 10m, total_value_currency = "IRR" } } },
+            parcels = parcels.Select((item, index) => new { custom_parcel_id = index.ToString(), to_city_code = request.DestinationCityCode, payment_type = p.PaymentType,
+                parcel_properties = new { height = item.Package.HeightCm, width = item.Package.WidthCm, length = item.Package.LengthCm,
+                    box_type_id = item.Package.BoxTypeId, is_fragile = false, is_liquid = false,
+                    total_weight = item.WeightGrams, total_value = item.DeclaredValueToman * 10m, total_value_currency = "IRR" } }).ToArray(),
             value_added_service = new { handling_fee = 0, request_label = false, request_packaging = false, request_sms_notification = false,
                 optional_insurance = false, request_email_notification = false, print_logo = false },
             channel = "api", appName = "Vendora"
@@ -48,10 +50,10 @@ public sealed class PostexRates(IHttpClientFactory clients, IConfiguration confi
         var key = "quote:" + p.Version + ":" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(json)));
         var response = await cache.ReadAsync(key, TimeSpan.FromMinutes(10), async () => {
             var value = await SendAsync("shipping/quotes", payload);
-            _ = ReadCostToman(value); // Invalid responses must fault the shared task and be evicted so retry can recover.
+            _ = ReadCostToman(value, parcels.Count); // Invalid responses must fault the shared task and be evicted so retry can recover.
             return value;
         }, ct);
-        return ReadCostToman(response);
+        return ReadCostToman(response, parcels.Count);
     }
 
     /// <summary>Only public reference catalogs are allowed, cached for a day to avoid per-customer list downloads.</summary>
@@ -67,13 +69,14 @@ public sealed class PostexRates(IHttpClientFactory clients, IConfiguration confi
     }
 
     /// <summary>Sums service, separately enumerated extras and pickup once, converting IRR to Toman without floating point.</summary>
-    public static decimal ReadCostToman(JsonElement response)
+    public static decimal ReadCostToman(JsonElement response, int expectedParcels = 1)
     {
-        if (response.ValueKind != JsonValueKind.Object) throw new AccountingException("POSTEX_INVALID_QUOTE", 503);
+        if (expectedParcels is < 1 or > 100 || response.ValueKind != JsonValueKind.Object)
+            throw new AccountingException("POSTEX_INVALID_QUOTE", 503);
         if (response.TryGetProperty("isSuccess", out var success) && success.ValueKind == JsonValueKind.False)
             throw new AccountingException("POSTEX_INVALID_QUOTE", 503);
-        if (!response.TryGetProperty("shipping_prices", out var parcels) || parcels.ValueKind != JsonValueKind.Array || parcels.GetArrayLength() != 1 ||
-            parcels[0].ValueKind != JsonValueKind.Object || !parcels[0].TryGetProperty("service_price", out var services) || services.ValueKind != JsonValueKind.Array || services.GetArrayLength() != 1)
+        if (!response.TryGetProperty("shipping_prices", out var parcels) ||
+            parcels.ValueKind != JsonValueKind.Array || parcels.GetArrayLength() != expectedParcels)
             throw new AccountingException("POSTEX_INVALID_QUOTE", 503);
         decimal Number(JsonElement obj, string field, bool optional = false)
         {
@@ -82,13 +85,21 @@ public sealed class PostexRates(IHttpClientFactory clients, IConfiguration confi
             if (optional && !obj.TryGetProperty(field, out _)) return 0;
             throw new AccountingException("POSTEX_INVALID_QUOTE", 503);
         }
-        decimal total = Number(services[0], "totalPrice") + Number(response, "pickup_price", true);
-        if (parcels[0].TryGetProperty("value_added_service_price", out var extras))
+        // Pickup is a top-level amount. Never add it once per parcel.
+        decimal total = Number(response, "pickup_price", true);
+        foreach (var parcel in parcels.EnumerateArray())
         {
+            if (parcel.ValueKind != JsonValueKind.Object ||
+                !parcel.TryGetProperty("service_price", out var services) ||
+                services.ValueKind != JsonValueKind.Array || services.GetArrayLength() != 1)
+                throw new AccountingException("POSTEX_INVALID_QUOTE", 503);
+            total += Number(services[0], "totalPrice");
+            if (!parcel.TryGetProperty("value_added_service_price", out var extras)) continue;
             if (extras.ValueKind != JsonValueKind.Array) throw new AccountingException("POSTEX_INVALID_QUOTE", 503);
             foreach (var extra in extras.EnumerateArray())
             {
-                if (extra.ValueKind != JsonValueKind.Object || !extra.TryGetProperty("price", out var price)) throw new AccountingException("POSTEX_INVALID_QUOTE", 503);
+                if (extra.ValueKind != JsonValueKind.Object || !extra.TryGetProperty("price", out var price))
+                    throw new AccountingException("POSTEX_INVALID_QUOTE", 503);
                 total += Number(price, "totalPrice");
             }
         }

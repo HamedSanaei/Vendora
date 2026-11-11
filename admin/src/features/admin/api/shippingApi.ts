@@ -1,6 +1,6 @@
 import { httpClient } from '../../../lib/api/httpClient';
 
-export interface ShippingPackage { minQuantity: number; maxQuantity: number; emptyWeightGrams: number; lengthCm: number; widthCm: number; heightCm: number; boxTypeId: number }
+export interface ShippingPackage { minQuantity: number; maxQuantity: number; emptyWeightGrams: number; lengthCm: number; widthCm: number; heightCm: number; boxTypeId: number; defaultUnitWeightGrams?: number }
 export interface ShippingPolicy { id: number; includedInPrice: boolean; unitAmount: number; version: number; originCityCode: string; originLatitude: number | null; originLongitude: number | null; courierCode: string; serviceType: string; paymentType: string; collectionType: string }
 export interface ShippingSettings { policy: ShippingPolicy; packages: ShippingPackage[]; postexConfigured: boolean }
 export interface ShippingReference { code: string; name: string; province?: string }

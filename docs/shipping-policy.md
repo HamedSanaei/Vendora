@@ -33,10 +33,38 @@ Configure these nonsecret fields in the existing store settings panel:
 
 - Origin city selected from the carrier catalog, and actual origin coordinates when required by the chosen handoff method.
 - An `IR_POST` service from the carrier list, payment mode `SENDER`, and a supported collection mode: `courier_drop_off`, `postex_drop_off` or `pick_up`.
-- Inclusive, non-overlapping quantity ranges for parcel profiles, actual empty package weight in grams, measured dimensions in centimetres and carrier box type.
+- One default parcel profile with actual empty packaging weight, measured dimensions, and optional carrier box type. Quantity-range overrides are optional when several items physically share one package.
 - Measured unit weight in grams in each existing product create/edit form. Old products have no fabricated weight. Requests from older editors which omit the weight field preserve the stored value.
 
-A postal quote requires a matching profile and valid weights. Shipment weight is the sum of unit weights multiplied by quantities plus the empty package weight. City matching normalizes Persian letter/whitespace variants, includes province, and rejects ambiguous matches. An explicit destination selection must still match the saved address's city and province.
+A postal quote requires valid parcel dimensions and product weights (measured per-product or configured fallback). Matching quantity-range profiles are not mandatory when a default parcel is configured. Shipment weight includes each product unit's weight and the empty packaging weight of each physical parcel; combined-package overrides apply a single empty packaging weight. City matching normalizes Persian letter/whitespace variants, includes province, and rejects ambiguous matches. An explicit destination selection must still match the saved address's city and province.
+
+## Default per-item parcel quoting
+
+**Quantity ranges are optional.** In Admin > Online Store > Shipping, configure
+a **Default parcel per item** using the actual length/width/height in centimetres,
+empty packaging weight in grams, and optional Postex box type. Enter a fallback
+product weight (grams) for old catalog items without a measured product weight.
+A product's own measured weight takes precedence. Do not invent physical
+measurements for production quotes.
+
+The default is stored as the reserved package profile minQuantity=0,
+maxQuantity=0 inside the existing PackagesJson (no schema migration). On
+carts without a matching legacy combined-package profile, the backend creates
+one Postex parcel per unit, each with its own weight and declared value. Postex
+receives the parcels array in one rate-quote request, and the response must
+contain exactly one accepted service price per parcel; pickup price is counted
+once.
+
+Existing quantity ranges remain usable as **optional combined-parcel overrides**.
+They take precedence only when explicitly configured for that cart total.
+Auto-splitting is capped at 100 parcels; larger carts need a combined package
+definition or a separate fulfillment plan.
+
+Until the default profile has real valid dimensions, postal quoting fails with
+DEFAULT_PACKAGE_NOT_CONFIGURED rather than inventing a zero-rate quote. Carrier
+errors never become free shipping. Tests mock Postex; **live multi-parcel
+behavior and tariffs require a staging test with a real carrier account before
+deploying this feature**.
 
 ## Provider contract and failure handling
 

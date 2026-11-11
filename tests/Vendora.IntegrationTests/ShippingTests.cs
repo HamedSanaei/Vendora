@@ -154,6 +154,55 @@ public sealed class ShippingTests
     }
 
     [Fact]
+    public async Task DefaultParcelQuotesWithoutQuantityRanges_AndSplitsMultipleUnits()
+    {
+        await using var f = await Fixture.Create();
+        var oneUnit = new ShippingPackage(0, 0, 80, 40, 30, 20, 0, 450);
+        f.Policy.PackagesJson = JsonSerializer.Serialize(new[] { oneUnit });
+        await f.Db.SaveChangesAsync();
+        var carrier = new FakeCarrier();
+        var handler = new ShippingUseCases.QuoteHandler(f.Db, f.Pricing, carrier, TimeProvider.System);
+        var quote = new ShippingUseCases.Quote(f.User, f.Address.Id, [new(f.Product.Id, 1, 1000000)], "post");
+        Assert.Equal(60000, (await handler.Handle(quote, default)).Cost);
+        Assert.Equal(580, carrier.Weight); // measured product (500g) + 80g packing
+        Assert.Equal(1, carrier.ParcelCount);
+        Assert.Equal(60000, (await handler.Handle(quote with { Items = [new(f.Product.Id, 3, 1000000)] }, default)).Cost);
+        Assert.Equal(1740, carrier.Weight);
+        Assert.Equal(3, carrier.ParcelCount);
+        Assert.Equal(2, carrier.Calls);
+    }
+
+    [Fact]
+    public async Task DefaultParcelWeightOnlyFillsMissingProductMeasurement()
+    {
+        await using var f = await Fixture.Create();
+        f.Product.WeightGrams = null;
+        f.Policy.PackagesJson = JsonSerializer.Serialize(new[] { new ShippingPackage(0, 0, 80, 40, 30, 20, 0, 450) });
+        await f.Db.SaveChangesAsync();
+        var carrier = new FakeCarrier();
+        var handler = new ShippingUseCases.QuoteHandler(f.Db, f.Pricing, carrier, TimeProvider.System);
+        var quote = new ShippingUseCases.Quote(f.User, f.Address.Id, [new(f.Product.Id, 1, 1000000)], "post");
+        await handler.Handle(quote, default);
+        Assert.Equal(530, carrier.Weight);
+        f.Policy.PackagesJson = JsonSerializer.Serialize(new[] { new ShippingPackage(0, 0, 80, 40, 30, 20, 0, 0) });
+        f.Policy.Version++; await f.Db.SaveChangesAsync();
+        Assert.Equal("PRODUCT_WEIGHT_MISSING", (await Assert.ThrowsAsync<AccountingException>(() => handler.Handle(quote, default))).Code);
+    }
+
+    [Fact]
+    public async Task DefaultParcelMustBeConfiguredInsteadOfFabricatingDimensions()
+    {
+        await using var f = await Fixture.Create();
+        f.Policy.PackagesJson = "[]";
+        await f.Db.SaveChangesAsync();
+        var carrier = new FakeCarrier();
+        var handler = new ShippingUseCases.QuoteHandler(f.Db, f.Pricing, carrier, TimeProvider.System);
+        var quote = new ShippingUseCases.Quote(f.User, f.Address.Id, [new(f.Product.Id, 1, 1000000)], "post");
+        Assert.Equal("DEFAULT_PACKAGE_NOT_CONFIGURED", (await Assert.ThrowsAsync<AccountingException>(() => handler.Handle(quote, default))).Code);
+        Assert.Equal(0, carrier.Calls);
+    }
+
+    [Fact]
     public async Task FreeOrCollectNeverCallsCarrier_AndUnquotedPostCannotBecomeFree()
     {
         await using var f = await Fixture.Create(); var carrier = new FakeCarrier();
@@ -207,6 +256,28 @@ public sealed class ShippingTests
         Assert.Equal(65000, await recovering.QuoteAsync(input, default)); Assert.Equal(2, recoveringWire.Count);
     }
 
+    [Fact]
+    public async Task PostexMultipleParcels_SumsEachServiceAndAddsPickupOnce()
+    {
+        var wire = new Wire(); var cache = new PostexReadCache();
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?>
+        { ["Shipping:Postex:ApiKey"] = "local-fixture-key" }).Build();
+        var adapter = new PostexRates(wire, config, cache);
+        var pack = new ShippingPackage(0, 0, 70, 40, 30, 20, 0, 500);
+        var parcels = new[] { new PostexParcel(pack, 570, 1000000), new PostexParcel(pack, 570, 2000000) };
+        var request = new PostexRateRequest(new ShippingPolicy { OriginCityCode = "1", ServiceType = "PISHTAZ" },
+            pack, "10", 1140, 3000000, parcels);
+        var cost = await adapter.QuoteAsync(request, default);
+        Assert.Equal(127000m, cost); // 2x(600000+20000) + 30000 pickup, in IRR /10
+        Assert.Equal(1, wire.Count);
+        using var payload = JsonDocument.Parse(wire.Body!);
+        Assert.Equal(2, payload.RootElement.GetProperty("parcels").GetArrayLength());
+        Assert.Equal(10000000, payload.RootElement.GetProperty("parcels")[0].GetProperty("parcel_properties").GetProperty("total_value").GetDecimal());
+        Assert.Equal(20000000, payload.RootElement.GetProperty("parcels")[1].GetProperty("parcel_properties").GetProperty("total_value").GetDecimal());
+        Assert.Throws<AccountingException>(() => PostexRates.ReadCostToman(
+            JsonDocument.Parse("{\"shipping_prices\":[{\"service_price\":[{\"totalPrice\":600000}]}]}").RootElement, 2));
+    }
+
     /// <summary>Real SQLite fixture isolated from development and production databases.</summary>
     private sealed class Fixture : IAsyncDisposable
     {
@@ -228,8 +299,9 @@ public sealed class ShippingTests
 
     private sealed class FakeCarrier : IPostexRates
     {
-        public bool Configured => true; public int Calls, Weight;
-        public Task<decimal> QuoteAsync(PostexRateRequest request, CancellationToken ct) { Calls++; Weight = request.WeightGrams; return Task.FromResult(60000m); }
+        public bool Configured => true; public int Calls, Weight, ParcelCount;
+        public Task<decimal> QuoteAsync(PostexRateRequest request, CancellationToken ct)
+        { Calls++; Weight = request.WeightGrams; ParcelCount = request.Parcels?.Count ?? 1; return Task.FromResult(60000m); }
         public Task<JsonElement> ReferenceAsync(string resource, CancellationToken ct) => Task.FromResult(JsonDocument.Parse(resource == "cities"
             ? "[{\"id\":1,\"name\":\"تهران\",\"cities\":[{\"id\":10,\"name\":\"تهران\"}]}]"
             : "{\"data\":[{\"courierCode\":\"IR_POST\",\"courierServiceCode\":\"PISHTAZ\",\"name\":\"پیشتاز\"}]}").RootElement.Clone());
@@ -249,7 +321,14 @@ public sealed class ShippingTests
         {
             Interlocked.Increment(ref Count); Key = request.Headers.GetValues("x-api-key").Single(); Uri = request.RequestUri!.ToString(); Body = await request.Content!.ReadAsStringAsync(ct);
             await Task.Delay(30, ct);
-            return new(HttpStatusCode.OK) { Content = new StringContent(Malformed ? "{}" : "{\"shipping_prices\":[{\"service_price\":[{\"totalPrice\":600000}],\"value_added_service_price\":[{\"price\":{\"totalPrice\":20000}}]}],\"pickup_price\":30000}", Encoding.UTF8, "application/json") };
+            using var parsed = JsonDocument.Parse(Body);
+            var count = parsed.RootElement.GetProperty("parcels").GetArrayLength();
+            var prices = Enumerable.Range(0, count).Select(_ => new {
+                service_price = new[] { new { totalPrice = 600000 } },
+                value_added_service_price = new[] { new { price = new { totalPrice = 20000 } } },
+            }).ToArray();
+            var payload = Malformed ? "{}" : JsonSerializer.Serialize(new { shipping_prices = prices, pickup_price = 30000 });
+            return new(HttpStatusCode.OK) { Content = new StringContent(payload, Encoding.UTF8, "application/json") };
         }
     }
 }
