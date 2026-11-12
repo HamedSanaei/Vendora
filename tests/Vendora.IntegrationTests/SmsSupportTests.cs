@@ -22,6 +22,92 @@ namespace Vendora.IntegrationTests;
 /// <summary>Real controllers/Identity/SQLite with an isolated in-memory carrier. No live SMS, customer data or production configuration.</summary>
 public sealed class SmsSupportTests
 {
+    /// <summary>The approved default routes new/existing customer proofs to different registered texts, never legacy SendOtp.</summary>
+    [Fact]
+    public async Task ApprovedDefault_EnablesCustomerLogin_AndUsesRegistrationThenLoginTexts()
+    {
+        await using var f = await Fixture.Create();
+        using (var scope = f.Host.App.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var defaults = new SmsSettings();
+            var row = await db.SmsSettings.SingleAsync();
+            row.PhoneLogin = defaults.PhoneLogin; row.ParsGreenBrandedOtp = defaults.ParsGreenBrandedOtp;
+            await db.SaveChangesAsync();
+        }
+        using var guest = f.Host.Client(null);
+        Assert.True((await guest.GetFromJsonAsync<JsonElement>("/api/account/auth-options")).GetProperty("phoneLogin").GetBoolean());
+        var sent = await guest.PostAsJsonAsync("/api/account/otp/request", new { phone = "+۹۸۹۱۲ ۰۰۰۰۵۲۰" });
+        sent.EnsureSuccessStatusCode();
+        Assert.Equal(SmsCodePurpose.Registration, f.Gateway.LastBrandedPurpose);
+        Assert.Equal(0, f.Gateway.CodeCalls);
+        var id = (await sent.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("challengeId").GetGuid();
+        var verified = await guest.PostAsJsonAsync("/api/account/otp/verify", new { challengeId = id, code = f.Gateway.Code });
+        verified.EnsureSuccessStatusCode();
+        var account = (await verified.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("account");
+        Assert.False(account.GetProperty("completion").GetProperty("isComplete").GetBoolean());
+        f.Clock.Advance(TimeSpan.FromSeconds(121));
+        sent = await guest.PostAsJsonAsync("/api/account/otp/request", new { phone = "09120000520" });
+        sent.EnsureSuccessStatusCode();
+        Assert.Equal(SmsCodePurpose.Login, f.Gateway.LastBrandedPurpose);
+        Assert.Equal(0, f.Gateway.CodeCalls);
+        id = (await sent.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("challengeId").GetGuid();
+        verified = await guest.PostAsJsonAsync("/api/account/otp/verify", new { challengeId = id, code = f.Gateway.Code });
+        verified.EnsureSuccessStatusCode();
+        Assert.Equal(account.GetProperty("id").GetGuid(), (await verified.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("account").GetProperty("id").GetGuid());
+        using var finalScope = f.Host.App.Services.CreateScope();
+        var finalDb = finalScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.All(await finalDb.SmsMessages.ToListAsync(), message => Assert.Empty(message.Body));
+    }
+
+    /// <summary>Carrier ambiguity preserves budgets and cannot issue a usable proof or duplicate the send; a later manual retry succeeds.</summary>
+    [Fact]
+    public async Task Registration_CarrierFailureCannotCreateSession_AndHonorsRetryBudget()
+    {
+        await using var f = await Fixture.Create();
+        f.Gateway.RejectCodes = true;
+        using var guest = f.Host.Client(null);
+        var failed = await guest.PostAsJsonAsync("/api/account/otp/request", new { phone = "09120000521" });
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, failed.StatusCode);
+        var failure = await failed.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("SMS_SEND_FAILED", failure.GetProperty("code").GetString());
+        Assert.Equal(120, failure.GetProperty("retryAfter").GetInt32());
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await guest.PostAsJsonAsync("/api/account/otp/request", new { phone = "09120000521" })).StatusCode);
+        Assert.Equal(1, f.Gateway.CodeCalls);
+        using (var scope = f.Host.App.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var challenge = await db.SmsChallenges.SingleAsync();
+            Assert.Null(challenge.CodeHash);
+            Assert.False(await db.Users.AnyAsync(x => x.PhoneNumber == "09120000521"));
+            Assert.Equal(HttpStatusCode.BadRequest, (await guest.PostAsJsonAsync("/api/account/otp/verify", new { challengeId = challenge.Id, code = f.Gateway.Code })).StatusCode);
+        }
+        f.Gateway.RejectCodes = false;
+        f.Clock.Advance(TimeSpan.FromSeconds(121));
+        (await guest.PostAsJsonAsync("/api/account/otp/request", new { phone = "09120000521" })).EnsureSuccessStatusCode();
+        Assert.Equal(2, f.Gateway.CodeCalls);
+    }
+
+    /// <summary>An explicit store-level shutdown remains authoritative even though the frontend keeps its mobile form visible.</summary>
+    [Fact]
+    public async Task DisabledPhoneLogin_ReturnsActionableError_WithoutSendingOrCreatingChallenge()
+    {
+        await using var f = await Fixture.Create();
+        using (var scope = f.Host.App.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            (await db.SmsSettings.SingleAsync()).PhoneLogin = false;
+            await db.SaveChangesAsync();
+        }
+        using var guest = f.Host.Client(null);
+        var response = await guest.PostAsJsonAsync("/api/account/otp/request", new { phone = "09120000522" });
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        var data = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("SMS_AUTH_UNAVAILABLE", data.GetProperty("code").GetString());
+        Assert.Equal(0, data.GetProperty("retryAfter").GetInt32());
+        Assert.Equal(0, f.Gateway.CodeCalls + f.Gateway.BrandedCalls);
+    }
+
     /// <summary>Signup stores the supplied real name only after proof; retrying or registering again cannot duplicate or rename an owner.</summary>
     [Fact]
     public async Task PhoneRegistration_PersistsNameAfterProof_AndExistingOwnerIsNotRenamed()
@@ -532,10 +618,10 @@ public sealed class SmsSupportTests
     private sealed class FakeGateway : ISmsGateway
     {
         public bool BrandedOtpConfigured=>TextConfigured;
-        public SmsCodePurpose? LastBrandedPurpose; public int BrandedCalls;
-        public Task<string?> SendBrandedCodeAsync(string phone,SmsCodePurpose purpose,CancellationToken ct){BrandedCalls++;LastBrandedPurpose=purpose;return Task.FromResult<string?>(Code);}
+        public SmsCodePurpose? LastBrandedPurpose; public int BrandedCalls; public bool RejectCodes;
+        public Task<string?> SendBrandedCodeAsync(string phone,SmsCodePurpose purpose,CancellationToken ct){BrandedCalls++;LastBrandedPurpose=purpose;return Task.FromResult<string?>(RejectCodes ? null : Code);}
         public string Id{get;init;}="ParsGreen";public bool OtpConfigured=>true;public bool TextReady=true;public bool TextConfigured=>TextReady;public bool DeliveryConfigured=>true;public int MaxTextLength=>Id=="Kavenegar"?1800:3000;public string Code="123456";public int CodeCalls,TextCalls;public SmsGatewayResult Result=new("Accepted","100001");
-        public Task<string?> SendCodeAsync(string phone,int otpType,int patternId,CancellationToken ct){CodeCalls++;return Task.FromResult<string?>(Code);}
+        public Task<string?> SendCodeAsync(string phone,int otpType,int patternId,CancellationToken ct){CodeCalls++;return Task.FromResult<string?>(RejectCodes ? null : Code);}
         public Task<SmsGatewayResult> SendTextAsync(string phone,string text,CancellationToken ct){TextCalls++;return Task.FromResult(Result);}
         public Task<SmsGatewayResult> DeliveryAsync(string id,CancellationToken ct)=>Task.FromResult(new SmsGatewayResult("Delivered",id));
     }
@@ -557,7 +643,7 @@ public sealed class SmsSupportTests
                 services.RemoveAll<IUserValidator<AppUser>>();services.AddScoped<IUserValidator<AppUser>,VerifiedPhoneUserValidator>();services.AddScoped<IPhoneCodeSender,ConfiguredPhoneCodeSender>();services.AddScoped<AccountingUnitOfWork>();
             });
             using var scope=f.Host.App.Services.CreateScope();var db=scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            db.SmsSettings.Add(new SmsSettings{PhoneLogin=true,PasswordRecovery=true,ActivatedAtUtc=f.Clock.GetUtcNow().UtcDateTime.AddHours(-1),RulesJson=JsonSerializer.Serialize(SmsPolicy.Templates.Select(x=>new SmsRule(x.Key,true,x.Value)))});await db.SaveChangesAsync();return f;
+            db.SmsSettings.Add(new SmsSettings{PhoneLogin=true,PasswordRecovery=true,ParsGreenBrandedOtp=false,ActivatedAtUtc=f.Clock.GetUtcNow().UtcDateTime.AddHours(-1),RulesJson=JsonSerializer.Serialize(SmsPolicy.Templates.Select(x=>new SmsRule(x.Key,true,x.Value)))});await db.SaveChangesAsync();return f;
         }
         public HttpClient Client(AppUser user,string role){var client=Host.Client(role);client.DefaultRequestHeaders.Add("Test-User",user.Id.ToString());return client;}
         public async Task<AppUser> User(string role,string phone,bool password=true,bool verified=true)

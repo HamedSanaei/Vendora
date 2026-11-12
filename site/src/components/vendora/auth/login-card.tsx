@@ -22,7 +22,7 @@ import { getDict } from "@/lib/vendora/i18n";
 import { EyeIcon } from "../icons";
 import { googleErrorMessage } from '@/lib/auth/google-errors';
 
-import { createPhoneAuthAdapter, smsCapabilities, smsErrorMessage } from "@/lib/sms-client";
+import { createPhoneAuthAdapter, smsErrorMessage } from "@/lib/sms-client";
 import { createSmsCodeAutofill } from '@/lib/auth/sms-code-autofill';
 
 type PhoneStep = "identifier" | "otp";
@@ -49,7 +49,8 @@ export function LoginCard({ locale, returnTo, phoneAdapter, intent = "login" }: 
   const [phoneStep, setPhoneStep] = useState<PhoneStep>("identifier");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState<string[]>(["", "", "", "", ""]);
-  const [secondsLeft, setSecondsLeft] = useState(120);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const [cooldownPhone, setCooldownPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -63,31 +64,13 @@ export function LoginCard({ locale, returnTo, phoneAdapter, intent = "login" }: 
   const adapter = useMemo(() => phoneAdapter ?? createPhoneAuthAdapter(), [phoneAdapter]);
   const autofill = useMemo(() => createSmsCodeAutofill(), []);
   useEffect(() => () => autofill.cancel(), [autofill]);
-  const [smsEnabled, setSmsEnabled] = useState(false);
-  const [capabilitiesLoaded, setCapabilitiesLoaded] = useState(Boolean(phoneAdapter));
-  const phoneAvailable = Boolean(phoneAdapter) || smsEnabled;
-  useEffect(() => {
-    const abort = new AbortController();
-    smsCapabilities(abort.signal).then(value => {
-      setSmsEnabled(value.phoneLogin);
-      // Existing email accounts remain usable when SMS is explicitly unavailable.
-      if (!value.phoneLogin && !phoneAdapter && !registering) setMode("email");
-      setCapabilitiesLoaded(true);
-    }).catch(() => {
-      if (!abort.signal.aborted) {
-        if (!phoneAdapter && !registering) setMode("email");
-        setCapabilitiesLoaded(true);
-      }
-    });
-    return () => abort.abort();
-  }, [phoneAdapter, registering]);
   const googleAvailable = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim());
 
   useEffect(() => {
-    if (phoneStep !== "otp" || secondsLeft <= 0) return undefined;
+    if (secondsLeft <= 0) return undefined;
     const timer = window.setInterval(() => setSecondsLeft((value) => Math.max(0, value - 1)), 1000);
     return () => window.clearInterval(timer);
-  }, [phoneStep, secondsLeft]);
+  }, [secondsLeft]);
 
   const changeMode = (nextMode: LoginMode) => {
     autofill.cancel();
@@ -123,7 +106,7 @@ export function LoginCard({ locale, returnTo, phoneAdapter, intent = "login" }: 
     event?.preventDefault();
     setError("");
     setInfo("");
-    if (phoneLoading || !phoneAvailable) return;
+    if (phoneLoading || (secondsLeft > 0 && cooldownPhone === normalizePhone(phone))) return;
     if (registering && !validFullName(fullName)) { setError(copy.invalidName); return; }
     const normalizedPhone = normalizePhone(phone);
     if (!/^09\d{9}$/.test(normalizedPhone)) {
@@ -136,9 +119,12 @@ export function LoginCard({ locale, returnTo, phoneAdapter, intent = "login" }: 
     setPhoneLoading(false);
     if (!result.ok) {
       autofill.cancel();
+      setSecondsLeft(result.retryAfter ?? 0);
+      setCooldownPhone(normalizedPhone);
       setError(adapterMessage(result.message, isFa ? "ارسال کد انجام نشد." : "The code could not be sent.", isFa ? "ورود با کد پیامکی هنوز به سرویس پیامک متصل نشده است." : "Phone sign-in is not connected to an SMS service yet."));
       return;
     }
+    setCooldownPhone(normalizedPhone);
     setSecondsLeft(result.retryAfter ?? 120);
     setOtp(Array(Math.min(8, Math.max(4, result.codeLength ?? 5))).fill(""));
     setPhoneStep("otp");
@@ -165,8 +151,8 @@ export function LoginCard({ locale, returnTo, phoneAdapter, intent = "login" }: 
     }
     persistAdapterAccount(result.account, dispatch);
     notifySuccess(isFa ? "با موفقیت وارد شدید." : "You are signed in.");
-    // Buying/services still enforce profile completion at their own route guard.
-    router.push(destination);
+    // Phone proof creates the session; missing required details are completed inside the customer panel.
+    router.push(result.account.user.completion?.isComplete ? destination : completeProfileHref(locale, destination));
   };
 
   const handleGoogle = async (credential: string) => {
@@ -212,31 +198,30 @@ export function LoginCard({ locale, returnTo, phoneAdapter, intent = "login" }: 
   };
 
   const busy = phoneLoading || emailLoading || googleLoading;
+  const requestWait = cooldownPhone === normalizePhone(phone) ? secondsLeft : 0;
   const checkout = /\/(shipping|checkout)(?:[/?#]|$)/.test(destination);
   const alternateHref = `${withLocalePath(registering ? "/login" : "/register", locale)}?returnTo=${encodeURIComponent(destination)}`;
 
   return (
     <section className="vd-root vd-auth-section" dir={isFa ? "rtl" : "ltr"}>
       <div className="vd-auth-layout">
-        <div className="vd-auth-card" aria-busy={busy || !capabilitiesLoaded}>
+        <div className="vd-auth-card" aria-busy={busy}>
           <header>
             <p className="text-[13px] font-bold leading-6 text-jade">{copy.eyebrow}</p>
             <h1 className="mt-1 text-[22px] font-extrabold leading-10 text-ink md:text-2xl">{registering ? copy.registerTitle : copy.signInTitle}</h1>
             <p className="text-[13px] leading-6 text-vd-muted">{registering ? copy.registerIntro : copy.chooseMethod}</p>
           </header>
           {checkout ? <CheckoutContextNotice locale={locale} /> : null}
-          {!registering && phoneAvailable ? <LoginModeTabs locale={locale} mode={mode} onChange={changeMode} disabled={busy} /> : null}
-          {!capabilitiesLoaded ? <p role="status" className="my-6 text-sm text-vd-muted">{isFa ? "در حال دریافت روش‌های ورود…" : "Loading sign-in methods…"}</p> : null}
-          {capabilitiesLoaded && registering && !phoneAvailable ? <p role="status" className="mt-6 rounded-control bg-surface-soft p-4 text-sm leading-7 text-vd-muted">{copy.unavailable}</p> : null}
+          {!registering ? <LoginModeTabs locale={locale} mode={mode} onChange={changeMode} disabled={busy} /> : null}
 
-          {capabilitiesLoaded && phoneAvailable && mode === "phone" && phoneStep === "identifier" ? (
+          {mode === "phone" && phoneStep === "identifier" ? (
             <form onSubmit={requestCode} className="mt-[16px]" noValidate>
               {registering ? <div className="mb-5"><FieldLabel htmlFor="register-name" label={copy.fullName} /><input id="register-name" value={fullName} onChange={event => { setFullName(event.target.value); setError(""); }} autoComplete="name" maxLength={201} required aria-invalid={error === copy.invalidName || undefined} className="vd-auth-field vd-focus border-vd-line" /></div> : null}
               <PhoneField locale={locale} value={phone} onChange={value => { setPhone(value); setError(""); }} invalid={Boolean(error) && error !== copy.invalidName} />
-              <button type="submit" disabled={busy} className="vd-auth-submit vd-focus mt-[30px]">{phoneLoading ? (isFa ? "در حال ارسال…" : "Sending…") : registering ? copy.registerCode : (isFa ? "ارسال کد ورود" : "Send sign-in code")}</button>
+              <button type="submit" disabled={busy || requestWait > 0} className="vd-auth-submit vd-focus mt-[30px]">{phoneLoading ? (isFa ? "در حال ارسال…" : "Sending…") : requestWait > 0 ? (isFa ? `ارسال مجدد تا ${requestWait.toLocaleString("fa-IR")} ثانیه دیگر` : `Retry in ${requestWait}s`) : registering ? copy.registerCode : (isFa ? "ارسال کد ورود" : "Send sign-in code")}</button>
             </form>
           ) : null}
-          {phoneAvailable && mode === "phone" && phoneStep === "otp" ? (
+          {mode === "phone" && phoneStep === "otp" ? (
             <form onSubmit={verifyCode} className="mt-6">
               <p className="text-sm font-semibold leading-7 text-vd-muted">{isFa ? "کد ارسال‌شده به" : "Code sent to"} <bdi dir="ltr" className="font-extrabold text-ink">{phone}</bdi></p>
               <OtpInput locale={locale} digits={otp} invalid={Boolean(error)} setInputRef={(index, element) => { otpRefs.current[index] = element; }} onChange={handleOtpChange} onKeyDown={handleOtpKeyDown} onPaste={handleOtpPaste} />
@@ -247,7 +232,7 @@ export function LoginCard({ locale, returnTo, phoneAdapter, intent = "login" }: 
               </div>
             </form>
           ) : null}
-          {!registering && capabilitiesLoaded && mode === "email" ? (
+          {!registering && mode === "email" ? (
             <form onSubmit={handleEmailSubmit} className="mt-6 space-y-4">
               <div><FieldLabel htmlFor="login-email" label={isFa ? "ایمیل" : "Email"} /><input id="login-email" value={email} onChange={event => setEmail(event.target.value)} type="email" autoComplete="username" dir="ltr" placeholder="name@example.com" aria-invalid={Boolean(error) || undefined} className={`vd-focus vd-auth-field ${error ? "border-vd-danger" : "border-vd-line"}`} /></div>
               <div>
@@ -260,7 +245,7 @@ export function LoginCard({ locale, returnTo, phoneAdapter, intent = "login" }: 
           {info ? <p role="status" className="vd-auth-feedback rounded-control bg-jade-tint p-3 text-sm font-semibold leading-6 text-jade">{info}</p> : null}
           {error ? <p role="alert" className="vd-auth-feedback rounded-control bg-vd-danger-tint p-3 text-sm font-semibold leading-6 text-vd-danger">{error}</p> : null}
           {googleAvailable ? <><div className="mb-[-4px] mt-5 flex items-center gap-7 text-sm font-medium text-vd-muted"><span className="h-px flex-1 bg-vd-line" />{isFa ? "یا" : "or"}<span className="h-px flex-1 bg-vd-line" /></div><GoogleIdentityButton locale={locale} onCredential={handleGoogle} />{googleLoading ? <p role="status" className="mt-2 text-center text-sm leading-7 text-vd-muted">{isFa ? "در حال ورود…" : "Signing in…"}</p> : null}</> : null}
-          {mode === "phone" && phoneAvailable ? <p className="vd-auth-account-notice rounded-control bg-surface-soft p-[16px] text-[13px] font-medium leading-6 text-vd-muted">{copy.accountNotice}</p> : null}
+          {mode === "phone" ? <p className="vd-auth-account-notice rounded-control bg-surface-soft p-[16px] text-[13px] font-medium leading-6 text-vd-muted">{copy.accountNotice}</p> : null}
           <p className="vd-auth-alternate flex flex-wrap items-center justify-center gap-x-2 text-sm font-medium leading-7 text-vd-muted">{registering ? copy.registered : isFa ? "حساب ندارید؟" : "Don't have an account?"}<Link href={alternateHref} className="vd-focus inline-flex min-h-11 items-center rounded-sm font-bold text-jade">{registering ? copy.signIn : isFa ? "ثبت‌نام کنید" : "Create one"}</Link></p>
           <p className="vd-auth-privacy">{copy.privacy}</p>
         </div>

@@ -48,7 +48,7 @@ public static class SmsManagement
             SmsPolicy.ValidateRules(input.Rules);
             var gateway = gateways.SingleOrDefault(x => x.Id == input.Provider) ?? throw new AccountingException("SMS_PROVIDER_UNAVAILABLE", 400);
             var row = await db.SmsSettings.SingleOrDefaultAsync(x => x.Id == 1, ct);
-            bool branded = input.ParsGreenBrandedOtp ?? row?.ParsGreenBrandedOtp ?? false;
+            bool branded = input.ParsGreenBrandedOtp ?? row?.ParsGreenBrandedOtp ?? new SmsSettings().ParsGreenBrandedOtp;
             bool codeConfigured = input.Provider == "ParsGreen" && branded ? gateway.BrandedOtpConfigured : gateway.OtpConfigured;
             if (input.Enabled && ((input.PhoneLogin || input.PasswordRecovery || input.PhoneVerification) && !codeConfigured || input.Rules.Any(x => x.Enabled) && !gateway.TextConfigured))
                 throw new AccountingException("SMS_NOT_CONFIGURED", 400);

@@ -50,7 +50,8 @@ async function run() {
     for (const width of [390, 768, 1024, 1440]) {
       const context = await browser.newContext({ viewport: { width, height: 1000 } });
       if(width===390)await context.addInitScript(()=>{window.OTPCredential=function(){};Object.defineProperty(navigator,'credentials',{configurable:true,value:{get:()=>Promise.resolve({code:'123456',type:'otp'})}});});
-      let ticket = null, messages = [], failReply = true, phoneConfirmed = true, registration = false, rejectProof = false;
+      let ticket = null, messages = [], failReply = true, phoneConfirmed = true, registration = false, rejectProof = null;
+      let failRegistrationSend = true, profileComplete = true;
       const retryKeys = [], errors = [];
       await context.addInitScript(() => { if (!localStorage.getItem('sms-qa-cart')) { localStorage.setItem('sms-qa-cart', '1'); localStorage.setItem('cart_products', '[]'); } });
       await context.route('**/*', async route => {
@@ -59,16 +60,19 @@ async function run() {
         if (url.hostname === 'accounts.google.com' && p === '/gsi/client') return route.fulfill({ contentType: 'application/javascript', body: `window.google={accounts:{id:{initialize(){},renderButton(target,options){const button=document.createElement('button');button.type='button';button.textContent=options.locale==='fa'?'ادامه با Google':'Continue with Google';button.style.cssText='height:40px;width:100%;background:white;border:1px solid #e5e7eb;border-radius:10px;font:500 13px Vazirmatn;color:#0b0b0b';target.append(button);}}}};` });
         if (!p.startsWith('/api/')) return url.origin === origin ? route.continue() : route.abort();
         let data = common(p), status = 200; const body = req.postDataJSON();
-        if(p==='/api/account/me')data={...user,completion:{...user.completion,isComplete:phoneConfirmed,phoneNumberConfirmed:phoneConfirmed}};
+        if(p==='/api/account/me')data={...user,completion:{...user.completion,isComplete:phoneConfirmed && profileComplete,phoneNumberConfirmed:phoneConfirmed}};
+        if(p==='/api/account/profile' && method==='PUT'){profileComplete=true;data={...user,fullName:body.fullName,email:body.email,completion:{...user.completion,firstName:body.firstName,lastName:body.lastName,isComplete:true}};}
+        if(p==='/api/account/auth-options' && registration)data={phoneLogin:false,passwordRecovery:false,phoneVerification:true};
         if(p==='/api/account/phone/send')data={retryAfter:120};
         if(p==='/api/account/phone/confirm'){assert.equal(body.code,'123456');phoneConfirmed=true;data={retryAfter:0};}
         if (p === '/api/account/otp/request' || p === '/api/account/password/otp/request') {
           if (registration) assert.equal(body.phone, '09120000129', 'Persian digits and international prefix normalize before sending');
-          data = challenge;
+          data = registration ? {...challenge,retryAfter:1} : challenge;
+          if(registration && failRegistrationSend){failRegistrationSend=false;status=503;data={code:'SMS_SEND_FAILED',retryAfter:1};}
         }
         if (p === '/api/account/otp/verify') {
           if (registration) assert.equal(body.fullName, 'علی رضایی', 'Signup name travels only with the verified challenge');
-          if (rejectProof) { rejectProof = false; status = 400; data = { code: 'INVALID_CODE' }; }
+          if (rejectProof) { status = 400; data = { code: rejectProof }; rejectProof = null; }
           else { assert.equal(body.code, '123456'); data = { account: { ...user, token: 'local-sms-session', completion: { ...user.completion, isComplete: !registration } } }; }
         }
         if (p === '/api/account/password/otp/verify') { assert.equal(body.code, '123456'); data = { ...challenge, resetGrant: 'local-transient-recovery-proof' }; }
@@ -144,7 +148,7 @@ async function run() {
       assert.ok(!(await page.evaluate(() => localStorage.getItem('auth') ?? '')).includes('local-sms-session'));
       assert.equal(await page.evaluate(() => localStorage.getItem('cart_products')), '[]');
       registration = true;
-      await page.goto(origin + '/fa/register');
+      await page.goto(origin + '/fa/register?returnTo=%2Ffa%2Faccount');
       await page.locator('#register-name').waitFor();
       assert.equal(await page.locator('#login-email').count(), 0);
       assert.equal(await page.getByText('Harri', { exact: true }).count(), 0);
@@ -154,15 +158,33 @@ async function run() {
       await page.locator('#login-phone').fill('+۹۸۹۱۲ ۰۰۰۰۱۲۹');
       await capture(page, `register-${width}`, 'fa');
       await page.getByRole('button', { name: 'ارسال کد ثبت‌نام', exact: true }).click();
+      await page.getByRole('alert').filter({hasText:'پذیرش پیامک'}).waitFor();
+      assert.equal(await page.locator('#login-phone').inputValue(), '+۹۸۹۱۲ ۰۰۰۰۱۲۹');
+      assert.equal(await page.getByLabel('رقم 1',{exact:true}).count(),0);
+      assert.equal(await page.evaluate(()=>localStorage.getItem('auth')),null,'Failed SMS cannot create a session');
+      assert.equal(await page.getByRole('button',{name:/ارسال مجدد تا/}).isDisabled(),true);
+      await page.getByRole('button', { name: 'ارسال کد ثبت‌نام', exact: true }).click();
       await page.getByLabel('رقم 6', { exact: true }).waitFor();
-      rejectProof = true;
+      rejectProof = 'INVALID_CODE';
       await page.getByLabel('رقم 1', { exact: true }).fill('000000');
       await page.getByRole('button', { name: 'تأیید و ورود', exact: true }).click();
       await page.getByRole('alert').filter({ hasText: 'صحیح نیست' }).waitFor();
-      await page.getByLabel('رقم 1', { exact: true }).fill('123456');
+      rejectProof = 'CODE_EXPIRED';
       await page.getByRole('button', { name: 'تأیید و ورود', exact: true }).click();
-      await page.waitForURL('**/fa/account');
+      await page.getByRole('alert').filter({hasText:'منقضی یا مصرف شده'}).waitFor();
+      await page.getByRole('button',{name:'ویرایش شماره',exact:true}).click();
+      await page.getByRole('button',{name:'ارسال کد ثبت‌نام',exact:true}).click();
+      await page.getByLabel('رقم 6', { exact: true }).waitFor();
+      await page.getByLabel('رقم 1', { exact: true }).fill('123456');
+      profileComplete=false;
+      await page.getByRole('button', { name: 'تأیید و ورود', exact: true }).click();
+      await page.waitForURL('**/fa/account/profile?returnTo=%2Ffa%2Faccount');
       assert.equal(await page.evaluate(() => localStorage.getItem('cart_products')), '[]', 'Signup preserves the cart');
+      await page.locator('input[autocomplete="given-name"]').fill('علی');
+      await page.locator('input[autocomplete="family-name"]').fill('رضایی');
+      await page.getByRole('button',{name:'ذخیره اطلاعات',exact:true}).click();
+      await page.getByRole('link',{name:'ادامه',exact:true}).click();
+      await page.waitForURL('**/fa/account');
       await page.goto(origin + '/fa/register?returnTo=https%3A%2F%2Fevil.invalid');
       const safeLink = page.locator('.vd-auth-card').getByRole('link', { name: 'وارد شوید', exact: true });
       assert.equal(await safeLink.getAttribute('href'), '/fa/login?returnTo=%2Ffa%2Faccount');

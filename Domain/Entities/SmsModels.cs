@@ -1,19 +1,19 @@
 namespace Domain.Entities;
 
-/// <summary>Non-secret messaging policy. Missing settings preserve legacy phone verification only.</summary>
+/// <summary>Non-secret messaging policy. Customer phone sign-in uses the approved ParsGreen texts by default.</summary>
 public sealed class SmsSettings
 {
     public int Id { get; set; } = 1;
     public long Version { get; set; } = 1;
     public bool Enabled { get; set; } = true;
     public string Provider { get; set; } = "ParsGreen";
-    public bool PhoneLogin { get; set; }
+    public bool PhoneLogin { get; set; } = true;
     public bool PasswordRecovery { get; set; }
     public bool PhoneVerification { get; set; } = true;
     public int OtpType { get; set; } = 1;
     public int PatternId { get; set; } = 3;
-    /// <summary>Explicit opt-in after white-text approval; false preserves legacy provider-generated OTP messages.</summary>
-    public bool ParsGreenBrandedOtp { get; set; }
+    /// <summary>Approved Vendorashop white texts are the default; administrators can explicitly select legacy OTP.</summary>
+    public bool ParsGreenBrandedOtp { get; set; } = true;
     public int LowStockThreshold { get; set; } = 5;
     public string RulesJson { get; set; } = "[]";
     public string RecipientsJson { get; set; } = "[]";

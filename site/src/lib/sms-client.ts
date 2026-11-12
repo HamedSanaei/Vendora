@@ -17,7 +17,7 @@ export function createPhoneAuthAdapter(): PhoneAuthAdapter {
       try { const { data } = await http.post<OtpReply>("/account/otp/request", { phone });
         if (!data.challengeId) return { ok: false, message: "SMS_SEND_FAILED" };
         challenge = { id: data.challengeId, phone }; return { ok: true, retryAfter: data.retryAfter, codeLength: data.codeLength };
-      } catch (error) { return { ok: false, message: smsErrorCode(error) }; }
+      } catch (error) { return { ok: false, message: smsErrorCode(error), retryAfter: smsRetryAfter(error) }; }
     },
     async verifyCode(phone: string, code: string, fullName?: string): Promise<AuthAdapterResult> {
       if (!challenge || challenge.phone !== phone) return { ok: false, message: "CODE_EXPIRED" };
@@ -40,6 +40,11 @@ export async function recoveryReset(challengeId: string, grant: string, password
 
 /** Extracts a stable, non-sensitive application code instead of displaying provider responses. */
 export function smsErrorCode(error: unknown): string { return axios.isAxiosError(error) && typeof error.response?.data?.code === "string" ? error.response.data.code : "SMS_UNAVAILABLE"; }
+/** Preserves the server's bounded send cooldown after throttling or ambiguous carrier acceptance. */
+export function smsRetryAfter(error: unknown): number {
+  const seconds = axios.isAxiosError(error) ? Number(error.response?.data?.retryAfter ?? error.response?.headers['retry-after'] ?? 0) : 0;
+  return Number.isFinite(seconds) ? Math.min(1800, Math.max(0, Math.ceil(seconds))) : 0;
+}
 /** Centralized Persian/English flow messages; no raw provider errors or account existence are disclosed. */
 export function smsErrorMessage(code: string, fa: boolean): string {
   const messages: Record<string,[string,string]> = {
@@ -51,7 +56,11 @@ export function smsErrorMessage(code: string, fa: boolean): string {
     RESEND_WAIT: ["برای ارسال مجدد کمی صبر کنید.", "Wait before requesting another code."],
     ACCOUNT_LINK_REQUIRED: ["برای اتصال شماره به حساب قبلی، یک‌بار با ایمیل یا گوگل وارد شوید و شماره را در پروفایل تأیید کنید.", "Sign in using your existing email or Google account and verify the phone in your profile."],
     PHONE_OWNERSHIP_CONFLICT: ["مالکیت این شماره نیازمند بررسی پشتیبانی است.", "Contact support to resolve phone ownership."],
-    SMS_AUTH_UNAVAILABLE: ["این روش ورود فعلاً فعال نیست؛ از ایمیل یا گوگل استفاده کنید.", "This method is unavailable. Use email or Google."],
+    SMS_AUTH_UNAVAILABLE: ["ارسال کد ورود در تنظیمات فروشگاه غیرفعال است؛ برای فعال‌سازی با پشتیبانی تماس بگیرید.", "SMS sign-in is disabled in store settings. Please contact support."],
+    SMS_NOT_CONFIGURED: ["تنظیمات سرویس پیامک فروشگاه کامل نیست؛ با پشتیبانی تماس بگیرید.", "The store SMS service is not configured. Please contact support."],
+    SMS_PROVIDER_UNAVAILABLE: ["سرویس پیامکی انتخاب‌شده در دسترس نیست؛ کمی بعد دوباره تلاش کنید.", "The selected SMS service is unavailable. Please try again later."],
+    SMS_SEND_FAILED: ["پذیرش پیامک توسط سرویس تأیید نشد؛ پس از پایان زمان انتظار دوباره تلاش کنید.", "The SMS service did not confirm acceptance. Retry after the waiting period."],
+    SMS_UNAVAILABLE: ["ارتباط با سرویس پیامک برقرار نشد؛ شماره و فرم شما حفظ شده است. دوباره تلاش کنید.", "The SMS service could not be reached. Your form was preserved. Please retry."],
     OTP_NOT_ALLOWED: ["ورود پیامکی برای این حساب مجاز نیست.", "SMS sign-in is unavailable for this account."],
     PASSWORD_POLICY_FAILED: ["رمز باید شرایط امنیتی برنامه را داشته باشد؛ حداقل ۶ کاراکتر و یک عدد.", "Password must have at least 6 characters including a digit."],
     INVALID_RESET_GRANT: ["مجوز بازیابی منقضی شده است؛ دوباره کد بگیرید.", "Recovery authorization expired. Request another code."],

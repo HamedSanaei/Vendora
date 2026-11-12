@@ -57,6 +57,9 @@ async function main() {
         const errors = [];
         page.on("pageerror", e => errors.push(e.message));
         await page.goto(origin + "/" + locale + "/account");
+        await page.locator("#login-phone").waitFor();
+        // A disabled/unreachable capability response must not remove phone sign-in; email remains explicitly selectable.
+        await page.getByRole("tab", { name: locale === "fa" ? "ایمیل و رمزعبور" : "Email & password", exact: true }).click();
         await page.locator("#login-email").waitFor({ timeout: 30000 });
         assert.equal(await page.locator("html").getAttribute("dir"), locale === "fa" ? "rtl" : "ltr");
         assert.equal(await page.locator("#login-password").isVisible(), true);
@@ -75,16 +78,16 @@ async function main() {
         } else {
           await page.getByRole("button", { name: locale === "fa" ? "خروج از حساب" : "Sign out" }).click();
         }
-        await page.locator("#login-email").waitFor({ timeout: 15000 });
+        await page.locator("#login-phone").waitFor({ timeout: 15000 });
         assert.equal(await page.evaluate(() => localStorage.getItem("auth")), null);
         await page.goto(origin + "/" + locale + "/login");
-        await page.locator("#login-email").waitFor();
+        await page.locator("#login-phone").waitFor();
         assert.equal(await page.getByText("خرید خوب، از ورود ساده شروع می‌شود.").count(), 0);
         assert.equal(errors.length, 0, "JS errors: " + errors.join(" | "));
         await context.close();
       }
     }
-    console.log("PASS: guest account sign-in (fa/en, desktop/mobile), email login, authenticated account, no disabled methods or marketing.");
+    console.log("PASS: phone form survives unavailable capabilities; email login/logout and fa/en desktop/mobile remain functional.");
   } finally { await browser.close(); }
 }
 main().catch(error => { console.error(error); console.error(logs.slice(-18).join("")); process.exitCode = 1; }).finally(() => {

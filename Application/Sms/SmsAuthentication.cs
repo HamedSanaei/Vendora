@@ -31,9 +31,9 @@ public static class SmsAuthentication
             if (request.Purpose is not ("Login" or "Recovery" or "Test")) return new(400, "INVALID_OTP_PURPOSE");
             var policy = await SmsPolicy.ReadAsync(db, ct);
             if (!policy.Enabled || request.Purpose == "Login" && !policy.PhoneLogin || request.Purpose == "Recovery" && !policy.PasswordRecovery)
-                return new(503, "SMS_AUTH_UNAVAILABLE");
+                return new(503, "SMS_AUTH_UNAVAILABLE", RetryAfter: 0);
             var gateway = SmsPolicy.Gateway(policy, gateways);
-            if (!SmsCodeTemplates.IsConfigured(policy, gateway)) return new(503, "SMS_NOT_CONFIGURED");
+            if (!SmsCodeTemplates.IsConfigured(policy, gateway)) return new(503, "SMS_NOT_CONFIGURED", RetryAfter: 0);
             string? testPhone = request.Purpose == "Test"
                 ? (await db.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == request.Actor && x.PhoneNumberConfirmed, ct))?.PhoneNumber
                 : null;

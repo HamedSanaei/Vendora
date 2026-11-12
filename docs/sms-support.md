@@ -6,7 +6,7 @@
 
 See the [complete list of 19 ParsGreen templates and examples](parsgreen-sms-templates.md). In the SMS settings tab, hover over the eye icon beside a template to preview its message with fictional values. The icon also works with keyboard focus and touch.
 
-The existing **Use Vendorashop branded OTP text** setting is off by default. When off, ParsGreen generates codes through `SendOtp`. When enabled, Vendora uses the five event-specific WhiteText patterns. Both modes use the existing server-side `Sms__ParsGreen__Signature`.
+Customer phone login and **Use Vendorashop branded OTP text** now default to on for new configurations, following approval of the registered Vendorashop texts. The `EnableApprovedParsGreenPhoneLogin` data migration activates these two settings once for an existing enabled ParsGreen policy and increments its version. It preserves an explicitly disabled master switch, other providers, notification rules, recipients and server-only credentials. An administrator can still explicitly disable phone login or select the legacy `SendOtp` mode afterward; the migration does not run again on every startup. Both modes use the existing server-side `Sms__ParsGreen__Signature`.
 
 In branded mode, the adapter generates a cryptographically random ASCII six-digit code and sends one REST v2 `Message/SendSms` request to one validated recipient. `R_Success: true` returns the ephemeral code to the existing hash-only challenge flow. An ambiguous response does not trigger a retry or fall back to `SendOtp`. Plaintext codes are kept out of the outbox and audit log. Existing five-minute expiry, shared budgets, one-use verification and account ownership checks remain in force.
 
@@ -28,7 +28,7 @@ The storefront login, recovery and profile forms and the admin verification/test
 
 Reference: [Chrome WebOTP message format](https://developer.chrome.com/docs/identity/web-apis/web-otp#format-the-sms-message).
 
-The existing Online Store administration page includes **SMS & notifications**, with URL-addressable settings, send/test and history tabs. New phone authentication, password recovery and all notification rules default to **off**. Existing authenticated profile-phone verification remains available. Saving a rule establishes its activation timestamp; historical payments and stock levels do not generate a notification backlog.
+The existing Online Store administration page includes **SMS & notifications**, with URL-addressable settings, send/test and history tabs. Customer phone authentication uses the approved texts by default. Password recovery and notification rules remain **off** until enabled by an administrator. Existing authenticated profile-phone verification remains available. Saving a rule establishes its activation timestamp; historical payments and stock levels do not generate a notification backlog.
 
 Configure the following through the deployment's secure configuration mechanism, never the browser or a committed settings file:
 
@@ -191,3 +191,11 @@ No production database updates, real SMS sends, Git commits/pushes or deployment
 - Validation: `SmsSupportTests.cs`, `SmsGatewayTests.cs`, `site/scripts/check-sms-support.cjs`, `admin/scripts/sms-support-fixtures.mjs`, and extensions to the existing admin browser checker.
 
 Pre-existing shipping policy, pricing, gallery and admin visual changes in the working tree were preserved. They are not newly attributed to this SMS task.
+
+## Customer registration resilience (issue #5)
+
+The shared login/register card always exposes mobile entry independently of the public capability response, Google configuration or Google script availability. Server policy remains authoritative: a disabled or unconfigured SMS service returns a localized operational error and leaves the number/name in the form. No token, account or OTP screen is fabricated after a failed send. The browser preserves bounded server retry timing (including an ambiguous carrier response), offers manual retry and does not silently retry billed sends.
+
+For ParsGreen, a new verified phone uses the exact **Registration** WhiteText; an existing verified customer uses **Login**. Both messages have six ASCII digits and the documented origin-bound suffix. A valid server proof creates a session only once. An incomplete customer then opens `/fa/account/profile?returnTo=...`, completes the existing mandatory fields and can continue to the safe locale-local destination. Registration names already collected by the form remain persisted after proof. Existing customer ownership, administrator exclusions, five-minute expiry and shared send/attempt limits are unchanged.
+
+Validation uses isolated SQLite databases and fake SMS transports. A commit or successful local test does not update production configuration: deploy and apply the additive migrations normally before expecting the live `phoneLogin` capability to change. No production policy or real SMS is changed by the automated tests.
