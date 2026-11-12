@@ -2,6 +2,9 @@
 
 import type { ClipboardEvent, KeyboardEvent } from "react";
 import type { Locale } from "@/lib/vendora/types";
+import { getDict } from "@/lib/vendora/i18n";
+import { ArrowEndIcon, CheckIcon } from "../icons";
+import type { ReactNode } from "react";
 
 export type LoginMode = "phone" | "email";
 
@@ -9,17 +12,18 @@ interface LoginModeTabsProps {
   locale: Locale;
   mode: LoginMode;
   onChange: (mode: LoginMode) => void;
+  disabled?: boolean;
 }
 
 /** Accessible mode switch shared by every state of the login card. */
-export function LoginModeTabs({ locale, mode, onChange }: LoginModeTabsProps) {
+export function LoginModeTabs({ locale, mode, onChange, disabled }: LoginModeTabsProps) {
   const isFa = locale === "fa";
   return (
-    <div className="mt-6 grid grid-cols-2 rounded-control bg-surface-soft p-1" role="tablist" aria-label={isFa ? "روش ورود" : "Sign-in method"}>
-      <button type="button" role="tab" aria-selected={mode === "phone"} onClick={() => onChange("phone")} className={`vd-focus min-h-11 rounded-[10px] text-sm font-bold ${mode === "phone" ? "bg-white text-jade shadow-sm" : "text-vd-muted"}`}>
+    <div className="mt-6 grid grid-cols-2 rounded-control bg-surface-soft p-[2px]" role="tablist" aria-label={isFa ? "روش ورود" : "Sign-in method"}>
+      <button type="button" role="tab" disabled={disabled} aria-selected={mode === "phone"} onClick={() => onChange("phone")} className={`vd-focus min-h-11 rounded-[10px] text-sm font-bold ${mode === "phone" ? "bg-white text-jade shadow-sm" : "text-vd-muted"}`}>
         {isFa ? "شماره موبایل" : "Phone"}
       </button>
-      <button type="button" role="tab" aria-selected={mode === "email"} onClick={() => onChange("email")} className={`vd-focus min-h-11 rounded-[10px] text-sm font-bold ${mode === "email" ? "bg-white text-jade shadow-sm" : "text-vd-muted"}`}>
+      <button type="button" role="tab" disabled={disabled} aria-selected={mode === "email"} onClick={() => onChange("email")} className={`vd-focus min-h-11 rounded-[10px] text-sm font-bold ${mode === "email" ? "bg-white text-jade shadow-sm" : "text-vd-muted"}`}>
         {isFa ? "ایمیل و رمزعبور" : "Email & password"}
       </button>
     </div>
@@ -28,7 +32,10 @@ export function LoginModeTabs({ locale, mode, onChange }: LoginModeTabsProps) {
 
 /** Checkout return notice used when authentication interrupts the purchase flow. */
 export function CheckoutContextNotice({ locale }: { locale: Locale }) {
-  return <div className="mt-5 rounded-control bg-jade-tint p-3 text-center text-xs font-semibold leading-6 text-jade">{locale === "fa" ? "پس از ورود به اطلاعات ارسال بازمی‌گردید." : "After sign-in, you will return to shipping details."}</div>;
+  return <div className="vd-auth-context">
+    <div><p className="text-[12px] font-semibold leading-6 text-jade">{locale === "fa" ? "پس از ورود به اطلاعات ارسال بازمی‌گردید." : "After sign-in, you will return to shipping details."}</p><p className="text-[11px] leading-5 text-vd-muted">{getDict(locale).auth.checkoutTrail}</p></div>
+    <span aria-hidden="true" className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-jade md:flex"><ArrowEndIcon size={18} /></span>
+  </div>;
 }
 
 interface PhoneFieldProps {
@@ -44,10 +51,24 @@ export function PhoneField({ locale, value, onChange, invalid = false }: PhoneFi
   return (
     <div>
       <label htmlFor="login-phone" className="mb-2 block text-[13px] font-bold text-ink">{isFa ? "شماره موبایل" : "Mobile number"}</label>
-      <input id="login-phone" value={value} onChange={(event) => onChange(event.target.value)} inputMode="tel" autoComplete="tel" dir="ltr" placeholder="0912 123 4567" aria-invalid={invalid || undefined} className={`vd-focus h-[52px] w-full rounded-control border bg-white px-4 text-sm text-ink outline-none ${invalid ? "border-vd-danger" : "border-vd-line"}`} />
-      <p className="mt-2 text-xs text-vd-muted">{isFa ? "برای شماره‌های جدید، حساب پس از تأیید کد ساخته می‌شود." : "New numbers get an account after code verification."}</p>
+      <input id="login-phone" type="tel" value={value} onChange={(event) => onChange(event.target.value)} inputMode="tel" autoComplete="tel" dir="ltr" placeholder="0912 123 4567" aria-invalid={invalid || undefined} className={`vd-auth-field vd-focus ${invalid ? "border-vd-danger" : "border-vd-line"}`} />
     </div>
   );
+}
+
+/** Penpot's existing desktop/tablet brand panel; mobile retains only the shared form. */
+export function LoginBenefits({ locale, wordmark, checkout }: { locale: Locale; wordmark: ReactNode; checkout: boolean }) {
+  const copy = getDict(locale).auth;
+  const benefits = [checkout ? copy.benefitShipping : copy.benefitAccount, copy.benefitCart, copy.benefitOrders, copy.benefitSupport];
+  return <aside className="vd-auth-benefits" aria-label={copy.eyebrow}>
+    <div className="vd-auth-wordmark">{wordmark}</div>
+    <h2 className="text-xl font-extrabold leading-9 text-jade">{copy.benefitsTitle}</h2>
+    <div className="vd-auth-benefits-detail">
+      <p className="text-sm font-medium leading-7 text-vd-muted">{copy.benefitsIntro}</p>
+      <ul className="vd-auth-benefits-list">{benefits.map((benefit, index) => <li key={benefit} className={`flex items-start gap-2 text-sm font-bold leading-7 ${index === 0 ? "text-jade" : "text-ink"}`}><CheckIcon size={18} className="mt-1 shrink-0" />{benefit}</li>)}</ul>
+      <blockquote className="vd-auth-quote">{copy.quote}</blockquote>
+    </div>
+  </aside>;
 }
 
 interface OtpInputProps {

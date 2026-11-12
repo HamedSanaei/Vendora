@@ -20,7 +20,7 @@ public sealed record SmsAuthReply(int Status, string? Error = null, Guid? Challe
 public static class SmsAuthentication
 {
     public sealed record Request(string Phone, string Purpose, Guid? Actor = null) : IRequest<SmsAuthReply>;
-    public sealed record Verify(Guid ChallengeId, string Code, string Purpose, Guid? Actor = null) : IRequest<SmsAuthReply>;
+    public sealed record Verify(Guid ChallengeId, string Code, string Purpose, Guid? Actor = null, string? FullName = null) : IRequest<SmsAuthReply>;
     public sealed record Reset(Guid ChallengeId, string Grant, string Password) : IRequest<SmsAuthReply>;
 
     /// <summary>Reserves the shared budget before external I/O and stores only the returned code's salted hash.</summary>
@@ -78,6 +78,11 @@ public static class SmsAuthentication
         public async Task<SmsAuthReply> Handle(Verify request, CancellationToken ct)
         {
             if (request.Purpose is not ("Login" or "Recovery" or "Test")) return new(400, "INVALID_OTP_PURPOSE");
+            // Legacy sign-in clients may omit names; explicit registration must supply both real name parts.
+            string[]? name = request.FullName?.Trim().Split((char[]?)null, 2, StringSplitOptions.RemoveEmptyEntries);
+            if (request.Purpose == "Login" && name is not null
+                && (name.Length != 2 || !CustomerProfile.ValidName(name[0]) || !CustomerProfile.ValidName(name[1])))
+                return new(400, "INVALID_FULL_NAME");
             await using var tx = await db.Database.BeginTransactionAsync(ct);
             await new AccountingUnitOfWork(db, time).AcquireGateAsync(ct);
             var challenge = await db.SmsChallenges.SingleOrDefaultAsync(x => x.Id == request.ChallengeId && x.Purpose == request.Purpose, ct);
@@ -107,7 +112,8 @@ public static class SmsAuthentication
             {
                 bool existing = (await db.Users.AsNoTracking().Where(x => x.PhoneNumber != null && !x.PhoneNumberConfirmed).Select(x => x.PhoneNumber!).ToListAsync(ct)).Any(x => PhoneOwnership.Normalize(x) == challenge.Phone);
                 if (existing) { await db.SaveChangesAsync(ct); await tx.CommitAsync(ct); return new(409, "ACCOUNT_LINK_REQUIRED"); }
-                user = new AppUser { Id = Guid.NewGuid(), UserName = "phone-" + Guid.NewGuid().ToString("N"), PhoneNumber = challenge.Phone, PhoneNumberConfirmed = true };
+                user = new AppUser { Id = Guid.NewGuid(), UserName = "phone-" + Guid.NewGuid().ToString("N"), PhoneNumber = challenge.Phone, PhoneNumberConfirmed = true,
+                    FirstName = name?[0], LastName = name?[1], FullName = name is null ? "" : string.Join(' ', name) };
                 var created = await users.CreateAsync(user);
                 if (!created.Succeeded) throw new AccountingException("PHONE_ACCOUNT_CREATE_FAILED", 409);
                 if (!await roles.RoleExistsAsync("Customer"))

@@ -35,7 +35,7 @@ public sealed class SmsController(ISender sender) : ControllerBase
     [AllowAnonymous, EnableRateLimiting("sms-ip"), HttpPost("account/otp/request")]
     public async Task<IActionResult> LoginRequest(PhoneInput input, CancellationToken ct) => Reply(await sender.Send(new SmsAuthentication.Request(input.Phone,"Login"),ct));
     [AllowAnonymous, EnableRateLimiting("sms-ip"), HttpPost("account/otp/verify")]
-    public async Task<IActionResult> LoginVerify(CodeInput input, CancellationToken ct) => Reply(await sender.Send(new SmsAuthentication.Verify(input.ChallengeId,input.Code,"Login"),ct));
+    public async Task<IActionResult> LoginVerify(CodeInput input, CancellationToken ct) => Reply(await sender.Send(new SmsAuthentication.Verify(input.ChallengeId,input.Code,"Login",FullName: input.FullName),ct));
     [AllowAnonymous, EnableRateLimiting("sms-ip"), HttpPost("account/password/otp/request")]
     public async Task<IActionResult> RecoveryRequest(PhoneInput input, CancellationToken ct) => Reply(await sender.Send(new SmsAuthentication.Request(input.Phone,"Recovery"),ct));
     [AllowAnonymous, EnableRateLimiting("sms-ip"), HttpPost("account/password/otp/verify")]
@@ -55,6 +55,7 @@ public sealed class SmsController(ISender sender) : ControllerBase
     private string Key() => Request.Headers["Idempotency-Key"].FirstOrDefault() ?? throw new Application.Accounting.AccountingException("IDEMPOTENCY_KEY_REQUIRED",400);
     public sealed record ManualInput(Guid UserId,string Text);
     public sealed record PhoneInput(string Phone);
-    public sealed record CodeInput(Guid ChallengeId,string Code);
+    /// <summary>Optional signup name is applied only to a new account after successful phone proof.</summary>
+    public sealed record CodeInput(Guid ChallengeId,string Code,string? FullName = null);
     public sealed record ResetInput(Guid ChallengeId,string Grant,string Password);
 }

@@ -17,12 +17,12 @@ const api = http.createServer((request, response) => {
   response.setHeader("Content-Type", "application/json");
   const url = new URL(request.url, "http://127.0.0.1:5058");
   const data = url.pathname === "/api/account/login"
-    ? { token: "fixture-token", id: "fixture-user", fullName: "Fixture Customer", email: "fixture@example.com", role: "Customer" }
+    ? { token: "fixture-token", id: "fixture-user", fullName: "Fixture Customer", email: "fixture@example.com", role: "Customer", completion: { isComplete: true, phoneNumberConfirmed: true } }
     : url.pathname.endsWith("/store-settings") ? {}
     : url.pathname === "/api/catalog/seo"
       ? { siteName: "Vendora", siteUrl: "", titleTemplate: "{title} | {siteName}", isIndexingEnabled: false }
       : url.pathname === "/api/account/me"
-        ? { id: "fixture-user", fullName: "Fixture Customer", email: "fixture@example.com" }
+        ? { id: "fixture-user", fullName: "Fixture Customer", email: "fixture@example.com", completion: { isComplete: true, phoneNumberConfirmed: true } }
         : [];
   response.end(JSON.stringify(data));
 });
@@ -67,6 +67,7 @@ async function main() {
         await page.locator("#login-email").fill("fixture@example.com");
         await page.locator("#login-password").fill("wrong-password");
         await page.getByRole("button", { name: locale === "fa" ? "ورود به حساب" : "Sign in", exact: true }).click();
+        await page.waitForURL(new RegExp("/" + locale + "/account$"));
         await page.locator(".vd-account-page").waitFor({ timeout: 30000 });
         if (width < 1024) {
           await page.locator(".vd-account-page button[aria-expanded]").click();

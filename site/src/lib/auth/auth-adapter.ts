@@ -20,7 +20,7 @@ export interface AuthAdapterResult {
 
 export interface PhoneAuthAdapter {
   requestCode(phone: string): Promise<AuthAdapterResult>;
-  verifyCode(phone: string, code: string): Promise<AuthAdapterResult>;
+  verifyCode(phone: string, code: string, fullName?: string): Promise<AuthAdapterResult>;
 }
 
 export interface GoogleAuthAdapter {

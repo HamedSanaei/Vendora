@@ -7,9 +7,9 @@ import { CheckoutFlowLayout } from "@/components/vendora/checkout/checkout-shell
 import { LoginCard } from "./login-card";
 
 /** Login route shell that preserves a safe checkout return path. */
-export function VendoraLoginPage() {
+export function VendoraLoginPage({ intent = "login" }: { intent?: "login" | "register" }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const locale: Locale = getLocaleFromPathname(pathname);
-  return <CheckoutFlowLayout locale={locale}><LoginCard locale={locale} returnTo={searchParams.get("returnTo") ?? undefined} /></CheckoutFlowLayout>;
+  return <CheckoutFlowLayout locale={locale}><LoginCard locale={locale} intent={intent} returnTo={searchParams.get("returnTo") ?? undefined} /></CheckoutFlowLayout>;
 }

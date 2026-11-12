@@ -7,17 +7,19 @@ import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useLoginUserMutation } from "@/redux/features/auth/authApi";
 import { userLoggedIn } from "@/redux/features/auth/authSlice";
-import { getLocaleFromPathname, withLocalePath } from "@/lib/locale-path";
+import { withLocalePath } from "@/lib/locale-path";
 import type { Locale } from "@/lib/vendora/types";
 import { type AuthAccount, type PhoneAuthAdapter } from "@/lib/auth/auth-adapter";
 import { notifySuccess } from "@/utils/toast";
-import { CheckoutContextNotice, LoginModeTabs, OtpInput, PhoneField, type LoginMode } from "./login-components";
+import { CheckoutContextNotice, LoginBenefits, LoginModeTabs, OtpInput, PhoneField, type LoginMode } from "./login-components";
 import { GoogleIdentityButton } from "./google-identity-button";
 import { http } from "@/lib/http";
 import axios from "axios";
 import { storePresentation, useStoreSettings } from '../layout/store-settings-provider';
 import { resolveApiImageUrl } from '@/lib/http';
 import { completeProfileHref, type ProfileCompletion } from '@/lib/auth/customer-profile';
+import { getDict } from "@/lib/vendora/i18n";
+import { EyeIcon } from "../icons";
 import { googleErrorMessage } from '@/lib/auth/google-errors';
 
 import { createPhoneAuthAdapter, smsCapabilities, smsErrorMessage } from "@/lib/sms-client";
@@ -29,18 +31,21 @@ interface LoginCardProps {
   locale: Locale;
   returnTo?: string;
   phoneAdapter?: PhoneAuthAdapter;
-
+  intent?: "login" | "register";
 }
 
 /** Penpot-aligned responsive login card with email, phone OTP and Google modes. */
-export function LoginCard({ locale, returnTo, phoneAdapter }: LoginCardProps) {
+export function LoginCard({ locale, returnTo, phoneAdapter, intent = "login" }: LoginCardProps) {
   const isFa = locale === "fa";
+  const copy = getDict(locale).auth;
+  const registering = intent === "register";
+  const [fullName, setFullName] = useState("");
   const storeProfile = useStoreSettings();
   const brand = storePresentation(storeProfile, locale);
   const router = useRouter();
   const dispatch = useDispatch();
   const [loginUser, { isLoading: emailLoading }] = useLoginUserMutation();
-  const [mode, setMode] = useState<LoginMode>("email");
+  const [mode, setMode] = useState<LoginMode>("phone");
   const [phoneStep, setPhoneStep] = useState<PhoneStep>("identifier");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState<string[]>(["", "", "", "", ""]);
@@ -59,8 +64,23 @@ export function LoginCard({ locale, returnTo, phoneAdapter }: LoginCardProps) {
   const autofill = useMemo(() => createSmsCodeAutofill(), []);
   useEffect(() => () => autofill.cancel(), [autofill]);
   const [smsEnabled, setSmsEnabled] = useState(false);
+  const [capabilitiesLoaded, setCapabilitiesLoaded] = useState(Boolean(phoneAdapter));
   const phoneAvailable = Boolean(phoneAdapter) || smsEnabled;
-  useEffect(() => { const abort = new AbortController(); smsCapabilities(abort.signal).then(value => setSmsEnabled(value.phoneLogin)).catch(() => { if (!abort.signal.aborted) setSmsEnabled(false); }); return () => abort.abort(); }, []);
+  useEffect(() => {
+    const abort = new AbortController();
+    smsCapabilities(abort.signal).then(value => {
+      setSmsEnabled(value.phoneLogin);
+      // Existing email accounts remain usable when SMS is explicitly unavailable.
+      if (!value.phoneLogin && !phoneAdapter && !registering) setMode("email");
+      setCapabilitiesLoaded(true);
+    }).catch(() => {
+      if (!abort.signal.aborted) {
+        if (!phoneAdapter && !registering) setMode("email");
+        setCapabilitiesLoaded(true);
+      }
+    });
+    return () => abort.abort();
+  }, [phoneAdapter, registering]);
   const googleAvailable = Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim());
 
   useEffect(() => {
@@ -98,11 +118,14 @@ export function LoginCard({ locale, returnTo, phoneAdapter }: LoginCardProps) {
     router.push(result.data?.completion?.isComplete ? destination : completeProfileHref(locale, destination));
   };
 
+  /** Requests a server-bound proof; signup names remain local until verification succeeds. */
   const requestCode = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
     setError("");
     setInfo("");
-    const normalizedPhone = normalizeDigits(phone);
+    if (phoneLoading || !phoneAvailable) return;
+    if (registering && !validFullName(fullName)) { setError(copy.invalidName); return; }
+    const normalizedPhone = normalizePhone(phone);
     if (!/^09\d{9}$/.test(normalizedPhone)) {
       setError(isFa ? "شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد." : "Enter an 11-digit Iranian mobile number starting with 09.");
       return;
@@ -134,7 +157,7 @@ export function LoginCard({ locale, returnTo, phoneAdapter }: LoginCardProps) {
       return;
     }
     setPhoneLoading(true);
-    const result = await adapter.verifyCode(normalizeDigits(phone), code);
+    const result = await adapter.verifyCode(normalizePhone(phone), code, registering ? fullName.trim() : undefined);
     setPhoneLoading(false);
     if (!result.ok || !result.account) {
       setError(adapterMessage(result.message, secondsLeft === 0 ? (isFa ? "کد منقضی شده است." : "The code has expired.") : (isFa ? "کد واردشده صحیح نیست." : "The code is incorrect."), isFa ? "تأیید کد پیامکی هنوز به سرویس احراز هویت متصل نشده است." : "Phone verification is not connected to an auth service yet."));
@@ -142,7 +165,8 @@ export function LoginCard({ locale, returnTo, phoneAdapter }: LoginCardProps) {
     }
     persistAdapterAccount(result.account, dispatch);
     notifySuccess(isFa ? "با موفقیت وارد شدید." : "You are signed in.");
-    router.push(result.account.user.completion?.isComplete ? destination : completeProfileHref(locale, destination));
+    // Buying/services still enforce profile completion at their own route guard.
+    router.push(destination);
   };
 
   const handleGoogle = async (credential: string) => {
@@ -187,21 +211,60 @@ export function LoginCard({ locale, returnTo, phoneAdapter }: LoginCardProps) {
     otpRefs.current[Math.min(pasted.length, otp.length) - 1]?.focus();
   };
 
+  const busy = phoneLoading || emailLoading || googleLoading;
+  const checkout = /\/(shipping|checkout)(?:[/?#]|$)/.test(destination);
+  const alternateHref = `${withLocalePath(registering ? "/login" : "/register", locale)}?returnTo=${encodeURIComponent(destination)}`;
+
   return (
-    <section className="vd-root min-h-[calc(100vh-132px)] bg-surface-soft px-4 py-8 md:px-8 md:py-12" dir={isFa ? "rtl" : "ltr"}>
-      <div className="mx-auto w-full max-w-[520px]">
-        <div className="rounded-[24px] border border-vd-line bg-white p-5 shadow-[0_24px_70px_-45px_rgba(0,77,58,.65)] md:p-8">
-          <div className="text-center"><span className="text-[26px] font-extrabold tracking-tight text-ink">{storeProfile.logoUrl ? <Image unoptimized width={180} height={48} className="mx-auto h-12 max-w-[180px] object-contain" src={resolveApiImageUrl(storeProfile.logoUrl)} alt={brand.name} /> : brand.wordmark}</span><h2 className="mt-7 text-2xl font-extrabold text-ink">{isFa ? "ورود به حساب کاربری" : "Sign in to your account"}</h2><p className="mt-2 text-sm leading-7 text-vd-muted">{mode === "phone" ? (isFa ? "با کد پیامکی وارد شوید یا حساب بسازید." : "Sign in or register using an SMS code.") : (isFa ? "با ایمیل و رمز عبور خود وارد شوید." : "Enter your email and password.")}</p></div>
-          {destination.includes("/shipping") ? <CheckoutContextNotice locale={locale} /> : null}
-          {phoneAvailable ? <LoginModeTabs locale={locale} mode={mode} onChange={changeMode} /> : null}
+    <section className="vd-root vd-auth-section" dir={isFa ? "rtl" : "ltr"}>
+      <div className="vd-auth-layout">
+        <div className="vd-auth-card" aria-busy={busy || !capabilitiesLoaded}>
+          <header>
+            <p className="text-[13px] font-bold leading-6 text-jade">{copy.eyebrow}</p>
+            <h1 className="mt-1 text-[22px] font-extrabold leading-10 text-ink md:text-2xl">{registering ? copy.registerTitle : copy.signInTitle}</h1>
+            <p className="text-[13px] leading-6 text-vd-muted">{registering ? copy.registerIntro : copy.chooseMethod}</p>
+          </header>
+          {checkout ? <CheckoutContextNotice locale={locale} /> : null}
+          {!registering && phoneAvailable ? <LoginModeTabs locale={locale} mode={mode} onChange={changeMode} disabled={busy} /> : null}
+          {!capabilitiesLoaded ? <p role="status" className="my-6 text-sm text-vd-muted">{isFa ? "در حال دریافت روش‌های ورود…" : "Loading sign-in methods…"}</p> : null}
+          {capabilitiesLoaded && registering && !phoneAvailable ? <p role="status" className="mt-6 rounded-control bg-surface-soft p-4 text-sm leading-7 text-vd-muted">{copy.unavailable}</p> : null}
 
-          {mode === "phone" && phoneStep === "identifier" ? <form onSubmit={requestCode} className="mt-6"><PhoneField locale={locale} value={phone} onChange={setPhone} invalid={Boolean(error)} /><button type="submit" disabled={phoneLoading} className="vd-focus mt-5 flex h-12 w-full items-center justify-center rounded-control bg-jade text-sm font-extrabold text-white hover:bg-jade-dark disabled:opacity-60">{phoneLoading ? (isFa ? "در حال ارسال…" : "Sending…") : (isFa ? "ارسال کد ورود" : "Send sign-in code")}</button></form> : null}
-          {mode === "phone" && phoneStep === "otp" ? <form onSubmit={verifyCode} className="mt-6"><p className="text-sm font-semibold text-vd-muted">{isFa ? "کد ارسال‌شده به" : "Code sent to"} <bdi dir="ltr" className="font-extrabold text-ink">{phone}</bdi></p><OtpInput locale={locale} digits={otp} invalid={Boolean(error)} setInputRef={(index, element) => { otpRefs.current[index] = element; }} onChange={handleOtpChange} onKeyDown={handleOtpKeyDown} onPaste={handleOtpPaste} /><button type="submit" disabled={phoneLoading} className="vd-focus mt-5 flex h-12 w-full items-center justify-center rounded-control bg-jade text-sm font-extrabold text-white hover:bg-jade-dark disabled:opacity-60">{phoneLoading ? (isFa ? "در حال بررسی…" : "Verifying…") : (isFa ? "تأیید و ورود" : "Verify and sign in")}</button><div className="mt-4 flex items-center justify-between gap-3 text-xs"><button type="button" onClick={() => { autofill.cancel(); setPhoneStep("identifier"); setError(""); }} className="vd-focus rounded-sm font-bold text-jade">{isFa ? "ویرایش شماره" : "Edit number"}</button>{secondsLeft > 0 ? <span className="text-vd-muted">{isFa ? `${secondsLeft} ثانیه تا ارسال مجدد` : `Resend in ${secondsLeft}s`}</span> : <button type="button" onClick={() => void requestCode()} className="vd-focus rounded-sm font-bold text-jade">{isFa ? "ارسال مجدد" : "Resend code"}</button>}</div></form> : null}
-          {mode === "email" ? <form onSubmit={handleEmailSubmit} className="mt-6 space-y-4"><div><FieldLabel htmlFor="login-email" label={isFa ? "ایمیل" : "Email"} /><input id="login-email" value={email} onChange={(event) => setEmail(event.target.value)} type="email" dir="ltr" placeholder="name@example.com" className={`vd-focus h-[52px] w-full rounded-control border bg-white px-4 text-sm text-ink outline-none ${error ? "border-vd-danger" : "border-vd-line"}`} /></div><div><div className="flex items-center justify-between gap-3"><FieldLabel htmlFor="login-password" label={isFa ? "رمز عبور" : "Password"} /><Link href={withLocalePath("/forgot", locale)} className="vd-focus text-xs font-bold text-jade">{isFa ? "فراموشی رمز؟" : "Forgot password?"}</Link></div><div className="relative"><input id="login-password" value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? "text" : "password"} dir="ltr" className={`vd-focus h-[52px] w-full rounded-control border bg-white px-4 pe-12 text-sm text-ink outline-none ${error ? "border-vd-danger" : "border-vd-line"}`} /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? (isFa ? "مخفی کردن رمز" : "Hide password") : (isFa ? "نمایش رمز" : "Show password")} className="vd-focus absolute inset-y-0 end-2 my-auto flex h-10 w-10 items-center justify-center rounded-full text-vd-muted">{showPassword ? "◉" : "○"}</button></div></div><button type="submit" disabled={emailLoading} className="vd-focus flex h-12 w-full items-center justify-center rounded-control bg-jade text-sm font-extrabold text-white hover:bg-jade-dark disabled:opacity-60">{emailLoading ? (isFa ? "در حال ورود…" : "Signing in…") : (isFa ? "ورود به حساب" : "Sign in")}</button><p className="font-sans text-center text-base font-medium leading-8 text-vd-muted">{isFa ? "حساب ندارید؟" : "Don't have an account?"} <Link href={withLocalePath("/register", locale)} className="vd-focus inline-flex min-h-11 items-center rounded-sm font-bold text-jade">{isFa ? "ثبت‌نام کنید" : "Create one"}</Link></p></form> : null}
-
-          {googleAvailable ? <><div className="my-6 flex items-center gap-3 font-sans text-base font-medium text-vd-muted"><span className="h-px flex-1 bg-vd-line" />{isFa ? "یا" : "or"}<span className="h-px flex-1 bg-vd-line" /></div><GoogleIdentityButton locale={locale} onCredential={handleGoogle} />{googleLoading ? <p role="status" className="mt-2 font-sans text-center text-base leading-7 text-vd-muted">{isFa ? "در حال ورود…" : "Signing in…"}</p> : null}</> : null}
-          {info ? <p role="status" className="mt-4 rounded-control bg-jade-tint p-3 text-center text-xs font-semibold leading-6 text-jade">{info}</p> : null}{error ? <p role="alert" className="mt-4 rounded-control bg-vd-danger-tint p-3 text-center text-xs font-semibold leading-6 text-vd-danger">{error}</p> : null}
+          {capabilitiesLoaded && phoneAvailable && mode === "phone" && phoneStep === "identifier" ? (
+            <form onSubmit={requestCode} className="mt-[16px]" noValidate>
+              {registering ? <div className="mb-5"><FieldLabel htmlFor="register-name" label={copy.fullName} /><input id="register-name" value={fullName} onChange={event => { setFullName(event.target.value); setError(""); }} autoComplete="name" maxLength={201} required aria-invalid={error === copy.invalidName || undefined} className="vd-auth-field vd-focus border-vd-line" /></div> : null}
+              <PhoneField locale={locale} value={phone} onChange={value => { setPhone(value); setError(""); }} invalid={Boolean(error) && error !== copy.invalidName} />
+              <button type="submit" disabled={busy} className="vd-auth-submit vd-focus mt-[30px]">{phoneLoading ? (isFa ? "در حال ارسال…" : "Sending…") : registering ? copy.registerCode : (isFa ? "ارسال کد ورود" : "Send sign-in code")}</button>
+            </form>
+          ) : null}
+          {phoneAvailable && mode === "phone" && phoneStep === "otp" ? (
+            <form onSubmit={verifyCode} className="mt-6">
+              <p className="text-sm font-semibold leading-7 text-vd-muted">{isFa ? "کد ارسال‌شده به" : "Code sent to"} <bdi dir="ltr" className="font-extrabold text-ink">{phone}</bdi></p>
+              <OtpInput locale={locale} digits={otp} invalid={Boolean(error)} setInputRef={(index, element) => { otpRefs.current[index] = element; }} onChange={handleOtpChange} onKeyDown={handleOtpKeyDown} onPaste={handleOtpPaste} />
+              <button type="submit" disabled={busy} className="vd-auth-submit vd-focus mt-5">{phoneLoading ? (isFa ? "در حال بررسی…" : "Verifying…") : (isFa ? "تأیید و ورود" : "Verify and sign in")}</button>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[13px]">
+                <button type="button" disabled={busy} onClick={() => { autofill.cancel(); setPhoneStep("identifier"); setError(""); setInfo(""); }} className="vd-focus min-h-11 rounded-sm font-bold text-jade">{isFa ? "ویرایش شماره" : "Edit number"}</button>
+                {secondsLeft > 0 ? <span className="text-vd-muted">{isFa ? `${secondsLeft.toLocaleString("fa-IR")} ثانیه تا ارسال مجدد` : `Resend in ${secondsLeft}s`}</span> : <button type="button" disabled={busy} onClick={() => void requestCode()} className="vd-focus min-h-11 rounded-sm font-bold text-jade">{isFa ? "ارسال مجدد" : "Resend code"}</button>}
+              </div>
+            </form>
+          ) : null}
+          {!registering && capabilitiesLoaded && mode === "email" ? (
+            <form onSubmit={handleEmailSubmit} className="mt-6 space-y-4">
+              <div><FieldLabel htmlFor="login-email" label={isFa ? "ایمیل" : "Email"} /><input id="login-email" value={email} onChange={event => setEmail(event.target.value)} type="email" autoComplete="username" dir="ltr" placeholder="name@example.com" aria-invalid={Boolean(error) || undefined} className={`vd-focus vd-auth-field ${error ? "border-vd-danger" : "border-vd-line"}`} /></div>
+              <div>
+                <div className="flex items-center justify-between gap-3"><FieldLabel htmlFor="login-password" label={isFa ? "رمز عبور" : "Password"} /><Link href={withLocalePath("/forgot", locale)} className="vd-focus inline-flex min-h-11 items-center text-[13px] font-bold text-jade">{isFa ? "فراموشی رمز؟" : "Forgot password?"}</Link></div>
+                <div className="relative"><input id="login-password" value={password} onChange={event => setPassword(event.target.value)} type={showPassword ? "text" : "password"} autoComplete="current-password" dir="ltr" aria-invalid={Boolean(error) || undefined} className={`vd-focus vd-auth-field pe-14 ${error ? "border-vd-danger" : "border-vd-line"}`} /><button type="button" onClick={() => setShowPassword(value => !value)} aria-pressed={showPassword} aria-label={showPassword ? (isFa ? "مخفی کردن رمز" : "Hide password") : (isFa ? "نمایش رمز" : "Show password")} className="vd-focus absolute inset-y-0 end-1 my-auto flex h-11 w-11 items-center justify-center rounded-full text-vd-muted"><EyeIcon off={showPassword} /></button></div>
+              </div>
+              <button type="submit" disabled={busy} className="vd-focus vd-auth-submit">{emailLoading ? (isFa ? "در حال ورود…" : "Signing in…") : (isFa ? "ورود به حساب" : "Sign in")}</button>
+            </form>
+          ) : null}
+          {info ? <p role="status" className="vd-auth-feedback rounded-control bg-jade-tint p-3 text-sm font-semibold leading-6 text-jade">{info}</p> : null}
+          {error ? <p role="alert" className="vd-auth-feedback rounded-control bg-vd-danger-tint p-3 text-sm font-semibold leading-6 text-vd-danger">{error}</p> : null}
+          {googleAvailable ? <><div className="mb-[-4px] mt-5 flex items-center gap-7 text-sm font-medium text-vd-muted"><span className="h-px flex-1 bg-vd-line" />{isFa ? "یا" : "or"}<span className="h-px flex-1 bg-vd-line" /></div><GoogleIdentityButton locale={locale} onCredential={handleGoogle} />{googleLoading ? <p role="status" className="mt-2 text-center text-sm leading-7 text-vd-muted">{isFa ? "در حال ورود…" : "Signing in…"}</p> : null}</> : null}
+          {mode === "phone" && phoneAvailable ? <p className="vd-auth-account-notice rounded-control bg-surface-soft p-[16px] text-[13px] font-medium leading-6 text-vd-muted">{copy.accountNotice}</p> : null}
+          <p className="vd-auth-alternate flex flex-wrap items-center justify-center gap-x-2 text-sm font-medium leading-7 text-vd-muted">{registering ? copy.registered : isFa ? "حساب ندارید؟" : "Don't have an account?"}<Link href={alternateHref} className="vd-focus inline-flex min-h-11 items-center rounded-sm font-bold text-jade">{registering ? copy.signIn : isFa ? "ثبت‌نام کنید" : "Create one"}</Link></p>
+          <p className="vd-auth-privacy">{copy.privacy}</p>
         </div>
+        <LoginBenefits locale={locale} checkout={checkout} wordmark={storeProfile.logoUrl ? <Image unoptimized width={240} height={64} className="h-16 max-w-full object-contain" src={resolveApiImageUrl(storeProfile.logoUrl)} alt={brand.name} /> : brand.wordmark} />
       </div>
     </section>
   );
@@ -211,10 +274,28 @@ function FieldLabel({ htmlFor, label }: { htmlFor: string; label: string }) { re
 
 function normalizeDigits(value = "") { return String(value ?? "").replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit))).replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit))); }
 
+/** Accepts locale-local destinations, including filters, without allowing external or auth-loop redirects. */
 function safeReturnTo(value: string | undefined, locale: Locale) {
   const fallback = withLocalePath("/account", locale);
-  if (!value || !(value === `/${locale}` || value.startsWith(`/${locale}/`)) || value.includes("\\") || value.includes("//") || /[?#]/.test(value)) return fallback;
-  return value;
+  if (!value || !value.startsWith("/") || value.includes("\\") || value.includes("//") || /[\u0000-\u0020]/.test(value)) return fallback;
+  try {
+    const url = new URL(value, "https://vendora.invalid");
+    if (url.origin !== "https://vendora.invalid" || !(url.pathname === `/${locale}` || url.pathname.startsWith(`/${locale}/`))
+      || new RegExp(`^/${locale}/(login|register)(/|$)`).test(url.pathname)) return fallback;
+    return url.pathname + url.search + url.hash;
+  } catch { return fallback; }
+}
+
+/** Normalizes Iranian prefix and separators without accepting arbitrary country codes. */
+function normalizePhone(value: string) {
+  return normalizeDigits(value).replace(/[\s-]/g, "").replace(/^(?:\+98|0098|98)(?=9)/, "0");
+}
+
+/** Requires explicit first/surname values; mirrors the server's bounded, non-control name validation. */
+function validFullName(value: string) {
+  const parts = value.trim().split(/\s+/);
+  const names = [parts[0], parts.slice(1).join(" ")];
+  return names.every(name => Boolean(name) && name.length <= 100 && /\p{L}/u.test(name) && !/[\u0000-\u001f\u007f]/.test(name));
 }
 
 function adapterMessage(message: string | undefined, fallback: string, unavailable: string) {

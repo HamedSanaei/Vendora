@@ -125,6 +125,63 @@
   zoom: 1.25;
 }
 
+/* Auth: existing Penpot page 14 (1440/1024 split, 768 stacked, 390 form only).
+   Named rules keep legacy Bootstrap padding/form styles out of this surface. */
+.vd-auth-section { background: #f6faf8; padding: 24px 16px 44px; }
+.vd-auth-layout { display: grid; gap: 32px; max-width: 1120px; margin-inline: auto; align-items: start; }
+.vd-auth-card {
+  width: 100%; max-width: 500px; min-width: 0; min-height: 700px;
+  margin-inline: auto; padding: 18px 24px 24px; display: flex; flex-direction: column;
+  border: 1px solid var(--color-vd-line); border-radius: 22px; background: white;
+  box-shadow: 0 14px 30px -16px rgb(11 11 11 / 0.3);
+}
+.vd-auth-benefits { position: relative; isolation: isolate; display: none; min-width: 0; border-radius: 24px; background: #f3f8f6; }
+.vd-auth-benefits > h2 { margin-top: 4px; }
+.vd-auth-benefits-detail > p { margin-top: 20px; }
+.vd-auth-wordmark { position: relative; color: var(--color-ink); font-size: 40px; font-weight: 800; line-height: 1.4; letter-spacing: -1.5px; }
+.vd-auth-wordmark::before {
+  content: ""; position: absolute; z-index: -1; inset-inline-start: -18px;
+  inset-block-start: -20px; width: 116px; height: 116px; border-radius: 50%; background: #dff1e9;
+}
+.vd-auth-card .vd-auth-field {
+  display: block; width: 100%; height: 56px; border-width: 1px; border-style: solid;
+  border-radius: 12px; padding-inline: 16px; background: white;
+  border-color: var(--color-vd-line); color: var(--color-ink); font-family: inherit; font-size: 15px; line-height: normal; outline: none;
+}
+.vd-auth-card .vd-auth-field[aria-invalid="true"] { border-color: var(--color-vd-danger); }
+.vd-auth-card .vd-auth-field.pe-14 { padding-inline-end: 56px; }
+.vd-auth-card label { line-height: 20px; }
+.vd-auth-card [role="tablist"] { margin-top: 14px; padding: 2px; }
+.vd-auth-context { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; min-height: 58px; padding: 8px 16px; border-radius: 14px; background: #e3f4ec; }
+.vd-auth-submit {
+  display: flex; width: 100%; min-height: 52px; align-items: center; justify-content: center;
+  border-radius: 12px; background: var(--color-jade); color: white;
+  font-size: 14px; font-weight: 800; transition: background-color 150ms;
+}
+.vd-auth-submit:hover { background: var(--color-jade-dark); }
+.vd-auth-submit:disabled { opacity: .6; cursor: wait; }
+.vd-auth-card .vd-auth-account-notice, .vd-auth-card .vd-auth-feedback { margin-top: 16px; }
+.vd-auth-card .vd-auth-alternate { margin-top: 12px; }
+.vd-auth-privacy { margin-top: auto !important; padding-top: 24px; text-align: center; font-size: 12px; line-height: 24px; color: var(--color-vd-muted); }
+@media (width >= 768px) {
+  .vd-auth-section { padding: 44px 32px; }
+  .vd-auth-card { min-height: 680px; }
+  .vd-auth-benefits { display: block; grid-row: 1; min-height: 184px; padding: 28px 44px; }
+  .vd-auth-benefits-detail { display: none; }
+}
+@media (width >= 1024px) {
+  .vd-auth-section { padding-inline: 48px; }
+  .vd-auth-layout { grid-template-columns: 430px minmax(0, 1fr); }
+  .vd-auth-benefits { grid-row: auto; min-height: 650px; padding-block: 64px 44px; }
+  .vd-auth-benefits-detail { display: block; }
+  .vd-auth-benefits-list { display: grid; gap: 24px; margin-top: 26px !important; }
+  .vd-auth-quote { margin: 68px 0 0; padding: 20px 28px; border: 1px solid var(--color-vd-line); border-radius: 14px; background: white; font-size: 13px; line-height: 26px; color: var(--color-vd-muted); }
+}
+@media (width >= 1280px) {
+  .vd-auth-layout { grid-template-columns: 500px minmax(0, 1fr); }
+  .vd-auth-benefits { padding-inline: 166px 44px; }
+}
+
 /* Account lists are navigation controls, including when legacy list styles load. */
 .vd-header-popover {
   --vd-header-tint: #e3f4ec;

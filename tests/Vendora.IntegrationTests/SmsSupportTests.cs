@@ -22,6 +22,60 @@ namespace Vendora.IntegrationTests;
 /// <summary>Real controllers/Identity/SQLite with an isolated in-memory carrier. No live SMS, customer data or production configuration.</summary>
 public sealed class SmsSupportTests
 {
+    /// <summary>Signup stores the supplied real name only after proof; retrying or registering again cannot duplicate or rename an owner.</summary>
+    [Fact]
+    public async Task PhoneRegistration_PersistsNameAfterProof_AndExistingOwnerIsNotRenamed()
+    {
+        await using var f = await Fixture.Create();
+        using var guest = f.Host.Client(null);
+        const string phone = "09120000501";
+        var sent = await guest.PostAsJsonAsync("/api/account/otp/request", new { phone });
+        sent.EnsureSuccessStatusCode();
+        var challengeId = (await sent.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("challengeId").GetGuid();
+        using (var scope = f.Host.App.Services.CreateScope())
+            Assert.False(await scope.ServiceProvider.GetRequiredService<AppDbContext>().Users.AnyAsync(x => x.PhoneNumber == phone));
+        var invalid = await guest.PostAsJsonAsync("/api/account/otp/verify", new { challengeId, code = "000000", fullName = "علی رضایی" });
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+        var proof = await guest.PostAsJsonAsync("/api/account/otp/verify", new { challengeId, code = f.Gateway.Code, fullName = "  علی رضایی  " });
+        proof.EnsureSuccessStatusCode();
+        var account = (await proof.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("account");
+        Assert.Equal("علی رضایی", account.GetProperty("fullName").GetString());
+        Assert.True(account.GetProperty("completion").GetProperty("phoneNumberConfirmed").GetBoolean());
+        Assert.Equal(HttpStatusCode.BadRequest, (await guest.PostAsJsonAsync("/api/account/otp/verify", new { challengeId, code = f.Gateway.Code, fullName = "علی رضایی" })).StatusCode);
+        f.Clock.Advance(TimeSpan.FromSeconds(121));
+        sent = await guest.PostAsJsonAsync("/api/account/otp/request", new { phone });
+        challengeId = (await sent.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("challengeId").GetGuid();
+        proof = await guest.PostAsJsonAsync("/api/account/otp/verify", new { challengeId, code = f.Gateway.Code, fullName = "نام متفاوت" });
+        proof.EnsureSuccessStatusCode();
+        var repeated = (await proof.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("account");
+        Assert.Equal(account.GetProperty("id").GetGuid(), repeated.GetProperty("id").GetGuid());
+        Assert.Equal("علی رضایی", repeated.GetProperty("fullName").GetString());
+        using var finalScope = f.Host.App.Services.CreateScope();
+        var owners = await finalScope.ServiceProvider.GetRequiredService<AppDbContext>().Users.Where(x => x.PhoneNumber == phone).ToListAsync();
+        var owner = Assert.Single(owners);
+        Assert.Equal("علی", owner.FirstName);
+        Assert.Equal("رضایی", owner.LastName);
+        Assert.Null(owner.Email);
+    }
+
+    /// <summary>Invalid names do not consume the phone proof or create accounts, and old nameless clients remain compatible.</summary>
+    [Theory]
+    [InlineData("")]
+    [InlineData("علی")]
+    [InlineData("123 456")]
+    public async Task PhoneRegistration_InvalidNameCanBeCorrectedWithoutResending(string fullName)
+    {
+        await using var f = await Fixture.Create();
+        using var guest = f.Host.Client(null);
+        var sent = await guest.PostAsJsonAsync("/api/account/otp/request", new { phone = "09120000502" });
+        var challengeId = (await sent.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("challengeId").GetGuid();
+        var invalid = await guest.PostAsJsonAsync("/api/account/otp/verify", new { challengeId, code = f.Gateway.Code, fullName });
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+        Assert.Contains("INVALID_FULL_NAME", await invalid.Content.ReadAsStringAsync());
+        var corrected = await guest.PostAsJsonAsync("/api/account/otp/verify", new { challengeId, code = f.Gateway.Code, fullName = "علی رضایی" });
+        corrected.EnsureSuccessStatusCode();
+    }
+
     [Fact]
     public async Task BrandedMode_UnconfiguredGatewayIsRejected_AndOldClientsDoNotClearSavedMode()
     {

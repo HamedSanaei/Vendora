@@ -19,9 +19,9 @@ export function createPhoneAuthAdapter(): PhoneAuthAdapter {
         challenge = { id: data.challengeId, phone }; return { ok: true, retryAfter: data.retryAfter, codeLength: data.codeLength };
       } catch (error) { return { ok: false, message: smsErrorCode(error) }; }
     },
-    async verifyCode(phone: string, code: string): Promise<AuthAdapterResult> {
+    async verifyCode(phone: string, code: string, fullName?: string): Promise<AuthAdapterResult> {
       if (!challenge || challenge.phone !== phone) return { ok: false, message: "CODE_EXPIRED" };
-      try { const { data } = await http.post<OtpReply>("/account/otp/verify", { challengeId: challenge.id, code });
+      try { const { data } = await http.post<OtpReply>("/account/otp/verify", { challengeId: challenge.id, code, fullName });
         const account = data.account;
         if (!account?.token) return { ok: false, message: "INVALID_CODE" };
         challenge = null;
@@ -44,6 +44,7 @@ export function smsErrorCode(error: unknown): string { return axios.isAxiosError
 export function smsErrorMessage(code: string, fa: boolean): string {
   const messages: Record<string,[string,string]> = {
     INVALID_PHONE: ["شماره همراه معتبر وارد کنید.", "Enter a valid mobile number."],
+    INVALID_FULL_NAME: ["نام و نام خانوادگی معتبر وارد کنید.", "Enter your first and last name."],
     INVALID_CODE: ["کد واردشده صحیح نیست.", "Incorrect verification code."],
     CODE_EXPIRED: ["کد منقضی یا مصرف شده است؛ کد تازه بگیرید.", "Code expired or used. Request another."],
     CODE_ATTEMPT_LIMIT: ["تعداد تلاش‌ها بیش از حد مجاز است؛ کد تازه بگیرید.", "Attempt limit reached. Request another code."],

@@ -1,18 +1,14 @@
-import Header from "@layout/header";
-import Footer from "@layout/footer";
 import Wrapper from "@layout/wrapper";
-import RegisterArea from "@components/login-register/register-area";
+import { VendoraLoginPage } from "@components/vendora/auth/login-page";
 
 export const metadata = {
-  title: "Register - Harri Shop",
+  title: "ثبت‌نام | وندورا",
 };
 
 export default function Register() {
   return (
     <Wrapper>
-      <Header style_2={true} />
-      <RegisterArea />
-      <Footer />
+      <VendoraLoginPage intent="register" />
     </Wrapper>
   );
 }

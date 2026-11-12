@@ -6,6 +6,30 @@ import type { Locale } from "./types";
  * for the /en locale. All new components must pull strings from here.
  */
 const fa = {
+  auth: {
+    eyebrow: "حساب کاربری وندورا",
+    signInTitle: "ورود به حساب کاربری",
+    registerTitle: "ساخت حساب کاربری",
+    chooseMethod: "روش ورود خود را انتخاب کنید.",
+    registerIntro: "با نام و شماره موبایل خود ثبت‌نام کنید.",
+    fullName: "نام و نام خانوادگی",
+    invalidName: "نام و نام خانوادگی معتبر وارد کنید.",
+    registerCode: "ارسال کد ثبت‌نام",
+    registered: "حساب دارید؟",
+    signIn: "وارد شوید",
+    unavailable: "ثبت‌نام پیامکی فعلاً در دسترس نیست. برای حساب موجود از ایمیل یا Google وارد شوید یا با پشتیبانی تماس بگیرید.",
+    accountNotice: "اگر شماره جدید باشد، حساب شما پس از تأیید کد خودکار ساخته می‌شود.",
+    privacy: "با ورود، قوانین و حریم خصوصی وندورا را می‌پذیرید.",
+    benefitsTitle: "سفارش شما، امن و همراه تا مقصد",
+    benefitsIntro: "با ورود به حساب کاربری، آدرس‌ها، سبد خرید و پیگیری سفارش‌ها همیشه در دسترس شماست.",
+    benefitAccount: "دسترسی آسان به اطلاعات حساب",
+    benefitShipping: "بازگشت مستقیم به اطلاعات ارسال",
+    benefitCart: "حفظ کامل سبد خرید",
+    benefitOrders: "پیگیری وضعیت سفارش",
+    benefitSupport: "پشتیبانی حساب کاربری",
+    quote: "«ورود فقط یک مرحله است؛ سبد خرید شما همان‌طور باقی می‌ماند.»",
+    checkoutTrail: "سبد خرید ← ورود ← ارسال",
+  },
   common: {
     viewAll: "مشاهده همه",
     view: "مشاهده",
@@ -587,6 +611,30 @@ const fa = {
 export type Dict = typeof fa;
 
 const en: Dict = {
+  auth: {
+    eyebrow: "Vendora account",
+    signInTitle: "Sign in to your account",
+    registerTitle: "Create your account",
+    chooseMethod: "Choose how you would like to sign in.",
+    registerIntro: "Register with your name and mobile number.",
+    fullName: "Full name",
+    invalidName: "Enter your first and last name.",
+    registerCode: "Send registration code",
+    registered: "Already have an account?",
+    signIn: "Sign in",
+    unavailable: "SMS registration is currently unavailable. Sign in to an existing account with email or Google, or contact support.",
+    accountNotice: "For a new number, your account is created after code verification.",
+    privacy: "By signing in, you accept Vendora’s terms and privacy policy.",
+    benefitsTitle: "Your order, safe all the way",
+    benefitsIntro: "Sign in to keep your addresses, shopping cart and order tracking within reach.",
+    benefitAccount: "Easy access to your account details",
+    benefitShipping: "Return directly to shipping details",
+    benefitCart: "Keep your entire shopping cart",
+    benefitOrders: "Track your orders",
+    benefitSupport: "Account support",
+    quote: "“Signing in is just one step. Your shopping cart stays with you.”",
+    checkoutTrail: "Cart → Sign in → Shipping",
+  },
   common: {
     viewAll: "View all",
     view: "View",

@@ -30,6 +30,13 @@ async function capture(page, name, locale) {
   await page.evaluate(() => document.fonts.ready);
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), name + ': overflow');
   assert.equal(await page.locator('html').getAttribute('dir'), locale === 'fa' ? 'rtl' : 'ltr');
+  if (await page.locator('.vd-auth-card').count()) {
+    assert.match(await page.locator('.vd-auth-card').evaluate(card => getComputedStyle(card).fontFamily), /Vazirmatn/);
+    if (await page.locator('.vd-auth-account-notice').count() && await page.locator('.vd-google-identity-button').count()) {
+      const notice = await page.locator('.vd-auth-account-notice').boundingBox(), google = await page.locator('.vd-google-identity-button').boundingBox();
+      assert.ok(notice.y >= google.y + google.height + 12, 'Google button and account notice retain their designed separation');
+    }
+  }
   await page.screenshot({ path: path.join(output, name + '.png'), fullPage: true });
 }
 /** Runs complete browser workflows; provider and business correctness are covered separately by SQLite tests. */
@@ -43,17 +50,27 @@ async function run() {
     for (const width of [390, 768, 1024, 1440]) {
       const context = await browser.newContext({ viewport: { width, height: 1000 } });
       if(width===390)await context.addInitScript(()=>{window.OTPCredential=function(){};Object.defineProperty(navigator,'credentials',{configurable:true,value:{get:()=>Promise.resolve({code:'123456',type:'otp'})}});});
-      let ticket = null, messages = [], failReply = true, phoneConfirmed = true; const retryKeys = [], errors = [];
+      let ticket = null, messages = [], failReply = true, phoneConfirmed = true, registration = false, rejectProof = false;
+      const retryKeys = [], errors = [];
       await context.addInitScript(() => { if (!localStorage.getItem('sms-qa-cart')) { localStorage.setItem('sms-qa-cart', '1'); localStorage.setItem('cart_products', '[]'); } });
       await context.route('**/*', async route => {
         const req = route.request(), url = new URL(req.url()), p = url.pathname, method = req.method();
+        // Isolated visual fixture for the official external widget; never issues Google credentials.
+        if (url.hostname === 'accounts.google.com' && p === '/gsi/client') return route.fulfill({ contentType: 'application/javascript', body: `window.google={accounts:{id:{initialize(){},renderButton(target,options){const button=document.createElement('button');button.type='button';button.textContent=options.locale==='fa'?'ادامه با Google':'Continue with Google';button.style.cssText='height:40px;width:100%;background:white;border:1px solid #e5e7eb;border-radius:10px;font:500 13px Vazirmatn;color:#0b0b0b';target.append(button);}}}};` });
         if (!p.startsWith('/api/')) return url.origin === origin ? route.continue() : route.abort();
         let data = common(p), status = 200; const body = req.postDataJSON();
         if(p==='/api/account/me')data={...user,completion:{...user.completion,isComplete:phoneConfirmed,phoneNumberConfirmed:phoneConfirmed}};
         if(p==='/api/account/phone/send')data={retryAfter:120};
         if(p==='/api/account/phone/confirm'){assert.equal(body.code,'123456');phoneConfirmed=true;data={retryAfter:0};}
-        if (p === '/api/account/otp/request' || p === '/api/account/password/otp/request') data = challenge;
-        if (p === '/api/account/otp/verify') { assert.equal(body.code, '123456'); data = { account: { ...user, token: 'local-sms-session' } }; }
+        if (p === '/api/account/otp/request' || p === '/api/account/password/otp/request') {
+          if (registration) assert.equal(body.phone, '09120000129', 'Persian digits and international prefix normalize before sending');
+          data = challenge;
+        }
+        if (p === '/api/account/otp/verify') {
+          if (registration) assert.equal(body.fullName, 'علی رضایی', 'Signup name travels only with the verified challenge');
+          if (rejectProof) { rejectProof = false; status = 400; data = { code: 'INVALID_CODE' }; }
+          else { assert.equal(body.code, '123456'); data = { account: { ...user, token: 'local-sms-session', completion: { ...user.completion, isComplete: !registration } } }; }
+        }
         if (p === '/api/account/password/otp/verify') { assert.equal(body.code, '123456'); data = { ...challenge, resetGrant: 'local-transient-recovery-proof' }; }
         if (p === '/api/account/password/otp/reset') { assert.equal(body.grant, 'local-transient-recovery-proof'); assert.equal(body.password, 'Changed123!'); data = {}; }
         if (p === '/api/orders/me') data = [{ id: 'order-owned', orderNumber: 'VD-900' }];
@@ -71,6 +88,22 @@ async function run() {
         return route.fulfill({ status, json: data });
       });
       const page = await context.newPage(); page.on('pageerror', e => { if(e.message!=='Failed to load Stripe.js')errors.push(e.message); });
+      await page.goto(origin + '/fa/login?returnTo=%2Ffa%2Fshipping');
+      await page.locator('#login-phone').waitFor();
+      assert.equal(await page.getByRole('tab', { name: 'شماره موبایل', exact: true }).getAttribute('aria-selected'), 'true');
+      assert.equal(await page.locator('.vd-auth-benefits').isVisible(), width >= 768);
+      if (width >= 1024) {
+        const card = await page.locator('.vd-auth-card').boundingBox(), panel = await page.locator('.vd-auth-benefits').boundingBox();
+        assert.ok(card.x > panel.x && card.y === panel.y, 'RTL card right, brand panel left and top-aligned');
+        assert.equal(Math.round(card.width), width >= 1280 ? 500 : 430);
+      }
+      await capture(page, `login-default-${width}`, 'fa');
+      assert.equal(await page.locator('#login-phone').evaluate(input => getComputedStyle(input).backgroundColor), 'rgb(255, 255, 255)', 'Legacy theme must not override the Penpot white field');
+      await page.getByRole('tab', { name: 'ایمیل و رمزعبور', exact: true }).click();
+      await page.locator('#login-password').fill('example-password');
+      await page.getByRole('button', { name: 'نمایش رمز', exact: true }).click();
+      assert.equal(await page.locator('#login-password').getAttribute('type'), 'text');
+      await capture(page, `login-email-${width}`, 'fa');
       await page.goto(origin + '/fa/login?returnTo=%2Ffa%2Faccount%2Ftickets');
       await page.getByRole('tab', { name: 'شماره موبایل', exact: true }).click();
       await page.getByLabel('شماره موبایل', { exact: true }).fill('09120000129');
@@ -110,6 +143,30 @@ async function run() {
       await capture(page, `recovery-${width}`, 'fa'); await page.getByRole('button', { name: 'ثبت رمز جدید', exact: true }).click(); await page.getByText('رمز تغییر کرد؛ اکنون دوباره وارد شوید.', { exact: true }).waitFor();
       assert.ok(!(await page.evaluate(() => localStorage.getItem('auth') ?? '')).includes('local-sms-session'));
       assert.equal(await page.evaluate(() => localStorage.getItem('cart_products')), '[]');
+      registration = true;
+      await page.goto(origin + '/fa/register');
+      await page.locator('#register-name').waitFor();
+      assert.equal(await page.locator('#login-email').count(), 0);
+      assert.equal(await page.getByText('Harri', { exact: true }).count(), 0);
+      await page.getByRole('button', { name: 'ارسال کد ثبت‌نام', exact: true }).click();
+      await page.getByRole('alert').filter({ hasText: 'نام و نام خانوادگی' }).waitFor();
+      await page.locator('#register-name').fill('علی رضایی');
+      await page.locator('#login-phone').fill('+۹۸۹۱۲ ۰۰۰۰۱۲۹');
+      await capture(page, `register-${width}`, 'fa');
+      await page.getByRole('button', { name: 'ارسال کد ثبت‌نام', exact: true }).click();
+      await page.getByLabel('رقم 6', { exact: true }).waitFor();
+      rejectProof = true;
+      await page.getByLabel('رقم 1', { exact: true }).fill('000000');
+      await page.getByRole('button', { name: 'تأیید و ورود', exact: true }).click();
+      await page.getByRole('alert').filter({ hasText: 'صحیح نیست' }).waitFor();
+      await page.getByLabel('رقم 1', { exact: true }).fill('123456');
+      await page.getByRole('button', { name: 'تأیید و ورود', exact: true }).click();
+      await page.waitForURL('**/fa/account');
+      assert.equal(await page.evaluate(() => localStorage.getItem('cart_products')), '[]', 'Signup preserves the cart');
+      await page.goto(origin + '/fa/register?returnTo=https%3A%2F%2Fevil.invalid');
+      const safeLink = page.locator('.vd-auth-card').getByRole('link', { name: 'وارد شوید', exact: true });
+      assert.equal(await safeLink.getAttribute('href'), '/fa/login?returnTo=%2Ffa%2Faccount');
+      registration = false;
       if (width === 768) { await page.goto(origin + '/en/login'); await page.getByRole('tab', { name: 'Phone', exact: true }).click(); await page.getByLabel('Mobile number', { exact: true }).waitFor(); await capture(page, 'login-en-768', 'en'); }
       assert.deepEqual(errors, []); await context.close(); console.log(`PASS SMS login, ticket retry/ownership UI, recovery and geometry ${width}px`);
     }
