@@ -9,17 +9,19 @@ using System.Xml.Linq;
 using Application.Interfaces;
 using Application.Sms;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Auth;
 
 /// <summary>Uses the fixed REST v2 text endpoint and the existing SOAP OTP and delivery contracts.</summary>
-public sealed class ParsGreenSmsGateway(HttpClient client, IConfiguration configuration) : ISmsGateway
+public sealed class ParsGreenSmsGateway(HttpClient client, IConfiguration configuration, ILogger<ParsGreenSmsGateway>? logger = null) : ISmsGateway
 {
     public string Id => "ParsGreen";
     public bool OtpConfigured => !string.IsNullOrWhiteSpace(configuration["Sms:ParsGreen:Signature"]);
     public bool TextConfigured => OtpConfigured;
     public bool DeliveryConfigured => !string.IsNullOrWhiteSpace(configuration["Sms:ParsGreen:DeliveredCodes"]);
     public bool BrandedOtpConfigured => TextConfigured;
+    public bool PrefersBrandedOtp => !string.IsNullOrWhiteSpace(configuration["Sms:ParsGreen:PreferredSenderNumber"]);
     private static readonly XNamespace Ns = "http://ParsGreen.com/";
 
     /// <summary>Generates a secure six-digit code, sends the registered white text and exposes it only for server-side hashing after acceptance.</summary>
@@ -46,8 +48,24 @@ public sealed class ParsGreenSmsGateway(HttpClient client, IConfiguration config
     public async Task<SmsGatewayResult> SendTextAsync(string phone, string text, CancellationToken ct)
     {
         if (!TextConfigured) return new("Failed", ErrorCode: "SMS_NOT_CONFIGURED");
+        ct.ThrowIfCancellationRequested();
+        string? preferred = configuration["Sms:ParsGreen:PreferredSenderNumber"]?.Trim();
+        string? fallback = configuration["Sms:ParsGreen:SenderNumber"]?.Trim();
+        if (string.IsNullOrWhiteSpace(preferred)) return await SendFromAsync(phone, text, fallback, ct);
+
+        var result = await SendFromAsync(phone, text, preferred, ct);
+        // Only a definitive API rejection is safe to reroute. A timeout/5xx/malformed response
+        // can follow acceptance, so falling back then could deliver the same SMS twice.
+        if (result.Status != "Failed" || result.ErrorCode != "PARSGREEN_REJECTED") return result;
+        ct.ThrowIfCancellationRequested();
+        logger?.LogWarning("ParsGreen preferred sender rejected the request; attempting the legacy route once.");
+        return await SendFromAsync(phone, text, fallback == preferred ? null : fallback, ct);
+    }
+
+    /// <summary>Attempts one fixed REST request; never retries, changes the message, or logs recipient/code/provider bodies.</summary>
+    private async Task<SmsGatewayResult> SendFromAsync(string phone, string text, string? sender, CancellationToken ct)
+    {
         var payload = new Dictionary<string, object> { ["SmsBody"] = text, ["Mobiles"] = new[] { phone } };
-        var sender = configuration["Sms:ParsGreen:SenderNumber"];
         if (!string.IsNullOrWhiteSpace(sender)) payload["SmsNumber"] = sender.Trim();
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://sms.parsgreen.ir/Apiv2/Message/SendSms");
@@ -57,7 +75,7 @@ public sealed class ParsGreenSmsGateway(HttpClient client, IConfiguration config
         {
             using var response = await client.SendAsync(request, ct);
             if (response.StatusCode == HttpStatusCode.TooManyRequests) return new("Failed", ErrorCode: "SMS_RATE_LIMIT", Retryable: true);
-            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden) return new("Failed", ErrorCode: "PARSGREEN_REJECTED");
+            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden) return new("Failed", ErrorCode: "PARSGREEN_AUTH_REJECTED");
             if (!response.IsSuccessStatusCode) return new("Unknown", ErrorCode: "SMS_ACCEPTANCE_UNKNOWN");
 
             await using var stream = await response.Content.ReadAsStreamAsync(ct);
@@ -65,7 +83,14 @@ public sealed class ParsGreenSmsGateway(HttpClient client, IConfiguration config
             var result = json.RootElement;
             if (result.ValueKind == JsonValueKind.Object && result.TryGetProperty("R_Success", out var success))
             {
-                if (success.ValueKind == JsonValueKind.False) return new("Failed", ErrorCode: "PARSGREEN_REJECTED");
+                if (success.ValueKind == JsonValueKind.False)
+                {
+                    // A receipt contradicting the negative flag makes acceptance ambiguous, not safe to reroute.
+                    bool hasReceipt = result.TryGetProperty("DataList", out var items) && items.ValueKind == JsonValueKind.Array
+                        && items.EnumerateArray().Any(item => ReadItemReceipt(item) is not null);
+                    return hasReceipt ? new("Unknown", ErrorCode: "SMS_ACCEPTANCE_UNKNOWN")
+                        : new("Failed", ErrorCode: "PARSGREEN_REJECTED");
+                }
                 if (success.ValueKind == JsonValueKind.True) return new("Accepted", ReadReceipt(result));
             }
             return new("Unknown", ErrorCode: "PARSGREEN_RESPONSE_UNRECOGNIZED");
@@ -79,8 +104,14 @@ public sealed class ParsGreenSmsGateway(HttpClient client, IConfiguration config
     /// <summary>Extracts an optional numeric receipt for the one submitted recipient without retaining provider data.</summary>
     private static string? ReadReceipt(JsonElement result)
     {
-        if (!result.TryGetProperty("DataList", out var items) || items.ValueKind != JsonValueKind.Array || items.GetArrayLength() != 1 ||
-            items[0].ValueKind != JsonValueKind.Object || !items[0].TryGetProperty("ReqID", out var receipt)) return null;
+        return result.TryGetProperty("DataList", out var items) && items.ValueKind == JsonValueKind.Array && items.GetArrayLength() == 1
+            ? ReadItemReceipt(items[0]) : null;
+    }
+
+    /// <summary>Recognizes positive numeric acceptance evidence even in an otherwise contradictory provider response.</summary>
+    private static string? ReadItemReceipt(JsonElement item)
+    {
+        if (item.ValueKind != JsonValueKind.Object || !item.TryGetProperty("ReqID", out var receipt)) return null;
         var value = receipt.ValueKind switch { JsonValueKind.String => receipt.GetString(), JsonValueKind.Number => receipt.GetRawText(), _ => null };
         return long.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out long id) && id > 0 ? id.ToString(CultureInfo.InvariantCulture) : null;
     }

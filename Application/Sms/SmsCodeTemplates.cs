@@ -27,13 +27,13 @@ public static class SmsCodeTemplates
         return Pattern(purpose).Replace("{code}", code);
     }
 
-    /// <summary>Requires explicit opt-in and branded capability only for ParsGreen; other providers keep their existing templates.</summary>
-    public static bool UsesBranded(SmsSettings policy, ISmsGateway gateway) => policy.ParsGreenBrandedOtp && gateway.Id == "ParsGreen";
+    /// <summary>Dedicated ParsGreen senders take priority over legacy OTP; other providers retain their configured templates.</summary>
+    public static bool UsesBranded(SmsSettings policy, ISmsGateway gateway) => gateway.Id == "ParsGreen" && (gateway.PrefersBrandedOtp || policy.ParsGreenBrandedOtp);
 
     /// <summary>Checks the selected mode without silently falling back to a different template or provider.</summary>
     public static bool IsConfigured(SmsSettings policy, ISmsGateway gateway) => UsesBranded(policy, gateway) ? gateway.BrandedOtpConfigured : gateway.OtpConfigured;
 
-    /// <summary>Dispatches a purpose-bound code through the explicitly selected mode; no retry or plaintext persistence occurs here.</summary>
+    /// <summary>Dispatches a purpose-bound code through the selected provider; its adapter owns safe sender fallback.</summary>
     public static Task<string?> SendAsync(SmsSettings policy, ISmsGateway gateway, string phone, SmsCodePurpose purpose, CancellationToken ct)
         => UsesBranded(policy, gateway) ? gateway.SendBrandedCodeAsync(phone, purpose, ct) : gateway.SendCodeAsync(phone, policy.OtpType, policy.PatternId, ct);
 }

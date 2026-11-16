@@ -13,6 +13,136 @@ namespace Vendora.IntegrationTests;
 /// <summary>Exercises REST text and SOAP OTP/delivery requests without contacting the carrier.</summary>
 public sealed class SmsGatewayTests
 {
+    /// <summary>A successful dedicated-line send is the only request, preserving message and delivery receipt.</summary>
+    [Fact]
+    public async Task PreferredSender_SuccessDoesNotUseLegacyRoute()
+    {
+        var wire = new Wire();
+        var gateway = Gateway(wire, preferred: "9998883511");
+        var result = await gateway.SendTextAsync("09120000999", SmsPolicy.ServiceTestTemplate, default);
+        Assert.Equal("Accepted", result.Status);
+        Assert.Equal("123456789", result.ProviderId);
+        var request = Assert.Single(wire.Requests);
+        using var body = JsonDocument.Parse(request.Body);
+        Assert.Equal("9998883511", body.RootElement.GetProperty("SmsNumber").GetString());
+        Assert.Equal(SmsPolicy.ServiceTestTemplate, body.RootElement.GetProperty("SmsBody").GetString());
+        Assert.True(gateway.PrefersBrandedOtp);
+    }
+
+    /// <summary>Only definitive rejection retries once, using the former sender/default without changing any message data.</summary>
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("300000000000")]
+    [InlineData(" 300000000000 ")]
+    [InlineData("9998883511")]
+    public async Task PreferredSender_RejectionFallsBackOnceToPreviousRoute(string? fallback)
+    {
+        var wire = new Wire();
+        wire.Replies.Enqueue((HttpStatusCode.OK, """{"R_Success":false}"""));
+        wire.Replies.Enqueue((HttpStatusCode.OK, """{"R_Success":true,"DataList":[{"ReqID":7654321}]}"""));
+        var result = await Gateway(wire, sender: fallback, preferred: "9998883511").SendTextAsync("09120000999", "وندوراشاپ پیام خدماتی", default);
+        Assert.Equal("Accepted", result.Status);
+        Assert.Equal("7654321", result.ProviderId);
+        Assert.Equal(2, wire.Requests.Count);
+        using var first = JsonDocument.Parse(wire.Requests[0].Body);
+        using var second = JsonDocument.Parse(wire.Requests[1].Body);
+        Assert.Equal("9998883511", first.RootElement.GetProperty("SmsNumber").GetString());
+        Assert.Equal(first.RootElement.GetProperty("SmsBody").GetString(), second.RootElement.GetProperty("SmsBody").GetString());
+        Assert.Equal(first.RootElement.GetProperty("Mobiles").GetRawText(), second.RootElement.GetProperty("Mobiles").GetRawText());
+        if (string.IsNullOrWhiteSpace(fallback) || fallback == "9998883511") Assert.False(second.RootElement.TryGetProperty("SmsNumber", out _));
+        else Assert.Equal(fallback.Trim(), second.RootElement.GetProperty("SmsNumber").GetString());
+        Assert.All(wire.Requests, request => Assert.Null(request.Action));
+    }
+
+    /// <summary>Every security purpose uses the dedicated line and keeps exactly one code through fallback, even with a legacy saved mode.</summary>
+    [Theory]
+    [InlineData(SmsCodePurpose.Login)]
+    [InlineData(SmsCodePurpose.Registration)]
+    [InlineData(SmsCodePurpose.PhoneVerification)]
+    [InlineData(SmsCodePurpose.Recovery)]
+    [InlineData(SmsCodePurpose.Test)]
+    public async Task PreferredSender_OtpUsesApprovedPurposeAndSameCodeOnFallback(SmsCodePurpose purpose)
+    {
+        var wire = new Wire();
+        wire.Replies.Enqueue((HttpStatusCode.OK, """{"R_Success":false}"""));
+        var gateway = Gateway(wire, sender: null, preferred: "9998883511");
+        var policy = new Domain.Entities.SmsSettings { ParsGreenBrandedOtp = false };
+        Assert.True(SmsCodeTemplates.UsesBranded(policy, gateway));
+        string code = (await SmsCodeTemplates.SendAsync(policy, gateway, "09120000999", purpose, default))!;
+        Assert.Matches("^[0-9]{6}$", code);
+        Assert.Equal(2, wire.Calls);
+        Assert.All(wire.Requests, request => {
+            Assert.Null(request.Action);
+            using var json = JsonDocument.Parse(request.Body);
+            Assert.Equal(SmsCodeTemplates.Render(purpose, code), json.RootElement.GetProperty("SmsBody").GetString());
+        });
+    }
+
+    /// <summary>Account-wide failures and ambiguous acceptance never reroute and cannot create duplicate delivery.</summary>
+    [Theory]
+    [InlineData(HttpStatusCode.Unauthorized, "PARSGREEN_AUTH_REJECTED")]
+    [InlineData(HttpStatusCode.Forbidden, "PARSGREEN_AUTH_REJECTED")]
+    [InlineData(HttpStatusCode.TooManyRequests, "SMS_RATE_LIMIT")]
+    [InlineData(HttpStatusCode.InternalServerError, "SMS_ACCEPTANCE_UNKNOWN")]
+    [InlineData(HttpStatusCode.ServiceUnavailable, "SMS_ACCEPTANCE_UNKNOWN")]
+    public async Task PreferredSender_AccountOrAmbiguousHttpFailureDoesNotFallback(HttpStatusCode status, string error)
+    {
+        var wire = new Wire { Status = status };
+        var result = await Gateway(wire, preferred: "9998883511").SendTextAsync("09120000999", "Fixture", default);
+        Assert.Equal(error, result.ErrorCode);
+        Assert.Single(wire.Requests);
+    }
+
+    /// <summary>Malformed responses, contradictory acceptance and transport failures cannot trigger an unsafe second request.</summary>
+    [Theory]
+    [InlineData("{", false)]
+    [InlineData("{\"R_Success\":false,\"DataList\":[{\"ReqID\":123}]}", false)]
+    [InlineData("{\"R_Success\":false,\"DataList\":[{\"ReqID\":0},{\"ReqID\":\"123\"}]}", false)]
+    [InlineData("{\"R_Success\":\"true\"}", false)]
+    [InlineData("{}", true)]
+    public async Task PreferredSender_AmbiguousPayloadOrNetworkDoesNotFallback(string json, bool networkFailure)
+    {
+        var wire = new Wire { Json = json, Throw = networkFailure };
+        var result = await Gateway(wire, preferred: "9998883511").SendTextAsync("09120000999", "Fixture", default);
+        Assert.Equal("Unknown", result.Status);
+        Assert.False(result.Retryable);
+        Assert.Single(wire.Requests);
+    }
+
+    /// <summary>A rejected fallback terminates the operation; no loop, SOAP send or third carrier attempt is allowed.</summary>
+    [Theory]
+    [InlineData("{\"R_Success\":false}", "Failed")]
+    [InlineData("{", "Unknown")]
+    public async Task PreferredSender_UnsuccessfulFallbackNeverTriesAThirdRoute(string fallbackJson, string expected)
+    {
+        var wire = new Wire();
+        wire.Replies.Enqueue((HttpStatusCode.OK, """{"R_Success":false}"""));
+        wire.Replies.Enqueue((HttpStatusCode.OK, fallbackJson));
+        var result = await Gateway(wire, preferred: "9998883511").SendTextAsync("09120000999", "Fixture", default);
+        Assert.Equal(expected, result.Status);
+        Assert.Equal(2, wire.Requests.Count);
+    }
+
+    /// <summary>A configured priority line is not a credential and cannot bypass readiness or cancellation.</summary>
+    [Fact]
+    public async Task PreferredSender_MissingCredentialsOrCancellationCannotSend()
+    {
+        var wire = new Wire();
+        var gateway = new ParsGreenSmsGateway(new HttpClient(wire), new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Sms:ParsGreen:PreferredSenderNumber"] = "9998883511" }).Build());
+        Assert.True(gateway.PrefersBrandedOtp);
+        Assert.False(SmsCodeTemplates.IsConfigured(new Domain.Entities.SmsSettings { ParsGreenBrandedOtp = false }, gateway));
+        Assert.Null(await SmsCodeTemplates.SendAsync(new(), gateway, "09120000999", SmsCodePurpose.Login, default));
+        Assert.Empty(wire.Requests);
+        using var cancelled = new CancellationTokenSource();
+        cancelled.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Gateway(wire, preferred: "9998883511")
+            .SendTextAsync("09120000999", "Fixture", cancelled.Token));
+        Assert.Empty(wire.Requests);
+    }
+
     /// <summary>Every registered branded pattern receives a secure six-digit code and the same origin-bound suffix.</summary>
     [Theory]
     [InlineData(SmsCodePurpose.Login, "کد ورود شما به وندوراشاپ: ")]
@@ -122,19 +252,25 @@ public sealed class SmsGatewayTests
     }
 
     /// <summary>Creates a provider with in-memory nonproduction credentials and an optional explicitly supplied code mapping.</summary>
-    private static ParsGreenSmsGateway Gateway(Wire wire,string? deliveredCodes=null,string? sender="300000000000")=>new(new HttpClient(wire,false),new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?>{
-        ["Sms:ParsGreen:Signature"]="fixture-signature",["Sms:ParsGreen:SenderNumber"]=sender,["Sms:ParsGreen:DeliveredCodes"]=deliveredCodes}).Build());
+    private static ParsGreenSmsGateway Gateway(Wire wire,string? deliveredCodes=null,string? sender="300000000000",string? preferred=null)=>new(new HttpClient(wire,false),new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?>{
+        ["Sms:ParsGreen:Signature"]="fixture-signature",["Sms:ParsGreen:SenderNumber"]=sender,["Sms:ParsGreen:PreferredSenderNumber"]=preferred,["Sms:ParsGreen:DeliveredCodes"]=deliveredCodes}).Build());
 
     private sealed class Wire : HttpMessageHandler
     {
         public bool Malformed,Throw;public int Calls;public string? Body,Action,Url,Authorization,ContentType;public HttpMethod? Method;public HttpStatusCode Status=HttpStatusCode.OK;
         public string Json = """{"R_Success":true,"DataList":[{"ReqID":123456789}]}""";
+        public Queue<(HttpStatusCode Status, string Json)> Replies = new();
+        public List<(string Body, string? Action)> Requests = new();
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken ct)
         {
             Calls++;Body=await request.Content!.ReadAsStringAsync(ct);Action=request.Headers.TryGetValues("SOAPAction", out var actions)?actions.Single():null;Url=request.RequestUri!.ToString();
+            Requests.Add((Body, Action));
             Authorization=request.Headers.TryGetValues("Authorization", out var auth)?auth.Single():null;ContentType=request.Content.Headers.ContentType?.MediaType;Method=request.Method;
             if(Throw)throw new HttpRequestException("Fixture transport ambiguity");
-            if (Action is null) return new(Status) { Content = new StringContent(Malformed ? "{" : Json, Encoding.UTF8, "application/json") };
+            if (Action is null) {
+                var reply = Replies.TryDequeue(out var queued) ? queued : (Status, Json);
+                return new(reply.Item1) { Content = new StringContent(Malformed ? "{" : reply.Item2, Encoding.UTF8, "application/json") };
+            }
             string operation=Action.Contains("SendOtp")?"SendOtp":"GetDelivery";
             string fields=operation=="SendOtp"?"<SendOtpResult>1</SendOtpResult><otpCode>123456</otpCode>":"<GetDeliveryResult>7</GetDeliveryResult>";
             string xml=Malformed?"<not-a-provider-result/>":$"<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><{operation}Response xmlns=\"http://ParsGreen.com/\">{fields}</{operation}Response></soap:Body></soap:Envelope>";

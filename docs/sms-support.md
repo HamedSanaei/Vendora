@@ -6,9 +6,9 @@
 
 See the [complete list of 19 ParsGreen templates and examples](parsgreen-sms-templates.md). In the SMS settings tab, hover over the eye icon beside a template to preview its message with fictional values. The icon also works with keyboard focus and touch.
 
-Customer phone login and **Use Vendorashop branded OTP text** now default to on for new configurations, following approval of the registered Vendorashop texts. The `EnableApprovedParsGreenPhoneLogin` data migration activates these two settings once for an existing enabled ParsGreen policy and increments its version. It preserves an explicitly disabled master switch, other providers, notification rules, recipients and server-only credentials. An administrator can still explicitly disable phone login or select the legacy `SendOtp` mode afterward; the migration does not run again on every startup. Both modes use the existing server-side `Sms__ParsGreen__Signature`.
+Customer phone login and **Use Vendorashop branded OTP text** now default to on for new configurations, following approval of the registered Vendorashop texts. The `EnableApprovedParsGreenPhoneLogin` data migration activates these two settings once for an existing enabled ParsGreen policy and increments its version. It preserves an explicitly disabled master switch, other providers, notification rules, recipients and server-only credentials. An administrator can still explicitly disable phone login. When no preferred sender is configured, the legacy `SendOtp` mode remains selectable; a preferred sender instead routes codes through their purpose-specific registered texts. The migration does not run again on every startup. Both modes use the existing server-side `Sms__ParsGreen__Signature`.
 
-In branded mode, the adapter generates a cryptographically random ASCII six-digit code and sends one REST v2 `Message/SendSms` request to one validated recipient. `R_Success: true` returns the ephemeral code to the existing hash-only challenge flow. An ambiguous response does not trigger a retry or fall back to `SendOtp`. Plaintext codes are kept out of the outbox and audit log. Existing five-minute expiry, shared budgets, one-use verification and account ownership checks remain in force.
+In branded mode, the adapter generates a cryptographically random ASCII six-digit code and sends one REST v2 `Message/SendSms` request to one validated recipient. `R_Success: true` returns the ephemeral code to the existing hash-only challenge flow. An ambiguous response does not trigger a retry or fall back to another sender or `SendOtp`. A definitive rejection of the preferred sender can use the bounded legacy sender fallback described below. Plaintext codes are kept out of the outbox and audit log. Existing five-minute expiry, shared budgets, one-use verification and account ownership checks remain in force.
 
 The five immutable template previews are returned by the server. The exact first lines are:
 
@@ -34,12 +34,23 @@ Configure the following through the deployment's secure configuration mechanism,
 
 ```text
 Sms__ParsGreen__Signature
+Sms__ParsGreen__PreferredSenderNumber
 Sms__ParsGreen__SenderNumber
 Sms__ParsGreen__DeliveredCodes
 Sms__ParsGreen__FailedDeliveryCodes
 ```
 
-`Signature` enables ParsGreen OTP and REST v2 text requests. Text uses HTTPS `POST /Apiv2/Message/SendSms` with the API key in the redacted authorization header. The JSON body contains `SmsBody` and `Mobiles`; `SmsNumber` is sent only if configured. With a blank or missing `SenderNumber`, ParsGreen selects the sending route. A successful response may include a numeric `DataList[].ReqID` for delivery polling. The UI exposes readiness booleans and safe outcomes. Service templates, OTP type/pattern ID, selected verified administrators and low-stock threshold are database settings.
+`Signature` enables ParsGreen OTP and REST v2 text requests. Text uses HTTPS `POST /Apiv2/Message/SendSms` with the API key in the redacted authorization header. The JSON body contains `SmsBody` and `Mobiles`. A successful response may include a numeric `DataList[].ReqID` for delivery polling. The UI exposes readiness booleans and safe outcomes. Service templates, OTP type/pattern ID, selected verified administrators and low-stock threshold are database settings.
+
+### Preferred service line and bounded fallback
+
+The non-secret default `Sms:ParsGreen:PreferredSenderNumber` in `API/appsettings.json` is **9998883511**. Every ParsGreen service message, manual/test message and purpose-specific OTP first includes this number as `SmsNumber`. Security codes keep the exact approved Login/Registration/PhoneVerification/Recovery/Test text, six-digit code and origin-bound suffix. A preferred sender takes precedence over a saved legacy OTP-mode checkbox, so active flows cannot accidentally bypass it via SOAP `SendOtp`.
+
+Only an HTTP-successful response with the explicit boolean `R_Success: false` and **no positive receipt** allows one fallback. This sends the identical message (including the same OTP) via the pre-existing `SenderNumber`, or omits `SmsNumber` if that value is blank. If the fallback number equals the preferred number, the field is omitted instead of explicitly retrying the rejected line. No third attempt or SOAP fallback is made.
+
+A successful preferred attempt never uses the old route. Timeouts, connection loss, malformed/contradictory responses, HTTP 5xx and unrecognized results remain **Unknown** and never trigger immediate fallback because the carrier may already have accepted the message. Account authorization failures (401/403) do not retry a different sender; rate limits retain the existing bounded retry policy. Acceptance still does not mean handset delivery. Fallback logging contains no recipient, message body, OTP, API key or raw provider response.
+
+`Sms__ParsGreen__PreferredSenderNumber` can override the non-secret priority number. An explicitly blank value disables dedicated-line priority and restores the former sender/OTP selection. The existing `Sms__ParsGreen__SenderNumber` remains the fallback setting and is not overwritten. Credentials, provider selection, notification rules and database schema are unchanged. No live test SMS, deployment or production configuration edit is performed by these automated tests. Actual line entitlement and delivery require an explicit administrator send/test after deployment.
 
 ### Kavenegar
 

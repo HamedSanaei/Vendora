@@ -49,7 +49,7 @@ public static class SmsManagement
             var gateway = gateways.SingleOrDefault(x => x.Id == input.Provider) ?? throw new AccountingException("SMS_PROVIDER_UNAVAILABLE", 400);
             var row = await db.SmsSettings.SingleOrDefaultAsync(x => x.Id == 1, ct);
             bool branded = input.ParsGreenBrandedOtp ?? row?.ParsGreenBrandedOtp ?? new SmsSettings().ParsGreenBrandedOtp;
-            bool codeConfigured = input.Provider == "ParsGreen" && branded ? gateway.BrandedOtpConfigured : gateway.OtpConfigured;
+            bool codeConfigured = input.Provider == "ParsGreen" && (branded || gateway.PrefersBrandedOtp) ? gateway.BrandedOtpConfigured : gateway.OtpConfigured;
             if (input.Enabled && ((input.PhoneLogin || input.PasswordRecovery || input.PhoneVerification) && !codeConfigured || input.Rules.Any(x => x.Enabled) && !gateway.TextConfigured))
                 throw new AccountingException("SMS_NOT_CONFIGURED", 400);
             var view = await new ReadHandler(db, gateways).Handle(new(), ct);

@@ -14,6 +14,8 @@ public interface ISmsGateway
     bool TextConfigured { get; }
     bool DeliveryConfigured => false;
     bool BrandedOtpConfigured => false;
+    /// <summary>A dedicated sender requires purpose-specific codes so every customer SMS follows its priority route.</summary>
+    bool PrefersBrandedOtp => false;
     /// <summary>Sends a branded purpose-specific code when supported; unsupported providers never fall back implicitly.</summary>
     Task<string?> SendBrandedCodeAsync(string phone, SmsCodePurpose purpose, CancellationToken ct) => Task.FromResult<string?>(null);
     /// <summary>Maximum service-message length accepted by this provider; existing adapters retain their current bound.</summary>
