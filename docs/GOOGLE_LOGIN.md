@@ -61,20 +61,9 @@ verification cannot fetch Google's rotating signing keys. This produces
 audience, issuer, or expiry checks, and never replace the JWKS response with a
 fixed or untrusted key.
 
-The API supports an **optional, host-scoped HTTP CONNECT proxy**:
+Set the **Google Sign-In** route in the admin **Store management → Network & outbound proxy** tab. A fresh database defaults to Direct. The legacy `Google__EgressProxy` environment value is ignored. See [outbound egress settings and rollout](outbound-egress.md).
 
-```dotenv
-# API runtime only, NOT a Next.js public build variable.
-Google__EgressProxy=http://TRUSTED_EGRESS_HOST:CONNECT_PORT
-```
-
-- The proxy must only permit authorized Vendora source IPs and `CONNECT www.googleapis.com:443`. Ensure that HTTPS stays end-to-end to Google. A trusted egress host in a network where Google responds 200 is required.
-- Set this in `/opt/vendora/deploy/env/production.env` and redeploy/recreate **vendora-api**. Merely restarting an existing Docker container cannot add newly edited environment variables.
-- `API/GoogleCertificateEgressProxy.cs` routes **only HTTPS requests to `www.googleapis.com` on port 443** to that proxy, and delegates every other destination to the original .NET proxy settings. Requests to payment providers, SMS services and other domains must not be affected.
-- Verify from the API's network namespace: `curl -4 --proxy http://TRUSTED_EGRESS_HOST:CONNECT_PORT -fsS https://www.googleapis.com/oauth2/v3/certs` returns JWKS JSON with `keys`. A direct request may still return 403.
-- Then perform a legitimate Google login with a controlled test account and verify that a Vendora session is minted. A random or invalid Google credential must still fail closed.
-- If the relay is unavailable, login must fail closed with `GOOGLE_UNAVAILABLE`, not accept unverified tokens. Monitor relay availability, its TLS tunnel success and the API auth error code.
-- To roll back the egress routing, remove `Google__EgressProxy` from the private API environment and redeploy/recreate `vendora-api`. Keep credentials out of logs and public configuration.
+The verifier uses the official Google JWKS endpoint through the saved route and validates the signature, issuer, audience, expiration and verified email. A failed required route returns `GOOGLE_UNAVAILABLE` when keys cannot be loaded. Cached keys are scoped to the persisted route revision and expire within the upstream cache lifetime, capped at five minutes.
 
 **Important:** A Google-created account does not automatically have a local
 password hash. Email/password login is therefore not a fallback for that account

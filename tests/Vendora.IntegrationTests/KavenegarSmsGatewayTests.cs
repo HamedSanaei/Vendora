@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Net;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection;
 using System.Text.Json;
 using Application.Interfaces;
 using Infrastructure.Auth;
@@ -129,6 +131,9 @@ public sealed class KavenegarSmsGatewayTests
     {
         var wire=new Wire();var logs=new Logs();var services=new ServiceCollection();
         services.AddSingleton<IConfiguration>(Configuration());services.AddLogging(x=>x.SetMinimumLevel(LogLevel.Trace).AddProvider(logs));
+        services.AddSingleton(TimeProvider.System);
+        services.AddDataProtection();
+        services.AddDbContextFactory<Persistence.AppDbContext>();
         Infrastructure.DependencyInjection.AddInfrastructure(services);
         services.AddHttpClient("SmsKavenegar").ConfigurePrimaryHttpMessageHandler(()=>wire);
         using var provider=services.BuildServiceProvider();

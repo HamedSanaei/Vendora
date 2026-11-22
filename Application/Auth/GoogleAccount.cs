@@ -1,5 +1,4 @@
 using Domain.Enums;
-using Google.Apis.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -17,11 +16,11 @@ public static class GoogleAccount
     public sealed class LoginHandler(
         UserManager<AppUser> users,
         RoleManager<IdentityRole<Guid>> roles,
-        IConfiguration settings) : IRequestHandler<LoginCommand, Account.Result>
+        IConfiguration settings, IGoogleCredentialVerifier? verifier = null) : IRequestHandler<LoginCommand, Account.Result>
     {
         public async Task<Account.Result> Handle(LoginCommand request, CancellationToken cancellationToken)
         {
-            var claim = await VerifyAsync(settings, request.Credential, cancellationToken);
+            var claim = await VerifyAsync(settings, verifier, request.Credential, cancellationToken);
             if (claim.Payload is null)
                 return Account.Result.Fail(claim.Error ?? "GOOGLE_TOKEN_INVALID");
             var identity = claim.Payload;
@@ -73,11 +72,11 @@ public static class GoogleAccount
 
     public sealed class LinkHandler(
         UserManager<AppUser> users,
-        IConfiguration settings) : IRequestHandler<LinkCommand, Account.Result>
+        IConfiguration settings, IGoogleCredentialVerifier? verifier = null) : IRequestHandler<LinkCommand, Account.Result>
     {
         public async Task<Account.Result> Handle(LinkCommand request, CancellationToken cancellationToken)
         {
-            var claim = await VerifyAsync(settings, request.Credential, cancellationToken);
+            var claim = await VerifyAsync(settings, verifier, request.Credential, cancellationToken);
             if (claim.Payload is null)
                 return Account.Result.Fail(claim.Error ?? "GOOGLE_TOKEN_INVALID");
             var identity = claim.Payload;
@@ -102,11 +101,11 @@ public static class GoogleAccount
         }
     }
 
-    private sealed record Verification(GoogleJsonWebSignature.Payload? Payload, string? Error = null);
+    private sealed record Verification(GoogleIdentity? Payload, string? Error = null);
 
     /// <summary>Retains signature/audience verification while distinguishing safe configuration, credential and transport errors.</summary>
     private static async Task<Verification> VerifyAsync(
-        IConfiguration settings, string? credential, CancellationToken ct)
+        IConfiguration settings, IGoogleCredentialVerifier? verifier, string? credential, CancellationToken ct)
     {
         string clientId = settings["Google:ClientId"]?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(clientId)) return new(null, "GOOGLE_NOT_CONFIGURED");
@@ -115,25 +114,9 @@ public static class GoogleAccount
             return new(null, "GOOGLE_TOKEN_INVALID");
         try
         {
-            // Official Google library verifies signature (rotating Google keys), issuer,
-            // audience, expiration, and rejects malformed/forged credentials.
-            var payload = await GoogleJsonWebSignature.ValidateAsync(
-                credential, new GoogleJsonWebSignature.ValidationSettings
-                {
-                    Audience = [clientId],
-                });
-            if (payload.EmailVerified != true || string.IsNullOrWhiteSpace(payload.Subject)
-                || string.IsNullOrWhiteSpace(payload.Email))
-                return new(null, "GOOGLE_TOKEN_INVALID");
-            return new(payload);
-        }
-        catch (InvalidJwtException)
-        {
-            return new(null, "GOOGLE_TOKEN_INVALID");
-        }
-        catch (ArgumentException)
-        {
-            return new(null, "GOOGLE_TOKEN_INVALID");
+            if (verifier is null) return new(null, "GOOGLE_UNAVAILABLE");
+            var identity = await verifier.VerifyAsync(credential, clientId, ct);
+            return identity is null ? new(null, "GOOGLE_TOKEN_INVALID") : new(identity);
         }
         catch (HttpRequestException) { return new(null, "GOOGLE_UNAVAILABLE"); }
         catch (TaskCanceledException) when (!ct.IsCancellationRequested) { return new(null, "GOOGLE_UNAVAILABLE"); }

@@ -5,6 +5,7 @@ export const storeManagementSections = [
   { id: 'slideshow', fa: 'اسلایدر صفحه اصلی', en: 'Homepage slideshow' },
   { id: 'shipping', fa: 'ارسال و قیمت‌گذاری', en: 'Shipping & pricing' },
   { id: 'sms', fa: 'پیامک و اعلان‌ها', en: 'SMS & notifications' },
+  { id: 'egress', fa: 'شبکه و پروکسی خروجی', en: 'Network & outbound proxy' },
   { id: 'data', fa: 'داده‌های نمونه', en: 'Sample data' },
   { id: 'preview', fa: 'مشاهده فروشگاه', en: 'View storefront' },
 ] as const;

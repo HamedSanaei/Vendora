@@ -1,4 +1,5 @@
 import { AdminSmsSettings } from "../components/AdminSmsSettings";
+import { AdminEgressSettings } from '../components/AdminEgressSettings';
 import { AdminShippingSettings } from "../components/AdminShippingSettings";
 import { useRef, useState, type KeyboardEvent } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -57,6 +58,7 @@ export function AdminOnlineStorePage() {
       <div id="store-panel-data" className="admin-store-management-panel" role="tabpanel" aria-labelledby="store-tab-data" hidden={section !== 'data'}>{visited.includes('data') && <AdminSeedVisibility locale={locale} />}</div>
       <div id="store-panel-shipping" className="admin-store-management-panel" role="tabpanel" aria-labelledby="store-tab-shipping" hidden={section !== 'shipping'}>{visited.includes('shipping') && <AdminShippingSettings locale={locale} />}</div>
       <div id="store-panel-sms" className="admin-store-management-panel" role="tabpanel" aria-labelledby="store-tab-sms" hidden={section !== 'sms'}>{visited.includes('sms') && <AdminSmsSettings locale={locale} active={section === 'sms'} />}</div>
+      <div id="store-panel-egress" className="admin-store-management-panel" role="tabpanel" aria-labelledby="store-tab-egress" hidden={section !== 'egress'}>{visited.includes('egress') && <AdminEgressSettings locale={locale} />}</div>
       <div id="store-panel-slideshow" className="admin-store-management-panel" role="tabpanel" aria-labelledby="store-tab-slideshow" hidden={section !== 'slideshow'}>{visited.includes('slideshow') && <AdminSlideshowManager key={locale} locale={locale} />}</div>
       <div id="store-panel-preview" className="admin-store-management-panel" role="tabpanel" aria-labelledby="store-tab-preview" hidden={section !== 'preview'}>
       <AdminFeedback tone="info">{isFa ? 'نشانی فروشگاه: ' : 'Storefront address: '}<bdi dir="ltr">{storefrontBaseUrl}</bdi></AdminFeedback>

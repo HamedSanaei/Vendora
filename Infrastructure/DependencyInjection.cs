@@ -1,3 +1,6 @@
+using Application.Auth;
+using Application.Egress;
+using Infrastructure.Egress;
 using Application.Interfaces;
 using Infrastructure.Maps;
 using Infrastructure.Storage;
@@ -18,25 +21,30 @@ public static class DependencyInjection
     /// <returns>The same service collection.</returns>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
+        services.AddSingleton<EgressNetwork>();
+        services.AddSingleton<IEgressNetwork>(sp => sp.GetRequiredService<EgressNetwork>());
+        services.AddSingleton<IGoogleCredentialVerifier, GoogleKeys>();
+        services.AddHttpClient("GoogleJwks", client => client.Timeout = TimeSpan.FromSeconds(15))
+            .RemoveAllLoggers().ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<EgressNetwork>().For(EgressCatalog.Google));
         services.AddHttpClient<ITabaPayGateway, Payments.TabaPayGateway>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(12);
             client.MaxResponseContentBufferSize = 32 * 1024;
         }).RemoveAllLoggers()
-          .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+          .ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<EgressNetwork>().For(EgressCatalog.TabaPay));
         services.AddHttpClient<ISmsGateway, Infrastructure.Auth.ParsGreenSmsGateway>(client => { client.Timeout = TimeSpan.FromSeconds(15); client.MaxResponseContentBufferSize = 32768; })
             .RedactLoggedHeaders(new[] { "Authorization" })
-            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+            .ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<EgressNetwork>().For(EgressCatalog.ParsGreen));
         // Kavenegar authenticates in the URI path, so default HttpClient request/response URL logging must be disabled.
         services.AddHttpClient<ISmsGateway, Infrastructure.Auth.KavenegarSmsGateway>("SmsKavenegar", client => { client.Timeout = TimeSpan.FromSeconds(15); client.MaxResponseContentBufferSize = 32768; })
             .RemoveAllLoggers()
-            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+            .ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<EgressNetwork>().For(EgressCatalog.Kavenegar));
         services.AddScoped<IPhoneCodeSender, Application.Sms.ConfiguredPhoneCodeSender>();
         services.AddSingleton<Shipping.PostexReadCache>();
         services.AddScoped<IPostexRates, Shipping.PostexRates>();
         services.AddHttpClient("PostexRates", client => { client.Timeout = TimeSpan.FromSeconds(10); client.MaxResponseContentBufferSize = 16 * 1024 * 1024; })
             .RedactLoggedHeaders(new[] { "x-api-key" })
-            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+            .ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<EgressNetwork>().For(EgressCatalog.Postex));
         services.AddScoped<IProductImageStorage, LocalProductImageStorage>();
         services.AddScoped<ICommercialDocumentRenderer, Documents.QuestCommercialDocumentRenderer>();
         services.AddScoped<IShippingLabelRenderer, Documents.QuestShippingLabelRenderer>();
@@ -47,13 +55,13 @@ public static class DependencyInjection
         {
             client.Timeout = TimeSpan.FromSeconds(60);
             client.MaxResponseContentBufferSize = 1024 * 1024;
-        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+        }).ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<EgressNetwork>().For(EgressCatalog.Seo));
         services.AddHttpClient("UsdtPublicRates", client =>
         {
             client.Timeout = TimeSpan.FromSeconds(8);
             client.MaxResponseContentBufferSize = 2 * 1024 * 1024;
             client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
-        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+        }).ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<EgressNetwork>().For(EgressCatalog.Rates));
         foreach (string source in new[] { "Nobitex", "Wallex", "AbanTether" })
         {
             services.AddScoped<IUsdtRateSource>(provider => new PublicUsdtRateSource(source,
@@ -64,7 +72,7 @@ public static class DependencyInjection
             client.BaseAddress = new Uri("https://api.neshan.org/");
             client.Timeout = TimeSpan.FromSeconds(8);
         })
-            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+            .ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<EgressNetwork>().For(EgressCatalog.Neshan));
         return services;
     }
 }

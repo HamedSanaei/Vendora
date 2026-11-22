@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Application;
 using Domain.Enums;
 using Infrastructure;
@@ -9,15 +10,9 @@ using Persistence;
 using System.Text;
 using API;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Google signs ID tokens with rotating public keys. Some production networks
-// reject the Google JWKS endpoint, so allow a narrowly scoped HTTPS CONNECT
-// egress without proxying unrelated payment/SMS/backend requests.
-// Configure this before any Google authentication HttpClient is constructed.
-string? googleEgressProxy = builder.Configuration["Google:EgressProxy"];
-if (!string.IsNullOrWhiteSpace(googleEgressProxy))
-    HttpClient.DefaultProxy = new GoogleCertificateEgressProxy(googleEgressProxy, HttpClient.DefaultProxy);
+const string egressImportFlag = "--vendora-import-egress";
+bool importEgress = args.Contains(egressImportFlag, StringComparer.Ordinal);
+var builder = WebApplication.CreateBuilder(args.Where(x => x != egressImportFlag).ToArray());
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -31,6 +26,13 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCors();
 builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure();
+if (builder.Configuration["Egress:KeyDirectory"] is { Length: > 0 } keyDirectory)
+{
+    if (OperatingSystem.IsWindows()) Directory.CreateDirectory(keyDirectory);
+    else Directory.CreateDirectory(keyDirectory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+    builder.Services.AddDataProtection().SetApplicationName("Vendora")
+        .PersistKeysToFileSystem(new DirectoryInfo(keyDirectory));
+}
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -63,6 +65,11 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddDiscussionRateLimiting();
 
 var app = builder.Build();
+if (importEgress)
+{
+    Environment.ExitCode = await EgressImport.RunAsync(app);
+    return;
+}
 
 // License activation is local and requires no registration/key. Invalid configuration disables PDF only.
 string? pdfConfigurationError = Infrastructure.Documents.CommercialPdfConfiguration.Initialize(builder.Configuration, builder.Environment);

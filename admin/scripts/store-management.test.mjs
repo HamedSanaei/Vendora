@@ -9,7 +9,7 @@ const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.
 const module={exports:{}};vm.runInNewContext(compiled,{exports:module.exports});
 const {storeManagementSection:section,storeManagementSections:sections}=module.exports;
 test('every configured scope is directly addressable and has both locale labels',()=>{
-  assert.equal(new Set(Array.from(sections,item=>item.id)).size,8);
+  assert.equal(new Set(Array.from(sections,item=>item.id)).size,9);
   for(const item of sections){assert.ok(item.fa&&item.en);assert.equal(section(new URLSearchParams({section:item.id})),item.id);}
 });
 test('legacy SMS bookmarks select SMS but an explicit scope takes precedence',()=>{

@@ -119,6 +119,7 @@ async function main() {
         if (['dashboard', 'product-list', 'accounting', 'login', 'online-store'].includes(route)) await page.screenshot({ path: resolve(output, `${route}-${width}.png`), fullPage: true });
         if (!before && route === 'online-store') {
           await checkStoreManagement(page,management,async name=>{await geometry(page,name,width);await page.screenshot({path:resolve(output,`${name}-${width}.png`),fullPage:true});});
+          if (process.env.ADMIN_QA_EGRESS_ONLY === '1') continue;
           await page.getByRole('tablist',{name:'بخش‌های مدیریت فروشگاه',exact:true}).getByRole('tab',{name:'ارسال و قیمت‌گذاری',exact:true}).click();
           const section = page.locator('section.admin-surface').filter({ has: page.getByRole('heading', { name: 'ارسال و قیمت‌گذاری', exact: true }) });
           await section.getByLabel('ارسال رایگان با احتساب هزینه در قیمت هر واحد کالا', { exact: true }).check();

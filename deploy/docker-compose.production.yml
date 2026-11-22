@@ -44,6 +44,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Data Source=/data/vendora.db
+      Egress__KeyDirectory: /data/egress-keys
     volumes:
       - /opt/vendora/data:/data
       - /opt/vendora/uploads:/app/wwwroot/uploads

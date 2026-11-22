@@ -107,6 +107,7 @@ public partial class AppDbContext(DbContextOptions<AppDbContext> options)
         ConfigureAccounting(modelBuilder);
         ConfigureShipping(modelBuilder);
         ConfigureSms(modelBuilder);
+        ConfigureEgress(modelBuilder);
         modelBuilder.Entity<AppUser>().Property(x => x.FirstName).HasMaxLength(100);
         modelBuilder.Entity<AppUser>().Property(x => x.LastName).HasMaxLength(100);
         modelBuilder.Entity<PhoneVerification>(b =>

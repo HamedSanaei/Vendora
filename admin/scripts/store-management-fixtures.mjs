@@ -3,10 +3,29 @@ import assert from 'node:assert/strict';
 /** Supplies mutable local-only profile responses and records requests to prove lazy loading and explicit saves. */
 export function storeManagementRoutes() {
   let profile={showSeedData:false,nameFa:'وندورا',phone:'02112345678',email:'store@example.invalid',addressFa:'نشانی آزمایشی فروشگاه',enamadEnabled:false};
+  const egress={profiles:[],routes:[{service:'google',version:null,enabled:false,proxyId:null,canProxy:true,lastTest:null}],audit:[]};
   const requests=[],saves=[];
   return {requests,saves,async handle(route){
     const req=route.request(),path=new URL(req.url()).pathname;
     if(path.startsWith('/api/'))requests.push(path);
+    if(path==='/api/admin/egress'){await route.fulfill({json:egress});return true;}
+    if(path==='/api/admin/egress/profiles'){
+      const {user,password,clearCredential,...saved}=req.postDataJSON();
+      assert.equal(user,'fixture-user');assert.equal(password,'fixture-password');assert.equal(clearCredential,false);
+      egress.profiles=[{...saved,id:'fixture-proxy',version:'1',hasCredential:true}];
+      await route.fulfill({json:egress.profiles[0]});return true;
+    }
+    if(path==='/api/admin/egress/routes/google'){
+      Object.assign(egress.routes[0],req.postDataJSON(),{version:'route-1'});
+      await route.fulfill({status:204});return true;
+    }
+    if(path==='/api/admin/egress/test'){
+      const check={at:'2026-11-22T20:00:00Z',path:'Proxy',code:'Success',milliseconds:120};
+      const payload=req.postDataJSON();
+      if(payload.service==='google')egress.routes[0].lastTest=check;
+      else {assert.equal(payload.proxyId,'fixture-proxy');egress.profiles[0].lastTest=check;}
+      await route.fulfill({json:check});return true;
+    }
     if(path!=='/api/admin/store-settings'&&path!=='/api/store-settings')return false;
     if(req.method()==='PUT'){
       const raw=req.postData(),json=raw.match(/name="settings"\r\n\r\n([^\r\n]+)/)?.[1];assert.ok(json,'Shared multipart contract retained');
@@ -24,7 +43,7 @@ export async function checkStoreManagement(page,state,capture) {
   const tabs=page.getByRole('tablist',{name:'بخش‌های مدیریت فروشگاه',exact:true});
   const choose=async name=>{await tabs.getByRole('tab',{name,exact:true}).click();await page.waitForTimeout(80);assert.equal(await page.locator('[role="tabpanel"]:visible').count(),1);};
   await page.getByRole('heading',{name:'مدیریت فروشگاه',exact:true,level:1}).waitFor();await page.locator('#settings-nameFa').waitFor();
-  assert.equal(await tabs.getByRole('tab').count(),8);
+  assert.equal(await tabs.getByRole('tab').count(),9);
   assert.equal(state.requests.some(path=>/\/admin\/(sms|slideshow)|\/store-settings\/shipping/.test(path)),false,'Unopened scopes do not eagerly load their APIs');
   await page.locator('#settings-nameFa').fill('برند پیش‌نویس');
   await page.locator('#settings-homeTitleFa').fill('خرید کیف از وندورا | تولید مستقیم');
@@ -63,6 +82,30 @@ export async function checkStoreManagement(page,state,capture) {
   await choose('ارسال و قیمت‌گذاری');assert.equal(await page.getByLabel('سهم ثابت هر واحد (تومان)',{exact:true}).inputValue(),'333333');
   await choose('اسلایدر صفحه اصلی');assert.equal(await page.locator('#slideshow-order').inputValue(),'7');
   await choose('پیامک و اعلان‌ها');assert.equal(await page.getByLabel('آستانه موجودی قابل‌فروش کم',{exact:true}).inputValue(),'6');
+  await choose('شبکه و پروکسی خروجی');
+  await page.getByRole('button',{name:'افزودن پروفایل',exact:true}).click();
+  await page.getByLabel('نام پروفایل',{exact:true}).fill('پروکسی آزمایشی');
+  await page.getByLabel('نوع پروکسی',{exact:true}).selectOption('socks5');
+  await page.getByLabel('میزبان',{exact:true}).fill('proxy.example.invalid');
+  await page.getByLabel('نام کاربری اختیاری',{exact:true}).fill('fixture-user');
+  await page.getByLabel('رمز جدید اختیاری',{exact:true}).fill('fixture-password');
+  await page.getByRole('button',{name:'ذخیره پروفایل',exact:true}).click();
+  await page.getByText('پروکسی آزمایشی',{exact:true}).first().waitFor();
+  await page.getByRole('button',{name:'تست پروکسی با گوگل',exact:true}).click();
+  await page.getByText(/موفق · پروکسی/).first().waitFor();
+  await page.getByLabel('ورود گوگل',{exact:true}).selectOption('fixture-proxy');
+  await Promise.all([
+    page.waitForResponse(response=>response.url().endsWith('/api/admin/egress') && response.request().method()==='GET'),
+    page.getByRole('button',{name:'اعمال مسیر',exact:true}).click()
+  ]);
+  await page.getByRole('button',{name:'تست مسیر ذخیره‌شده',exact:true}).click();
+  await page.getByText(/موفق · پروکسی/).nth(1).waitFor();
+  await page.reload();
+  assert.equal(await page.getByLabel('ورود گوگل',{exact:true}).inputValue(),'fixture-proxy');
+  await page.getByRole('button',{name:'ویرایش',exact:true}).click();
+  assert.equal(await page.getByLabel('رمز جدید اختیاری',{exact:true}).inputValue(),'');
+  await page.getByRole('button',{name:'انصراف',exact:true}).click();
+  await capture('store-management-egress');
   await tabs.getByRole('tab',{name:'هویت و ظاهر',exact:true}).focus();await page.keyboard.press('ArrowLeft');await tabs.getByRole('tab',{name:'تماس و پشتیبانی',exact:true,selected:true}).waitFor();
   await page.keyboard.press('End');await tabs.getByRole('tab',{name:'مشاهده فروشگاه',exact:true,selected:true}).waitFor();await page.keyboard.press('Home');
   await tabs.getByRole('tab',{name:'هویت و ظاهر',exact:true,selected:true}).waitFor();await page.waitForTimeout(220);assert.equal(await tabs.getByRole('tab',{selected:true}).evaluate(node=>getComputedStyle(node).color),'rgb(255, 255, 255)');await capture('store-management-identity');
