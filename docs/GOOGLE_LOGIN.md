@@ -51,3 +51,33 @@ If the Google email differs from the Vendora account email, linking is rejected.
 - If the frontend receives an HTTP 400, ensure the backend Client ID is **identical** and deployed, and verify CSP, CORS, and the token expiry.
 - The browser sends the ID token to Vendora's API only. Never log raw credentials or include them in error messages.
 - Keep the email/password flow as a fallback. Test Persian and English layouts and both desktop and mobile.
+
+## Production Google certificate egress
+
+When a hosting provider's public egress returns HTTP 403 for Google's official JWKS
+endpoint (`https://www.googleapis.com/oauth2/v3/certs`), Google ID-token
+verification cannot fetch Google's rotating signing keys. This produces
+`GOOGLE_UNAVAILABLE` even when `/healthz` is healthy. Do not disable signature,
+audience, issuer, or expiry checks, and never replace the JWKS response with a
+fixed or untrusted key.
+
+The API supports an **optional, host-scoped HTTP CONNECT proxy**:
+
+```dotenv
+# API runtime only, NOT a Next.js public build variable.
+Google__EgressProxy=http://TRUSTED_EGRESS_HOST:CONNECT_PORT
+```
+
+- The proxy must only permit authorized Vendora source IPs and `CONNECT www.googleapis.com:443`. Ensure that HTTPS stays end-to-end to Google. A trusted egress host in a network where Google responds 200 is required.
+- Set this in `/opt/vendora/deploy/env/production.env` and redeploy/recreate **vendora-api**. Merely restarting an existing Docker container cannot add newly edited environment variables.
+- `API/GoogleCertificateEgressProxy.cs` routes **only HTTPS requests to `www.googleapis.com` on port 443** to that proxy, and delegates every other destination to the original .NET proxy settings. Requests to payment providers, SMS services and other domains must not be affected.
+- Verify from the API's network namespace: `curl -4 --proxy http://TRUSTED_EGRESS_HOST:CONNECT_PORT -fsS https://www.googleapis.com/oauth2/v3/certs` returns JWKS JSON with `keys`. A direct request may still return 403.
+- Then perform a legitimate Google login with a controlled test account and verify that a Vendora session is minted. A random or invalid Google credential must still fail closed.
+- If the relay is unavailable, login must fail closed with `GOOGLE_UNAVAILABLE`, not accept unverified tokens. Monitor relay availability, its TLS tunnel success and the API auth error code.
+- To roll back the egress routing, remove `Google__EgressProxy` from the private API environment and redeploy/recreate `vendora-api`. Keep credentials out of logs and public configuration.
+
+**Important:** A Google-created account does not automatically have a local
+password hash. Email/password login is therefore not a fallback for that account
+until it has securely set a password after independently proving account
+ownership. Do not populate `PasswordHash` manually or silently link accounts
+based only on matching email.

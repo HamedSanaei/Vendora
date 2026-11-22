@@ -11,6 +11,14 @@ using API;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Google signs ID tokens with rotating public keys. Some production networks
+// reject the Google JWKS endpoint, so allow a narrowly scoped HTTPS CONNECT
+// egress without proxying unrelated payment/SMS/backend requests.
+// Configure this before any Google authentication HttpClient is constructed.
+string? googleEgressProxy = builder.Configuration["Google:EgressProxy"];
+if (!string.IsNullOrWhiteSpace(googleEgressProxy))
+    HttpClient.DefaultProxy = new GoogleCertificateEgressProxy(googleEgressProxy, HttpClient.DefaultProxy);
+
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
